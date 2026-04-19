@@ -25,7 +25,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
                 type="button"
                 className={`ev-actions__submit${submitted ? ' ev-actions__submit--success' : ''}`}
                 onClick={onSubmit}
-                disabled={submitting || saving}
+                disabled={submitting || saving || submitted}
                 aria-label="Enviar terna"
             >
                 {submitting ? (
@@ -41,7 +41,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
                 type="button"
                 className={`ev-actions__draft${draftSaved ? ' ev-actions__draft--saved' : ''}`}
                 onClick={onSaveDraft}
-                disabled={submitting || saving}
+                disabled={submitting || saving || draftSaved}
                 aria-label="Guardar borrador"
             >
                 {saving ? (
@@ -53,7 +53,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
                 )}
             </button>
         </div>
-        <p className="ev-actions__note">Los cambios se guardan automáticamente</p>
+        <p className="ev-actions__note">Revisá los puntajes antes de enviar</p>
     </div>
 );
 

@@ -1011,7 +1011,7 @@
     content: '';
     width: 6px;
     height: 6px;
-    background: var(--color-success);
+    background: var(--gray-400);
     border-radius: 50%;
     flex-shrink: 0;
 }
