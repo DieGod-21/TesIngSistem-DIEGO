@@ -1,42 +1,54 @@
 import { apiFetch } from './apiClient';
+import { API_PATHS } from '../config/apiConfig';
+import type { AcademicPhaseDTO } from '../types/dto';
 
+/** Modelo interno de fase académica */
 export interface AcademicPhase {
     id: number;
     name: string;
     description: string | null;
-    is_active: boolean;
+    isActive: boolean;
 }
 
-/** GET /api/academic-phases — fases activas (para formularios de estudiantes). */
+function adaptPhase(dto: AcademicPhaseDTO): AcademicPhase {
+    return {
+        id:          dto.id,
+        name:        dto.name,
+        description: dto.description ?? null,
+        isActive:    dto.is_active,
+    };
+}
+
 export async function getAcademicPhases(): Promise<AcademicPhase[]> {
-    return apiFetch<AcademicPhase[]>('/academic-phases');
+    const dtos = await apiFetch<AcademicPhaseDTO[]>(API_PATHS.academicPhases.active);
+    return dtos.map(adaptPhase);
 }
 
-/** GET /api/academic-phases/admin — todas las fases (solo admin). */
 export async function getAllAcademicPhases(): Promise<AcademicPhase[]> {
-    return apiFetch<AcademicPhase[]>('/academic-phases/admin');
+    const dtos = await apiFetch<AcademicPhaseDTO[]>(API_PATHS.academicPhases.admin);
+    return dtos.map(adaptPhase);
 }
 
-/** POST /api/academic-phases — crea una nueva fase (solo admin). */
 export async function createAcademicPhase(data: { name: string; description: string }): Promise<AcademicPhase> {
-    return apiFetch<AcademicPhase>('/academic-phases', {
+    const dto = await apiFetch<AcademicPhaseDTO>(API_PATHS.academicPhases.active, {
         method: 'POST',
         body: JSON.stringify(data),
     });
+    return adaptPhase(dto);
 }
 
-/** PUT /api/academic-phases/:id — actualiza nombre y descripción (solo admin). */
 export async function updateAcademicPhase(
     id: number,
     data: { name: string; description: string }
 ): Promise<AcademicPhase> {
-    return apiFetch<AcademicPhase>(`/academic-phases/${id}`, {
+    const dto = await apiFetch<AcademicPhaseDTO>(API_PATHS.academicPhases.byId(id), {
         method: 'PUT',
         body: JSON.stringify(data),
     });
+    return adaptPhase(dto);
 }
 
-/** PATCH /api/academic-phases/:id/toggle — activa o desactiva una fase (solo admin). */
 export async function toggleAcademicPhase(id: number): Promise<AcademicPhase> {
-    return apiFetch<AcademicPhase>(`/academic-phases/${id}/toggle`, { method: 'PATCH' });
+    const dto = await apiFetch<AcademicPhaseDTO>(API_PATHS.academicPhases.toggle(id), { method: 'PATCH' });
+    return adaptPhase(dto);
 }

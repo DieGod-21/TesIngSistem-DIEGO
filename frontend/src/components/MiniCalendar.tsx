@@ -76,8 +76,8 @@ const MiniCalendar: React.FC = () => {
     const dotMap = useMemo(() => {
         const map = new Map<string, number>();
         const inc = (k: string) => map.set(k, (map.get(k) ?? 0) + 1);
-        events.forEach((ev) => inc(toDateKey(ev.fecha_inicio)));
-        deadlines.forEach((dl) => inc(toDateKey(dl.fecha)));
+        events.forEach((ev) => inc(toDateKey(ev.startDate)));
+        deadlines.forEach((dl) => inc(toDateKey(dl.date)));
         return map;
     }, [events, deadlines]);
 
@@ -85,12 +85,12 @@ const MiniCalendar: React.FC = () => {
     const upcoming = useMemo<UpcomingItem[]>(() => {
         const items: UpcomingItem[] = [];
         events.forEach((ev) => {
-            if (toDateKey(ev.fecha_inicio) >= todayKey)
-                items.push({ id: ev.id, date: toDateKey(ev.fecha_inicio), title: ev.titulo, tipo: ev.tipo, isDeadline: false });
+            if (toDateKey(ev.startDate) >= todayKey)
+                items.push({ id: ev.id, date: toDateKey(ev.startDate), title: ev.title, tipo: ev.type, isDeadline: false });
         });
         deadlines.forEach((dl) => {
-            if (toDateKey(dl.fecha) >= todayKey)
-                items.push({ id: dl.id, date: toDateKey(dl.fecha), title: dl.titulo, tipo: 'deadline', isDeadline: true });
+            if (toDateKey(dl.date) >= todayKey)
+                items.push({ id: dl.id, date: toDateKey(dl.date), title: dl.title, tipo: 'deadline', isDeadline: true });
         });
         return items.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
     }, [events, deadlines, todayKey]);

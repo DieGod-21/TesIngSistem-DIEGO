@@ -6,15 +6,17 @@
  */
 
 import { apiFetch, apiFetchList } from './apiClient';
-import type { Student, BackendStudent } from '../types/student';
-import { mapBackendStudent } from '../types/student';
+import { API_PATHS } from '../config/apiConfig';
+import type { Student } from '../types/student';
+import type { StudentDTO } from '../types/dto';
+import { adaptStudent } from '../adapters/studentAdapter';
 
 // ─── Lectura ─────────────────────────────────────────────────────────
 
 /** Obtiene todos los estudiantes desde el backend (paginado). */
 export async function getStudents(): Promise<Student[]> {
-    const rows = await apiFetchList<BackendStudent>('/students?limit=100');
-    return rows.map(mapBackendStudent);
+    const rows = await apiFetchList<StudentDTO>(`${API_PATHS.students.list}?limit=100`);
+    return rows.map(adaptStudent);
 }
 
 // ─── Escritura ────────────────────────────────────────────────────────
@@ -24,7 +26,7 @@ export async function getStudents(): Promise<Student[]> {
  * La UI ya aplica el cambio optimistamente — no se re-fetcha la lista completa.
  */
 export async function updateStudentStatus(id: string, approved: boolean): Promise<void> {
-    await apiFetch<BackendStudent>(`/students/${id}`, {
+    await apiFetch<StudentDTO>(API_PATHS.students.byId(id), {
         method: 'PUT',
         body: JSON.stringify({ approved }),
     });

@@ -42,11 +42,11 @@ const ErrorsPanel: React.FC<{ errors: UploadError[] }> = ({ errors }) => (
         <ul className="sn-upload__errors-list">
             {errors.map((e, i) => (
                 <li key={i} className="sn-upload__error-row">
-                    <span className="sn-upload__err-fila">Fila {e.fila}</span>
-                    {e.carnet_id && (
-                        <span className="sn-upload__err-carnet">{e.carnet_id}</span>
+                    <span className="sn-upload__err-fila">Fila {e.row}</span>
+                    {e.carnetId && (
+                        <span className="sn-upload__err-carnet">{e.carnetId}</span>
                     )}
-                    <span className="sn-upload__err-reason">{e.razon}</span>
+                    <span className="sn-upload__err-reason">{e.reason}</span>
                 </li>
             ))}
         </ul>

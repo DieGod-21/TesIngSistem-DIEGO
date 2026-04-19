@@ -51,11 +51,11 @@ export function useNotifications() {
     const markAllAsRead = useCallback(async () => {
         try {
             await svc.markAllAsRead();
-            setNotifications((prev) => prev.map((n) => ({ ...n, leida: true })));
+            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
         } catch { /* ignore */ }
     }, []);
 
-    const unreadCount = notifications.filter((n) => !n.leida).length;
+    const unreadCount = notifications.filter((n) => !n.read).length;
 
     return { notifications, unreadCount, loading, markAsRead, markAllAsRead, refresh: fetch };
 }

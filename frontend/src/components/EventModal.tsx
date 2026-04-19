@@ -59,14 +59,14 @@ const EventModal: React.FC<Props> = ({ event, defaultDate, canWrite, onSave, onD
     const [form, setForm] = useState<FormState>(() =>
         isEdit
             ? {
-                titulo: event.titulo,
-                tipo: event.tipo,
-                fecha_inicio: toInputDate(event.fecha_inicio),
-                fecha_fin: toInputDate(event.fecha_fin),
-                ubicacion: event.ubicacion ?? '',
-                descripcion: event.descripcion ?? '',
-                recordatorio: event.recordatorio ?? false,
-                recordatorio_tiempo: event.recordatorio_tiempo ?? 1,
+                titulo: event.title,
+                tipo: event.type,
+                fecha_inicio: toInputDate(event.startDate),
+                fecha_fin: toInputDate(event.endDate),
+                ubicacion: event.location ?? '',
+                descripcion: event.description ?? '',
+                recordatorio: event.hasReminder ?? false,
+                recordatorio_tiempo: event.reminderMinutes ?? 1,
             }
             : { ...EMPTY, fecha_inicio: defaultDate ?? '' }
     );

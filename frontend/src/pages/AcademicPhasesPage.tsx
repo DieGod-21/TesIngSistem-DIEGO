@@ -135,7 +135,7 @@ const AcademicPhasesPage: React.FC = () => {
     // ─── Toggle ───────────────────────────────────────────────────────
 
     function requestToggle(phase: AcademicPhase) {
-        if (phase.is_active) {
+        if (phase.isActive) {
             setConfirmPhase(phase);
         } else {
             executeToggle(phase.id);
@@ -309,8 +309,8 @@ const AcademicPhasesPage: React.FC = () => {
                                             )}
                                         </td>
                                         <td className="sl-table__td">
-                                            <span className={`ap-status-badge${phase.is_active ? ' ap-status-badge--active' : ' ap-status-badge--inactive'}`}>
-                                                {phase.is_active ? 'Activa' : 'Inactiva'}
+                                            <span className={`ap-status-badge${phase.isActive ? ' ap-status-badge--active' : ' ap-status-badge--inactive'}`}>
+                                                {phase.isActive ? 'Activa' : 'Inactiva'}
                                             </span>
                                         </td>
                                         <td className="sl-table__td">
@@ -340,13 +340,13 @@ const AcademicPhasesPage: React.FC = () => {
                                     /* ── Fila normal ── */
                                     <tr
                                         key={phase.id}
-                                        className={`sl-table__tr${!phase.is_active ? ' ap-row--inactive' : ''}`}
+                                        className={`sl-table__tr${!phase.isActive ? ' ap-row--inactive' : ''}`}
                                     >
                                         <td className="sl-table__td ap-code">{phase.name}</td>
                                         <td className="sl-table__td">{phase.description ?? '—'}</td>
                                         <td className="sl-table__td">
-                                            <span className={`ap-status-badge${phase.is_active ? ' ap-status-badge--active' : ' ap-status-badge--inactive'}`}>
-                                                {phase.is_active ? 'Activa' : 'Inactiva'}
+                                            <span className={`ap-status-badge${phase.isActive ? ' ap-status-badge--active' : ' ap-status-badge--inactive'}`}>
+                                                {phase.isActive ? 'Activa' : 'Inactiva'}
                                             </span>
                                         </td>
                                         <td className="sl-table__td">
@@ -360,17 +360,17 @@ const AcademicPhasesPage: React.FC = () => {
                                                     Editar
                                                 </button>
                                                 <button
-                                                    className={`ap-btn${phase.is_active ? ' ap-btn--deactivate' : ' ap-btn--activate'}`}
+                                                    className={`ap-btn${phase.isActive ? ' ap-btn--deactivate' : ' ap-btn--activate'}`}
                                                     onClick={() => requestToggle(phase)}
                                                     disabled={togglingId === phase.id}
-                                                    title={phase.is_active ? 'Desactivar fase' : 'Activar fase'}
+                                                    title={phase.isActive ? 'Desactivar fase' : 'Activar fase'}
                                                 >
-                                                    {phase.is_active
+                                                    {phase.isActive
                                                         ? <PowerOff size={15} />
                                                         : <Power size={15} />}
                                                     {togglingId === phase.id
                                                         ? '…'
-                                                        : phase.is_active ? 'Desactivar' : 'Activar'}
+                                                        : phase.isActive ? 'Desactivar' : 'Activar'}
                                                 </button>
                                             </div>
                                         </td>

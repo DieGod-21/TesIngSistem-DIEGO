@@ -176,17 +176,17 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                                         {notifications.map((n) => (
                                             <li
                                                 key={n.id}
-                                                className={`notif-item ${n.leida ? 'notif-item--read' : 'notif-item--unread'}`}
+                                                className={`notif-item ${n.read ? 'notif-item--read' : 'notif-item--unread'}`}
                                             >
                                                 <div className="notif-item__icon-wrap">
                                                     <Calendar size={14} className="notif-item__icon" />
                                                 </div>
                                                 <div className="notif-item__content">
-                                                    <p className="notif-item__title">{n.titulo}</p>
-                                                    <p className="notif-item__msg">{n.mensaje}</p>
-                                                    <p className="notif-item__time">{timeAgo(n.created_at)}</p>
+                                                    <p className="notif-item__title">{n.title}</p>
+                                                    <p className="notif-item__msg">{n.message}</p>
+                                                    <p className="notif-item__time">{timeAgo(n.createdAt)}</p>
                                                 </div>
-                                                {!n.leida && (
+                                                {!n.read && (
                                                     <button
                                                         className="notif-item__read-btn"
                                                         onClick={() => handleMarkRead(n.id)}

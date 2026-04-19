@@ -27,6 +27,7 @@ const COOLDOWN_MS = 4000;
 
 export function useStudentsList(initialQuery = '') {
     const [students, setStudents] = useState<Student[]>([]);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [query, setQuery] = useState(initialQuery);
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -45,8 +46,8 @@ export function useStudentsList(initialQuery = '') {
             try {
                 const data = await getStudents();
                 if (!canceled) setStudents(data);
-            } catch {
-                // API error: la tabla queda vacía, no hay crash
+            } catch (err) {
+                if (!canceled) setLoadError(err instanceof Error ? err.message : 'Error al cargar estudiantes');
             } finally {
                 if (!canceled) setLoading(false);
             }
@@ -157,6 +158,7 @@ export function useStudentsList(initialQuery = '') {
     return {
         students,
         loading,
+        loadError,
         query,
         setQuery,
         statusFilter,

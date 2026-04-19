@@ -1,15 +1,14 @@
 /**
  * authService.ts
  *
- * Capa de servicio para autenticación.
- * Persiste la sesión en localStorage para que sobreviva recargas.
- *
- * Claves de localStorage:
- *   auth_token → JWT del backend
- *   auth_user  → JSON del objeto User
+ * Autenticación desacoplada del schema del API.
+ * Los field names del request/response viven en apiConfig.ts — no aquí.
  */
 
 import { apiFetch } from './apiClient';
+import { AUTH_REQUEST_FIELDS, JWT_CLAIMS, AUTH_TOKEN_RESPONSE_FIELD, API_PATHS } from '../config/apiConfig';
+// DEV ONLY — no produce este import cuando import.meta.env.DEV = false (tree-shaken)
+import { isDevBypass, DEV_BYPASS_TOKEN, DEV_MOCK_USER } from '../config/devBypass';
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY  = 'auth_user';
@@ -26,17 +25,14 @@ export interface LoginCredentials {
   password: string;
 }
 
-// ─── Helpers JWT ─────────────────────────────────────────────────────
+// ─── JWT ──────────────────────────────────────────────────────────────────
 
-interface JwtPayload {
-  user_id: string;
-  nombre: string;
-  roles: string[];
-  exp: number;
-}
-
-function parseJwt(token: string): JwtPayload {
-  const base64Url = token.split('.')[1];
+function parseJwt(token: string): Record<string, unknown> {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    throw new Error('Formato de token no reconocido. Contacta al administrador.');
+  }
+  const base64Url = parts[1];
   const base64    = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   const json      = decodeURIComponent(
     atob(base64)
@@ -44,13 +40,30 @@ function parseJwt(token: string): JwtPayload {
       .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
       .join(''),
   );
-  return JSON.parse(json) as JwtPayload;
+  return JSON.parse(json) as Record<string, unknown>;
 }
 
-// ─── Persistencia ───────────────────────────────────────────────────
+function extractUser(email: string, payload: Record<string, unknown>): User {
+  const userId = payload[JWT_CLAIMS.userId];
+  const name   = payload[JWT_CLAIMS.name];
+  const roles  = payload[JWT_CLAIMS.roles];
 
-/** Lee la sesión guardada en localStorage. Retorna null si no existe o está corrupta. */
+  return {
+    id:    typeof userId === 'string' ? userId : String(userId ?? ''),
+    email: email.trim().toLowerCase(),
+    name:  typeof name === 'string' && name ? name : email.split('@')[0],
+    role:  Array.isArray(roles) ? (roles[0] ?? 'user') : (typeof roles === 'string' ? roles : 'user'),
+  };
+}
+
+// ─── Persistencia ─────────────────────────────────────────────────────────
+
 export function readPersistedSession(): { user: User; token: string } | null {
+  // DEV ONLY: bypass de autenticación para desarrollo sin backend
+  if (isDevBypass()) {
+    return { user: DEV_MOCK_USER, token: DEV_BYPASS_TOKEN };
+  }
+
   try {
     const token = localStorage.getItem(TOKEN_KEY);
     const raw   = localStorage.getItem(USER_KEY);
@@ -74,48 +87,48 @@ function clearSession(): void {
   localStorage.removeItem(USER_KEY);
 }
 
-// ─── API pública ────────────────────────────────────────────────────
+// ─── API pública ──────────────────────────────────────────────────────────
 
-/**
- * Autentica al usuario contra POST /api/auth/login.
- * El backend espera { correo_electronico, contrasena } y retorna { token }.
- * Se decodifica el JWT para extraer user_id y roles.
- */
 export const login = async (email: string, password: string): Promise<User> => {
-  const { token } = await apiFetch<{ token: string }>('/auth/login', {
+  // DEV ONLY: omitir llamada al API cuando bypass está activo
+  if (isDevBypass()) {
+    return DEV_MOCK_USER;
+  }
+
+  const body: Record<string, string> = {
+    [AUTH_REQUEST_FIELDS.email]:    email,
+    [AUTH_REQUEST_FIELDS.password]: password,
+  };
+
+  const response = await apiFetch<Record<string, unknown>>(API_PATHS.auth.login, {
     method: 'POST',
-    body: JSON.stringify({ correo_electronico: email, contrasena: password }),
+    body: JSON.stringify(body),
   });
 
+  const token = response[AUTH_TOKEN_RESPONSE_FIELD];
+  if (typeof token !== 'string' || !token) {
+    throw new Error('Respuesta de autenticación inválida. Contacta al administrador.');
+  }
+
   const payload = parseJwt(token);
-  const user: User = {
-    id:    payload.user_id,
-    email: email.trim().toLowerCase(),
-    name:  payload.nombre || email.split('@')[0],
-    role:  payload.roles?.[0] ?? 'user',
-  };
+  const user    = extractUser(email, payload);
 
   persistSession(user, token);
   return user;
 };
 
-/**
- * Cierra sesión y limpia el localStorage.
- */
 export const logout = async (): Promise<void> => {
   clearSession();
 };
 
-/**
- * Verifica si el JWT almacenado sigue siendo válido
- * comparando su campo `exp` con el tiempo actual.
- * No realiza llamada al servidor (validación local).
- */
 export const verifyToken = async (token: string): Promise<boolean> => {
   if (!token) return false;
+  // DEV ONLY: el token de bypass siempre es válido
+  if (isDevBypass() && token === DEV_BYPASS_TOKEN) return true;
   try {
     const payload = parseJwt(token);
-    return payload.exp > Date.now() / 1000;
+    const exp     = payload[JWT_CLAIMS.exp];
+    return typeof exp === 'number' && exp > Date.now() / 1000;
   } catch {
     return false;
   }

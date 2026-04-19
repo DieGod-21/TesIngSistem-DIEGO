@@ -148,12 +148,12 @@ const CalendarPage: React.FC = () => {
             map.get(key)!.push(item);
         };
         events.forEach((ev) =>
-            push(toDateKey(ev.fecha_inicio), {
-                id: ev.id, title: ev.titulo, tipo: ev.tipo, isDeadline: false, raw: ev,
+            push(toDateKey(ev.startDate), {
+                id: ev.id, title: ev.title, tipo: ev.type, isDeadline: false, raw: ev,
             })
         );
         deadlines.forEach((dl) =>
-            push(toDateKey(dl.fecha), { id: dl.id, title: dl.titulo, tipo: 'deadline', isDeadline: true })
+            push(toDateKey(dl.date), { id: dl.id, title: dl.title, tipo: 'deadline', isDeadline: true })
         );
         return map;
     }, [events, deadlines]);
@@ -538,8 +538,8 @@ const CalendarPage: React.FC = () => {
                                                     {it.isDeadline ? 'Entrega' : it.tipo}
                                                 </span>
                                                 <span className="cal-day-panel__item-title">{it.title}</span>
-                                                {!it.isDeadline && it.raw?.ubicacion && (
-                                                    <span className="cal-day-panel__item-loc">{it.raw.ubicacion}</span>
+                                                {!it.isDeadline && it.raw?.location && (
+                                                    <span className="cal-day-panel__item-loc">{it.raw.location}</span>
                                                 )}
                                                 {it.isDeadline && canWrite && (
                                                     <button
@@ -570,8 +570,8 @@ const CalendarPage: React.FC = () => {
                 >
                     <p className="cal-tooltip__title">{tooltip.item.title}</p>
                     <p className="cal-tooltip__tipo">{tooltip.item.isDeadline ? 'Fecha límite' : tooltip.item.tipo}</p>
-                    {!tooltip.item.isDeadline && tooltip.item.raw?.ubicacion && (
-                        <p className="cal-tooltip__loc">{tooltip.item.raw.ubicacion}</p>
+                    {!tooltip.item.isDeadline && tooltip.item.raw?.location && (
+                        <p className="cal-tooltip__loc">{tooltip.item.raw.location}</p>
                     )}
                 </div>
             )}

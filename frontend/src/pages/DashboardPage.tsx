@@ -280,7 +280,7 @@ const DashboardPage: React.FC = () => {
                                         </div>
                                         <div className="dash-recent-item__info">
                                             <p className="dash-recent-item__name">{s.nombreCompleto}</p>
-                                            <p className="dash-recent-item__carnet">{s.carnetId} · {s.phaseDescription ?? s.phaseName ?? s.faseAcademica}</p>
+                                            <p className="dash-recent-item__carnet">{s.carnetId} · {s.phaseDescription ?? s.phaseName ?? '—'}</p>
                                         </div>
                                         <StatusBadge approved={s.approved} />
                                     </li>

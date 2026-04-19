@@ -20,6 +20,8 @@ import StudentNewPage from '../pages/StudentNewPage';
 import StudentsListPage from '../pages/StudentsListPage';
 import CalendarPage from '../pages/CalendarPage';
 import AcademicPhasesPage from '../pages/AcademicPhasesPage';
+import EvaluationPanelsPage from '../features/evaluation/pages/EvaluationPanelsPage';
+import StudentEvaluationPage from '../features/evaluation/pages/StudentEvaluationPage';
 
 // ─── Tipos ───────────────────────────────────────────────────────────
 
@@ -143,6 +145,14 @@ const AppRouter: React.FC = () => (
 
             <ProtectedRoute path="/academic-phases" exact>
                 <AcademicPhasesPage />
+            </ProtectedRoute>
+
+            <ProtectedRoute path="/evaluation" exact>
+                <EvaluationPanelsPage />
+            </ProtectedRoute>
+
+            <ProtectedRoute path="/evaluation/:panelId" exact>
+                <StudentEvaluationPage />
             </ProtectedRoute>
 
             <Route exact path="/">

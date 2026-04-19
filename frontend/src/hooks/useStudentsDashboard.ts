@@ -1,18 +1,12 @@
 /**
  * useStudentsDashboard.ts
  *
- * Hook que encapsula la logica de datos de estudiantes
- * usada en el panel de inicio del dashboard:
- *   - KPIs desde GET /api/dashboard/summary (backend)
- *   - Estudiantes recientes desde GET /api/dashboard/recent-students
- *   - Filtrado rapido (busqueda + estado)
- *
- * Ya NO descarga todos los estudiantes al frontend.
+ * Hook de datos para el panel de inicio del dashboard.
+ * Delega toda la lógica de API a los servicios — no toca apiFetch ni DTOs directamente.
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { apiFetch } from '../services/apiClient';
-import { getRecentStudentsSummary } from '../services/dashboardService';
+import { getDashboardSummary, getRecentStudentsSummary } from '../services/dashboardService';
 import type { RecentStudent } from '../services/dashboardService';
 
 interface StudentKpis {
@@ -21,65 +15,49 @@ interface StudentKpis {
     pending: number;
 }
 
-/** Estudiante reciente mapeado a formato del UI */
-interface RecentStudentUI {
-    id: string;
-    nombreCompleto: string;
-    carnetId: string;
-    approved: boolean;
-    updatedAt: string;
-    phaseName: string | null;
-    phaseDescription: string | null;
-    faseAcademica: string;
-}
-
-/** Respuesta del backend GET /api/dashboard/summary */
-interface BackendSummary {
-    total: number;
-    approved: number;
-    pending: number;
-    completionPct: number;
-    byPhase: Array<{ phase_id: number; phase_name: string; phase_description: string; count: number }>;
-}
-
-function mapRecentStudent(s: RecentStudent): RecentStudentUI {
-    return {
-        id:               s.id,
-        nombreCompleto:   s.nombre_completo,
-        carnetId:         s.carnet_id,
-        approved:         s.approved,
-        updatedAt:        s.updated_at,
-        phaseName:        s.phase_name,
-        phaseDescription: s.phase_description,
-        faseAcademica:    s.phase_name ?? '',
-    };
+interface DashboardStudentState {
+    studentKpis: StudentKpis;
+    recentStudents: RecentStudent[];
+    error: string | null;
 }
 
 export function useStudentsDashboard() {
-    const [studentKpis, setStudentKpis] = useState<StudentKpis>({ total: 0, approved: 0, pending: 0 });
-    const [recentStudents, setRecentStudents] = useState<RecentStudentUI[]>([]);
+    const [state, setState] = useState<DashboardStudentState>({
+        studentKpis:    { total: 0, approved: 0, pending: 0 },
+        recentStudents: [],
+        error:          null,
+    });
 
-    // Filtros del panel de actividad reciente
-    const [dashStudentQuery, setDashStudentQuery] = useState('');
-    const [dashStatusFilter, setDashStatusFilter] = useState<'all' | 'approved' | 'pending'>('all');
-
-    // ── Carga inicial (async) ─────────────────────────────────────────
+    const [dashStudentQuery, setDashStudentQuery]   = useState('');
+    const [dashStatusFilter, setDashStatusFilter]   = useState<'all' | 'approved' | 'pending'>('all');
 
     useEffect(() => {
         let canceled = false;
 
         const load = async () => {
-            const [summary, recent] = await Promise.all([
-                apiFetch<BackendSummary>('/dashboard/summary'),
-                getRecentStudentsSummary(5),
-            ]);
-            if (!canceled) {
-                setStudentKpis({
-                    total:    summary.total,
-                    approved: summary.approved,
-                    pending:  summary.pending,
-                });
-                setRecentStudents(recent.map(mapRecentStudent));
+            try {
+                const [summary, recent] = await Promise.all([
+                    getDashboardSummary(),
+                    getRecentStudentsSummary(5),
+                ]);
+                if (!canceled) {
+                    const kpis = summary.kpis;
+                    const pendingKpi = kpis.find((k) => k.id === 'kpi-pending');
+                    const total    = recent.length;
+                    const approved = recent.filter((s) => s.approved).length;
+                    const pending  = typeof pendingKpi?.value === 'string'
+                        ? parseInt(pendingKpi.value, 10) || 0
+                        : total - approved;
+
+                    setState({ studentKpis: { total, approved, pending }, recentStudents: recent, error: null });
+                }
+            } catch (err) {
+                if (!canceled) {
+                    setState((prev) => ({
+                        ...prev,
+                        error: err instanceof Error ? err.message : 'Error al cargar datos del dashboard',
+                    }));
+                }
             }
         };
 
@@ -87,26 +65,25 @@ export function useStudentsDashboard() {
         return () => { canceled = true; };
     }, []);
 
-    // ── Actividad reciente filtrada ──────────────────────────────────
-
     const filteredRecent = useMemo(() => {
         const q = dashStudentQuery.trim().toLowerCase();
-        return recentStudents.filter((s) => {
+        return state.recentStudents.filter((s) => {
             const matchText = !q ||
                 s.nombreCompleto.toLowerCase().includes(q) ||
                 s.carnetId.toLowerCase().includes(q);
             const matchStatus =
                 dashStatusFilter === 'all' ||
-                (dashStatusFilter === 'approved' && s.approved) ||
-                (dashStatusFilter === 'pending' && !s.approved);
+                (dashStatusFilter === 'approved' &&  s.approved) ||
+                (dashStatusFilter === 'pending'  && !s.approved);
             return matchText && matchStatus;
         });
-    }, [recentStudents, dashStudentQuery, dashStatusFilter]);
+    }, [state.recentStudents, dashStudentQuery, dashStatusFilter]);
 
     return {
-        studentKpis,
-        recentStudents,
+        studentKpis:       state.studentKpis,
+        recentStudents:    state.recentStudents,
         filteredRecent,
+        dashStudentError:  state.error,
         dashStudentQuery,
         setDashStudentQuery,
         dashStatusFilter,

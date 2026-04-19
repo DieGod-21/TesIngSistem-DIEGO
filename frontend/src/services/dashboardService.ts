@@ -12,7 +12,11 @@
  */
 
 import { apiFetch } from './apiClient';
-import type { BackendStudent } from '../types/student';
+import { API_PATHS } from '../config/apiConfig';
+import { FALLBACK_DEADLINES, FALLBACK_RESOURCES } from '../config/staticData';
+import { adaptDashboardSummary } from '../adapters/dashboardAdapter';
+import { adaptStudent } from '../adapters/studentAdapter';
+import type { DashboardSummaryDTO, StudentDTO } from '../types/dto';
 
 // ─── Interfaces ────────────────────────────────────────────────────
 
@@ -63,29 +67,17 @@ export interface DashboardSummary {
     resources: FacultyResource[];
 }
 
-/** Respuesta del backend GET /api/dashboard/summary */
-interface BackendSummary {
-    total: number;
-    approved: number;
-    pending: number;
-    completionPct: number;
-    byPhase: Array<{
-        phase_id: number;
-        phase_name: string;
-        phase_description: string;
-        count: number;
-    }>;
-}
+// BackendSummary movida a types/dto.ts como DashboardSummaryDTO
 
-/** Respuesta del backend GET /api/dashboard/recent-students */
+/** Modelo interno para estudiante reciente (camelCase, sin snake_case) */
 export interface RecentStudent {
     id: string;
-    nombre_completo: string;
-    carnet_id: string;
+    nombreCompleto: string;
+    carnetId: string;
     approved: boolean;
-    updated_at: string;
-    phase_name: string;
-    phase_description: string;
+    updatedAt: string;
+    phaseName: string | null;
+    phaseDescription: string | null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -101,38 +93,7 @@ function initials(name: string): string {
 
 const AVATAR_VARIANTS: Array<'blue' | 'green' | 'slate'> = ['blue', 'green', 'slate'];
 
-// ─── Datos estaticos ────────────────────────────────────────────────
-
-const STATIC_DEADLINES: Deadline[] = [
-    {
-        id: 'dl-1',
-        month: 'Abr',
-        day: '15',
-        title: 'Revisión de Anteproyectos',
-        subtitle: 'Fase Anteproyecto — Primer Semestre 2026',
-    },
-    {
-        id: 'dl-2',
-        month: 'May',
-        day: '09',
-        title: 'Entrega de Capítulos I-III',
-        subtitle: 'Tesis — Estudiantes con Asesor Asignado',
-    },
-    {
-        id: 'dl-3',
-        month: 'Jun',
-        day: '20',
-        title: 'Defensas Privadas',
-        subtitle: 'Salón B-102 — Fase Final de Graduación',
-    },
-];
-
-const currentYear = new Date().getFullYear();
-const STATIC_RESOURCES: FacultyResource[] = [
-    { id: 'res-1', label: `Guía Normativa ${currentYear}`, iconName: 'Download', href: '#' },
-    { id: 'res-2', label: 'Plantillas LaTeX / Word',        iconName: 'File',     href: '#' },
-    { id: 'res-3', label: 'Repositorio Institucional',      iconName: 'Link',     href: '#' },
-];
+// Datos temporales movidos a config/staticData.ts
 
 // ─── API publica ────────────────────────────────────────────────────
 
@@ -141,50 +102,12 @@ const STATIC_RESOURCES: FacultyResource[] = [
  * Los KPIs se calculan en el backend con SQL (COUNT, GROUP BY).
  */
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-    const summary = await apiFetch<BackendSummary>('/dashboard/summary');
-
-    const { total, approved, pending, completionPct, byPhase } = summary;
-
-    const phaseKpis: KpiData[] = byPhase.map((p) => ({
-        id:            `kpi-phase-${p.phase_id}`,
-        label:         p.phase_description || p.phase_name,
-        value:         String(p.count),
-        trend:         '',
-        trendPositive: true,
-        description:   `Estudiantes en ${p.phase_description || p.phase_name}`,
-        iconName:      'GraduationCap',
-        iconVariant:   'blue' as const,
-    }));
-
-    const kpis: KpiData[] = [
-        ...phaseKpis,
-        {
-            id:            'kpi-pending',
-            label:         'Sin Aprobar',
-            value:         String(pending),
-            trend:         '',
-            trendPositive: pending === 0,
-            description:   'Expedientes pendientes de revisión',
-            iconName:      'AlertTriangle',
-            iconVariant:   pending > 0 ? 'red' : 'blue',
-        },
-        {
-            id:            'kpi-completion',
-            label:         'Completación',
-            value:         `${completionPct}%`,
-            trend:         '',
-            trendPositive: true,
-            description:   `${approved} de ${total} aprobados`,
-            iconName:      'CheckCircle',
-            iconVariant:   'blue',
-            progressValue: completionPct,
-        },
-    ];
-
+    const dto = await apiFetch<DashboardSummaryDTO>(API_PATHS.dashboard.summary);
+    const summary = adaptDashboardSummary(dto);
     return {
-        kpis,
-        deadlines: STATIC_DEADLINES,
-        resources: STATIC_RESOURCES,
+        ...summary,
+        deadlines: FALLBACK_DEADLINES,
+        resources: FALLBACK_RESOURCES,
     };
 }
 
@@ -192,7 +115,18 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
  * Obtiene los estudiantes mas recientes desde el backend.
  */
 export async function getRecentStudentsSummary(limit = 5): Promise<RecentStudent[]> {
-    return apiFetch<RecentStudent[]>(`/dashboard/recent-students?limit=${limit}`);
+    const dtos = await apiFetch<import('../types/dto').RecentStudentDTO[]>(
+        `${API_PATHS.dashboard.recentStudents}?limit=${limit}`
+    );
+    return dtos.map((s) => ({
+        id:               s.id,
+        nombreCompleto:   s.nombre_completo,
+        carnetId:         s.carnet_id,
+        approved:         s.approved,
+        updatedAt:        s.updated_at,
+        phaseName:        s.phase_name  ?? null,
+        phaseDescription: s.phase_description ?? null,
+    }));
 }
 
 /**
@@ -203,21 +137,20 @@ export async function getPendingActions(query?: string): Promise<PendingAction[]
     const params = new URLSearchParams({ approved: 'false', limit: '50' });
     if (query?.trim()) params.set('search', query.trim());
 
-    const response = await apiFetch<{ data: BackendStudent[]; pagination: unknown }>(`/students?${params}`);
-    const students = Array.isArray(response) ? response : response.data;
+    const response = await apiFetch<{ data: StudentDTO[]; pagination: unknown } | StudentDTO[]>(`${API_PATHS.students.list}?${params}`);
+    const dtos = Array.isArray(response) ? response : (response?.data ?? []);
 
-    return students
-        .map((s, i): PendingAction => ({
-            id:            s.id,
-            studentName:   s.nombre_completo,
-            studentId:     s.carnet_id,
-            avatarInitials: initials(s.nombre_completo),
-            avatarVariant: AVATAR_VARIANTS[i % AVATAR_VARIANTS.length],
-            projectTitle:  s.correo_institucional,
-            phase:         s.phase_description ?? s.phase_name ?? s.fase_academica ?? '—',
-            actionLabel:   'Pendiente de aprobación',
-            actionVariant: 'warning',
-            deadline:      'Sin fecha límite',
-            deadlineUrgent: false,
-        }));
+    return dtos.map(adaptStudent).map((s, i): PendingAction => ({
+        id:             s.id,
+        studentName:    s.nombreCompleto,
+        studentId:      s.carnetId,
+        avatarInitials: initials(s.nombreCompleto),
+        avatarVariant:  AVATAR_VARIANTS[i % AVATAR_VARIANTS.length],
+        projectTitle:   s.correoInstitucional,
+        phase:          s.phaseDescription ?? s.phaseName ?? s.faseAcademica ?? '—',
+        actionLabel:    'Pendiente de aprobación',
+        actionVariant:  'warning',
+        deadline:       'Sin fecha límite',
+        deadlineUrgent: false,
+    }));
 }

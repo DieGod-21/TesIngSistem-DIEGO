@@ -6,7 +6,10 @@
  */
 
 import { apiFetch, apiFetchList } from './apiClient';
-import type { BackendStudent } from '../types/student';
+import { API_PATHS } from '../config/apiConfig';
+import type { StudentDTO, SemesterDTO, BulkImportResponseDTO, UploadDTO } from '../types/dto';
+import type { Student } from '../types/student';
+import { adaptStudent, adaptBulkImport, adaptUpload } from '../adapters/studentAdapter';
 
 // ─── Interfaces ────────────────────────────────────────────────────
 
@@ -55,19 +58,11 @@ export interface ImportResult {
     errors: Array<{ row: number; carnetId: string; reason: string }>;
 }
 
-/** Respuesta del endpoint POST /api/students/bulk */
-interface BulkResponse {
-    importados: number;
-    rechazados: number;
-    total: number;
-    errores: Array<{ fila: number; carnet_id: string; razon: string }>;
-}
-
-/** Un error de fila devuelto por el historial */
+/** Error de fila (modelo interno, camelCase) */
 export interface UploadError {
-    fila: number;
-    carnet_id: string;
-    razon: string;
+    row: number;
+    carnetId: string;
+    reason: string;
 }
 
 /** Ítem de carga reciente (historial) */
@@ -87,7 +82,13 @@ export interface UploadItem {
 // ─── Semesters ──────────────────────────────────────────────────────
 
 export async function getSemesters(): Promise<Semester[]> {
-    return apiFetchList<Semester>('/semesters');
+    const dtos = await apiFetchList<SemesterDTO>(API_PATHS.semesters);
+    return dtos.map((d) => ({
+        id:     d.id,
+        nombre: d.nombre,
+        anio:   d.anio,
+        numero: d.numero,
+    }));
 }
 
 // ─── Estudiantes ─────────────────────────────────────────────────────
@@ -96,8 +97,8 @@ export async function getSemesters(): Promise<Semester[]> {
  * Registra un estudiante via POST /api/students.
  * Envía academic_phase_id (nuevo campo relacional).
  */
-export async function createStudent(payload: StudentPayload): Promise<BackendStudent> {
-    return apiFetch<BackendStudent>('/students', {
+export async function createStudent(payload: StudentPayload): Promise<Student> {
+    const dto = await apiFetch<StudentDTO>(API_PATHS.students.list, {
         method: 'POST',
         body: JSON.stringify({
             nombre_completo:      payload.nombreCompleto.trim(),
@@ -108,22 +109,10 @@ export async function createStudent(payload: StudentPayload): Promise<BackendStu
             approved:             false,
         }),
     });
+    return adaptStudent(dto);
 }
 
 // ─── Historial ────────────────────────────────────────────────────────
-
-interface BackendUpload {
-    id: string;
-    filename: string;
-    type: 'excel' | 'pdf';
-    status: 'success' | 'error';
-    imported: number;
-    rejected: number;
-    total_rows: number;
-    errors: UploadError[];
-    created_at: string;
-    uploaded_by: string | null;
-}
 
 /**
  * Importa filas desde Excel usando POST /api/students/bulk.
@@ -139,33 +128,25 @@ export async function importStudents(rows: ParsedRow[]): Promise<ImportResult> {
         approved:  row.approved,
     }));
 
-    const resp = await apiFetch<BulkResponse>('/students/bulk', {
+    const dto = await apiFetch<BulkImportResponseDTO>(API_PATHS.students.bulk, {
         method: 'POST',
         body: JSON.stringify({ filas }),
     });
 
-    return {
-        imported: resp.importados,
-        rejected: resp.rechazados,
-        total:    resp.total,
-        errors:   resp.errores.map((e) => ({ row: e.fila, carnetId: e.carnet_id, reason: e.razon })),
-    };
+    return adaptBulkImport(dto);
 }
 
 export async function uploadPdf(_file: File): Promise<void> {
-    // PDF processing is handled server-side when backend endpoint is added
+    // TODO: implementar cuando el nuevo API exponga el endpoint de subida de PDF
+    throw new Error('La subida de PDF no está disponible en este momento. Usa Excel para importación masiva.');
 }
 
 export async function downloadTemplate(): Promise<void> {
-    const token = localStorage.getItem('auth_token');
-    const base  = import.meta.env.VITE_API_URL ?? '/api';
-    const res   = await fetch(`${base}/students/template`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+    const blob = await apiFetch<Blob>(API_PATHS.students.template, {
+        headers: { Accept: 'application/octet-stream' },
     });
-    if (!res.ok) throw new Error('No se pudo descargar la plantilla');
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
     a.href     = url;
     a.download = 'plantilla_estudiantes.xlsx';
     a.click();
@@ -173,24 +154,10 @@ export async function downloadTemplate(): Promise<void> {
 }
 
 export async function deleteUpload(id: string): Promise<void> {
-    await apiFetch<void>(`/uploads/${id}`, { method: 'DELETE' });
+    await apiFetch<void>(API_PATHS.uploads.byId(id), { method: 'DELETE' });
 }
 
 export async function getRecentUploads(): Promise<UploadItem[]> {
-    const rows = await apiFetch<BackendUpload[]>('/uploads');
-    return rows.map((r) => ({
-        id:         r.id,
-        filename:   r.filename,
-        type:       r.type,
-        status:     r.status,
-        imported:   r.imported  ?? 0,
-        rejected:   r.rejected  ?? 0,
-        total:      r.total_rows ?? (r.imported ?? 0) + (r.rejected ?? 0),
-        errors:     Array.isArray(r.errors) ? r.errors : [],
-        uploadedBy: r.uploaded_by ?? '',
-        uploadedAt: new Date(r.created_at).toLocaleString('es-GT', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit',
-        }),
-    }));
+    const dtos = await apiFetch<UploadDTO[]>(API_PATHS.uploads.list);
+    return dtos.map(adaptUpload);
 }
