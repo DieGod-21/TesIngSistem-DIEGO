@@ -1,0 +1,154 @@
+/**
+ * approval-toggle.css
+ *
+ * Toggle de aprobación estilo iOS / Liquid Glass.
+ * Sin librerías externas — CSS puro.
+ *
+ * Anatomy:
+ *   .at-root     → wrapper accesible (inline-flex)
+ *   .at-track    → la pista redondeada (background cambia)
+ *   .at-thumb    → el círculo que desliza
+ *   .at-label    → texto opcional a la derecha
+ *
+ * Estados CSS:
+ *   [data-checked="true"]  ON  → verde, thumb a la derecha
+ *   [data-checked="false"] OFF → gris, thumb a la izquierda
+ *   :focus-visible         → anillo de foco visible
+ *   [aria-disabled="true"] → opacidad reducida, cursor not-allowed
+ */
+
+/* ─── Variables locales ─────────────────────────────────────────── */
+:root {
+    --at-width: 48px;
+    --at-height: 28px;
+    --at-thumb-size: 22px;
+    --at-thumb-offset: 3px;
+    /* margen entre thumb y track */
+    --at-thumb-travel: calc(var(--at-width) - var(--at-thumb-size) - var(--at-thumb-offset) * 2);
+    --at-duration: 220ms;
+    --at-easing: cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* spring ligera */
+    --at-off-bg: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+    --at-on-bg: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    --at-thumb-bg: rgba(255, 255, 255, 0.96);
+    --at-thumb-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), 0 0 1px rgba(0, 0, 0, 0.12);
+    --at-thumb-glass: blur(4px);
+    --at-focus-ring: 0 0 0 3px rgba(34, 197, 94, 0.35);
+}
+
+/* ─── Root wrapper ──────────────────────────────────────────────── */
+.at-root {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    /* IMPORTANTE: sin outline aquí — el foco se muestra en at-track */
+    outline: none;
+}
+
+.at-root[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ─── Track (pista) ─────────────────────────────────────────────── */
+.at-track {
+    position: relative;
+    width: var(--at-width);
+    height: var(--at-height);
+    border-radius: calc(var(--at-height) / 2);
+    background: var(--at-off-bg);
+    transition: background var(--at-duration) ease;
+    flex-shrink: 0;
+    outline: none;
+    /* foco visual gestionado por :focus-visible del root */
+}
+
+/* Estado ON */
+.at-root[data-checked="true"] .at-track {
+    background: var(--at-on-bg);
+}
+
+/* Anillo de foco: solo con teclado (no con mouse) */
+.at-root:focus-visible .at-track {
+    box-shadow: var(--at-focus-ring);
+}
+
+/* ─── Thumb (círculo deslizante) ────────────────────────────────── */
+.at-thumb {
+    position: absolute;
+    top: var(--at-thumb-offset);
+    left: var(--at-thumb-offset);
+    width: var(--at-thumb-size);
+    height: var(--at-thumb-size);
+    border-radius: 50%;
+    background: var(--at-thumb-bg);
+    backdrop-filter: var(--at-thumb-glass);
+    -webkit-backdrop-filter: var(--at-thumb-glass);
+    box-shadow: var(--at-thumb-shadow);
+    transition: transform var(--at-duration) var(--at-easing);
+    will-change: transform;
+}
+
+/* Thumb en ON: desliza a la derecha */
+.at-root[data-checked="true"] .at-thumb {
+    transform: translateX(var(--at-thumb-travel));
+}
+
+/* Micro-escala al hacer click (press feedback) */
+.at-root:active:not([aria-disabled="true"]) .at-thumb {
+    transform: scaleX(1.12) translateX(0);
+}
+
+.at-root[data-checked="true"]:active:not([aria-disabled="true"]) .at-thumb {
+    transform: translateX(var(--at-thumb-travel)) scaleX(1.12);
+}
+
+/* ─── Hover shimmer en el track ─────────────────────────────────── */
+.at-track::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0);
+    transition: background 180ms ease;
+}
+
+.at-root:hover:not([aria-disabled="true"]) .at-track::after {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* ─── Label ──────────────────────────────────────────────────────── */
+.at-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--dash-text-secondary, #64748b);
+    transition: color 180ms ease;
+}
+
+.at-root[data-checked="true"] .at-label {
+    color: #16a34a;
+}
+
+.at-root[data-checked="false"] .at-label {
+    color: #dc2626;
+}
+
+/* ─── Dark mode ──────────────────────────────────────────────────── */
+[data-theme="dark"] {
+    --at-off-bg: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    --at-on-bg:  linear-gradient(135deg, #16a34a 0%, #14532d 100%);
+    --at-thumb-bg: rgba(255, 255, 255, 0.92);
+    --at-focus-ring: 0 0 0 3px rgba(34, 197, 94, 0.30);
+}
+
+/* ─── Accesibilidad — prefers-reduced-motion ────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+
+    .at-track,
+    .at-thumb {
+        transition: none;
+    }
+}

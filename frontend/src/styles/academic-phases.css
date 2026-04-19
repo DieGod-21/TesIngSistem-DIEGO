@@ -1,0 +1,516 @@
+/**
+ * academic-phases.css
+ *
+ * Estilos para la vista Administración de Fases Académicas (/academic-phases).
+ * Depende de variables de src/theme/variables.css.
+ * Reutiliza clases sl- de students-list.css y sn- de student-new.css.
+ */
+
+@import url('../theme/variables.css');
+
+/* ═══════════════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-body {
+    padding: 32px;
+    flex: 1;
+    max-width: 1280px;
+    width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TARJETA DE CREACIÓN
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-create-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e8ecf0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 4px 16px rgba(0, 0, 0, 0.05);
+    margin-bottom: 28px;
+    transition: box-shadow 0.2s ease;
+}
+
+.ap-create-card:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.09), 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Encabezado de la tarjeta */
+.ap-create-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 24px;
+}
+
+.ap-create-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #003366 0%, #0052a3 100%);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.ap-create-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ap-create-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--umg-blue, #003366);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.ap-create-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.ap-create-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 0 24px;
+}
+
+/* Cuerpo del formulario */
+.ap-create-body {
+    padding: 20px 24px 24px;
+}
+
+.ap-create-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+/* Campo (label + input) */
+.ap-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ap-field__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--umg-blue, #003366);
+    letter-spacing: 0.01em;
+}
+
+.ap-field__required {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+.ap-field__input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1e293b;
+    background: #f8fafc;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.ap-field__input:focus {
+    border-color: #003366;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.ap-field__input::placeholder {
+    color: #94a3b8;
+}
+
+/* Botón de creación */
+.ap-create-actions {
+    display: flex;
+    align-items: flex-end;
+}
+
+.ap-create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 22px;
+    background: var(--color-primary, #003366);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 51, 102, 0.25);
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.ap-create-btn:hover:not(:disabled) {
+    background: #002244;
+    box-shadow: 0 4px 14px rgba(0, 51, 102, 0.35);
+    transform: translateY(-1px);
+}
+
+.ap-create-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 51, 102, 0.2);
+}
+
+.ap-create-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INPUT GENÉRICO
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--color-border, #e2e8f0);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--color-text-primary, #1e293b);
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.ap-input:focus {
+    border-color: var(--color-primary, #003366);
+}
+
+.ap-input--sm {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BADGE DE ESTADO
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.ap-status-badge--active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.ap-status-badge--inactive {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACCIONES DE FILA
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.ap-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.ap-btn--edit {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.ap-btn--edit:hover { background: #dbeafe; }
+
+.ap-btn--activate {
+    background: #16a34a;
+    color: #fff;
+    border-color: #15803d;
+}
+
+.ap-btn--activate:hover { background: #15803d; }
+
+.ap-btn--deactivate {
+    background: #dc2626;
+    color: #fff;
+    border-color: #b91c1c;
+}
+
+.ap-btn--deactivate:hover { background: #b91c1c; }
+
+.ap-btn--save {
+    background: var(--color-primary, #003366);
+    color: #fff;
+    border-color: var(--color-primary, #003366);
+}
+
+.ap-btn--save:hover { background: #002244; }
+
+.ap-btn--cancel {
+    background: #fff;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+
+.ap-btn--cancel:hover { background: #f8fafc; }
+
+.ap-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ESTADOS DE FILA
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-row--inactive td:not(:last-child) {
+    opacity: 0.55;
+}
+
+.ap-row--editing {
+    background: #f8fafc;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CELDA CÓDIGO
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary, #003366);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MENSAJES
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-form-error {
+    color: #dc2626;
+    font-size: 12px;
+    margin: 6px 0 0;
+}
+
+.ap-page-error {
+    color: #dc2626;
+    font-size: 14px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.ap-loading {
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+    padding: 32px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MODAL DE CONFIRMACIÓN
+═══════════════════════════════════════════════════════════════════ */
+
+.ap-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: ap-fade-in 0.15s ease;
+}
+
+@keyframes ap-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.ap-modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px 24px 20px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: ap-slide-up 0.18s ease;
+}
+
+@keyframes ap-slide-up {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.ap-modal__title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 10px;
+}
+
+.ap-modal__body {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0 0 22px;
+}
+
+.ap-modal__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .ap-create-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .ap-create-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .ap-body {
+        padding: 16px;
+    }
+
+    .ap-create-header {
+        padding: 16px;
+    }
+
+    .ap-create-divider {
+        margin: 0 16px;
+    }
+
+    .ap-create-body {
+        padding: 16px;
+    }
+
+    .ap-actions {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK MODE
+═══════════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] .ap-create-card {
+    background: var(--dash-card-bg, #1e293b);
+    border-color: #2d3f55;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35), 0 4px 16px rgba(0,0,0,0.25);
+}
+
+[data-theme="dark"] .ap-create-title { color: #93c5fd; }
+[data-theme="dark"] .ap-create-subtitle { color: var(--dash-text-secondary); }
+
+[data-theme="dark"] .ap-create-divider { background: #2d3f55; }
+
+[data-theme="dark"] .ap-field__label { color: #93c5fd; }
+
+[data-theme="dark"] .ap-field__input {
+    background: #162032;
+    border-color: #2d3f55;
+    color: var(--dash-text-primary);
+}
+
+[data-theme="dark"] .ap-field__input:focus {
+    border-color: #3b82f6;
+    background: #1e293b;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .ap-field__input::placeholder { color: #475569; }
+
+[data-theme="dark"] .ap-input {
+    background: #162032;
+    border-color: #2d3f55;
+    color: var(--dash-text-primary);
+}
+
+[data-theme="dark"] .ap-input:focus { border-color: #3b82f6; }
+
+[data-theme="dark"] .ap-code { color: #93c5fd; }
+
+[data-theme="dark"] .ap-status-badge--active   { background: rgba(21, 128, 61, 0.22); color: #86efac; }
+[data-theme="dark"] .ap-status-badge--inactive { background: rgba(220, 38, 38, 0.20); color: #fca5a5; }
+
+[data-theme="dark"] .ap-btn--edit {
+    background: rgba(29, 78, 216, 0.18);
+    color: #93c5fd;
+    border-color: rgba(29, 78, 216, 0.35);
+}
+
+[data-theme="dark"] .ap-btn--edit:hover {
+    background: rgba(29, 78, 216, 0.28);
+}
+
+[data-theme="dark"] .ap-btn--cancel {
+    background: rgba(71, 85, 105, 0.20);
+    color: #94a3b8;
+    border-color: #2d3f55;
+}
+
+[data-theme="dark"] .ap-btn--cancel:hover { background: rgba(71, 85, 105, 0.30); }
+
+[data-theme="dark"] .ap-row--editing { background: rgba(30, 58, 138, 0.10); }
+
+[data-theme="dark"] .ap-page-error {
+    background: rgba(220, 38, 38, 0.12);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .ap-modal {
+    background: var(--dash-card-bg, #1e293b);
+    border: 1px solid #2d3f55;
+}
+
+[data-theme="dark"] .ap-modal__title { color: var(--dash-text-primary); }
+[data-theme="dark"] .ap-modal__body  { color: var(--dash-text-secondary); }

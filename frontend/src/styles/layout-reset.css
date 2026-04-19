@@ -1,0 +1,103 @@
+/**
+ * layout-reset.css
+ *
+ * Reset de layout para apps Ionic React SPA con Sidebar + TopHeader.
+ *
+ * PROBLEMA QUE RESUELVE:
+ * ─────────────────────────────────────────────────────────────────
+ * Ionic usa un shadow DOM para IonContent. Por defecto, el elemento
+ * host (ion-content) tiene overflow:auto interno vía ::part(scroll).
+ * Si algún hijo tiene overflow:hidden, height:100vh, o display:flex
+ * sin flex-direction correcto, el scroll se rompe silenciosamente.
+ *
+ * REGLAS:
+ *   1. html, body → height:100%, overflow:hidden (Ionic los gestiona)
+ *   2. #root / ion-app → height:100% (no 100vh; evita iOS notch issues)
+ *   3. ion-page → no overflow manual
+ *   4. Contenido de page → height:auto, fluye con el contenido
+ *   5. scroll → SOLO en IonContent (via ::part(scroll))
+ *
+ * MOBILE (iOS / Android):
+ *   - 100vh falla en iOS Safari (incluye la URL bar).
+ *   - Usar 100dvh cuando esté disponible, con fallback 100%.
+ *   - -webkit-overflow-scrolling: touch — ya no es necesario en iOS 13+
+ *     pero sigue siendo inofensivo ponerlo.
+ */
+
+/* ─── 1. App root ─────────────────────────────────────────────────── */
+
+html,
+body {
+    height: 100%;
+    /* overflow:hidden en html/body → Ionic es el dueño del scroll */
+    overflow: hidden;
+    /* Evita el bounce en iOS (el bounce lo gestiona IonContent) */
+    overscroll-behavior: none;
+}
+
+/* Reset de Ionic */
+ion-app {
+    height: 100%;
+    /* 100dvh = Dynamic Viewport Height (excluye barra de iOS en iOS 15.4+) */
+    height: 100dvh;
+}
+
+ion-page {
+    /* No overflow aquí — IonContent lo maneja */
+    overflow: visible;
+}
+
+/* ─── 2. IonContent scroll en móvil ─────────────────────────────── */
+
+/*
+ * Permite momentum scroll en iOS 13+ (nativamente ya lo hace,
+ * but explicitarlo sigue siendo necesario para algunos casos edge).
+ */
+ion-content {
+    --overflow: auto;
+}
+
+ion-content::part(scroll) {
+    overflow-y: auto;
+    overflow-x: auto;
+    /* momentum scroll en iOS */
+    -webkit-overflow-scrolling: touch;
+    /* impide que el scroll se "escape" al contenedor padre */
+    overscroll-behavior-y: contain;
+}
+
+/* ─── 3. Box-sizing universal ─────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* ─── 4. Corrección de 100vh en móvil ────────────────────────────── */
+/*
+ * iOS Safari calcula 100vh incluyendo la barra de URL (cuando está visible).
+ * Esto causa que el contenido quede cortado ~60px abajo.
+ * Solución: usar var(--app-height) calculado con JS, o preferir 100dvh.
+ *
+ * La variable --app-height puede setearse en main.tsx si necesitas soporte
+ * para navegadores sin dvh:
+ *   document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+ *   window.addEventListener('resize', () => { ... });
+ */
+:root {
+    --app-height: 100%;
+    /* override con JS en main.tsx si es necesario */
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* ─── 5. Imagen ancla para viewport-based heights ────────────────── */
+/*
+ * Contenedores que SÍ pueden usar height calculado
+ * (fuera de layout Ionic):
+ */
+.viewport-full {
+    height: 100vh;
+    height: 100dvh;
+}

@@ -1,0 +1,125 @@
+/**
+ * app-footer.css
+ *
+ * Footer glass elegante para la aplicación UMG.
+ * Sin position:fixed — usa margin-top:auto para pegarse al fondo
+ * cuando el contenido es corto, y fluye naturalmente si es largo.
+ *
+ * COMPATIBLE CON IONIC:
+ *   - No interfiere con el scroll de IonContent
+ *   - Funciona en iOS y Android
+ *   - El efecto glass usa backdrop-filter (soportado en iOS 9+)
+ */
+
+/* ─── Contenedor footer ───────────────────────────────────────── */
+.app-footer {
+    /*
+     * margin-top:auto es el truco clave:
+     * Como dash-main es flex-column, el footer se "empuja"
+     * al fondo cuando el contenido es corto.
+     * Cuando el contenido es largo, simplemente fluye al final.
+     * SIN position:fixed — eso rompería el scroll de Ionic.
+     */
+    margin-top: auto;
+    width: 100%;
+
+    /* Efecto glass */
+    background: rgba(0, 51, 102, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(0, 51, 102, 0.1);
+
+    /* Padding seguro para iOS (notch inferior) */
+    padding: 18px 32px calc(18px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ─── Interior (flex row) ──────────────────────────────────────── */
+.app-footer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* ─── Identidad institucional ──────────────────────────────────── */
+.app-footer__brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.app-footer__institution {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--umg-navy);
+    margin: 0;
+    opacity: 0.75;
+}
+
+.app-footer__dept {
+    font-size: 0.68rem;
+    color: var(--dash-text-muted);
+    margin: 0;
+}
+
+/* ─── Copyright ────────────────────────────────────────────────── */
+.app-footer__copy {
+    font-size: 0.68rem;
+    color: var(--dash-text-muted);
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* ─── Links ────────────────────────────────────────────────────── */
+.app-footer__links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.app-footer__link {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--umg-blue);
+    text-decoration: none;
+    transition: color 150ms ease;
+}
+
+.app-footer__link:hover {
+    color: var(--umg-navy);
+    text-decoration: underline;
+}
+
+.app-footer__sep {
+    font-size: 0.72rem;
+    color: var(--dash-border);
+    user-select: none;
+}
+
+.app-footer__version {
+    font-size: 0.65rem;
+    color: var(--dash-text-muted);
+    opacity: 0.6;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ─── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .app-footer {
+        padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .app-footer__inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .app-footer__links {
+        flex-wrap: wrap;
+    }
+}

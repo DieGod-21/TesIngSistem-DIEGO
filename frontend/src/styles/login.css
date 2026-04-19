@@ -1,0 +1,926 @@
+/**
+ * login.css
+ *
+ * Estilos del módulo de autenticación (Login).
+ * Traduce el diseño original de Tailwind a CSS puro.
+ *
+ * DECISIÓN: Usar CSS puro (sin Tailwind) para respetar la arquitectura
+ * Ionic y evitar dependencias externas de CDN.
+ * Las variables CSS permiten cambiar colores de la marca desde un solo lugar.
+ */
+
+/* ─── Variables de Marca UMG ─────────────────────────────────────── */
+:root {
+  --umg-dark: #00264d;
+  --umg-blue: #003366;
+  --umg-red: #cc0000;
+  --umg-light: #f3f6f9;
+  --umg-gradient: linear-gradient(135deg, #003366 0%, #001a33 100%);
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Contenedor principal tipo split-screen ─────────────────────── */
+.auth-screen {
+  display: flex;
+  flex-direction: column;
+  /* min-height:100vh garantiza que IonContent se estire al 100% de pantalla */
+  min-height: 100vh;
+  font-family: var(--font-main);
+}
+
+@media (min-width: 768px) {
+  .auth-screen {
+    flex-direction: row;
+  }
+}
+
+/* ─── Sección izquierda – Branding ───────────────────────────────── */
+.auth-branding {
+  display: none;
+  position: relative;
+  overflow: hidden;
+  /* Paleta premium oscura con gradiente animado */
+  background: linear-gradient(135deg, #001a33, #003366, #00264d, #001022);
+  background-size: 300% 300%;
+  animation:
+    gradientMove 18s ease infinite,
+    fadeSlideLeft 0.8s ease forwards;
+  color: #ffffff;
+  padding: 3rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .auth-branding {
+    display: flex;
+    width: 50%;
+    min-height: 100%;
+  }
+}
+
+/* Elementos decorativos (círculos difusos) */
+.auth-branding__deco-top {
+  position: absolute;
+  top: -5rem;
+  right: -5rem;
+  width: 16rem;
+  height: 16rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+.auth-branding__deco-bottom {
+  position: absolute;
+  bottom: -8rem;
+  left: -8rem;
+  width: 24rem;
+  height: 24rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+/* Logo superior */
+.auth-branding__logo-wrap {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.auth-branding__logo-box {
+  display: inline-block;
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.auth-branding__logo-box img {
+  width: 6rem;
+  height: 6rem;
+  object-fit: contain;
+  display: block;
+}
+
+.auth-branding__faculty {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.auth-branding__quote {
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  color: #bfdbfe;
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* Texto central */
+.auth-branding__center {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 28rem;
+}
+
+.auth-branding__title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
+}
+
+.auth-branding__subtitle {
+  font-size: 1rem;
+  color: #bfdbfe;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Footer – panel izquierdo (desktop) */
+.auth-branding__footer {
+  position: relative;
+  z-index: 1;
+  font-size: 0.75rem;
+  color: #93c5fd;
+  /* margin-top: auto empuja el footer al fondo cuando
+     justify-content: space-between no alcanza a separarlo */
+  margin-top: auto;
+}
+
+/* Footer – panel derecho (copyright, visible en todas las resoluciones) */
+.auth-mobile-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+/* ─── Sección derecha – Formulario ───────────────────────────────── */
+.auth-form-section {
+  flex: 1;
+  position: relative;
+  /* requerido para que el footer absolute funcione */
+  min-height: 100vh;
+  /* garantiza altura mínima de viewport */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #ffffff;
+  animation: slideInRight 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (min-width: 768px) {
+  .auth-form-section {
+    padding: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-form-section {
+    padding: 6rem;
+  }
+}
+
+.auth-form-container {
+  width: 100%;
+  max-width: 28rem;
+  padding-bottom: 96px;
+  /* evita que el footer tape el contenido */
+}
+
+/* Logo móvil (solo visible en pantallas pequeñas) */
+.auth-mobile-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .auth-mobile-logo {
+    display: none;
+  }
+}
+
+.auth-mobile-logo img {
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+}
+
+.auth-mobile-logo__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--umg-blue);
+}
+
+/* Cabecera del formulario */
+.auth-form-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .auth-form-header {
+    text-align: left;
+  }
+}
+
+.auth-form-header__title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem 0;
+}
+
+.auth-form-header__subtitle {
+  color: #64748b;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ─── Formulario ─────────────────────────────────────────────────── */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.auth-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-form__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.auth-form__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-form__forgot {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--umg-blue);
+  text-decoration: none;
+}
+
+.auth-form__forgot:hover {
+  text-decoration: underline;
+}
+
+/* Input personalizado (sobrescribe Ionic para este módulo) */
+.auth-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #ffffff;
+}
+
+.auth-input-wrapper:focus-within {
+  border-color: var(--umg-blue);
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.15);
+}
+
+.auth-input-wrapper ion-input {
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --padding-top: 0.75rem;
+  --padding-bottom: 0.75rem;
+  --color: #0f172a;
+  --placeholder-color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+/* Checkbox "Recordar sesión" */
+.auth-form__remember {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-form__remember input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--umg-blue);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.auth-form__remember-label {
+  font-size: 0.875rem;
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Botón de submit */
+.auth-submit-btn {
+  --background: var(--umg-blue);
+  --background-hover: var(--umg-dark);
+  --background-activated: var(--umg-dark);
+  --color: #ffffff;
+  --border-radius: 0.5rem;
+  --box-shadow: 0 10px 15px -3px rgba(0, 51, 102, 0.3);
+  font-weight: 700;
+  font-size: 1rem;
+  height: 3.25rem;
+  letter-spacing: 0.01em;
+  transition: transform 0.2s;
+}
+
+.auth-submit-btn:active {
+  transform: scale(0.98);
+}
+
+.auth-submit-btn .btn-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Mensaje de error */
+.auth-error-msg {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* ─── Acciones secundarias ───────────────────────────────────────── */
+.auth-secondary {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
+}
+
+.auth-secondary p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.auth-secondary__link {
+  font-weight: 600;
+  color: var(--umg-red);
+  text-decoration: none;
+}
+
+.auth-secondary__link:hover {
+  text-decoration: underline;
+}
+
+/* ─── Links de ayuda (footer del formulario) ─────────────────────── */
+.auth-help-links {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.auth-help-links a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.auth-help-links a:hover {
+  color: var(--umg-blue);
+}
+
+.auth-help-links__sep {
+  color: #cbd5e1;
+}
+
+/* ─── Nuevas clases: validación y mejoras interactivas ──────────── */
+
+/* Input con error: borde rojo */
+.auth-input-wrapper--error {
+  border-color: #ef4444;
+}
+
+.auth-input-wrapper--error:focus-within {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* Wrapper con botón de toggle (contraseña) */
+.auth-input-wrapper--password {
+  padding-right: 0.25rem;
+}
+
+.auth-input-wrapper--password ion-input {
+  flex: 1;
+  --padding-end: 0.25rem;
+}
+
+/* Botón de mostrar/ocultar contraseña */
+.auth-password-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.625rem;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+  /* Altura mínima táctil (44px recomendado WCAG) */
+  min-height: 2.75rem;
+}
+
+.auth-password-toggle:hover {
+  color: var(--umg-blue);
+}
+
+.auth-password-toggle:focus-visible {
+  outline: 2px solid var(--umg-blue);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Mensaje de error por campo (debajo del input) */
+.auth-form__field-error {
+  font-size: 0.8rem;
+  color: #ef4444;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Sugerencia de dominio institucional */
+.auth-form__field-hint {
+  font-size: 0.78rem;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  display: block;
+}
+
+.auth-form__field-hint strong {
+  color: var(--umg-blue);
+}
+
+/* Spinner centrado dentro del botón de submit */
+.auth-submit-btn ion-spinner {
+  --color: #ffffff;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* ─── Espacio reservado para mensajes de error por campo ─────────── */
+/*
+ * DECISIÓN: min-height fija en lugar de renderizado condicional.
+ * El contenedor siempre ocupa su espacio en el DOM.
+ * Cuando no hay mensaje, está vacío pero sigue "empujando".
+ * Esto elimina el layout shift al aparecer/desaparecer el error.
+ */
+.auth-field-error {
+  min-height: 18px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--umg-red);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ─── Footer copyright – visible al fondo del panel derecho ──────── */
+/*
+ * SOLUCIÓN: flex normal. El footer vive al final del flex column de
+ * .auth-form-section. No requiere position:absolute (IonContent lo rompía).
+ * padding-top: auto lo empuja al fondo cuando hay espacio sobrante.
+ */
+/* ─── IonContent: forzar altura completa ─────────────────────────── */
+/*
+ * IonContent crea un shadow DOM con overflow:hidden en su scroll container.
+ * Estos selectores fuerzan que el contenido ocupe todo el viewport.
+ */
+ion-content {
+  --overflow: hidden;
+}
+
+ion-content::part(scroll) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* ─── Footer copyright – POSITION FIXED ─────────────────────────── */
+/*
+ * SOLUCIÓN DEFINITIVA: position:fixed bypasea todo el shadow DOM de
+ * IonContent. Se ancla al viewport directamente, independientemente
+ * de cualquier contenedor padre con overflow:hidden.
+ * En desktop el panel derecho ocupa la mitad derecha, así que
+ * right:16px bottom:16px cae visualmente dentro del panel blanco.
+ */
+.auth-copyright-footer {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  font-size: 12px;
+  color: #94a3b8;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────── */
+
+/* Gradiente animado del panel izquierdo */
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Entrada del panel izquierdo: fade + slide desde la izquierda */
+@keyframes fadeSlideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Panel izquierdo: entra desde la izquierda */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Panel derecho: entra desde la derecha */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Fade + slide hacia arriba (formulario) */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Aplica fadeSlideIn al contenedor del formulario */
+.auth-form-container {
+  animation: fadeSlideIn 0.6s ease forwards;
+}
+
+/* ─── Botón submit: interactividad moderna ───────────────────────── */
+.auth-submit-btn {
+  --transition: all 0.2s ease;
+}
+
+.auth-submit-btn::part(native) {
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.auth-submit-btn::part(native):hover {
+  background: var(--umg-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+.auth-submit-btn::part(native):active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Logo flotante ──────────────────────────────────────────────── */
+.logo-float {
+  animation: floatLogo 4s ease-in-out infinite;
+}
+
+@keyframes floatLogo {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* ═══ PREMIUM ADDITIONS ══════════════════════════════════════════════ */
+
+/* ─── auth-brand-content: centra el bloque principal del panel azul ─ */
+/*
+ * Agrupa logo-wrap y branding__center en un solo bloque vertical
+ * con gap uniforme. El panel usa justify-content:center, así que
+ * este wrapper queda centrado naturalmente.
+ */
+.auth-brand-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── auth-glow: resplandor radial detrás del logo ───────────────── */
+/*
+ * Punto de luz difuso animado. Usa position:absolute y blur
+ * para crear un efecto de "halo" premium detrás del logo.
+ */
+.auth-glow {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(100, 160, 255, 0.18) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(32px);
+  animation: glowPulse 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes glowPulse {
+
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.12);
+  }
+}
+
+/* ─── auth-wave: ola SVG decorativa en la base del panel ─────────── */
+/*
+ * Posicionado fuera del flujo flex (absolute bottom:0) para no
+ * desplazar el contenido. El SVG tiene preserveAspectRatio="none"
+ * así que se estira al 100% del ancho.
+ */
+.auth-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  animation: waveShift 8s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-wave svg {
+  display: block;
+  width: 100%;
+  height: 80px;
+}
+
+@keyframes waveShift {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-3%);
+  }
+}
+
+/* ─── Focus premium en los inputs ────────────────────────────────── */
+/*
+ * Sobrescribe el focus-within del wrapper con un glow azul suave.
+ * Mantiene el mismo borde para no romper el layout.
+ */
+.auth-input-wrapper:focus-within {
+  border-color: var(--umg-blue);
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.auth-input-wrapper {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* ─── Mobile responsive fix ──────────────────────────────────────── */
+/*
+ * En pantallas pequeñas, el panel azul izquierdo está oculto.
+ * Aplicamos el fondo azul directamente a auth-screen y convertimos
+ * la zona del logo móvil en un encabezado azul con el logo visible.
+ */
+
+@media (max-width: 767px) {
+  .auth-screen {
+    background: linear-gradient(160deg, #001a33 0%, #003366 50%, #00264d 100%);
+  }
+
+  .auth-form-section {
+    background: transparent;
+    justify-content: flex-start;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  .auth-mobile-logo {
+    width: 100%;
+    padding: 2.5rem 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .auth-mobile-logo img {
+    width: 5rem;
+    height: 5rem;
+    max-width: 100%;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 0.75rem;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    display: block;
+  }
+
+  .auth-mobile-logo__title {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .auth-form-container {
+    background: #ffffff;
+    border-radius: 24px 24px 0 0;
+    padding: 2rem 1.5rem 6rem;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+    flex: 1;
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* ─── Dark Mode ──────────────────────────────────────────────────── */
+
+[data-theme="dark"] .auth-form-section {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .auth-form-header__title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .auth-form-header__subtitle {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .auth-form__label {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .auth-form__label-row .auth-form__forgot {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .auth-input-wrapper {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .auth-input-wrapper ion-input {
+  --color: #f1f5f9;
+  --placeholder-color: #64748b;
+}
+
+[data-theme="dark"] .auth-input-wrapper:focus-within {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+}
+
+[data-theme="dark"] .auth-input-wrapper--error {
+  border-color: #f87171;
+}
+
+[data-theme="dark"] .auth-input-wrapper--error:focus-within {
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.18);
+}
+
+[data-theme="dark"] .auth-password-toggle {
+  color: #64748b;
+}
+
+[data-theme="dark"] .auth-password-toggle:hover {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .auth-secondary {
+  border-top-color: #2d3f55;
+}
+
+[data-theme="dark"] .auth-secondary p {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .auth-secondary__link {
+  color: #f87171;
+}
+
+[data-theme="dark"] .auth-help-links {
+  color: #64748b;
+}
+
+[data-theme="dark"] .auth-help-links a:hover {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .auth-form__field-hint {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .auth-form__field-hint strong {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .auth-copyright-footer {
+  color: #64748b;
+}
+
+/* Mobile dark mode: el fondo del form container */
+@media (max-width: 767px) {
+  [data-theme="dark"] .auth-form-container {
+    background: #1e293b;
+  }
+
+  [data-theme="dark"] .auth-screen {
+    background: linear-gradient(160deg, #020917 0%, #0f172a 50%, #030d1a 100%);
+  }
+}

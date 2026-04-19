@@ -1,0 +1,13 @@
+# Archivo de configuración de Claude
+CLAUDE.md
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+
+
+template_estudiantes.xlsx
+
+node_modules
+GUIA_DEL_SISTEMA
