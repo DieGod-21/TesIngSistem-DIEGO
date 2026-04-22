@@ -1,95 +1,135 @@
 /**
  * apiConfig.ts
  *
- * Contrato centralizado entre el frontend y el API externo.
+ * Contrato centralizado entre el frontend y el API Control de Notas (UMG).
+ * Si el backend cambia rutas, este es el único archivo a modificar.
  *
- * CUANDO LLEGUE EL NUEVO API: solo modifica este archivo.
- * Los servicios y componentes NO deben cambiar.
- *
- * Convención de nombres de secciones:
- *   AUTH   → campos del endpoint de login / claims del JWT
- *   PATHS  → rutas de endpoints (si cambian de /auth/login a /api/v2/login, etc.)
+ * Las secciones bajo `legacy:` apuntan a endpoints inexistentes en el API real
+ * (eran del prototipo anterior). Se mantienen sólo para no romper la
+ * compilación de servicios antiguos. NO las uses en código nuevo.
  */
 
-// ─── Auth ─────────────────────────────────────────────────────────────────
+// ─── Endpoints reales (Control de Notas) ──────────────────────────────────
 
-/**
- * Campos que el API espera en el body de POST /auth/login.
- * Si el nuevo API usa "email" / "password", cambia aquí.
- */
+export const API_PATHS = {
+    usuarios: {
+        me:    '/api/usuarios/yo',
+        list:  '/api/usuarios',
+        byId:  (id: number) => `/api/usuarios/${id}`,
+    },
+    estudiantes: {
+        list:       '/api/estudiantes',
+        byId:       (id: number | string) => `/api/estudiantes/${id}`,
+        byCarnet:   (carnet: string) => `/api/estudiantes/carnet/${encodeURIComponent(carnet)}`,
+        search:     '/api/estudiantes/buscar',
+    },
+    cursos: {
+        list:     '/api/cursos',
+        byCodigo: (codigo: string) => `/api/cursos/${codigo}`,
+    },
+    notas: {
+        upsert:        '/api/notas',
+        byEstudiante:  (id: number | string) => `/api/notas/estudiante/${id}`,
+        byCarnet:      (carnet: string) => `/api/notas/carnet/${encodeURIComponent(carnet)}`,
+        byCurso:       (codigo: string) => `/api/notas/curso/${codigo}`,
+    },
+    tesis: {
+        resumen:    '/api/tesis/resumen',
+        aprobados:  '/api/tesis/aprobados',
+        reprobados: '/api/tesis/reprobados',
+        byCarnet:   (carnet: string) => `/api/tesis/estado/${encodeURIComponent(carnet)}`,
+    },
+    proyectos: {
+        list:           '/api/proyectos',
+        byId:           (id: number) => `/api/proyectos/${id}`,
+        byEstudiante:   (estudianteId: number) => `/api/proyectos/estudiante/${estudianteId}`,
+    },
+    ternas: {
+        list:               '/api/ternas',
+        byId:               (id: number) => `/api/ternas/${id}`,
+        addEvaluador:       (id: number) => `/api/ternas/${id}/evaluadores`,
+        removeEvaluador:    (id: number, usuarioId: number) => `/api/ternas/${id}/evaluadores/${usuarioId}`,
+        draft:              (id: number) => `/api/ternas/${id}/evaluacion/borrador`,
+        submit:             (id: number) => `/api/ternas/${id}/evaluacion/enviar`,
+        reopen:             (id: number) => `/api/ternas/${id}/evaluacion/reabrir`,
+    },
+    reportes: {
+        ternas:      '/api/reportes/ternas',
+        ternaById:   (id: number) => `/api/reportes/ternas/${id}`,
+        estudiante:  (carnet: string) => `/api/reportes/estudiante/${encodeURIComponent(carnet)}`,
+    },
+    health: '/health',
+
+    // ─── Legacy (no existen en el API real, sólo evitan que rompa el build) ─
+    auth: { login: '/auth/login' },
+    students: {
+        list:     '/api/estudiantes',
+        bulk:     '/api/estudiantes/bulk',
+        template: '/api/estudiantes/template',
+        byId:     (id: string) => `/api/estudiantes/${id}`,
+    },
+    semesters: '/api/semesters',
+    academicPhases: {
+        active: '/api/academic-phases',
+        admin:  '/api/academic-phases/admin',
+        byId:   (id: number) => `/api/academic-phases/${id}`,
+        toggle: (id: number) => `/api/academic-phases/${id}/toggle`,
+    },
+    dashboard: {
+        summary:        '/api/dashboard/summary',
+        recentStudents: '/api/dashboard/recent-students',
+    },
+    events: {
+        list:  '/api/events',
+        byId:  (id: string) => `/api/events/${id}`,
+    },
+    deadlines: {
+        list:  '/api/deadlines',
+        byId:  (id: string) => `/api/deadlines/${id}`,
+    },
+    notifications: {
+        list:        '/api/notifications',
+        unreadCount: '/api/notifications/unread-count',
+        markRead:    (id: string) => `/api/notifications/${id}/read`,
+        markAllRead: '/api/notifications/read-all',
+    },
+    uploads: {
+        list:  '/api/uploads',
+        byId:  (id: string) => `/api/uploads/${id}`,
+    },
+    evaluations: {
+        panels:            '/api/evaluation/panels',
+        panelById:         (id: string) => `/api/evaluation/panels/${id}`,
+        studentByPanel:    (panelId: string) => `/api/evaluation/panels/${panelId}/student`,
+        criteria:          '/api/evaluation/criteria',
+        evaluatorsByPanel: (panelId: string) => `/api/evaluation/panels/${panelId}/evaluators`,
+        submit:            (panelId: string) => `/api/evaluation/panels/${panelId}/submit`,
+        draft:             (panelId: string) => `/api/evaluation/panels/${panelId}/draft`,
+    },
+} as const;
+
+// ─── Auth (legacy compat — el API real no usa JWT) ────────────────────────
+
 export const AUTH_REQUEST_FIELDS = {
-  email:    'correo_electronico',
-  password: 'contrasena',
+    email:    'correo_electronico',
+    password: 'contrasena',
 } as const;
 
-/**
- * Claims del JWT que el frontend necesita leer.
- * Si el nuevo JWT usa "sub" en lugar de "user_id", cambia aquí.
- */
 export const JWT_CLAIMS = {
-  userId: 'user_id',
-  name:   'nombre',
-  roles:  'roles',
-  exp:    'exp',
+    userId: 'user_id',
+    name:   'nombre',
+    roles:  'roles',
+    exp:    'exp',
 } as const;
 
-/**
- * Campo de la respuesta de login que contiene el token.
- * Si el API devuelve { access_token: "..." } en lugar de { token: "..." }, cambia aquí.
- */
 export const AUTH_TOKEN_RESPONSE_FIELD = 'token' as const;
 
-// ─── Endpoints ────────────────────────────────────────────────────────────
+// ─── Constantes del dominio de tesis ──────────────────────────────────────
 
-/**
- * Rutas de la API. Cambiar aquí si el nuevo backend tiene versioning u otras rutas.
- */
-export const API_PATHS = {
-  auth: {
-    login: '/auth/login',
-  },
-  students: {
-    list:     '/students',
-    bulk:     '/students/bulk',
-    template: '/students/template',
-    byId:     (id: string) => `/students/${id}`,
-  },
-  semesters:      '/semesters',
-  academicPhases: {
-    active: '/academic-phases',
-    admin:  '/academic-phases/admin',
-    byId:   (id: number) => `/academic-phases/${id}`,
-    toggle: (id: number) => `/academic-phases/${id}/toggle`,
-  },
-  dashboard: {
-    summary:        '/dashboard/summary',
-    recentStudents: '/dashboard/recent-students',
-  },
-  events: {
-    list:  '/events',
-    byId:  (id: string) => `/events/${id}`,
-  },
-  deadlines: {
-    list:  '/deadlines',
-    byId:  (id: string) => `/deadlines/${id}`,
-  },
-  notifications: {
-    list:       '/notifications',
-    unreadCount:'/notifications/unread-count',
-    markRead:   (id: string) => `/notifications/${id}/read`,
-    markAllRead:'/notifications/read-all',
-  },
-  uploads: {
-    list:  '/uploads',
-    byId:  (id: string) => `/uploads/${id}`,
-  },
-  evaluations: {
-    panels:            '/evaluation/panels',
-    panelById:         (id: string) => `/evaluation/panels/${id}`,
-    studentByPanel:    (panelId: string) => `/evaluation/panels/${panelId}/student`,
-    criteria:          '/evaluation/criteria',
-    evaluatorsByPanel: (panelId: string) => `/evaluation/panels/${panelId}/evaluators`,
-    submit:            (panelId: string) => `/evaluation/panels/${panelId}/submit`,
-    draft:             (panelId: string) => `/evaluation/panels/${panelId}/draft`,
-  },
+export const COURSE_CODES = {
+    PG1: '043',
+    PG2: '049',
 } as const;
+
+/** Nota mínima requerida en cada curso para aprobar la tesis. */
+export const THESIS_MIN_GRADE = 70;

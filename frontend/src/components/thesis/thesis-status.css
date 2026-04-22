@@ -1,0 +1,174 @@
+/* ── ThesisStatusBadge ────────────────────────────────────────────────── */
+
+:root {
+  --tsb-eligible:     #10b981;
+  --tsb-eligible-bg:  rgba(16, 185, 129, 0.10);
+  --tsb-partial:      #f59e0b;
+  --tsb-partial-bg:   rgba(245, 158, 11, 0.10);
+  --tsb-not:          #ef4444;
+  --tsb-not-bg:       rgba(239, 68, 68, 0.10);
+  --tsb-pending:      #64748b;
+  --tsb-pending-bg:   rgba(100, 116, 139, 0.08);
+  --tsb-border:       rgba(15, 23, 42, 0.08);
+}
+
+/* Pill compacto */
+.tsb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.tsb-pill.tsb--eligible     { color: var(--tsb-eligible); background: var(--tsb-eligible-bg); border-color: rgba(16,185,129,.25); }
+.tsb-pill.tsb--partial      { color: var(--tsb-partial);  background: var(--tsb-partial-bg);  border-color: rgba(245,158,11,.30); }
+.tsb-pill.tsb--not-eligible { color: var(--tsb-not);      background: var(--tsb-not-bg);      border-color: rgba(239,68,68,.30); }
+.tsb-pill.tsb--pending      { color: var(--tsb-pending);  background: var(--tsb-pending-bg);  border-color: rgba(100,116,139,.25); }
+
+/* Tarjeta principal */
+.tsb-card {
+  border: 1px solid var(--tsb-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.tsb-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--accent, #cbd5e1);
+}
+.tsb-card.tsb--eligible     { --accent: var(--tsb-eligible); }
+.tsb-card.tsb--partial      { --accent: var(--tsb-partial); }
+.tsb-card.tsb--not-eligible { --accent: var(--tsb-not); }
+.tsb-card.tsb--pending      { --accent: var(--tsb-pending); }
+
+.tsb-card__heading {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.tsb-card__header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.tsb-card__icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: #fff;
+  flex-shrink: 0;
+}
+.tsb--pending .tsb-card__icon-wrap { color: #fff; }
+.tsb-card__status-label {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.tsb-card__min {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.tsb-card__grades {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tsb-grade {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tsb-grade__head {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 0.85rem;
+  color: #334155;
+}
+.tsb-grade__label {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-align: center;
+  color: #1e293b;
+}
+.tsb-grade__name { color: #475569; }
+.tsb-grade__score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  color: #0f172a;
+}
+.tsb-grade--pending .tsb-grade__score { color: #94a3b8; }
+.tsb-grade--fail    .tsb-grade__score { color: var(--tsb-not); }
+.tsb-grade--pass    .tsb-grade__score { color: var(--tsb-eligible); }
+
+.tsb-grade__bar {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+.tsb-grade__fill {
+  height: 100%;
+  background: #cbd5e1;
+  transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tsb-grade--pass .tsb-grade__fill { background: var(--tsb-eligible); }
+.tsb-grade--fail .tsb-grade__fill { background: var(--tsb-not); }
+.tsb-grade__threshold {
+  position: absolute;
+  top: -2px;
+  width: 2px;
+  height: 12px;
+  background: #0f172a;
+  opacity: 0.45;
+  border-radius: 1px;
+}
+
+.tsb-card__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px dashed var(--tsb-border);
+  padding-top: 12px;
+}
+.tsb-card__avg {
+  font-size: 0.85rem;
+  color: #475569;
+}
+.tsb-card__reason {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #334155;
+}

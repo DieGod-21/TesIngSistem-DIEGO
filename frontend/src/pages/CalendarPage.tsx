@@ -109,7 +109,7 @@ interface TooltipState { x: number; y: number; item: DayItem; }
 const CalendarPage: React.FC = () => {
     const { user } = useAuth();
     const { toast } = useToast();
-    const canWrite = user?.role === 'admin' || user?.role === 'asesor';
+    const canWrite = user?.role === 'admin';
     const today    = new Date();
     const todayKey = localKey(today);
 

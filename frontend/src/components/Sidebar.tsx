@@ -48,7 +48,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Proyectos',            to: '/projects',         icon: <Briefcase size={20} />,       disabled: true },
     { label: 'Calendario Académico', to: '/calendar',         icon: <CalendarDays size={20} />,    exact: true },
     { label: 'Fases Académicas',     to: '/academic-phases',  icon: <GraduationCap size={20} />,   exact: true, adminOnly: true },
-    { label: 'Evaluaciones',         to: '/evaluation',       icon: <ClipboardList size={20} />,   exact: true },
+    { label: 'Ternas',               to: '/ternas',           icon: <ClipboardList size={20} />,   exact: false },
 ];
 
 // ─── Componente ──────────────────────────────────────────────────────

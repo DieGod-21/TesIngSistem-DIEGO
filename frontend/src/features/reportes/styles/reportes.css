@@ -1,0 +1,197 @@
+/* ── Reportes ─────────────────────────────────────────────────────────── */
+
+.reportes-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.reportes-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.rep-stat {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.rep-stat::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--rs-accent, #cbd5e1);
+}
+.rep-stat__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.rep-stat__value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 4px 0 2px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+.rep-stat__pct {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.rep-stat--aprueba-tesis { --rs-accent: #10b981; }
+.rep-stat--aprueba-curso { --rs-accent: #f59e0b; }
+.rep-stat--reprobado     { --rs-accent: #ef4444; }
+.rep-stat--pendiente     { --rs-accent: #64748b; }
+.rep-stat--total         { --rs-accent: #0ea5e9; }
+
+.reportes-table-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.reportes-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.reportes-table th,
+.reportes-table td {
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+.reportes-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.reportes-table tr:last-child td { border-bottom: none; }
+.reportes-table tbody tr { transition: background 120ms; cursor: pointer; }
+.reportes-table tbody tr:hover { background: #f8fafc; }
+.reportes-table tbody tr:focus-visible { outline: 2px solid #0f172a; outline-offset: -2px; background: #f1f5f9; }
+
+.rep-numero {
+  display: inline-block;
+  min-width: 28px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rep-carnet {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.rep-promedio {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+}
+.rep-promedio--none { color: #94a3b8; font-weight: 500; }
+
+.rep-res {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.rep-res--aprueba_tesis { color: #065f46; background: #d1fae5; border-color: rgba(16,185,129,.25); }
+.rep-res--aprueba_curso { color: #92400e; background: #fef3c7; border-color: rgba(245,158,11,.30); }
+.rep-res--reprobado     { color: #991b1b; background: #fee2e2; border-color: rgba(239,68,68,.30); }
+.rep-res--pendiente     { color: #475569; background: #f1f5f9; border-color: #cbd5e1; }
+.rep-res__dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+
+.reportes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Detalle */
+.report-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 18px;
+}
+@media (max-width: 1024px) {
+  .report-detail-grid { grid-template-columns: 1fr; }
+}
+
+.report-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.report-card__title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.report-evaluator {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.report-evaluator__name { font-weight: 600; color: #0f172a; font-size: 0.9rem; }
+.report-evaluator__score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  color: #0f172a;
+}
+.report-evaluator__comment {
+  grid-column: 1 / -1;
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.45;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 8px;
+}

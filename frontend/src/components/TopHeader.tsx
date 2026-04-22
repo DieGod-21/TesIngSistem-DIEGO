@@ -208,13 +208,15 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                 {/* Profile */}
                 <div className="dash-header__profile">
                     <div className="dash-header__profile-info">
-                        <p className="dash-header__profile-name">{user?.name ?? 'Coordinador'}</p>
-                        <p className="dash-header__profile-role">Coordinación de PG</p>
+                        <p className="dash-header__profile-name">{user?.nombre ?? 'Coordinador'}</p>
+                        <p className="dash-header__profile-role">
+                            {user?.role === 'admin' ? 'Administrador' : 'Evaluador'}
+                        </p>
                     </div>
                     <div className="dash-header__avatar" aria-hidden="true">
-                        {(user?.name ?? 'CO')
+                        {(user?.nombre ?? 'CO')
                             .split(' ')
-                            .map((w) => w[0])
+                            .map((w: string) => w[0])
                             .slice(0, 2)
                             .join('')
                             .toUpperCase()}

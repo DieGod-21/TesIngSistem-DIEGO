@@ -1,135 +1,156 @@
 /**
  * authService.ts
  *
- * Autenticación desacoplada del schema del API.
- * Los field names del request/response viven en apiConfig.ts — no aquí.
+ * El API Control de Notas no expone /auth/login con JWT.
+ * La autenticación se realiza mediante el header `X-Usuario-Id` (entero).
+ *
+ * Flujo:
+ *   1. El usuario ingresa su ID de evaluador o admin (proporcionado por el coordinador).
+ *   2. Persistimos el ID en localStorage.
+ *   3. apiClient adjunta el header automáticamente en cada request.
+ *   4. `verifyUser` valida el ID llamando a /api/usuarios/yo.
  */
 
-import { apiFetch } from './apiClient';
-import { AUTH_REQUEST_FIELDS, JWT_CLAIMS, AUTH_TOKEN_RESPONSE_FIELD, API_PATHS } from '../config/apiConfig';
-// DEV ONLY — no produce este import cuando import.meta.env.DEV = false (tree-shaken)
-import { isDevBypass, DEV_BYPASS_TOKEN, DEV_MOCK_USER } from '../config/devBypass';
+import { apiData, USER_ID_KEY } from './apiClient';
+import { API_PATHS } from '../config/apiConfig';
+import { isDevBypass, DEV_BYPASS_USER_ID, DEV_MOCK_USER } from '../config/devBypass';
 
-const TOKEN_KEY = 'auth_token';
-const USER_KEY  = 'auth_user';
+const USER_KEY = 'auth_user';
 
 export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
+    id: string;
+    /** ID numérico tal como lo espera la API (X-Usuario-Id). */
+    usuarioId: number;
+    nombre: string;
+    email: string;
+    role: 'admin' | 'evaluador';
+    fotoUrl?: string | null;
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
+interface UsuarioDTO {
+    id?: number;
+    usuario_id?: number;
+    nombre?: string;
+    email?: string;
+    correo?: string;
+    rol?: string;
+    role?: string;
+    foto_url?: string | null;
+    [key: string]: unknown;
 }
 
-// ─── JWT ──────────────────────────────────────────────────────────────────
-
-function parseJwt(token: string): Record<string, unknown> {
-  const parts = token.split('.');
-  if (parts.length !== 3) {
-    throw new Error('Formato de token no reconocido. Contacta al administrador.');
-  }
-  const base64Url = parts[1];
-  const base64    = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const json      = decodeURIComponent(
-    atob(base64)
-      .split('')
-      .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
-      .join(''),
-  );
-  return JSON.parse(json) as Record<string, unknown>;
-}
-
-function extractUser(email: string, payload: Record<string, unknown>): User {
-  const userId = payload[JWT_CLAIMS.userId];
-  const name   = payload[JWT_CLAIMS.name];
-  const roles  = payload[JWT_CLAIMS.roles];
-
-  return {
-    id:    typeof userId === 'string' ? userId : String(userId ?? ''),
-    email: email.trim().toLowerCase(),
-    name:  typeof name === 'string' && name ? name : email.split('@')[0],
-    role:  Array.isArray(roles) ? (roles[0] ?? 'user') : (typeof roles === 'string' ? roles : 'user'),
-  };
+/** Adapta la respuesta del backend al modelo interno User. */
+function adaptUsuario(dto: UsuarioDTO | { usuario?: UsuarioDTO }): User {
+    const raw = ('usuario' in dto && dto.usuario ? dto.usuario : dto) as UsuarioDTO;
+    const id = raw.id ?? raw.usuario_id;
+    if (id == null) {
+        throw new Error('Respuesta de usuario inválida (sin id).');
+    }
+    const role = (raw.rol ?? raw.role ?? 'evaluador') as 'admin' | 'evaluador';
+    return {
+        id:        String(id),
+        usuarioId: Number(id),
+        nombre:    String(raw.nombre ?? '—'),
+        email:     String(raw.email ?? raw.correo ?? ''),
+        role,
+        fotoUrl:   (raw.foto_url ?? null) as string | null,
+    };
 }
 
 // ─── Persistencia ─────────────────────────────────────────────────────────
 
-export function readPersistedSession(): { user: User; token: string } | null {
-  // DEV ONLY: bypass de autenticación para desarrollo sin backend
-  if (isDevBypass()) {
-    return { user: DEV_MOCK_USER, token: DEV_BYPASS_TOKEN };
-  }
+export function readPersistedSession(): { user: User; usuarioId: number } | null {
+    if (isDevBypass()) {
+        return { user: DEV_MOCK_USER, usuarioId: DEV_BYPASS_USER_ID };
+    }
 
-  try {
-    const token = localStorage.getItem(TOKEN_KEY);
-    const raw   = localStorage.getItem(USER_KEY);
-    if (!token || !raw) return null;
-    const user = JSON.parse(raw) as User;
-    return { user, token };
-  } catch {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    return null;
-  }
+    try {
+        const id = localStorage.getItem(USER_ID_KEY);
+        const raw = localStorage.getItem(USER_KEY);
+        if (!id || !raw) return null;
+        const user = JSON.parse(raw) as User;
+        return { user, usuarioId: Number(id) };
+    } catch {
+        localStorage.removeItem(USER_ID_KEY);
+        localStorage.removeItem(USER_KEY);
+        return null;
+    }
 }
 
-function persistSession(user: User, token: string): void {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+function persistSession(user: User): void {
+    localStorage.setItem(USER_ID_KEY, String(user.usuarioId));
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 function clearSession(): void {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(USER_ID_KEY);
+    localStorage.removeItem(USER_KEY);
 }
 
 // ─── API pública ──────────────────────────────────────────────────────────
 
-export const login = async (email: string, password: string): Promise<User> => {
-  // DEV ONLY: omitir llamada al API cuando bypass está activo
-  if (isDevBypass()) {
-    return DEV_MOCK_USER;
-  }
+/**
+ * Autentica al usuario por su ID. Como el API no provee /auth/login,
+ * persistimos primero el ID y luego validamos con /api/usuarios/yo.
+ * Si el ID no existe o devuelve 401, limpiamos y lanzamos error.
+ */
+export const loginByUserId = async (usuarioId: number): Promise<User> => {
+    if (isDevBypass()) return DEV_MOCK_USER;
 
-  const body: Record<string, string> = {
-    [AUTH_REQUEST_FIELDS.email]:    email,
-    [AUTH_REQUEST_FIELDS.password]: password,
-  };
+    if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
+        throw new Error('ID de usuario inválido. Debe ser un número entero positivo.');
+    }
 
-  const response = await apiFetch<Record<string, unknown>>(API_PATHS.auth.login, {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+    // Persistimos temporalmente para que apiClient adjunte el header
+    localStorage.setItem(USER_ID_KEY, String(usuarioId));
+    try {
+        const dto = await apiData<UsuarioDTO | { usuario: UsuarioDTO }>(API_PATHS.usuarios.me);
+        const user = adaptUsuario(dto);
+        persistSession(user);
+        return user;
+    } catch (err) {
+        clearSession();
+        throw err;
+    }
+};
 
-  const token = response[AUTH_TOKEN_RESPONSE_FIELD];
-  if (typeof token !== 'string' || !token) {
-    throw new Error('Respuesta de autenticación inválida. Contacta al administrador.');
-  }
-
-  const payload = parseJwt(token);
-  const user    = extractUser(email, payload);
-
-  persistSession(user, token);
-  return user;
+/**
+ * Mantiene la firma legacy (email/password) para no romper LoginForm.
+ * Si el "email" parece un número, lo trata como ID; si no, lanza error.
+ */
+export const login = async (emailOrId: string, _password: string): Promise<User> => {
+    const trimmed = emailOrId.trim();
+    const numericId = Number(trimmed);
+    if (Number.isFinite(numericId) && numericId > 0) {
+        return loginByUserId(numericId);
+    }
+    throw new Error(
+        'Este sistema autentica por ID de usuario. Ingresa el ID numérico que te proporcionó tu coordinador.',
+    );
 };
 
 export const logout = async (): Promise<void> => {
-  clearSession();
+    clearSession();
 };
 
-export const verifyToken = async (token: string): Promise<boolean> => {
-  if (!token) return false;
-  // DEV ONLY: el token de bypass siempre es válido
-  if (isDevBypass() && token === DEV_BYPASS_TOKEN) return true;
-  try {
-    const payload = parseJwt(token);
-    const exp     = payload[JWT_CLAIMS.exp];
-    return typeof exp === 'number' && exp > Date.now() / 1000;
-  } catch {
-    return false;
-  }
+/**
+ * Verifica que el ID persistido siga siendo válido contra el backend.
+ * Devuelve el usuario actualizado o null si la sesión es inválida.
+ */
+export const verifySession = async (): Promise<User | null> => {
+    if (isDevBypass()) return DEV_MOCK_USER;
+    try {
+        const dto = await apiData<UsuarioDTO | { usuario: UsuarioDTO }>(API_PATHS.usuarios.me);
+        const user = adaptUsuario(dto);
+        persistSession(user);
+        return user;
+    } catch {
+        return null;
+    }
+};
+
+/** Compatibilidad con código legado que llama verifyToken. */
+export const verifyToken = async (_token?: string): Promise<boolean> => {
+    const user = await verifySession();
+    return user !== null;
 };

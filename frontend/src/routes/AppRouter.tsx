@@ -20,8 +20,9 @@ import StudentNewPage from '../pages/StudentNewPage';
 import StudentsListPage from '../pages/StudentsListPage';
 import CalendarPage from '../pages/CalendarPage';
 import AcademicPhasesPage from '../pages/AcademicPhasesPage';
-import EvaluationPanelsPage from '../features/evaluation/pages/EvaluationPanelsPage';
-import StudentEvaluationPage from '../features/evaluation/pages/StudentEvaluationPage';
+import TernasListPage from '../features/ternas/pages/TernasListPage';
+import TernaDetailPage from '../features/ternas/pages/TernaDetailPage';
+import StudentDetailPage from '../pages/StudentDetailPage';
 
 // ─── Tipos ───────────────────────────────────────────────────────────
 
@@ -147,13 +148,25 @@ const AppRouter: React.FC = () => (
                 <AcademicPhasesPage />
             </ProtectedRoute>
 
-            <ProtectedRoute path="/evaluation" exact>
-                <EvaluationPanelsPage />
+            <ProtectedRoute path="/ternas" exact>
+                <TernasListPage />
             </ProtectedRoute>
 
-            <ProtectedRoute path="/evaluation/:panelId" exact>
-                <StudentEvaluationPage />
+            <ProtectedRoute path="/ternas/:id" exact>
+                <TernaDetailPage />
             </ProtectedRoute>
+
+            <ProtectedRoute path="/students/:id" exact>
+                <StudentDetailPage />
+            </ProtectedRoute>
+
+            {/* Compat: rutas antiguas redirigen a /ternas */}
+            <Route exact path="/evaluation">
+                <Redirect to="/ternas" />
+            </Route>
+            <Route exact path="/evaluation/:panelId">
+                <Redirect to="/ternas" />
+            </Route>
 
             <Route exact path="/">
                 <RootRedirect />
