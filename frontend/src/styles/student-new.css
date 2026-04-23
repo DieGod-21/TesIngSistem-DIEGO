@@ -1636,3 +1636,193 @@
     background: rgba(220, 38, 38, 0.14);
     color: #fca5a5;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   BULK UPLOAD — drag & drop
+═══════════════════════════════════════════════════════════════════ */
+
+.sn-dropzone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 32px 20px;
+    margin-bottom: 16px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+    text-align: center;
+}
+
+.sn-dropzone:hover {
+    border-color: #93c5fd;
+    background: #f1f5ff;
+}
+
+.sn-dropzone:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.sn-dropzone--dragging {
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: scale(1.01);
+}
+
+.sn-dropzone__icon {
+    color: #2563eb;
+    margin-bottom: 4px;
+}
+
+.sn-dropzone__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.sn-dropzone__hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.sn-dropzone__link {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.sn-dropzone__formats {
+    margin: 4px 0 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+}
+
+.sn-dropzone__input {
+    display: none;
+}
+
+.sn-file-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.sn-file-chip__meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.sn-file-chip__name {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.88rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sn-file-chip__size {
+    margin: 2px 0 0;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.sn-file-chip__clear {
+    background: transparent;
+    border: 0;
+    padding: 4px;
+    border-radius: 6px;
+    color: #64748b;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+.sn-file-chip__clear:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.sn-upload-msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    line-height: 1.35;
+}
+
+.sn-upload-msg--success {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.sn-upload-msg--error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.sn-upload-msg__list {
+    margin: 4px 0 0 16px;
+    padding: 0;
+    font-size: 0.82rem;
+}
+
+/* Dark theme */
+[data-theme="dark"] .sn-dropzone {
+    border-color: rgba(148, 163, 184, 0.4);
+    background: rgba(30, 41, 59, 0.6);
+}
+[data-theme="dark"] .sn-dropzone:hover {
+    border-color: #60a5fa;
+    background: rgba(37, 99, 235, 0.12);
+}
+[data-theme="dark"] .sn-dropzone--dragging {
+    border-color: #60a5fa;
+    background: rgba(37, 99, 235, 0.18);
+}
+[data-theme="dark"] .sn-dropzone__title { color: #e2e8f0; }
+[data-theme="dark"] .sn-dropzone__hint  { color: #94a3b8; }
+[data-theme="dark"] .sn-file-chip {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: #e2e8f0;
+}
+[data-theme="dark"] .sn-file-chip__size { color: #94a3b8; }
+[data-theme="dark"] .sn-upload-msg--success {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #6ee7b7;
+}
+[data-theme="dark"] .sn-upload-msg--error {
+    background: rgba(220, 38, 38, 0.14);
+    border-color: rgba(220, 38, 38, 0.35);
+    color: #fca5a5;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MICRO-INTERACCIONES — focus-visible consistente
+═══════════════════════════════════════════════════════════════════ */
+.sn-btn-primary:focus-visible,
+.sn-btn-secondary:focus-visible,
+.sn-btn-ghost:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}

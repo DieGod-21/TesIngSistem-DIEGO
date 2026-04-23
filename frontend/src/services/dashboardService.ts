@@ -1,22 +1,45 @@
 /**
  * dashboardService.ts
  *
- * Fuente de datos para el Panel de Control.
- * - KPIs: desde GET /api/dashboard/summary (agregaciones SQL en backend)
- * - Estudiantes recientes: desde GET /api/dashboard/recent-students
- * - Acciones pendientes: estudiantes sin aprobar (approved = false)
- * - Deadlines: estaticos (el backend tiene /api/deadlines pero sin datos semilla definidos)
- * - Recursos: estaticos
- *
- * Universidad Mariano Galvez — Coordinacion de Proyecto de Graduacion
+ * Fuente de datos para el Panel de Control. Sólo endpoints REALES:
+ *   - GET /api/tesis/resumen       → KPIs globales
+ *   - GET /api/estudiantes         → estudiantes recientes (paginado)
+ *   - GET /api/tesis/reprobados    → acciones pendientes (no cumplen tesis)
  */
 
-import { apiFetch } from './apiClient';
+import { apiGet } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
-import { FALLBACK_DEADLINES, FALLBACK_RESOURCES } from '../config/staticData';
-import { adaptDashboardSummary } from '../adapters/dashboardAdapter';
-import { adaptStudent } from '../adapters/studentAdapter';
-import type { DashboardSummaryDTO, StudentDTO } from '../types/dto';
+
+// Tipos provenientes de los endpoints REALES (Swagger):
+//   GET /api/tesis/resumen         → resumen de aprobación global
+//   GET /api/estudiantes           → listado paginado
+interface TesisResumen {
+    total_estudiantes:     number;
+    aprobados:             number;
+    reprobados:            number;
+    porcentaje_aprobacion: number;
+    nota_minima_requerida: number;
+}
+
+interface TesisResumenResponse {
+    resumen: TesisResumen;
+}
+
+interface EstudianteApi {
+    id:               number;
+    carnet:           string;
+    nombre:           string;
+    email?:           string | null;
+    carrera?:         string | null;
+    estado_tesis?:    string | null;
+    updated_at?:      string | null;
+    created_at?:      string | null;
+}
+
+interface EstudiantesListResponse {
+    estudiantes: EstudianteApi[];
+    pagination:  { total: number; page: number; limit: number; pages: number };
+}
 
 // ─── Interfaces ────────────────────────────────────────────────────
 
@@ -30,6 +53,8 @@ export interface KpiData {
     iconName: string;
     iconVariant: 'blue' | 'red';
     progressValue?: number;
+    /** Si está presente, la KPI es clickeable y navega a esta ruta. */
+    navigateTo?: string;
 }
 
 export interface PendingAction {
@@ -46,28 +71,9 @@ export interface PendingAction {
     deadlineUrgent?: boolean;
 }
 
-export interface Deadline {
-    id: string;
-    month: string;
-    day: string;
-    title: string;
-    subtitle: string;
-}
-
-export interface FacultyResource {
-    id: string;
-    label: string;
-    iconName: string;
-    href: string;
-}
-
 export interface DashboardSummary {
     kpis: KpiData[];
-    deadlines: Deadline[];
-    resources: FacultyResource[];
 }
-
-// BackendSummary movida a types/dto.ts como DashboardSummaryDTO
 
 /** Modelo interno para estudiante reciente (camelCase, sin snake_case) */
 export interface RecentStudent {
@@ -93,62 +99,126 @@ function initials(name: string): string {
 
 const AVATAR_VARIANTS: Array<'blue' | 'green' | 'slate'> = ['blue', 'green', 'slate'];
 
-// Datos temporales movidos a config/staticData.ts
-
 // ─── API publica ────────────────────────────────────────────────────
 
 /**
- * Obtiene el resumen del dashboard.
- * Los KPIs se calculan en el backend con SQL (COUNT, GROUP BY).
+ * Resumen del dashboard construido a partir de GET /api/tesis/resumen.
+ * No existe un endpoint /dashboard/summary en el backend; aquí derivamos
+ * los KPIs a partir de las estadísticas oficiales de tesis.
  */
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-    const dto = await apiFetch<DashboardSummaryDTO>(API_PATHS.dashboard.summary);
-    const summary = adaptDashboardSummary(dto);
-    return {
-        ...summary,
-        deadlines: FALLBACK_DEADLINES,
-        resources: FALLBACK_RESOURCES,
-    };
+    const { resumen } = await apiGet<TesisResumenResponse>(API_PATHS.tesis.resumen);
+
+    const { total_estudiantes, aprobados, reprobados, porcentaje_aprobacion } = resumen;
+    const pending = Math.max(total_estudiantes - aprobados - reprobados, 0);
+    const completionPct = Math.round(porcentaje_aprobacion);
+
+    const kpis: KpiData[] = [
+        {
+            id:            'kpi-total',
+            label:         'Estudiantes',
+            value:         String(total_estudiantes),
+            trend:         '',
+            trendPositive: true,
+            description:   'Estudiantes registrados en PG1/PG2',
+            iconName:      'GraduationCap',
+            iconVariant:   'blue',
+            navigateTo:    '/students',
+        },
+        {
+            id:            'kpi-approved',
+            label:         'Aprueban tesis',
+            value:         String(aprobados),
+            trend:         '',
+            trendPositive: true,
+            description:   `Con ambas notas ≥ ${resumen.nota_minima_requerida}`,
+            iconName:      'CheckCircle',
+            iconVariant:   'blue',
+            navigateTo:    '/students?status=approved',
+        },
+        {
+            id:            'kpi-pending',
+            label:         'Sin Aprobar',
+            value:         String(reprobados + pending),
+            trend:         '',
+            trendPositive: reprobados + pending === 0,
+            description:   'Reprobados o con nota pendiente',
+            iconName:      'AlertTriangle',
+            iconVariant:   reprobados + pending > 0 ? 'red' : 'blue',
+            navigateTo:    '/students?status=failed',
+        },
+        {
+            id:            'kpi-completion',
+            label:         'Completación',
+            value:         `${completionPct}%`,
+            trend:         '',
+            trendPositive: true,
+            description:   `${aprobados} de ${total_estudiantes} aprobados`,
+            iconName:      'CheckCircle',
+            iconVariant:   'blue',
+            progressValue: completionPct,
+        },
+    ];
+
+    return { kpis };
 }
 
 /**
- * Obtiene los estudiantes mas recientes desde el backend.
+ * Obtiene los estudiantes más recientes desde GET /api/estudiantes
+ * (paginado). El backend no expone un endpoint "recent-students", pero
+ * la primera página del listado cumple el mismo propósito.
  */
 export async function getRecentStudentsSummary(limit = 5): Promise<RecentStudent[]> {
-    const dtos = await apiFetch<import('../types/dto').RecentStudentDTO[]>(
-        `${API_PATHS.dashboard.recentStudents}?limit=${limit}`
+    const res = await apiGet<EstudiantesListResponse>(
+        `${API_PATHS.estudiantes.list}?page=1&limit=${limit}`
     );
-    return dtos.map((s) => ({
-        id:               s.id,
-        nombreCompleto:   s.nombre_completo,
-        carnetId:         s.carnet_id,
-        approved:         s.approved,
-        updatedAt:        s.updated_at,
-        phaseName:        s.phase_name  ?? null,
-        phaseDescription: s.phase_description ?? null,
+    return (res.estudiantes ?? []).map((s) => ({
+        id:               String(s.id),
+        nombreCompleto:   s.nombre,
+        carnetId:         s.carnet,
+        approved:         s.estado_tesis === 'aprobado',
+        updatedAt:        s.updated_at ?? s.created_at ?? '',
+        phaseName:        s.carrera ?? null,
+        phaseDescription: s.carrera ?? null,
     }));
 }
 
 /**
- * Devuelve estudiantes sin aprobar como acciones pendientes.
- * Filtra opcionalmente por query.
+ * Acciones pendientes = estudiantes que NO aprueban tesis (GET /api/tesis/reprobados).
+ * Es lo más cercano a "sin aprobar" que expone el backend real.
  */
 export async function getPendingActions(query?: string): Promise<PendingAction[]> {
-    const params = new URLSearchParams({ approved: 'false', limit: '50' });
-    if (query?.trim()) params.set('search', query.trim());
+    interface ReprobadosResp {
+        total: number;
+        nota_minima: number;
+        estudiantes: Array<{
+            carnet: string;
+            nombre: string;
+            nota_grad1: number | null;
+            estado_grad1: string;
+            nota_grad2: number | null;
+            estado_grad2: string;
+        }>;
+    }
 
-    const response = await apiFetch<{ data: StudentDTO[]; pagination: unknown } | StudentDTO[]>(`${API_PATHS.students.list}?${params}`);
-    const dtos = Array.isArray(response) ? response : (response?.data ?? []);
+    const { estudiantes } = await apiGet<ReprobadosResp>(API_PATHS.tesis.reprobados);
 
-    return dtos.map(adaptStudent).map((s, i): PendingAction => ({
-        id:             s.id,
-        studentName:    s.nombreCompleto,
-        studentId:      s.carnetId,
-        avatarInitials: initials(s.nombreCompleto),
+    const q = query?.trim().toLowerCase() ?? '';
+    const filtered = q
+        ? estudiantes.filter((s) =>
+              s.nombre.toLowerCase().includes(q) || s.carnet.toLowerCase().includes(q),
+          )
+        : estudiantes;
+
+    return filtered.map((s, i): PendingAction => ({
+        id:             s.carnet,
+        studentName:    s.nombre,
+        studentId:      s.carnet,
+        avatarInitials: initials(s.nombre),
         avatarVariant:  AVATAR_VARIANTS[i % AVATAR_VARIANTS.length],
-        projectTitle:   s.correoInstitucional,
-        phase:          s.phaseDescription ?? s.phaseName ?? s.faseAcademica ?? '—',
-        actionLabel:    'Pendiente de aprobación',
+        projectTitle:   `PG1: ${s.nota_grad1 ?? '—'} · PG2: ${s.nota_grad2 ?? '—'}`,
+        phase:          [s.estado_grad1, s.estado_grad2].filter(Boolean).join(' · ') || '—',
+        actionLabel:    'No cumple requisito de tesis',
         actionVariant:  'warning',
         deadline:       'Sin fecha límite',
         deadlineUrgent: false,

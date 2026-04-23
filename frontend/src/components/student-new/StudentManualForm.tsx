@@ -1,44 +1,29 @@
 /**
  * StudentManualForm.tsx
  *
- * Formulario de registro manual de estudiantes.
- * - Carga semestres desde GET /api/semesters
- * - Carga fases académicas desde GET /api/academic-phases
- * - Valida y envía via POST /api/students con academic_phase_id
+ * Registro manual contra POST /api/estudiantes.
+ * Campos expuestos por el backend real: nombre, carnet, email.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { IonToast } from '@ionic/react';
-import { User, CreditCard, Mail, BookOpen, GraduationCap, Save, Trash2 } from 'lucide-react';
-import {
-    createStudent,
-    getSemesters,
-} from '../../services/studentsService';
-import type { StudentPayload, Semester } from '../../services/studentsService';
-import { getAcademicPhases } from '../../services/academicPhasesService';
-import type { AcademicPhase } from '../../services/academicPhasesService';
+import { User, CreditCard, Mail, GraduationCap, Save, Trash2 } from 'lucide-react';
+import { createStudent } from '../../services/studentsService';
+import type { StudentPayload } from '../../services/studentsService';
 import { useForm } from '../../hooks/useForm';
 import { runValidators, validators } from '../../utils/validators';
-
-// ─── Tipo del formulario ─────────────────────────────────────────────
 
 type FormFields = {
     nombreCompleto:      string;
     carnetId:            string;
     correoInstitucional: string;
-    semesterId:          string;
-    academicPhaseId:     string;  // string en el form, se convierte a number al enviar
 };
 
 const EMPTY_FORM: FormFields = {
     nombreCompleto:      '',
     carnetId:            '',
     correoInstitucional: '',
-    semesterId:          '',
-    academicPhaseId:     '',
 };
-
-// ─── Validación ──────────────────────────────────────────────────────
 
 function validate(values: FormFields) {
     const errors: Partial<FormFields> = {};
@@ -59,38 +44,13 @@ function validate(values: FormFields) {
     );
     if (correo) errors.correoInstitucional = correo;
 
-    const semestre = validators.select('un semestre')(values.semesterId);
-    if (semestre) errors.semesterId = semestre;
-
-    const fase = validators.select('una fase académica')(values.academicPhaseId);
-    if (fase) errors.academicPhaseId = fase;
-
     return errors;
 }
 
-// ─── Componente ──────────────────────────────────────────────────────
-
 const StudentManualForm: React.FC = () => {
-    const [semesters, setSemesters]         = useState<Semester[]>([]);
-    const [semLoading, setSemLoading]       = useState(true);
-    const [phases, setPhases]               = useState<AcademicPhase[]>([]);
-    const [phasesLoading, setPhasesLoading] = useState(true);
     const [toast, setToast] = useState<{ open: boolean; message: string; color: string }>({
         open: false, message: '', color: 'success',
     });
-
-    useEffect(() => {
-        let canceled = false;
-        getSemesters()
-            .then((data) => { if (!canceled) setSemesters(data); })
-            .catch(() => {})
-            .finally(() => { if (!canceled) setSemLoading(false); });
-        getAcademicPhases()
-            .then((data) => { if (!canceled) setPhases(data); })
-            .catch(() => {})
-            .finally(() => { if (!canceled) setPhasesLoading(false); });
-        return () => { canceled = true; };
-    }, []);
 
     const { values, submitting, handleChange, handleBlur, handleSubmit, reset, showError } =
         useForm<FormFields>({
@@ -102,8 +62,6 @@ const StudentManualForm: React.FC = () => {
                         nombreCompleto:      vals.nombreCompleto,
                         carnetId:            vals.carnetId,
                         correoInstitucional: vals.correoInstitucional,
-                        semesterId:          vals.semesterId,
-                        academicPhaseId:     Number(vals.academicPhaseId),
                     };
                     await createStudent(payload);
                     setToast({ open: true, message: 'Estudiante registrado exitosamente.', color: 'success' });
@@ -124,7 +82,6 @@ const StudentManualForm: React.FC = () => {
                 </div>
 
                 <form className="sn-form" onSubmit={handleSubmit} noValidate>
-                    {/* Nombre Completo */}
                     <div className="sn-form__group sn-form__group--full">
                         <label className="sn-form__label" htmlFor="sn-nombre">
                             Nombre Completo <span className="sn-form__required">*</span>
@@ -149,7 +106,6 @@ const StudentManualForm: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* Carnet ID + Correo */}
                     <div className="sn-form__row">
                         <div className="sn-form__group">
                             <label className="sn-form__label" htmlFor="sn-carnet">
@@ -200,70 +156,6 @@ const StudentManualForm: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Semestre + Fase */}
-                    <div className="sn-form__row">
-                        <div className="sn-form__group">
-                            <label className="sn-form__label" htmlFor="sn-semestre">
-                                Semestre Lectivo <span className="sn-form__required">*</span>
-                            </label>
-                            <div className={`sn-field${showError('semesterId') ? ' sn-field--error' : ''}`}>
-                                <BookOpen size={16} className="sn-field__icon" aria-hidden="true" />
-                                <select
-                                    id="sn-semestre"
-                                    className="sn-field__input sn-field__select"
-                                    value={values.semesterId}
-                                    onChange={(e) => handleChange('semesterId', e.target.value)}
-                                    onBlur={() => handleBlur('semesterId')}
-                                    aria-describedby="sn-semestre-error"
-                                    aria-invalid={!!showError('semesterId')}
-                                    disabled={semLoading}
-                                >
-                                    <option value="">
-                                        {semLoading ? 'Cargando semestres…' : 'Seleccionar semestre'}
-                                    </option>
-                                    {semesters.map((s) => (
-                                        <option key={s.id} value={s.id}>{s.nombre}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <p id="sn-semestre-error" className="sn-field__error" role="alert">
-                                {showError('semesterId') ?? ''}
-                            </p>
-                        </div>
-
-                        <div className="sn-form__group">
-                            <label className="sn-form__label" htmlFor="sn-fase">
-                                Fase Académica <span className="sn-form__required">*</span>
-                            </label>
-                            <div className={`sn-field${showError('academicPhaseId') ? ' sn-field--error' : ''}`}>
-                                <GraduationCap size={16} className="sn-field__icon" aria-hidden="true" />
-                                <select
-                                    id="sn-fase"
-                                    className="sn-field__input sn-field__select"
-                                    value={values.academicPhaseId}
-                                    onChange={(e) => handleChange('academicPhaseId', e.target.value)}
-                                    onBlur={() => handleBlur('academicPhaseId')}
-                                    aria-describedby="sn-fase-error"
-                                    aria-invalid={!!showError('academicPhaseId')}
-                                    disabled={phasesLoading}
-                                >
-                                    <option value="">
-                                        {phasesLoading ? 'Cargando fases…' : 'Seleccionar fase'}
-                                    </option>
-                                    {phases.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.description ?? p.name} ({p.name})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <p id="sn-fase-error" className="sn-field__error" role="alert">
-                                {showError('academicPhaseId') ?? ''}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Acciones */}
                     <div className="sn-form__actions">
                         <button
                             type="submit"

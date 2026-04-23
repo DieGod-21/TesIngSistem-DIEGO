@@ -23,23 +23,27 @@ interface Props {
 
 const STATUS_META = {
     eligible: {
-        label: 'Apto para Tesis',
-        Icon: CheckCircle2,
+        label:    'Apto para Tesis',
+        headline: 'Cumple requisito de tesis',
+        Icon:     CheckCircle2,
         modifier: 'tsb--eligible',
     },
     partial: {
-        label: 'Parcial',
-        Icon: AlertTriangle,
+        label:    'Parcial',
+        headline: 'No cumple requisito aún',
+        Icon:     AlertTriangle,
         modifier: 'tsb--partial',
     },
     not_eligible: {
-        label: 'No Apto',
-        Icon: XCircle,
+        label:    'No Apto',
+        headline: 'No cumple requisito',
+        Icon:     XCircle,
         modifier: 'tsb--not-eligible',
     },
     pending: {
-        label: 'Sin notas',
-        Icon: HelpCircle,
+        label:    'Sin notas',
+        headline: 'Pendiente',
+        Icon:     HelpCircle,
         modifier: 'tsb--pending',
     },
 } as const;
@@ -68,6 +72,7 @@ const ThesisStatusBadge: React.FC<Props> = ({ result, variant = 'card', title })
                     <Icon size={22} />
                 </span>
                 <div>
+                    <p className="tsb-card__headline">{meta.headline}</p>
                     <p className="tsb-card__status-label">{meta.label}</p>
                     <p className="tsb-card__min">
                         Mínimo requerido: <strong>{minScore}</strong> en cada curso
@@ -107,9 +112,15 @@ const CourseProgressRow: React.FC<{ grade: ThesisEligibilityResult['pg1']; minSc
                     {grade.estado === 'NSP' && <small> · NSP</small>}
                 </span>
             </div>
-            <div className="tsb-grade__bar" aria-hidden="true">
+            <div
+                className="tsb-grade__bar"
+                role="img"
+                aria-label={`${grade.label}: ${score ?? 'sin nota'} de 100 (mínimo ${minScore})`}
+            >
                 <div className="tsb-grade__fill" style={{ width: `${pct}%` }} />
-                <div className="tsb-grade__threshold" style={{ left: `${minScore}%` }} title={`Mínimo: ${minScore}`} />
+                <div className="tsb-grade__threshold" style={{ left: `${minScore}%` }} aria-hidden="true">
+                    <span className="tsb-grade__threshold-label">{minScore}</span>
+                </div>
             </div>
         </div>
     );

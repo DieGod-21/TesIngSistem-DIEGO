@@ -195,3 +195,87 @@
   border-top: 1px dashed #e2e8f0;
   padding-top: 8px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK THEME — overrides
+═══════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .rep-stat,
+[data-theme="dark"] .reportes-table-card,
+[data-theme="dark"] .report-card {
+    background: var(--dash-card-bg);
+    border-color: var(--dash-border);
+    color: var(--dash-text-primary);
+}
+[data-theme="dark"] .rep-stat__label,
+[data-theme="dark"] .rep-stat__pct,
+[data-theme="dark"] .report-card__title {
+    color: var(--dash-text-secondary);
+}
+[data-theme="dark"] .rep-stat__value,
+[data-theme="dark"] .rep-promedio,
+[data-theme="dark"] .report-evaluator__name,
+[data-theme="dark"] .report-evaluator__score {
+    color: var(--dash-text-primary);
+}
+[data-theme="dark"] .reportes-table th,
+[data-theme="dark"] .reportes-table td {
+    border-bottom-color: var(--dash-border);
+}
+[data-theme="dark"] .reportes-table th {
+    background: rgba(148, 163, 184, 0.08);
+    color: var(--dash-text-secondary);
+}
+[data-theme="dark"] .reportes-table tbody tr:hover { background: rgba(148, 163, 184, 0.08); }
+[data-theme="dark"] .reportes-table tbody tr:focus-visible {
+    outline-color: #60a5fa;
+    background: rgba(59, 130, 246, 0.15);
+}
+[data-theme="dark"] .rep-numero {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--dash-text-primary);
+}
+[data-theme="dark"] .rep-carnet { color: var(--dash-text-secondary); }
+[data-theme="dark"] .rep-promedio--none { color: var(--dash-text-muted); }
+
+[data-theme="dark"] .rep-res--aprueba_tesis {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.35);
+}
+[data-theme="dark"] .rep-res--aprueba_curso {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fcd34d;
+    border-color: rgba(245, 158, 11, 0.35);
+}
+[data-theme="dark"] .rep-res--reprobado {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+}
+[data-theme="dark"] .rep-res--pendiente {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--dash-text-secondary);
+    border-color: var(--dash-border);
+}
+
+[data-theme="dark"] .report-evaluator {
+    border-color: var(--dash-border);
+    background: rgba(15, 23, 42, 0.4);
+}
+[data-theme="dark"] .report-evaluator__comment {
+    border-top-color: var(--dash-border);
+    color: var(--dash-text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARD HOVER ELEVATION (light + dark)
+═══════════════════════════════════════════════════════════════════ */
+.rep-stat,
+.report-card {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.rep-stat:hover,
+.report-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--dash-shadow-md);
+}

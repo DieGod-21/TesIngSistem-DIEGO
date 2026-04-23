@@ -520,6 +520,40 @@
     transform: translateY(-2px);
 }
 
+/* Botón-KPI (clickeable) — reset nativo del <button> + foco accesible */
+button.kpi-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.kpi-card--clickable {
+    cursor: pointer;
+}
+
+.kpi-card--clickable:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: var(--dash-shadow-md);
+}
+
+.kpi-card--clickable:active {
+    transform: translateY(0) scale(1.01);
+}
+
+.kpi-card--clickable:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kpi-card--clickable:hover {
+        transform: none;
+    }
+}
+
 .kpi-card__top {
     display: flex;
     justify-content: space-between;

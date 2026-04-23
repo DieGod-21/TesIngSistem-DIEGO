@@ -12,7 +12,9 @@ import AppShell from '../../../layout/AppShell';
 import { useAuth } from '../../../context/AuthContext';
 import { getGlobalTernasReport } from '../../../services/reportesService';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
+import { matchesText } from '../../../utils/text';
 import '../styles/reportes.css';
+import '../../../styles/transitions.css';
 
 const RES_LABEL: Record<ResolucionTerna, string> = {
     aprueba_tesis: 'Aprueba Tesis',
@@ -58,14 +60,13 @@ const ReportesPage: React.FC = () => {
     const ternas: ReporteTernaItem[] = data?.ternas ?? [];
 
     const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
         return ternas.filter((t) => {
             if (filter !== 'all' && t.resolucion !== filter) return false;
-            if (!q) return true;
+            if (!query.trim()) return true;
             return (
-                t.estudiante?.toLowerCase().includes(q) ||
-                t.carnet?.toLowerCase().includes(q) ||
-                t.titulo?.toLowerCase().includes(q)
+                matchesText(t.estudiante, query) ||
+                matchesText(t.carnet, query) ||
+                matchesText(t.titulo, query)
             );
         });
     }, [ternas, filter, query]);
@@ -161,7 +162,7 @@ const ReportesPage: React.FC = () => {
                 )}
 
                 {!loading && !error && filtered.length > 0 && (
-                    <div className="reportes-table-card">
+                    <div key={filter} className="reportes-table-card view-transition">
                         <table className="reportes-table" aria-label="Reporte de ternas">
                             <thead>
                                 <tr>

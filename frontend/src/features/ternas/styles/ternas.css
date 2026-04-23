@@ -323,3 +323,147 @@
 .tdetail-banner--ok    { background: #d1fae5; color: #065f46; }
 .tdetail-banner--warn  { background: #fef3c7; color: #92400e; }
 .tdetail-banner--err   { background: #fee2e2; color: #991b1b; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK THEME — overrides
+═══════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .ternas-page__title { color: var(--dash-text-primary); }
+[data-theme="dark"] .ternas-page__subtitle { color: var(--dash-text-secondary); }
+
+[data-theme="dark"] .ternas-chip {
+    background: var(--dash-card-bg);
+    border-color: var(--dash-border);
+    color: var(--dash-text-secondary);
+}
+[data-theme="dark"] .ternas-chip:hover { background: rgba(148, 163, 184, 0.12); }
+[data-theme="dark"] .ternas-chip--active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .terna-card,
+[data-theme="dark"] .tdetail-card {
+    background: var(--dash-card-bg);
+    border-color: var(--dash-border);
+    color: var(--dash-text-primary);
+}
+[data-theme="dark"] .terna-card:hover {
+    border-color: #475569;
+    box-shadow: var(--dash-shadow-md);
+}
+[data-theme="dark"] .terna-card__title,
+[data-theme="dark"] .tdetail-student-name {
+    color: var(--dash-text-primary);
+}
+[data-theme="dark"] .terna-card__numero,
+[data-theme="dark"] .terna-card__carnet,
+[data-theme="dark"] .tdetail-card__title,
+[data-theme="dark"] .tdetail-meta dt {
+    color: var(--dash-text-secondary);
+}
+[data-theme="dark"] .terna-card__student,
+[data-theme="dark"] .tdetail-meta {
+    color: var(--dash-text-primary);
+}
+[data-theme="dark"] .terna-card__progress { color: var(--dash-text-secondary); }
+[data-theme="dark"] .terna-card__progress-bar { background: rgba(148, 163, 184, 0.18); }
+[data-theme="dark"] .terna-card__progress-fill { background: #60a5fa; }
+
+[data-theme="dark"] .estado-pendiente {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fcd34d;
+}
+[data-theme="dark"] .estado-en_progreso {
+    background: rgba(59, 130, 246, 0.18);
+    color: #93c5fd;
+}
+[data-theme="dark"] .estado-completada {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .tdetail-evaluator {
+    border-color: var(--dash-border);
+    background: rgba(15, 23, 42, 0.4);
+}
+[data-theme="dark"] .tdetail-evaluator__name,
+[data-theme="dark"] .tdetail-evaluator__score { color: var(--dash-text-primary); }
+[data-theme="dark"] .eval-borrador { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+[data-theme="dark"] .eval-enviada  { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+[data-theme="dark"] .eval-empty    { background: rgba(148, 163, 184, 0.12); color: var(--dash-text-secondary); }
+
+[data-theme="dark"] .eval-form__label { color: var(--dash-text-primary); }
+[data-theme="dark"] .eval-form__hint  { color: var(--dash-text-secondary); }
+[data-theme="dark"] .eval-form__input,
+[data-theme="dark"] .eval-form__textarea {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: var(--dash-border);
+    color: var(--dash-text-primary);
+}
+[data-theme="dark"] .eval-form__input:focus,
+[data-theme="dark"] .eval-form__textarea:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+}
+
+[data-theme="dark"] .eval-btn--primary { background: #3b82f6; color: #f8fafc; }
+[data-theme="dark"] .eval-btn--primary:hover:not(:disabled) { background: #2563eb; }
+[data-theme="dark"] .eval-btn--secondary {
+    background: rgba(148, 163, 184, 0.18);
+    color: var(--dash-text-primary);
+}
+[data-theme="dark"] .eval-btn--secondary:hover:not(:disabled) {
+    background: rgba(148, 163, 184, 0.28);
+}
+[data-theme="dark"] .eval-btn--danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+}
+[data-theme="dark"] .eval-btn--danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.22);
+}
+
+[data-theme="dark"] .eval-locked,
+[data-theme="dark"] .tloading,
+[data-theme="dark"] .tempty {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: var(--dash-border);
+    color: var(--dash-text-secondary);
+}
+[data-theme="dark"] .terror {
+    background: rgba(220, 38, 38, 0.12);
+    border-color: rgba(220, 38, 38, 0.35);
+    color: #fca5a5;
+}
+[data-theme="dark"] .tdetail-banner--ok {
+    background: rgba(16, 185, 129, 0.15); color: #6ee7b7;
+}
+[data-theme="dark"] .tdetail-banner--warn {
+    background: rgba(245, 158, 11, 0.15); color: #fcd34d;
+}
+[data-theme="dark"] .tdetail-banner--err {
+    background: rgba(239, 68, 68, 0.15); color: #fca5a5;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARD HOVER ELEVATION (terna-card, tdetail-card)
+═══════════════════════════════════════════════════════════════════ */
+.terna-card:hover {
+    box-shadow: var(--dash-shadow-md);
+}
+.tdetail-card {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.tdetail-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--dash-shadow-md);
+}
+
+/* Micro-interacción — chip activo */
+.ternas-chip:active { transform: translateY(1px); }
+.ternas-chip:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}

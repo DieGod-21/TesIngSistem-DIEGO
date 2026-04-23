@@ -12,7 +12,16 @@
 
 const USER_ID_KEY = 'auth_user_id';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://notas.digicom.com.gt';
+/**
+ * BASE_URL:
+ *  - En desarrollo (vite dev) usamos string vacío para que las rutas /api/...
+ *    se resuelvan contra el mismo origen y pasen por el proxy de Vite
+ *    (ver vite.config.ts → server.proxy). Esto evita errores de CORS.
+ *  - En producción (build) usamos VITE_API_URL apuntando al backend real.
+ */
+const BASE_URL = import.meta.env.DEV
+    ? ''
+    : (import.meta.env.VITE_API_URL ?? 'https://notas.digicom.com.gt');
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -106,6 +115,14 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
         if (err instanceof DOMException && err.name === 'AbortError') {
             throw new ApiError(0, 'La solicitud tardó demasiado. Intenta de nuevo.');
         }
+        // TypeError: "Failed to fetch" → red caída, CORS, DNS, offline.
+        if (err instanceof TypeError) {
+            throw new ApiError(
+                0,
+                'No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.',
+                err.message,
+            );
+        }
         throw err;
     } finally {
         clearTimeout(timeoutId);
@@ -139,15 +156,5 @@ export const apiPut = <T>(path: string, body?: object, init?: Omit<ApiFetchOptio
 /** Atajo para DELETE con extracción de envelope. */
 export const apiDelete = <T>(path: string, init?: Omit<ApiFetchOptions, 'method' | 'body'>) =>
     apiData<T>(path, { ...init, method: 'DELETE' });
-
-/** Compatibilidad con código legado: GET de listas con potencial envelope `{data: T[]}`. */
-export async function apiFetchList<T>(path: string, init?: ApiFetchOptions): Promise<T[]> {
-    const res = await apiFetch<T[] | ApiEnvelope<T[]>>(path, init);
-    if (Array.isArray(res)) return res;
-    if (res && typeof res === 'object' && 'data' in res && Array.isArray((res as ApiEnvelope<T[]>).data)) {
-        return (res as ApiEnvelope<T[]>).data;
-    }
-    return [];
-}
 
 export { USER_ID_KEY };

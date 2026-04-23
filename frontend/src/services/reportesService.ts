@@ -2,6 +2,8 @@
  * reportesService.ts
  *
  * Acceso a /api/reportes/* (solo admin).
+ * El backend a veces devuelve la carga como raíz (`{ resumen, ternas }`)
+ * y a veces anidada bajo `reporte`. Aquí normalizamos ambas variantes.
  */
 
 import { apiGet } from './apiClient';
@@ -9,7 +11,28 @@ import { API_PATHS } from '../config/apiConfig';
 import type { ReporteTernasGlobal, ResolucionTerna } from '../types/api';
 
 export async function getGlobalTernasReport(): Promise<ReporteTernasGlobal> {
-    return apiGet<ReporteTernasGlobal>(API_PATHS.reportes.ternas);
+    const raw = await apiGet<unknown>(API_PATHS.reportes.ternas);
+    return normalizeGlobal(raw);
+}
+
+function normalizeGlobal(raw: unknown): ReporteTernasGlobal {
+    const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {};
+    // Posibles envolturas: { reporte: {...} } o { data: {...} } o directo.
+    const src = (obj.reporte && typeof obj.reporte === 'object')
+        ? obj.reporte as Record<string, unknown>
+        : (obj.data && typeof obj.data === 'object')
+            ? obj.data as Record<string, unknown>
+            : obj;
+
+    const resumen = (src.resumen && typeof src.resumen === 'object')
+        ? src.resumen as ReporteTernasGlobal['resumen']
+        : { total: 0, aprueba_tesis: 0, aprueba_curso: 0, reprobados: 0, pendientes: 0 };
+
+    const ternas = Array.isArray(src.ternas)
+        ? (src.ternas as ReporteTernasGlobal['ternas'])
+        : [];
+
+    return { resumen, ternas };
 }
 
 export interface ReporteTernaDetalleEvaluador {
@@ -43,11 +66,10 @@ export interface ReporteTernaDetalle {
 }
 
 export async function getTernaReport(id: number): Promise<ReporteTernaDetalle> {
-    const data = await apiGet<{ reporte: ReporteTernaDetalle } | ReporteTernaDetalle>(
-        API_PATHS.reportes.ternaById(id),
-    );
-    if (data && typeof data === 'object' && 'reporte' in data) {
-        return (data as { reporte: ReporteTernaDetalle }).reporte;
-    }
-    return data as ReporteTernaDetalle;
+    const raw = await apiGet<unknown>(API_PATHS.reportes.ternaById(id));
+    const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {};
+    const src = (obj.reporte && typeof obj.reporte === 'object')
+        ? obj.reporte as Record<string, unknown>
+        : obj;
+    return src as unknown as ReporteTernaDetalle;
 }

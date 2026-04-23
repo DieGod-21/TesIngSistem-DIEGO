@@ -1,95 +1,73 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, Bell, Menu, Sun, Moon, CheckCheck, Calendar } from 'lucide-react';
+import { Search, Menu, Sun, Moon } from 'lucide-react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useNotifications } from '../hooks/useNotifications';
-import '../styles/notifications.css';
 
 interface TopHeaderProps {
     onMenuToggle?: () => void;
 }
 
-function timeAgo(dateStr: string): string {
-    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
-    if (diff < 60)    return 'hace un momento';
-    if (diff < 3600)  return `hace ${Math.floor(diff / 60)} min`;
-    if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`;
-    return `hace ${Math.floor(diff / 86400)} d`;
-}
-
+/**
+ * Buscador global:
+ *  - En /students: sincroniza el input con el query param `search`
+ *    usando history.replace para mantener una URL compartible.
+ *  - En otras rutas: al presionar Enter o tras debounce (≥ 2 chars)
+ *    navega a /students?search=<query>.
+ */
 const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const history  = useHistory();
     const location = useLocation();
-    const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
-    const [inputValue,  setInputValue]  = useState('');
-    const [bellOpen,    setBellOpen]    = useState(false);
-    const debounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const inputRef      = useRef<HTMLInputElement>(null);
-    const bellRef       = useRef<HTMLDivElement>(null);
+    const [inputValue, setInputValue] = useState('');
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const inputRef    = useRef<HTMLInputElement>(null);
 
-    // Pre-populate search from URL
+    // Sincroniza el input cuando cambia la URL manualmente (p.ej. botón atrás,
+    // clic en KPI o navegación directa).
     useEffect(() => {
         if (location.pathname === '/students') {
             const params = new URLSearchParams(location.search);
-            const q = params.get('q') ?? '';
+            const q = params.get('search') ?? params.get('q') ?? '';
             setInputValue(q);
-            if (q) setTimeout(() => inputRef.current?.focus(), 0);
         } else {
             setInputValue('');
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.pathname]);
+    }, [location.pathname, location.search]);
 
-    // Search debounce
+    // Debounce de búsqueda: empuja el término a la URL.
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             const q = inputValue.trim();
             if (location.pathname === '/students') {
-                const current = new URLSearchParams(window.location.search).get('q') ?? '';
+                const current = new URLSearchParams(window.location.search).get('search') ?? '';
                 if (q === current) return;
                 const params = new URLSearchParams(window.location.search);
-                if (q) { params.set('q', q); } else { params.delete('q'); }
-                history.replace(`/students?${params.toString()}`);
+                if (q) params.set('search', q); else params.delete('search');
+                // limpiamos el alias legacy ?q=
+                params.delete('q');
+                history.replace(`/students${params.toString() ? `?${params}` : ''}`);
             } else if (q.length >= 2) {
-                history.push(`/students?q=${encodeURIComponent(q)}`);
+                history.push(`/students?search=${encodeURIComponent(q)}`);
             }
-        }, 500);
+        }, 400);
         return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inputValue]);
 
-    // Close bell panel on outside click
-    useEffect(() => {
-        if (!bellOpen) return;
-        const handler = (e: MouseEvent) => {
-            if (bellRef.current && !bellRef.current.contains(e.target as Node))
-                setBellOpen(false);
-        };
-        const escHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') setBellOpen(false); };
-        document.addEventListener('mousedown', handler);
-        document.addEventListener('keydown', escHandler);
-        return () => {
-            document.removeEventListener('mousedown', handler);
-            document.removeEventListener('keydown', escHandler);
-        };
-    }, [bellOpen]);
-
-    const handleMarkRead = async (id: string) => {
-        await markAsRead(id);
-    };
-
-    const handleMarkAll = async () => {
-        await markAllAsRead();
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const q = inputValue.trim();
+        if (!q) return;
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        history.push(`/students?search=${encodeURIComponent(q)}`);
     };
 
     return (
         <header className="dash-header">
-            {/* Hamburger (mobile) */}
             <button
                 className="dash-header__menu-btn"
                 onClick={onMenuToggle}
@@ -98,23 +76,24 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                 <Menu size={24} />
             </button>
 
-            {/* Search */}
-            <div className="dash-header__search-wrapper">
+            <form
+                className="dash-header__search-wrapper"
+                onSubmit={handleSubmit}
+                role="search"
+            >
                 <Search size={16} className="dash-header__search-icon" aria-hidden="true" />
                 <input
                     ref={inputRef}
-                    type="text"
+                    type="search"
                     className="dash-header__search"
-                    placeholder="Buscar por Carné o Nombre de Estudiante…"
+                    placeholder="Buscar por nombre o carné…"
                     aria-label="Buscar estudiante por nombre o carné"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                 />
-            </div>
+            </form>
 
-            {/* Right actions */}
             <div className="dash-header__actions">
-                {/* Theme toggle */}
                 <button
                     className="dash-header__theme-toggle"
                     onClick={toggleTheme}
@@ -128,84 +107,6 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                     }
                 </button>
 
-                {/* Notification bell */}
-                <div className="notif-wrapper" ref={bellRef}>
-                    <button
-                        className={`notif-bell ${bellOpen ? 'notif-bell--active' : ''}`}
-                        onClick={() => setBellOpen((o) => !o)}
-                        aria-label={`Notificaciones${unreadCount > 0 ? ` — ${unreadCount} sin leer` : ''}`}
-                        aria-expanded={bellOpen}
-                        aria-haspopup="true"
-                        type="button"
-                    >
-                        <Bell size={20} aria-hidden="true" />
-                        {unreadCount > 0 && (
-                            <span className="notif-badge" aria-hidden="true">
-                                {unreadCount > 99 ? '99+' : unreadCount}
-                            </span>
-                        )}
-                    </button>
-
-                    {bellOpen && (
-                        <div className="notif-panel" role="dialog" aria-label="Notificaciones">
-                            <div className="notif-panel__header">
-                                <h3 className="notif-panel__title">Notificaciones</h3>
-                                {unreadCount > 0 && (
-                                    <button
-                                        className="notif-panel__mark-all"
-                                        onClick={handleMarkAll}
-                                        title="Marcar todas como leídas"
-                                    >
-                                        <CheckCheck size={14} />
-                                        Leer todo
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="notif-panel__body">
-                                {notifications.length === 0 ? (
-                                    <div className="notif-empty">
-                                        <Bell size={28} className="notif-empty__icon" />
-                                        <p className="notif-empty__text">Sin notificaciones</p>
-                                        <p className="notif-empty__hint">
-                                            Los recordatorios de eventos aparecerán aquí
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <ul className="notif-list">
-                                        {notifications.map((n) => (
-                                            <li
-                                                key={n.id}
-                                                className={`notif-item ${n.read ? 'notif-item--read' : 'notif-item--unread'}`}
-                                            >
-                                                <div className="notif-item__icon-wrap">
-                                                    <Calendar size={14} className="notif-item__icon" />
-                                                </div>
-                                                <div className="notif-item__content">
-                                                    <p className="notif-item__title">{n.title}</p>
-                                                    <p className="notif-item__msg">{n.message}</p>
-                                                    <p className="notif-item__time">{timeAgo(n.createdAt)}</p>
-                                                </div>
-                                                {!n.read && (
-                                                    <button
-                                                        className="notif-item__read-btn"
-                                                        onClick={() => handleMarkRead(n.id)}
-                                                        title="Marcar como leída"
-                                                        aria-label="Marcar como leída"
-                                                    >
-                                                        <span className="notif-item__dot" />
-                                                    </button>
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Profile */}
                 <div className="dash-header__profile">
                     <div className="dash-header__profile-info">
                         <p className="dash-header__profile-name">{user?.nombre ?? 'Coordinador'}</p>

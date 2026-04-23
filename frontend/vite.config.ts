@@ -10,6 +10,17 @@ export default defineConfig({
     react(),
     legacy()
   ],
+  server: {
+    proxy: {
+      // Evita CORS en desarrollo: el navegador llama a /api/... (mismo origen)
+      // y Vite reenvía a https://notas.digicom.com.gt manteniendo HTTPS.
+      '/api': {
+        target: 'https://notas.digicom.com.gt',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

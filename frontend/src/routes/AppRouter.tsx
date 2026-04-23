@@ -18,11 +18,11 @@ import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
 import StudentNewPage from '../pages/StudentNewPage';
 import StudentsListPage from '../pages/StudentsListPage';
-import CalendarPage from '../pages/CalendarPage';
-import AcademicPhasesPage from '../pages/AcademicPhasesPage';
 import TernasListPage from '../features/ternas/pages/TernasListPage';
 import TernaDetailPage from '../features/ternas/pages/TernaDetailPage';
 import StudentDetailPage from '../pages/StudentDetailPage';
+import ReportesPage from '../features/reportes/pages/ReportesPage';
+import ReportDetailPage from '../features/reportes/pages/ReportDetailPage';
 
 // ─── Tipos ───────────────────────────────────────────────────────────
 
@@ -69,8 +69,8 @@ const AuthLoadingScreen: React.FC = () => (
  *  2. Si está autenticado → muestra el children
  *  3. Si no → redirige a /login (con `from` para volver después del login)
  */
-const ProtectedRoute: React.FC<RouteGuardProps> = ({ children, path, exact }) => {
-    const { isAuthenticated, isAuthLoading } = useAuth();
+const ProtectedRoute: React.FC<RouteGuardProps & { adminOnly?: boolean }> = ({ children, path, exact, adminOnly }) => {
+    const { isAuthenticated, isAuthLoading, isAdmin } = useAuth();
 
     return (
         <Route
@@ -78,9 +78,13 @@ const ProtectedRoute: React.FC<RouteGuardProps> = ({ children, path, exact }) =>
             exact={exact}
             render={({ location }) => {
                 if (isAuthLoading) return <AuthLoadingScreen />;
-                return isAuthenticated
-                    ? children
-                    : <Redirect to={{ pathname: '/login', state: { from: location } }} />;
+                if (!isAuthenticated) {
+                    return <Redirect to={{ pathname: '/login', state: { from: location } }} />;
+                }
+                if (adminOnly && !isAdmin) {
+                    return <Redirect to="/dashboard" />;
+                }
+                return children;
             }}
         />
     );
@@ -140,14 +144,6 @@ const AppRouter: React.FC = () => (
                 <StudentNewPage />
             </ProtectedRoute>
 
-            <ProtectedRoute path="/calendar" exact>
-                <CalendarPage />
-            </ProtectedRoute>
-
-            <ProtectedRoute path="/academic-phases" exact>
-                <AcademicPhasesPage />
-            </ProtectedRoute>
-
             <ProtectedRoute path="/ternas" exact>
                 <TernasListPage />
             </ProtectedRoute>
@@ -158,6 +154,14 @@ const AppRouter: React.FC = () => (
 
             <ProtectedRoute path="/students/:id" exact>
                 <StudentDetailPage />
+            </ProtectedRoute>
+
+            <ProtectedRoute path="/reports" exact adminOnly>
+                <ReportesPage />
+            </ProtectedRoute>
+
+            <ProtectedRoute path="/reports/:id" exact adminOnly>
+                <ReportDetailPage />
             </ProtectedRoute>
 
             {/* Compat: rutas antiguas redirigen a /ternas */}

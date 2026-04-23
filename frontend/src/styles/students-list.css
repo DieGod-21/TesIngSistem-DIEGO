@@ -704,3 +704,35 @@
     background: #1e293b; border-color: #334155; color: #e2e8f0;
 }
 [data-theme="dark"] .sl-pager__btn:hover:not(:disabled) { background: #334155; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   FILTER PILL (junto al título cuando hay filtro activo)
+═══════════════════════════════════════════════════════════════════ */
+.sl-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    margin-left: 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid rgba(30, 64, 175, 0.22);
+    vertical-align: middle;
+    animation: view-fade-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sl-filter-pill__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+[data-theme="dark"] .sl-filter-pill {
+    background: rgba(59, 130, 246, 0.18);
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.35);
+}

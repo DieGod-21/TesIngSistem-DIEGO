@@ -2368,3 +2368,32 @@
     border-top-color: rgba(220, 38, 38, 0.25);
     color: #fca5a5;
 }
+/* ── ConfirmModal: variantes + ícono (extensión) ─────────────────────── */
+
+.em-btn--warning {
+    background: #f59e0b;
+    color: #fff;
+}
+.em-btn--warning:hover:not(:disabled) {
+    background: #d97706;
+}
+.em-btn--warning:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.cfm-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 4px;
+}
+.cfm-icon--danger  { background: #fee2e2; color: #b91c1c; }
+.cfm-icon--warning { background: #fef3c7; color: #92400e; }
+.cfm-icon--primary { background: #dbeafe; color: #1e40af; }
+
+[data-theme="dark"] .cfm-icon--danger  { background: #7f1d1d; color: #fee2e2; }
+[data-theme="dark"] .cfm-icon--warning { background: #78350f; color: #fef3c7; }
+[data-theme="dark"] .cfm-icon--primary { background: #1e3a8a; color: #dbeafe; }

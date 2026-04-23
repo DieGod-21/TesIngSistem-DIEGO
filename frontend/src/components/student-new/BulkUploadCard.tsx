@@ -1,460 +1,216 @@
 /**
  * BulkUploadCard.tsx
  *
- * Dropzone con drag & drop para carga masiva de estudiantes.
- * - Excel/CSV: parsea con `xlsx`, muestra preview (máx 20 filas) + validaciones por fila.
- * - PDF: muestra nombre y tamaño (sin parsear contenido — parseo real será backend).
- * Llama importStudents() o uploadPdf() del servicio.
- * onUploaded() notifica al padre para refrescar RecentUploads.
+ * Carga masiva de estudiantes → POST /api/importar/estudiantes.
+ * Drag & drop + input file. Muestra estado de carga, resultado y errores.
+ * Endpoint único; no existe historial de cargas en el backend, por lo
+ * que no se intenta mostrar uno.
  */
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import * as XLSX from 'xlsx';
-import { CloudUpload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, XCircle, X, Download } from 'lucide-react';
-import { importStudents, uploadPdf, downloadTemplate } from '../../services/studentsService';
-import type { ImportResult, ParsedRow } from '../../services/studentsService';
+import React, { useRef, useState } from 'react';
+import { IonToast } from '@ionic/react';
+import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { importarEstudiantes, type ImportarEstudiantesResult } from '../../services/importarService';
 
-const ACCEPTED_TYPES = '.xlsx,.xls,.csv,.pdf';
-const PDF_TYPES = ['application/pdf'];
-const EXCEL_TYPES = [
+const ACCEPTED_EXT = ['.xlsx', '.xls', '.pdf'];
+const ACCEPTED_MIME = [
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/vnd.ms-excel',
-    'text/csv',
+    'application/pdf',
 ];
 
-interface BulkUploadCardProps {
-    onUploaded?: () => void;
+function isAcceptedFile(f: File): boolean {
+    const name = f.name.toLowerCase();
+    if (ACCEPTED_EXT.some((ext) => name.endsWith(ext))) return true;
+    return ACCEPTED_MIME.includes(f.type);
 }
 
-type UploadState =
-    | { status: 'idle' }
-    | { status: 'dragging' }
-    | { status: 'parsing' }
-    | { status: 'preview'; rows: ParsedRow[]; filename: string }
-    | { status: 'pdf'; filename: string; sizeKb: string }
-    | { status: 'uploading' }
-    | { status: 'success'; result: ImportResult }
-    | { status: 'pdf-success'; filename: string }
-    | { status: 'error'; message: string };
-
-// ─── Helpers ────────────────────────────────────────────────────────
-
-function formatSize(bytes: number): string {
+function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function isPdf(file: File): boolean {
-    return PDF_TYPES.includes(file.type) || file.name.toLowerCase().endsWith('.pdf');
-}
-
-function isExcel(file: File): boolean {
-    return EXCEL_TYPES.includes(file.type) || /\.(xlsx?|csv)$/i.test(file.name);
-}
-
-function norm(val: unknown): string {
-    return String(val ?? '').trim().replace(/\s+/g, ' ').replace(/\*/g, '').trim();
-}
-
-/** Busca un campo en la fila probando múltiples nombres de columna posibles */
-function pick(row: Record<string, unknown>, ...keys: string[]): string {
-    for (const k of keys) {
-        const val = row[k];
-        if (val !== undefined && val !== null && String(val).trim() !== '') return String(val).trim();
-    }
-    // Búsqueda tolerante: ignora asteriscos y espacios extra en los headers del archivo
-    const rowKeys = Object.keys(row);
-    for (const k of keys) {
-        const kNorm = k.replace(/\*/g, '').trim().toLowerCase();
-        const match = rowKeys.find((rk) => rk.replace(/\*/g, '').trim().toLowerCase() === kNorm);
-        if (match !== undefined) {
-            const val = row[match];
-            if (val !== undefined && val !== null && String(val).trim() !== '') return String(val).trim();
-        }
-    }
-    return '';
-}
-
-async function parseExcel(file: File): Promise<ParsedRow[]> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = e.target?.result;
-                const wb = XLSX.read(data, { type: 'array' });
-                const ws = wb.Sheets[wb.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: false });
-                const rows: ParsedRow[] = json.map((row, i) => ({
-                    rowIndex: i + 2,
-                    fullName:      pick(row, 'Full Name *', 'Full Name', 'nombreCompleto', 'nombre_completo'),
-                    carnetId:      pick(row, 'Carnet ID *', 'Carnet ID', 'carnetId', 'carnet_id'),
-                    email:         pick(row, 'Email (optional)', 'correoInstitucional', 'correo_institucional'),
-                    academicPhase: pick(row, 'Academic Phase *', 'Academic Phase', 'faseAcademica', 'fase_academica'),
-                    approved:      pick(row, 'Status *', 'Status', 'Approved', 'aprobado'),
-                    ...row,
-                }));
-                // Filtrar filas completamente vacías
-                resolve(rows.filter((r) => norm(r.fullName) || norm(r.carnetId)));
-            } catch (err) {
-                reject(err);
-            }
-        };
-        reader.onerror = () => reject(new Error('Error leyendo el archivo.'));
-        reader.readAsArrayBuffer(file);
+const BulkUploadCard: React.FC = () => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [file, setFile]         = useState<File | null>(null);
+    const [dragging, setDragging] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [result, setResult]     = useState<ImportarEstudiantesResult | null>(null);
+    const [error, setError]       = useState<string | null>(null);
+    const [toast, setToast]       = useState<{ open: boolean; message: string; color: string }>({
+        open: false, message: '', color: 'success',
     });
-}
 
-// Claves internas del ParsedRow y nombres conocidos de columnas Excel
-// que NO deben aparecer como columnas extra en el preview.
-const KNOWN_KEYS = new Set([
-    'rowIndex', 'fullName', 'carnetId', 'email', 'academicPhase', 'approved',
-    'Full Name *', 'Full Name', 'nombreCompleto', 'nombre_completo',
-    'Carnet ID *', 'Carnet ID', 'carnet_id',
-    'Email (optional)', 'correoInstitucional', 'correo_institucional',
-    'Academic Phase *', 'Academic Phase', 'faseAcademica', 'fase_academica',
-    'Status *', 'Status', 'Approved', 'aprobado',
-]);
-
-/** Celda de Estado: refleja el valor real del campo "Status" del Excel. */
-function StatusCell({ value }: { value: string | boolean | undefined }) {
-    const v = String(value ?? '').trim().toLowerCase();
-    if (v === 'aprobado' || v === 'true') {
-        return <span className="sn-status-badge sn-status-badge--ok"><CheckCircle2 size={12} />Aprobado</span>;
-    }
-    if (v === 'desaprobado' || v === 'false') {
-        return <span className="sn-status-badge sn-status-badge--ko"><XCircle size={12} />Desaprobado</span>;
-    }
-    return <span className="sn-status-badge sn-status-badge--warn"><AlertCircle size={12} />{value ? String(value) : 'sin valor'}</span>;
-}
-
-// ─── Componente ─────────────────────────────────────────────────────
-
-const BulkUploadCard: React.FC<BulkUploadCardProps> = ({ onUploaded }) => {
-    const [state, setState] = useState<UploadState>({ status: 'idle' });
-    const fileInputRef      = useRef<HTMLInputElement>(null);
-    const selectedFileRef   = useRef<File | null>(null);
-
-    // Columnas extra que el Excel pueda traer más allá de las 5 conocidas
-    const extraCols = useMemo<string[]>(() => {
-        if (state.status !== 'preview' || !state.rows.length) return [];
-        return Object.keys(state.rows[0]).filter((k) => !KNOWN_KEYS.has(k));
-    }, [state]);
-
-    const handleFile = useCallback(async (file: File) => {
-        selectedFileRef.current = file;
-        setState({ status: 'parsing' });
-        try {
-            if (isPdf(file)) {
-                setState({ status: 'pdf', filename: file.name, sizeKb: formatSize(file.size) });
-            } else if (isExcel(file)) {
-                const rows = await parseExcel(file);
-                setState({ status: 'preview', rows, filename: file.name });
-            } else {
-                selectedFileRef.current = null;
-                setState({ status: 'error', message: 'Formato no soportado. Usa .xlsx, .xls, .csv o .pdf.' });
-            }
-        } catch {
-            selectedFileRef.current = null;
-            setState({ status: 'error', message: 'No se pudo leer el archivo.' });
+    const pickFile = (f: File | null) => {
+        setResult(null);
+        setError(null);
+        if (!f) { setFile(null); return; }
+        if (!isAcceptedFile(f)) {
+            setError('Formato no válido. Usa .xlsx, .xls o .pdf.');
+            setFile(null);
+            return;
         }
-    }, []);
+        setFile(f);
+    };
 
-    const handleDrop = useCallback(
-        (e: React.DragEvent<HTMLDivElement>) => {
-            e.preventDefault();
-            setState({ status: 'idle' });
-            const file = e.dataTransfer.files[0];
-            if (file) handleFile(file);
-        },
-        [handleFile],
-    );
-
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
-        setState((s) => s.status !== 'dragging' ? { status: 'dragging' } : s);
+        setDragging(false);
+        const f = e.dataTransfer.files?.[0] ?? null;
+        pickFile(f);
     };
 
-    const handleDragLeave = () => {
-        setState((s) => s.status === 'dragging' ? { status: 'idle' } : s);
+    const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        setDragging(true);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) handleFile(file);
-        e.target.value = '';
-    };
-
-    const handleImport = async () => {
-        if (state.status === 'preview') {
-            setState({ status: 'uploading' });
-            try {
-                const result = await importStudents(state.rows);
-                setState({ status: 'success', result });
-                onUploaded?.();
-            } catch {
-                setState({ status: 'error', message: 'Error al importar. Intenta de nuevo.' });
-            }
-        } else if (state.status === 'pdf') {
-            const filename = state.filename;
-            const realFile = selectedFileRef.current;
-            setState({ status: 'uploading' });
-            try {
-                await uploadPdf(realFile ?? new File([''], filename, { type: 'application/pdf' }));
-                setState({ status: 'pdf-success', filename });
-                onUploaded?.();
-            } catch {
-                setState({ status: 'error', message: 'Error al subir el PDF.' });
-            }
+    const upload = async () => {
+        if (!file || uploading) return;
+        setUploading(true);
+        setError(null);
+        setResult(null);
+        try {
+            const res = await importarEstudiantes(file);
+            setResult(res);
+            setToast({
+                open: true,
+                message: res.mensaje ?? res.message ?? 'Importación completada.',
+                color: 'success',
+            });
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'No se pudo importar el archivo.';
+            setError(msg);
+            setToast({ open: true, message: msg, color: 'danger' });
+        } finally {
+            setUploading(false);
         }
     };
 
-    const handleReset = () => {
-        selectedFileRef.current = null;
-        setState({ status: 'idle' });
+    const clear = () => {
+        setFile(null);
+        setResult(null);
+        setError(null);
+        if (inputRef.current) inputRef.current.value = '';
     };
-
-    const handleDownloadTemplate = async () => {
-        try { await downloadTemplate(); } catch { /* silencioso */ }
-    };
-
-    const isDragging = state.status === 'dragging';
 
     return (
-        <div className="sn-card sn-card--bulk">
-            <div className="sn-card__header">
-                <CloudUpload size={20} className="sn-card__header-icon" />
-                <h3 className="sn-card__title">Carga Masiva</h3>
-                <button
-                    type="button"
-                    className="sn-btn-ghost sn-card__header-action"
-                    onClick={handleDownloadTemplate}
-                    title="Descargar plantilla Excel"
+        <>
+            <div className="sn-card">
+                <div className="sn-card__header">
+                    <UploadCloud size={20} className="sn-card__header-icon" />
+                    <h3 className="sn-card__title">Carga Masiva</h3>
+                </div>
+
+                <div
+                    className={`sn-dropzone${dragging ? ' sn-dropzone--dragging' : ''}`}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
+                    onDragLeave={() => setDragging(false)}
+                    onClick={() => inputRef.current?.click()}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            inputRef.current?.click();
+                        }
+                    }}
+                    aria-label="Zona de carga: arrastra un archivo o haz clic para seleccionarlo"
                 >
-                    <Download size={14} />
-                    Plantilla
-                </button>
-            </div>
+                    <UploadCloud size={32} className="sn-dropzone__icon" aria-hidden="true" />
+                    <p className="sn-dropzone__title">Arrastra tu archivo aquí</p>
+                    <p className="sn-dropzone__hint">
+                        o <span className="sn-dropzone__link">haz clic para seleccionarlo</span>
+                    </p>
+                    <p className="sn-dropzone__formats">Formatos: .xlsx · .xls · .pdf</p>
 
-            <div className="sn-bulk-body">
-                {/* ── Zona de arrastre ─────────────────────────────────── */}
-                {(state.status === 'idle' || state.status === 'dragging' || state.status === 'parsing') && (
-                    <div
-                        className={`sn-dropzone${isDragging ? ' sn-dropzone--over' : ''}`}
-                        onDrop={handleDrop}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        role="region"
-                        aria-label="Zona de arrastre de archivos"
-                    >
-                        <div className="sn-dropzone__icon-wrap">
-                            <CloudUpload size={36} className="sn-dropzone__icon" />
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        accept={ACCEPTED_EXT.join(',')}
+                        onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+                        className="sn-dropzone__input"
+                        aria-hidden="true"
+                        tabIndex={-1}
+                    />
+                </div>
+
+                {file && (
+                    <div className="sn-file-chip" role="status">
+                        <FileSpreadsheet size={18} aria-hidden="true" />
+                        <div className="sn-file-chip__meta">
+                            <p className="sn-file-chip__name">{file.name}</p>
+                            <p className="sn-file-chip__size">{formatBytes(file.size)}</p>
                         </div>
-                        <p className="sn-dropzone__title">
-                            {state.status === 'parsing' ? 'Procesando archivo…' : 'Arrastra archivos aquí'}
-                        </p>
-                        <p className="sn-dropzone__sub">Acepta .pdf, .xlsx, .xls y .csv</p>
-                        {state.status !== 'parsing' && (
-                            <button
-                                type="button"
-                                className="sn-btn-primary sn-dropzone__btn"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                Seleccionar Archivo
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            className="sn-file-chip__clear"
+                            onClick={(e) => { e.stopPropagation(); clear(); }}
+                            aria-label="Quitar archivo"
+                            disabled={uploading}
+                        >
+                            <X size={16} aria-hidden="true" />
+                        </button>
                     </div>
                 )}
 
-                {/* ── Preview Excel ────────────────────────────────────── */}
-                {state.status === 'preview' && (
-                    <div className="sn-preview">
-                        <div className="sn-preview__header">
-                            <FileSpreadsheet size={16} className="sn-preview__file-icon" />
-                            <span className="sn-preview__filename">{state.filename}</span>
-                            <button className="sn-preview__close" aria-label="Cancelar" onClick={handleReset}>
-                                <X size={14} />
-                            </button>
-                        </div>
-                        <p className="sn-preview__meta">
-                            <strong>{state.rows.length}</strong> estudiante{state.rows.length !== 1 ? 's' : ''} detectado{state.rows.length !== 1 ? 's' : ''} &mdash; todos visibles con scroll
-                        </p>
-
-                        <div className="sn-preview__table-wrap">
-                            <table className="sn-preview__table">
-                                <thead>
-                                    <tr>
-                                        <th className="sn-preview__th sn-preview__th--num">#</th>
-                                        <th className="sn-preview__th">Nombre</th>
-                                        <th className="sn-preview__th">Carnet</th>
-                                        <th className="sn-preview__th">Email</th>
-                                        <th className="sn-preview__th">Fase Académica</th>
-                                        <th className="sn-preview__th">Estado</th>
-                                        {extraCols.map((col) => (
-                                            <th key={col} className="sn-preview__th sn-preview__th--extra">{col}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {state.rows.map((row) => {
-                                        const hasError = !row.carnetId?.trim() || !row.fullName?.trim();
-                                        return (
-                                            <tr
-                                                key={row.rowIndex}
-                                                className={`sn-preview__row${hasError ? ' sn-preview__row--error' : ''}`}
-                                            >
-                                                <td className="sn-preview__td sn-preview__td--num">{row.rowIndex}</td>
-                                                <td className="sn-preview__td">{row.fullName || <span className="sn-preview__empty">vacío</span>}</td>
-                                                <td className="sn-preview__td sn-preview__td--mono">{row.carnetId || <span className="sn-preview__empty">vacío</span>}</td>
-                                                <td className="sn-preview__td sn-preview__td--email">{row.email?.trim() ? row.email : <span className="sn-preview__empty">—</span>}</td>
-                                                <td className="sn-preview__td">{row.academicPhase || <span className="sn-preview__empty">—</span>}</td>
-                                                <td className="sn-preview__td sn-preview__td--status">
-                                                    <StatusCell value={row.approved} />
-                                                </td>
-                                                {extraCols.map((col) => (
-                                                    <td key={col} className="sn-preview__td sn-preview__td--extra">
-                                                        {row[col] != null && String(row[col]).trim() !== ''
-                                                            ? String(row[col])
-                                                            : <span className="sn-preview__empty">—</span>}
-                                                    </td>
-                                                ))}
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="sn-preview__actions">
-                            <button
-                                type="button"
-                                className="sn-btn-primary"
-                                onClick={handleImport}
-                            >
-                                Importar {state.rows.length} Registro{state.rows.length !== 1 ? 's' : ''}
-                            </button>
-                            <button type="button" className="sn-btn-ghost" onClick={handleReset}>
-                                Cancelar
-                            </button>
-                        </div>
+                {error && (
+                    <div className="sn-upload-msg sn-upload-msg--error" role="alert">
+                        <AlertCircle size={16} aria-hidden="true" />
+                        <span>{error}</span>
                     </div>
                 )}
 
-                {/* ── PDF info ─────────────────────────────────────────── */}
-                {state.status === 'pdf' && (
-                    <div className="sn-pdf-info">
-                        <FileText size={32} className="sn-pdf-info__icon" />
-                        <p className="sn-pdf-info__name">{state.filename}</p>
-                        <p className="sn-pdf-info__size">{state.sizeKb}</p>
-                        <p className="sn-pdf-info__note">El contenido del PDF se procesará en el servidor.</p>
-                        <div className="sn-preview__actions">
-                            <button type="button" className="sn-btn-primary" onClick={handleImport}>Subir PDF</button>
-                            <button type="button" className="sn-btn-ghost"    onClick={handleReset}>Cancelar</button>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── Uploading ─────────────────────────────────────────── */}
-                {state.status === 'uploading' && (
-                    <div className="sn-uploading">
-                        <div className="sn-uploading__spinner" aria-label="Subiendo…" />
-                        <p className="sn-uploading__text">Procesando…</p>
-                    </div>
-                )}
-
-                {/* ── Success Excel ─────────────────────────────────────── */}
-                {state.status === 'success' && (
-                    <div className={`sn-result ${state.result.rejected === state.result.total ? 'sn-result--error' : 'sn-result--success'}`}>
-                        {state.result.rejected === state.result.total
-                            ? <AlertCircle size={28} className="sn-result__icon" />
-                            : <CheckCircle2 size={28} className="sn-result__icon" />}
-                        <p className="sn-result__title">
-                            {state.result.rejected === state.result.total
-                                ? 'Ningún registro importado'
-                                : 'Importación completada'}
-                        </p>
-                        <div className="sn-result__stats">
-                            <span className="sn-result__stat sn-result__stat--ok">
-                                <CheckCircle2 size={13} /> {state.result.imported} importados
-                            </span>
-                            {state.result.rejected > 0 && (
-                                <span className="sn-result__stat sn-result__stat--ko">
-                                    <XCircle size={13} /> {state.result.rejected} rechazados
-                                </span>
-                            )}
-                        </div>
-                        {state.result.errors.length > 0 && (
-                            <div className="sn-result__errors-wrap">
-                                <div className="sn-result__reject-header">
-                                    <div className="sn-result__reject-icon-wrap">
-                                        <XCircle size={18} className="sn-result__reject-main-icon" />
-                                    </div>
-                                    <div className="sn-result__reject-text">
-                                        <span className="sn-result__reject-primary">Errors detected in upload</span>
-                                        <span className="sn-result__reject-secondary">Registros Rechazados</span>
-                                    </div>
-                                    <span className="sn-result__reject-count">{state.result.rejected}</span>
-                                </div>
-                                <ul className="sn-result__errors">
-                                    {state.result.errors.map((e) => (
-                                        <li key={`${e.row}-${e.carnetId}`} className="sn-result__err-item">
-                                            <XCircle size={12} className="sn-result__err-icon" aria-hidden="true" />
-                                            <span className="sn-result__err-row">Fila {e.row}</span>
-                                            {e.carnetId && <span className="sn-result__err-carnet">{e.carnetId}</span>}
-                                            <span className="sn-result__err-reason">{e.reason}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        <button type="button" className="sn-btn-ghost" onClick={handleReset}>Nueva Carga</button>
-                    </div>
-                )}
-
-                {/* ── Success PDF ───────────────────────────────────────── */}
-                {state.status === 'pdf-success' && (
-                    <div className="sn-result sn-result--success">
-                        <CheckCircle2 size={28} className="sn-result__icon" />
-                        <p className="sn-result__title">PDF subido correctamente</p>
-                        <p className="sn-result__detail">{state.filename}</p>
-                        <button type="button" className="sn-btn-ghost" onClick={handleReset}>Nueva Carga</button>
-                    </div>
-                )}
-
-                {/* ── Error ─────────────────────────────────────────────── */}
-                {state.status === 'error' && (
-                    <div className="sn-result sn-result--error">
-                        <AlertCircle size={28} className="sn-result__icon" />
-                        <p className="sn-result__title">Error</p>
-                        <p className="sn-result__detail">{state.message}</p>
-                        <button type="button" className="sn-btn-ghost" onClick={handleReset}>Intentar de nuevo</button>
-                    </div>
-                )}
-
-                {/* Info banner */}
-                {(state.status === 'idle' || state.status === 'dragging') && (
-                    <div className="sn-info-block">
-                        <AlertCircle size={16} className="sn-info-block__icon" />
+                {result && (
+                    <div className="sn-upload-msg sn-upload-msg--success" role="status">
+                        <CheckCircle2 size={16} aria-hidden="true" />
                         <div>
-                            <p className="sn-info-block__title">Columnas requeridas en el archivo</p>
-                            <p className="sn-info-block__body">
-                                Requeridas: <code>Nombre completo</code>, <code>Carné</code>,{' '}
-                                <code>Fase académica</code>, <code>Estado</code> ("aprobado"/"desaprobado").{' '}
-                                Opcional: <code>Correo electrónico</code>.
-                            </p>
+                            <strong>Importación completada.</strong>
+                            <ul className="sn-upload-msg__list">
+                                {typeof result.total      === 'number' && <li>Total procesados: {result.total}</li>}
+                                {typeof result.creados    === 'number' && <li>Creados: {result.creados}</li>}
+                                {typeof result.duplicados === 'number' && <li>Duplicados: {result.duplicados}</li>}
+                                {Array.isArray(result.errores) && result.errores.length > 0 && (
+                                    <li>Con errores: {result.errores.length}</li>
+                                )}
+                            </ul>
                         </div>
                     </div>
                 )}
 
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={ACCEPTED_TYPES}
-                    className="sn-file-input"
-                    onChange={handleInputChange}
-                    aria-label="Seleccionar archivo"
-                />
+                <div className="sn-form__actions">
+                    <button
+                        type="button"
+                        className="sn-btn-primary"
+                        onClick={upload}
+                        disabled={!file || uploading}
+                        aria-busy={uploading}
+                    >
+                        <UploadCloud size={16} />
+                        {uploading ? 'Importando…' : 'Importar archivo'}
+                    </button>
+                    <button
+                        type="button"
+                        className="sn-btn-secondary"
+                        onClick={clear}
+                        disabled={uploading || (!file && !result && !error)}
+                    >
+                        Limpiar
+                    </button>
+                </div>
             </div>
-        </div>
+
+            <IonToast
+                isOpen={toast.open}
+                message={toast.message}
+                color={toast.color}
+                duration={3000}
+                position="bottom"
+                onDidDismiss={() => setToast((t) => ({ ...t, open: false }))}
+            />
+        </>
     );
 };
 

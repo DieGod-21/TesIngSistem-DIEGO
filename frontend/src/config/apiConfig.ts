@@ -2,11 +2,9 @@
  * apiConfig.ts
  *
  * Contrato centralizado entre el frontend y el API Control de Notas (UMG).
- * Si el backend cambia rutas, este es el único archivo a modificar.
- *
- * Las secciones bajo `legacy:` apuntan a endpoints inexistentes en el API real
- * (eran del prototipo anterior). Se mantienen sólo para no romper la
- * compilación de servicios antiguos. NO las uses en código nuevo.
+ * Sólo contiene endpoints REALES expuestos por https://notas.digicom.com.gt
+ * (verificados contra Swagger). Si el backend agrega rutas nuevas, este
+ * es el único archivo a modificar.
  */
 
 // ─── Endpoints reales (Control de Notas) ──────────────────────────────────
@@ -58,71 +56,12 @@ export const API_PATHS = {
         ternaById:   (id: number) => `/api/reportes/ternas/${id}`,
         estudiante:  (carnet: string) => `/api/reportes/estudiante/${encodeURIComponent(carnet)}`,
     },
+    importar: {
+        estudiantes:  '/api/importar/estudiantes',
+        notas:        (cursoCodigo: string) => `/api/importar/notas/${cursoCodigo}`,
+    },
     health: '/health',
-
-    // ─── Legacy (no existen en el API real, sólo evitan que rompa el build) ─
-    auth: { login: '/auth/login' },
-    students: {
-        list:     '/api/estudiantes',
-        bulk:     '/api/estudiantes/bulk',
-        template: '/api/estudiantes/template',
-        byId:     (id: string) => `/api/estudiantes/${id}`,
-    },
-    semesters: '/api/semesters',
-    academicPhases: {
-        active: '/api/academic-phases',
-        admin:  '/api/academic-phases/admin',
-        byId:   (id: number) => `/api/academic-phases/${id}`,
-        toggle: (id: number) => `/api/academic-phases/${id}/toggle`,
-    },
-    dashboard: {
-        summary:        '/api/dashboard/summary',
-        recentStudents: '/api/dashboard/recent-students',
-    },
-    events: {
-        list:  '/api/events',
-        byId:  (id: string) => `/api/events/${id}`,
-    },
-    deadlines: {
-        list:  '/api/deadlines',
-        byId:  (id: string) => `/api/deadlines/${id}`,
-    },
-    notifications: {
-        list:        '/api/notifications',
-        unreadCount: '/api/notifications/unread-count',
-        markRead:    (id: string) => `/api/notifications/${id}/read`,
-        markAllRead: '/api/notifications/read-all',
-    },
-    uploads: {
-        list:  '/api/uploads',
-        byId:  (id: string) => `/api/uploads/${id}`,
-    },
-    evaluations: {
-        panels:            '/api/evaluation/panels',
-        panelById:         (id: string) => `/api/evaluation/panels/${id}`,
-        studentByPanel:    (panelId: string) => `/api/evaluation/panels/${panelId}/student`,
-        criteria:          '/api/evaluation/criteria',
-        evaluatorsByPanel: (panelId: string) => `/api/evaluation/panels/${panelId}/evaluators`,
-        submit:            (panelId: string) => `/api/evaluation/panels/${panelId}/submit`,
-        draft:             (panelId: string) => `/api/evaluation/panels/${panelId}/draft`,
-    },
 } as const;
-
-// ─── Auth (legacy compat — el API real no usa JWT) ────────────────────────
-
-export const AUTH_REQUEST_FIELDS = {
-    email:    'correo_electronico',
-    password: 'contrasena',
-} as const;
-
-export const JWT_CLAIMS = {
-    userId: 'user_id',
-    name:   'nombre',
-    roles:  'roles',
-    exp:    'exp',
-} as const;
-
-export const AUTH_TOKEN_RESPONSE_FIELD = 'token' as const;
 
 // ─── Constantes del dominio de tesis ──────────────────────────────────────
 
