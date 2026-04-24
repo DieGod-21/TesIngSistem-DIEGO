@@ -9,7 +9,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { ChevronLeft, FileText, Users } from 'lucide-react';
-import AppShell from '../../../layout/AppShell';
 import { useAuth } from '../../../context/AuthContext';
 import { getTernaReport, type ReporteTernaDetalle } from '../../../services/reportesService';
 import { ResolutionBadge } from './ReportesPage';
@@ -46,17 +45,14 @@ const ReportDetailPage: React.FC = () => {
 
     if (!isAdmin) {
         return (
-            <AppShell>
-                <div className="reportes-page">
-                    <div className="terror" role="alert">Esta sección es solo para administradores.</div>
-                </div>
-            </AppShell>
+            <div className="reportes-page">
+                <div className="terror" role="alert">Esta sección es solo para administradores.</div>
+            </div>
         );
     }
 
     return (
-        <AppShell>
-            <div className="reportes-page">
+        <div className="reportes-page">
                 <button
                     type="button"
                     className="eval-btn eval-btn--secondary"
@@ -167,8 +163,7 @@ const ReportDetailPage: React.FC = () => {
                         </div>
                     </>
                 )}
-            </div>
-        </AppShell>
+        </div>
     );
 };
 

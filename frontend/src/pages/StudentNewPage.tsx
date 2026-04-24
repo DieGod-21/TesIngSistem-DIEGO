@@ -8,15 +8,13 @@
 
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import AppShell from '../layout/AppShell';
 import StudentManualForm from '../components/student-new/StudentManualForm';
 import BulkUploadCard from '../components/student-new/BulkUploadCard';
 
 import '../styles/student-new.css';
 
 const StudentNewPage: React.FC = () => (
-    <AppShell>
-        <div className="sn-body">
+    <div className="sn-body">
             <nav className="sn-breadcrumb" aria-label="Navegación secundaria">
                 <span className="sn-breadcrumb__item">Inicio</span>
                 <ChevronRight size={14} className="sn-breadcrumb__sep" aria-hidden="true" />
@@ -36,8 +34,7 @@ const StudentNewPage: React.FC = () => (
                 <StudentManualForm />
                 <BulkUploadCard />
             </div>
-        </div>
-    </AppShell>
+    </div>
 );
 
 export default StudentNewPage;

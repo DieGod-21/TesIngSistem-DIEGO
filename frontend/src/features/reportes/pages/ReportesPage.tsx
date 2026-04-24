@@ -8,7 +8,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { BarChart3, Search, RefreshCw, ChevronRight } from 'lucide-react';
-import AppShell from '../../../layout/AppShell';
 import { useAuth } from '../../../context/AuthContext';
 import { getGlobalTernasReport } from '../../../services/reportesService';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
@@ -73,13 +72,11 @@ const ReportesPage: React.FC = () => {
 
     if (!isAdmin) {
         return (
-            <AppShell>
-                <div className="reportes-page">
-                    <div className="terror" role="alert">
-                        Esta sección es solo para administradores.
-                    </div>
+            <div className="reportes-page">
+                <div className="terror" role="alert">
+                    Esta sección es solo para administradores.
                 </div>
-            </AppShell>
+            </div>
         );
     }
 
@@ -88,9 +85,8 @@ const ReportesPage: React.FC = () => {
     const pct = (n?: number) => (total > 0 && n != null ? Math.round((n / total) * 100) : 0);
 
     return (
-        <AppShell>
-            <div className="reportes-page">
-                <header className="ternas-page__header">
+        <div className="reportes-page">
+            <header className="ternas-page__header">
                     <h1 className="ternas-page__title">
                         <BarChart3 size={22} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 8 }} />
                         Reportes de Ternas
@@ -100,15 +96,17 @@ const ReportesPage: React.FC = () => {
                     </p>
                 </header>
 
-                <section className="reportes-summary" aria-label="Resumen global">
-                    <StatCard label="Total ternas"   value={r?.total ?? 0}             variant="total" />
-                    <StatCard label="Aprueba Tesis"  value={r?.aprueba_tesis ?? 0}     variant="aprueba-tesis"  pct={pct(r?.aprueba_tesis)} />
-                    <StatCard label="Aprueba Curso"  value={r?.aprueba_curso ?? 0}     variant="aprueba-curso"  pct={pct(r?.aprueba_curso)} />
-                    <StatCard label="Reprobados"     value={r?.reprobados ?? 0}        variant="reprobado"      pct={pct(r?.reprobados)} />
-                    <StatCard label="Pendientes"     value={r?.pendientes ?? 0}        variant="pendiente"      pct={pct(r?.pendientes)} />
-                </section>
+                {!loading && !error && (
+                    <section className="reportes-summary" aria-label="Resumen global">
+                        <StatCard label="Total ternas"   value={r?.total ?? 0}             variant="total" />
+                        <StatCard label="Aprueba Tesis"  value={r?.aprueba_tesis ?? 0}     variant="aprueba-tesis"  pct={pct(r?.aprueba_tesis)} />
+                        <StatCard label="Aprueba Curso"  value={r?.aprueba_curso ?? 0}     variant="aprueba-curso"  pct={pct(r?.aprueba_curso)} />
+                        <StatCard label="Reprobados"     value={r?.reprobados ?? 0}        variant="reprobado"      pct={pct(r?.reprobados)} />
+                        <StatCard label="Pendientes"     value={r?.pendientes ?? 0}        variant="pendiente"      pct={pct(r?.pendientes)} />
+                    </section>
+                )}
 
-                <div className="reportes-toolbar">
+                <div className="reportes-toolbar" style={loading ? { display: 'none' } : undefined}>
                     <div className="sl-filter-search" style={{ flex: 1, minWidth: 220 }}>
                         <Search size={14} className="sl-filter-search__icon" aria-hidden="true" />
                         <input
@@ -139,7 +137,7 @@ const ReportesPage: React.FC = () => {
                     </button>
                 </div>
 
-                {loading && <div className="tloading">Cargando reporte…</div>}
+                {loading && <ReportesSkeleton />}
                 {!loading && error && (
                     <div className="terror" role="alert">
                         {error}
@@ -212,12 +210,40 @@ const ReportesPage: React.FC = () => {
                         </table>
                     </div>
                 )}
-            </div>
-        </AppShell>
+        </div>
     );
 };
 
 // ─── Subcomponentes ──────────────────────────────────────────────────────
+
+const ReportesSkeleton: React.FC = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* Stat cards skeleton */}
+        <div className="reportes-summary">
+            {[...Array(5)].map((_, i) => (
+                <div key={i} className="rep-stat" style={{ pointerEvents: 'none' }}>
+                    <div className="skeleton skeleton--line skeleton--short" style={{ marginBottom: 10 }} />
+                    <div className="skeleton skeleton--large" />
+                    <div className="skeleton skeleton--line skeleton--medium" style={{ marginTop: 8 }} />
+                </div>
+            ))}
+        </div>
+        {/* Table skeleton */}
+        <div className="reportes-table-card" style={{ overflow: 'hidden' }}>
+            {[...Array(6)].map((_, i) => (
+                <div key={i} className="dash-skeleton-row">
+                    <div className="skeleton" style={{ width: 28, height: 28, borderRadius: 6, flexShrink: 0 }} />
+                    <div className="dash-skeleton-row__lines">
+                        <div className="skeleton skeleton--line skeleton--medium" />
+                        <div className="skeleton skeleton--line skeleton--short" />
+                    </div>
+                    <div className="skeleton skeleton--line" style={{ width: 70 }} />
+                    <div className="skeleton skeleton--line" style={{ width: 90 }} />
+                </div>
+            ))}
+        </div>
+    </div>
+);
 
 const StatCard: React.FC<{ label: string; value: number; variant: string; pct?: number }> = ({ label, value, variant, pct }) => (
     <article className={`rep-stat rep-stat--${variant}`}>

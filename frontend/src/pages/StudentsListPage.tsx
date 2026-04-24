@@ -21,7 +21,6 @@ import {
     Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight,
     RefreshCw, Users, X, CheckCircle2, AlertTriangle,
 } from 'lucide-react';
-import AppShell from '../layout/AppShell';
 import { useEstudiantesList } from '../hooks/useEstudiantesList';
 import { initials } from '../utils/strings';
 import { matchesText } from '../utils/text';
@@ -65,8 +64,7 @@ const StudentsListPage: React.FC = () => {
     );
 
     return (
-        <AppShell>
-            <div className="sl-body">
+        <div className="sl-body">
                 <nav className="sn-breadcrumb" aria-label="Navegación secundaria">
                     <span className="sn-breadcrumb__item">Inicio</span>
                     <ChevronRight size={14} className="sn-breadcrumb__sep" />
@@ -98,8 +96,7 @@ const StudentsListPage: React.FC = () => {
                         ? <TesisFilteredView filter={filter} initialSearch={initialSearch} />
                         : <DefaultStudentsView initialSearch={initialSearch} history={history} />}
                 </div>
-            </div>
-        </AppShell>
+        </div>
     );
 };
 

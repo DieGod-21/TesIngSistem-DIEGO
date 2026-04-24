@@ -23,6 +23,7 @@
 
 import React, { useState } from 'react';
 import { IonPage, IonContent } from '@ionic/react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/TopHeader';
 import '../styles/dashboard.css';
@@ -34,37 +35,28 @@ interface AppShellProps {
 
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { pathname } = useLocation();
 
     return (
         <IonPage>
-            {/*
-             * scrollY={true}  → habilita scroll vertical en Ionic
-             * fullscreen       → extiende el contenido bajo la barra de estado en iOS
-             * NO se pasa overflow manual — IonContent lo gestiona internamente
-             */}
             <IonContent scrollY={true} fullscreen>
-                {/*
-                 * dash-layout: flex-row, altura automática (NO 100vh).
-                 * Debe crecer con el contenido para que IonContent pueda hacer scroll.
-                 */}
                 <div className="dash-layout">
                     <Sidebar
                         open={sidebarOpen}
                         onClose={() => setSidebarOpen(false)}
                     />
                     {/*
-                     * dash-main: columna flex, min-height: 100% (relativo a IonContent),
-                     * NO min-height:100vh (eso bloquea el scroll en Ionic).
+                     * dash-main persists across route changes — sidebar and header
+                     * never remount. Only the inner div re-keys on pathname change,
+                     * triggering the entrance animation for the incoming page content.
                      */}
-                    <main className="dash-main page-enter-animate">
-                        {/*
-                         * TopHeader: sticky dentro del scroll de IonContent.
-                         * position:sticky funciona correctamente con IonContent en Ionic >=6.
-                         */}
+                    <main className="dash-main">
                         <TopHeader
                             onMenuToggle={() => setSidebarOpen((v) => !v)}
                         />
-                        {children}
+                        <div key={pathname} className="page-enter-animate">
+                            {children}
+                        </div>
                     </main>
                 </div>
             </IonContent>

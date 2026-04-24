@@ -9,7 +9,6 @@
 import React, { useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { ClipboardList, Users } from 'lucide-react';
-import AppShell from '../../../layout/AppShell';
 import TernaCard from '../components/TernaCard';
 import { useTernas } from '../hooks/useTernas';
 import { useAuth } from '../../../context/AuthContext';
@@ -54,8 +53,7 @@ const TernasListPage: React.FC = () => {
     }), [ternas]);
 
     return (
-        <AppShell>
-            <div className="ternas-page">
+        <div className="ternas-page">
                 <header className="ternas-page__header">
                     <h1 className="ternas-page__title">
                         <ClipboardList size={22} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 8 }} />
@@ -114,8 +112,7 @@ const TernasListPage: React.FC = () => {
                         ))}
                     </div>
                 )}
-            </div>
-        </AppShell>
+        </div>
     );
 };
 

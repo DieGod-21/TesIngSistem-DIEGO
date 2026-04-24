@@ -3,8 +3,8 @@
 .reportes-page {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 22px 24px;
+  gap: 24px;
+  padding: clamp(16px, 3vw, 32px);
   max-width: 1280px;
   margin: 0 auto;
   width: 100%;
@@ -62,31 +62,67 @@
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .reportes-table {
   width: 100%;
+  min-width: 600px;
   border-collapse: separate;
   border-spacing: 0;
 }
 .reportes-table th,
 .reportes-table td {
-  padding: 12px 16px;
+  padding: 14px 16px;
   font-size: 0.88rem;
   text-align: left;
   border-bottom: 1px solid #f1f5f9;
 }
 .reportes-table th {
-  background: #f8fafc;
+  background: var(--surface-raised);
   color: #475569;
   font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
 }
 .reportes-table tr:last-child td { border-bottom: none; }
-.reportes-table tbody tr { transition: background 120ms; cursor: pointer; }
-.reportes-table tbody tr:hover { background: #f8fafc; }
-.reportes-table tbody tr:focus-visible { outline: 2px solid #0f172a; outline-offset: -2px; background: #f1f5f9; }
+.reportes-table tbody tr {
+  transition: background 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+  animation: rep-row-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger entrance por fila */
+.reportes-table tbody tr:nth-child(1) { animation-delay: 0.02s; }
+.reportes-table tbody tr:nth-child(2) { animation-delay: 0.05s; }
+.reportes-table tbody tr:nth-child(3) { animation-delay: 0.08s; }
+.reportes-table tbody tr:nth-child(4) { animation-delay: 0.11s; }
+.reportes-table tbody tr:nth-child(5) { animation-delay: 0.14s; }
+.reportes-table tbody tr:nth-child(6) { animation-delay: 0.17s; }
+.reportes-table tbody tr:nth-child(7) { animation-delay: 0.20s; }
+.reportes-table tbody tr:nth-child(8) { animation-delay: 0.23s; }
+
+.reportes-table tbody tr:hover {
+  background: #f0f4ff;
+  box-shadow: inset 3px 0 0 #1a2340;
+}
+.reportes-table tbody tr:focus-visible {
+  outline: 2px solid #0f172a;
+  outline-offset: -2px;
+  background: #f1f5f9;
+}
+
+@keyframes rep-row-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reportes-table tbody tr { animation: none; }
+}
 
 .rep-numero {
   display: inline-block;
@@ -222,10 +258,13 @@
     border-bottom-color: var(--dash-border);
 }
 [data-theme="dark"] .reportes-table th {
-    background: rgba(148, 163, 184, 0.08);
+    background: var(--surface-raised);
     color: var(--dash-text-secondary);
 }
-[data-theme="dark"] .reportes-table tbody tr:hover { background: rgba(148, 163, 184, 0.08); }
+[data-theme="dark"] .reportes-table tbody tr:hover {
+    background: rgba(37, 99, 235, 0.09);
+    box-shadow: inset 3px 0 0 #3b82f6;
+}
 [data-theme="dark"] .reportes-table tbody tr:focus-visible {
     outline-color: #60a5fa;
     background: rgba(59, 130, 246, 0.15);

@@ -156,13 +156,25 @@
   background: #f1f5f9;
   overflow: hidden;
 }
+/* Animate bar from 0 → --bar-fill on mount (keyframe reads CSS var at run time) */
+@keyframes tsb-bar-fill {
+  from { width: 0; }
+  to   { width: var(--bar-fill, 0%); }
+}
 .tsb-grade__fill {
   position: relative;
   height: 100%;
   border-radius: 999px;
   z-index: 1;
   background: #cbd5e1;
-  transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* 260ms delay lets the card fade-in complete before the bar sweeps */
+  animation: tsb-bar-fill 550ms cubic-bezier(0.4, 0, 0.2, 1) 260ms both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tsb-grade__fill {
+    animation: none;
+    width: var(--bar-fill, 0%);
+  }
 }
 .tsb-grade--pass .tsb-grade__fill { background: var(--tsb-eligible); }
 .tsb-grade--fail .tsb-grade__fill { background: var(--tsb-not); }
@@ -219,4 +231,68 @@
   font-size: 0.85rem;
   line-height: 1.4;
   color: #334155;
+}
+
+/* ══ Dark mode ══════════════════════════════════════════════════════════
+   Strategy: tokenize neutral surfaces + text. Keep semantic accent
+   colors (tsb-eligible / tsb-partial / tsb-not / tsb-pending) intact —
+   status indicators must stay recognizable regardless of theme.
+════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] {
+  /* Border token: rgba(15,23,42,0.08) is dark-on-dark → invisible */
+  --tsb-border: var(--dash-border);
+}
+
+/* ── Card surface ── */
+[data-theme="dark"] .tsb-card {
+  background: var(--dash-card-bg);
+}
+
+/* ── Text: headings and labels ── */
+[data-theme="dark"] .tsb-card__heading    { color: var(--dash-text-secondary); }
+[data-theme="dark"] .tsb-card__headline   { color: var(--dash-text-primary); }
+[data-theme="dark"] .tsb-card__min        { color: var(--dash-text-secondary); }
+[data-theme="dark"] .tsb-card__avg        { color: var(--dash-text-secondary); }
+[data-theme="dark"] .tsb-card__reason     { color: var(--dash-text-primary); }
+
+/* ── Grade row ── */
+[data-theme="dark"] .tsb-grade__head      { color: var(--dash-text-primary); }
+[data-theme="dark"] .tsb-grade__name      { color: var(--dash-text-secondary); }
+[data-theme="dark"] .tsb-grade__score     { color: var(--dash-text-primary); }
+
+/* Semantic score colors preserve their meaning in dark mode */
+[data-theme="dark"] .tsb-grade--pending .tsb-grade__score { color: var(--dash-text-muted); }
+[data-theme="dark"] .tsb-grade--fail    .tsb-grade__score { color: var(--tsb-not); }
+[data-theme="dark"] .tsb-grade--pass    .tsb-grade__score { color: var(--tsb-eligible); }
+
+/* Course code chip */
+[data-theme="dark"] .tsb-grade__label {
+  background: rgba(148, 163, 184, 0.18);
+  color: var(--dash-text-primary);
+}
+
+/* ── Progress bar ── */
+[data-theme="dark"] .tsb-grade__bar,
+[data-theme="dark"] .tsb-grade__bar::before {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+/* Neutral fill (pending state): soften the light gray */
+[data-theme="dark"] .tsb-grade__fill {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+/* Threshold marker: dark line would vanish on dark surface */
+[data-theme="dark"] .tsb-grade__threshold {
+  background: var(--dash-text-muted);
+  opacity: 1;
+}
+[data-theme="dark"] .tsb-grade__threshold::after {
+  background: var(--dash-text-muted);
+}
+[data-theme="dark"] .tsb-grade__threshold-label {
+  background: var(--surface-raised);
+  color: var(--dash-text-primary);
+  border-color: var(--dash-border);
 }

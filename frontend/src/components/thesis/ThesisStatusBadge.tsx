@@ -117,7 +117,7 @@ const CourseProgressRow: React.FC<{ grade: ThesisEligibilityResult['pg1']; minSc
                 role="img"
                 aria-label={`${grade.label}: ${score ?? 'sin nota'} de 100 (mínimo ${minScore})`}
             >
-                <div className="tsb-grade__fill" style={{ width: `${pct}%` }} />
+                <div className="tsb-grade__fill" style={{ '--bar-fill': `${pct}%` } as React.CSSProperties} />
                 <div className="tsb-grade__threshold" style={{ left: `${minScore}%` }} aria-hidden="true">
                     <span className="tsb-grade__threshold-label">{minScore}</span>
                 </div>

@@ -13,7 +13,6 @@ import {
     AlertCircle, RefreshCw, ArrowRight,
 } from 'lucide-react';
 
-import AppShell from '../layout/AppShell';
 import AppFooter from '../components/AppFooter';
 import KpiCard from '../components/KpiCard';
 import PendingActionsTable from '../components/PendingActionsTable';
@@ -64,8 +63,8 @@ const DashboardPage: React.FC = () => {
         useDashboardData();
 
     return (
-        <AppShell>
-            <div className="dash-body">
+        <>
+        <div className="dash-body">
                 <div className="dash-page-header">
                     <div>
                         <h1 className="dash-page-title">Inicio — Panel de Control PG1-PG2</h1>
@@ -163,7 +162,7 @@ const DashboardPage: React.FC = () => {
             </div>
 
             <AppFooter />
-        </AppShell>
+        </>
     );
 };
 

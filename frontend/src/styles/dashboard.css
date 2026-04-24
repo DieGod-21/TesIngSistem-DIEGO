@@ -406,7 +406,7 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 .dash-body {
-    padding: 32px;
+    padding: clamp(16px, 3vw, 32px);
     flex: 1;
 }
 
@@ -489,9 +489,10 @@
 .kpi-card {
     background: var(--dash-card-bg);
     border: 1px solid var(--dash-border);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 24px;
     box-shadow: var(--dash-shadow-sm);
+    position: relative;
     transition: box-shadow var(--dash-transition), transform var(--dash-transition);
 }
 
@@ -535,8 +536,8 @@ button.kpi-card {
 }
 
 .kpi-card--clickable:hover {
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: var(--dash-shadow-md);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(29, 78, 216, 0.14), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .kpi-card--clickable:active {
@@ -548,9 +549,45 @@ button.kpi-card {
     outline-offset: 2px;
 }
 
+/* Indicador de navegación — flecha que aparece al hover */
+.kpi-card--clickable::after {
+    content: '›';
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--umg-navy);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 180ms ease, transform 180ms ease;
+    pointer-events: none;
+}
+
+.kpi-card--clickable:hover::after {
+    opacity: 0.5;
+    transform: translateX(0);
+}
+
+[data-theme="dark"] .kpi-card--clickable::after {
+    color: #93c5fd;
+}
+
+[data-theme="dark"] .kpi-card:hover {
+    border-top-color: #3b82f6;
+}
+
+[data-theme="dark"] .kpi-card--clickable:hover {
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.20), 0 4px 12px rgba(0, 0, 0, 0.30);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .kpi-card--clickable:hover {
         transform: none;
+    }
+    .kpi-card--clickable::after {
+        transition: none;
     }
 }
 
@@ -695,7 +732,7 @@ button.kpi-card {
 }
 
 .dash-table__head {
-    background: #f8fafc;
+    background: var(--surface-raised);
 }
 
 .dash-table__th {
@@ -1641,7 +1678,7 @@ button.kpi-card {
 }
 
 [data-theme="dark"] .dash-table__head {
-    background: #162032;
+    background: var(--surface-raised);
 }
 
 [data-theme="dark"] .dash-table__row:hover {
@@ -1649,15 +1686,15 @@ button.kpi-card {
 }
 
 [data-theme="dark"] .dash-deadlines__date-box {
-    background: #162032;
+    background: var(--surface-raised);
 }
 
 [data-theme="dark"] .dash-deadlines__btn:hover {
-    background: #162032;
+    background: var(--surface-raised);
 }
 
 [data-theme="dark"] .dash-resources {
-    background: #162032;
+    background: var(--surface-raised);
 }
 
 [data-theme="dark"] .dash-resources__link {
@@ -1728,15 +1765,15 @@ button.kpi-card {
 }
 
 [data-theme="dark"] .dash-skpi {
-    background: #162032;
+    background: var(--surface-raised);
 }
 
 [data-theme="dark"] .dash-qa-card {
-    background: #162032;
+    background: var(--surface-raised);
 }
 
 [data-theme="dark"] .dash-recent-item:hover {
-    background: #162032;
+    background: var(--surface-raised);
 }
 
 [data-theme="dark"] .dash-recent-filter__tab:hover {

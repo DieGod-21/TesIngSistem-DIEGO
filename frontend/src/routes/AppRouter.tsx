@@ -1,19 +1,24 @@
 /**
  * AppRouter.tsx
  *
- * Rutas protegidas con guarda robusta de autenticación.
+ * Arquitectura de layout persistente:
  *
- * ProtectedRoute espera a que AuthContext termine de leer
- * la sesión persistida (isAuthLoading) antes de decidir.
- * Esto evita el "logout falso" en recargas de página.
+ *   IonRouterOutlet
+ *     Switch
+ *       /login          → LoginPage           (layout propio, sin AppShell)
+ *       /*              → AuthenticatedLayout (AppShell persiste)
+ *                             Switch interno → contenido de cada ruta
  *
- * PublicRoute redirige al dashboard si el usuario ya está autenticado.
+ * El AppShell (sidebar + header) se monta UNA sola vez y permanece
+ * durante toda la sesión autenticada. Solo el área de contenido
+ * re-anima al cambiar de ruta, eliminando el "remount" visual del sidebar.
  */
 
 import React from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
+import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
 import { IonRouterOutlet } from '@ionic/react';
 import { useAuth } from '../context/AuthContext';
+import AppShell from '../layout/AppShell';
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
 import StudentNewPage from '../pages/StudentNewPage';
@@ -24,17 +29,7 @@ import StudentDetailPage from '../pages/StudentDetailPage';
 import ReportesPage from '../features/reportes/pages/ReportesPage';
 import ReportDetailPage from '../features/reportes/pages/ReportDetailPage';
 
-// ─── Tipos ───────────────────────────────────────────────────────────
-
-interface RouteGuardProps {
-    children: React.ReactElement;
-    path: string;
-    exact?: boolean;
-}
-
-// ─── Spinner de espera de autenticación inicial ──────────────────────
-// Se muestra mientras AuthContext lee localStorage (≈ 0-200ms).
-// Evita el parpadeo de redirigir a /login y volver.
+// ─── Auth loading screen ─────────────────────────────────────────────
 const AuthLoadingScreen: React.FC = () => (
     <div
         style={{
@@ -61,70 +56,61 @@ const AuthLoadingScreen: React.FC = () => (
     </div>
 );
 
-// ─── ProtectedRoute ──────────────────────────────────────────────────
+// ─── PublicRoute ──────────────────────────────────────────────────────
+interface RouteGuardProps {
+    children: React.ReactElement;
+    path: string;
+    exact?: boolean;
+}
 
-/**
- * Bloquea el acceso hasta que:
- *  1. AuthContext termina de leer localStorage (isAuthLoading = false)
- *  2. Si está autenticado → muestra el children
- *  3. Si no → redirige a /login (con `from` para volver después del login)
- */
-const ProtectedRoute: React.FC<RouteGuardProps & { adminOnly?: boolean }> = ({ children, path, exact, adminOnly }) => {
-    const { isAuthenticated, isAuthLoading, isAdmin } = useAuth();
-
-    return (
-        <Route
-            path={path}
-            exact={exact}
-            render={({ location }) => {
-                if (isAuthLoading) return <AuthLoadingScreen />;
-                if (!isAuthenticated) {
-                    return <Redirect to={{ pathname: '/login', state: { from: location } }} />;
-                }
-                if (adminOnly && !isAdmin) {
-                    return <Redirect to="/dashboard" />;
-                }
-                return children;
-            }}
-        />
-    );
-};
-
-// ─── PublicRoute ─────────────────────────────────────────────────────
-
-/**
- * Si el usuario ya está autenticado, redirige al dashboard.
- * También espera a que AuthContext termine.
- */
 const PublicRoute: React.FC<RouteGuardProps> = ({ children, path, exact }) => {
     const { isAuthenticated, isAuthLoading } = useAuth();
-
     return (
         <Route
             path={path}
             exact={exact}
             render={() => {
                 if (isAuthLoading) return <AuthLoadingScreen />;
-                return isAuthenticated
-                    ? <Redirect to="/dashboard" />
-                    : children;
+                return isAuthenticated ? <Redirect to="/dashboard" /> : children;
             }}
         />
     );
 };
 
-// ─── AppRouter ───────────────────────────────────────────────────────
+// ─── AuthenticatedLayout ──────────────────────────────────────────────
+// Single persistent AppShell for all authenticated routes.
+// Auth check here avoids each page duplicating the guard logic.
+const AuthenticatedLayout: React.FC = () => {
+    const { isAuthenticated, isAuthLoading } = useAuth();
+    const location = useLocation();
 
-/**
- * Componente raíz de rutas.
- *
- * Rutas registradas:
- *  /login         → LoginPage         (pública)
- *  /dashboard     → DashboardPage     (protegida)
- *  /students      → StudentsListPage  (protegida)
- *  /students/new  → StudentNewPage    (protegida)
- *  /              → Redirige según autenticación
- */
+    if (isAuthLoading) return <AuthLoadingScreen />;
+    if (!isAuthenticated) {
+        return <Redirect to={{ pathname: '/login', state: { from: location } }} />;
+    }
+
+    return (
+        <AppShell>
+            <Switch>
+                <Route path="/dashboard" exact><DashboardPage /></Route>
+                {/* /students/new must precede /students/:id to avoid partial match */}
+                <Route path="/students/new" exact><StudentNewPage /></Route>
+                <Route path="/students/:id" exact><StudentDetailPage /></Route>
+                <Route path="/students" exact><StudentsListPage /></Route>
+                <Route path="/ternas/:id" exact><TernaDetailPage /></Route>
+                <Route path="/ternas" exact><TernasListPage /></Route>
+                <Route path="/reports/:id" exact><ReportDetailPage /></Route>
+                <Route path="/reports" exact><ReportesPage /></Route>
+                <Route exact path="/evaluation"><Redirect to="/ternas" /></Route>
+                <Route exact path="/evaluation/:panelId"><Redirect to="/ternas" /></Route>
+                <Route exact path="/"><Redirect to="/dashboard" /></Route>
+                <Route><Redirect to="/dashboard" /></Route>
+            </Switch>
+        </AppShell>
+    );
+};
+
+// ─── AppRouter ────────────────────────────────────────────────────────
 const AppRouter: React.FC = () => (
     <IonRouterOutlet>
         <Switch>
@@ -132,63 +118,12 @@ const AppRouter: React.FC = () => (
                 <LoginPage />
             </PublicRoute>
 
-            <ProtectedRoute path="/dashboard" exact>
-                <DashboardPage />
-            </ProtectedRoute>
-
-            <ProtectedRoute path="/students" exact>
-                <StudentsListPage />
-            </ProtectedRoute>
-
-            <ProtectedRoute path="/students/new" exact>
-                <StudentNewPage />
-            </ProtectedRoute>
-
-            <ProtectedRoute path="/ternas" exact>
-                <TernasListPage />
-            </ProtectedRoute>
-
-            <ProtectedRoute path="/ternas/:id" exact>
-                <TernaDetailPage />
-            </ProtectedRoute>
-
-            <ProtectedRoute path="/students/:id" exact>
-                <StudentDetailPage />
-            </ProtectedRoute>
-
-            <ProtectedRoute path="/reports" exact adminOnly>
-                <ReportesPage />
-            </ProtectedRoute>
-
-            <ProtectedRoute path="/reports/:id" exact adminOnly>
-                <ReportDetailPage />
-            </ProtectedRoute>
-
-            {/* Compat: rutas antiguas redirigen a /ternas */}
-            <Route exact path="/evaluation">
-                <Redirect to="/ternas" />
-            </Route>
-            <Route exact path="/evaluation/:panelId">
-                <Redirect to="/ternas" />
-            </Route>
-
-            <Route exact path="/">
-                <RootRedirect />
-            </Route>
-
+            {/* All other routes → persistent authenticated layout */}
             <Route>
-                <Redirect to="/" />
+                <AuthenticatedLayout />
             </Route>
         </Switch>
     </IonRouterOutlet>
 );
-
-// ─── RootRedirect ─────────────────────────────────────────────────────
-
-const RootRedirect: React.FC = () => {
-    const { isAuthenticated, isAuthLoading } = useAuth();
-    if (isAuthLoading) return <AuthLoadingScreen />;
-    return <Redirect to={isAuthenticated ? '/dashboard' : '/login'} />;
-};
 
 export default AppRouter;

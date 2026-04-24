@@ -66,6 +66,10 @@
     /* ── Tipografía ── */
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
 
+    /* ── Superficies elevadas (usado en table headers, inner cards) ── */
+    --surface-raised: #f8fafc;
+    --surface-float:  #ffffff;
+
     /* ── Sidebar gradiente animado (azul profesional) ── */
     --sidebar-grad-start:  #0f172a;
     --sidebar-grad-mid1:   #1e3a8a;
@@ -90,6 +94,10 @@
     --dash-bg:             #0f172a;
     --dash-card-bg:        #1e293b;
     --dash-border:         #2d3f55;
+
+    /* Superficies elevadas en dark — más claras que la card base para profundidad real */
+    --surface-raised: #253347;
+    --surface-float:  #2d3f55;
 
     /* Texto */
     --dash-text-primary:   #f1f5f9;
@@ -157,7 +165,13 @@
 .cal-nav,
 .cal-legend,
 .cal-day-panel,
-.cal-day-panel__item {
+.cal-day-panel__item,
+.rep-stat,
+.report-card,
+.reportes-table-card,
+.terna-card,
+.tdetail-card,
+.tsb-card {
     transition:
         background-color 220ms ease,
         border-color     220ms ease,

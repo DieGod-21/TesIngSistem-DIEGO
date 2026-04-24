@@ -10,7 +10,6 @@
 import React from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { ChevronLeft, FileText, GraduationCap } from 'lucide-react';
-import AppShell from '../../../layout/AppShell';
 import ThesisStatusBadge from '../../../components/thesis/ThesisStatusBadge';
 import EvaluationForm from '../components/EvaluationForm';
 import { useTernaDetalle } from '../hooks/useTernaDetalle';
@@ -39,8 +38,7 @@ const TernaDetailPage: React.FC = () => {
     );
 
     return (
-        <AppShell>
-            <div className="ternas-page">
+        <div className="ternas-page">
                 <button
                     type="button"
                     className="eval-btn eval-btn--secondary"
@@ -146,8 +144,7 @@ const TernaDetailPage: React.FC = () => {
                         </div>
                     </>
                 )}
-            </div>
-        </AppShell>
+        </div>
     );
 };
 
