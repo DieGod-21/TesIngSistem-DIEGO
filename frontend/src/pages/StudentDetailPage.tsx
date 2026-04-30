@@ -1,27 +1,21 @@
-/**
- * StudentDetailPage.tsx
- *
- * Vista detallada de un estudiante:
- *   - Datos básicos (carnet, nombre, email, carrera)
- *   - Notas registradas (PG1 / PG2)
- *   - Elegibilidad de tesis (calculada en frontend)
- */
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { ChevronLeft, Mail, IdCard, GraduationCap } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import { getEstudianteById } from '../services/estudiantesService';
-import { getNotasByEstudianteId } from '../services/notasService';
-import { computeThesisEligibility, type ThesisEligibilityResult } from '../utils/thesisEligibility';
-import type { Estudiante, Nota } from '../types/api';
+import { getTesisEstadoByCarnet } from '../services/tesisService';
+import type { Estudiante, EstadoTesis } from '../types/api';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 
+const CURSO_NAMES: Record<string, string> = {
+    '043': 'Proyecto de Graduación I',
+    '049': 'Proyecto de Graduación II',
+};
+
 interface State {
     student: Estudiante | null;
-    notas: Nota[];
-    eligibility: ThesisEligibilityResult | null;
+    tesisEstado: EstadoTesis | null;
     loading: boolean;
     error: string | null;
 }
@@ -30,36 +24,28 @@ const StudentDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
     const [state, setState] = useState<State>({
-        student: null, notas: [], eligibility: null, loading: true, error: null,
+        student: null, tesisEstado: null, loading: true, error: null,
     });
 
     useEffect(() => {
         let canceled = false;
         const numId = Number(id);
         if (!Number.isFinite(numId)) {
-            setState({ student: null, notas: [], eligibility: null, loading: false, error: 'ID inválido.' });
+            setState({ student: null, tesisEstado: null, loading: false, error: 'ID inválido.' });
             return;
         }
 
         (async () => {
             try {
-                const [student, notasResp] = await Promise.all([
-                    getEstudianteById(numId),
-                    getNotasByEstudianteId(numId).catch(() => ({ notas: [], estudiante: null as unknown as Estudiante })),
-                ]);
+                const student = await getEstudianteById(numId);
                 if (canceled) return;
-                const notas = notasResp.notas ?? [];
-                setState({
-                    student,
-                    notas,
-                    eligibility: computeThesisEligibility(notas),
-                    loading: false,
-                    error: null,
-                });
+                const tesisEstado = await getTesisEstadoByCarnet(student.carnet).catch(() => null);
+                if (canceled) return;
+                setState({ student, tesisEstado, loading: false, error: null });
             } catch (e) {
                 if (canceled) return;
                 setState({
-                    student: null, notas: [], eligibility: null, loading: false,
+                    student: null, tesisEstado: null, loading: false,
                     error: e instanceof Error ? e.message : 'No se pudo cargar el estudiante.',
                 });
             }
@@ -67,6 +53,10 @@ const StudentDetailPage: React.FC = () => {
 
         return () => { canceled = true; };
     }, [id]);
+
+    const grads = state.tesisEstado
+        ? [state.tesisEstado.graduacion_1, state.tesisEstado.graduacion_2].filter(Boolean)
+        : [];
 
     return (
         <div className="ternas-page">
@@ -107,41 +97,38 @@ const StudentDetailPage: React.FC = () => {
                                     Notas registradas
                                 </h2>
 
-                                {state.notas.length === 0 ? (
+                                {grads.length === 0 ? (
                                     <div className="eval-locked">
                                         Aún no hay notas registradas para este estudiante.
                                     </div>
                                 ) : (
                                     <div className="tdetail-evaluators">
-                                        {state.notas
-                                            .slice()
-                                            .sort((a, b) => a.curso_codigo.localeCompare(b.curso_codigo))
-                                            .map((n) => (
-                                                <div key={n.id} className="tdetail-evaluator">
-                                                    <span className="tdetail-evaluator__name">
-                                                        {n.curso_codigo} · {n.curso_nombre}
-                                                        <small style={{ display: 'block', color: '#64748b', fontWeight: 400 }}>
-                                                            {n.ciclo}
-                                                        </small>
-                                                    </span>
-                                                    <span className="tdetail-evaluator__score">{n.nota_final}</span>
-                                                    <span
-                                                        className={`tdetail-evaluator__estado ${
-                                                            n.estado === 'APROBADO' ? 'eval-enviada'
-                                                            : n.estado === 'NSP' ? 'eval-empty'
-                                                            : 'eval-borrador'
-                                                        }`}
-                                                    >
-                                                        {n.estado}
-                                                    </span>
-                                                </div>
-                                            ))}
+                                        {grads.map((g) => (
+                                            <div key={g!.curso} className="tdetail-evaluator">
+                                                <span className="tdetail-evaluator__name">
+                                                    {g!.curso} · {CURSO_NAMES[g!.curso] ?? g!.curso}
+                                                    <small style={{ display: 'block', color: '#64748b', fontWeight: 400 }}>
+                                                        {g!.ciclo}
+                                                    </small>
+                                                </span>
+                                                <span className="tdetail-evaluator__score">{g!.nota_final}</span>
+                                                <span
+                                                    className={`tdetail-evaluator__estado ${
+                                                        g!.estado === 'APROBADO' ? 'eval-enviada'
+                                                        : g!.estado === 'NSP'     ? 'eval-empty'
+                                                        : 'eval-borrador'
+                                                    }`}
+                                                >
+                                                    {g!.estado}
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </article>
 
-                            {state.eligibility && (
-                                <ThesisStatusBadge result={state.eligibility} title="Estado de Tesis (PG1 + PG2)" />
+                            {state.tesisEstado && (
+                                <ThesisStatusBadge estado={state.tesisEstado} title="Estado de Tesis (PG1 + PG2)" />
                             )}
                         </div>
                     </div>
@@ -150,23 +137,17 @@ const StudentDetailPage: React.FC = () => {
     );
 };
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────
-// Mirrors the loaded layout (header + 2-column grid) so the transition
-// from loading → content feels continuous rather than a height jump.
 const StudentDetailSkeleton: React.FC = () => (
     <div className="tdetail-skeleton" aria-busy="true" aria-label="Cargando información del estudiante">
-        {/* Header */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div className="skeleton skeleton--line" style={{ height: 26, width: '45%' }} />
             <div className="skeleton skeleton--line" style={{ height: 14, width: '35%' }} />
         </div>
 
-        {/* Grid — matches terna-detail-grid proportions */}
         <div className="terna-detail-grid">
-            {/* Left card: notas */}
             <div className="tdetail-card">
                 <div className="skeleton skeleton--line" style={{ height: 11, width: '30%' }} />
-                {[...Array(3)].map((_, i) => (
+                {[...Array(2)].map((_, i) => (
                     <div key={i} className="dash-skeleton-row">
                         <div className="dash-skeleton-row__lines" style={{ flex: 1 }}>
                             <div className="skeleton skeleton--line skeleton--medium" />
@@ -178,7 +159,6 @@ const StudentDetailSkeleton: React.FC = () => (
                 ))}
             </div>
 
-            {/* Right card: thesis status */}
             <div className="tdetail-card" style={{ gap: 16 }}>
                 <div className="skeleton skeleton--line" style={{ height: 11, width: '55%' }} />
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>

@@ -8,6 +8,7 @@
 
 import { apiGet } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import type { EstadoTesis } from '../types/api';
 
 export interface TesisEstudiante {
     carnet: string;
@@ -35,6 +36,11 @@ export async function getAprobadosTesis(): Promise<TesisListResp> {
 export async function getReprobadosTesis(): Promise<TesisListResp> {
     const data = await apiGet<TesisListResp>(API_PATHS.tesis.reprobados);
     return normalize(data);
+}
+
+/** GET /api/tesis/estado/{carnet} — estado de tesis calculado por el servidor. */
+export async function getTesisEstadoByCarnet(carnet: string): Promise<EstadoTesis> {
+    return apiGet<EstadoTesis>(API_PATHS.tesis.byCarnet(carnet));
 }
 
 function normalize(d: Partial<TesisListResp> | null | undefined): TesisListResp {

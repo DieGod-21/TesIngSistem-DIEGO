@@ -116,7 +116,7 @@ const TernaDetailPage: React.FC = () => {
                             {/* Columna derecha: tesis + resultado */}
                             <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                 {eligibility && (
-                                    <ThesisStatusBadge result={eligibility} title="Elegibilidad de tesis (PG1 + PG2)" />
+                                    <ThesisStatusBadge estado={eligibility} title="Elegibilidad de tesis (PG1 + PG2)" />
                                 )}
 
                                 <article className="tdetail-card">

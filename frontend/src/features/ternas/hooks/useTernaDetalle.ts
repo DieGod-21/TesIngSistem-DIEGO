@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getTernaById } from '../../../services/ternasService';
-import { getNotasByCarnet } from '../../../services/notasService';
-import { computeThesisEligibility, type ThesisEligibilityResult } from '../../../utils/thesisEligibility';
-import type { TernaDetalle } from '../../../types/api';
+import { getTesisEstadoByCarnet } from '../../../services/tesisService';
+import type { EstadoTesis, TernaDetalle } from '../../../types/api';
 
 export interface TernaDetalleState {
     terna: TernaDetalle | null;
-    eligibility: ThesisEligibilityResult | null;
+    eligibility: EstadoTesis | null;
     loading: boolean;
     error: string | null;
 }
@@ -21,15 +20,9 @@ export function useTernaDetalle(id: number | null) {
         setState((s) => ({ ...s, loading: true, error: null }));
         try {
             const terna = await getTernaById(id);
-            // Cargamos notas del estudiante en paralelo si tenemos carnet
-            let eligibility: ThesisEligibilityResult | null = null;
+            let eligibility: EstadoTesis | null = null;
             if (terna?.carnet) {
-                try {
-                    const notas = await getNotasByCarnet(terna.carnet);
-                    eligibility = computeThesisEligibility(notas.notas);
-                } catch {
-                    eligibility = computeThesisEligibility([]);
-                }
+                eligibility = await getTesisEstadoByCarnet(terna.carnet).catch(() => null);
             }
             setState({ terna, eligibility, loading: false, error: null });
         } catch (e) {
