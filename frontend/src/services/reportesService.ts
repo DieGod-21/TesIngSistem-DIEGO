@@ -8,7 +8,7 @@
 
 import { apiGet } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
-import type { ReporteTernasGlobal, ResolucionTerna } from '../types/api';
+import type { ReporteTernasGlobal, ResolucionTerna, ReporteEstudiante } from '../types/api';
 
 export async function getGlobalTernasReport(): Promise<ReporteTernasGlobal> {
     const raw = await apiGet<unknown>(API_PATHS.reportes.ternas);
@@ -63,6 +63,10 @@ export interface ReporteTernaDetalle {
         evaluaciones_enviadas: number;
     };
     razon?: string;
+}
+
+export async function getReporteEstudiante(carnet: string): Promise<ReporteEstudiante> {
+    return apiGet<ReporteEstudiante>(API_PATHS.reportes.estudiante(carnet));
 }
 
 export async function getTernaReport(id: number): Promise<ReporteTernaDetalle> {

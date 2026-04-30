@@ -1,0 +1,337 @@
+/* import-modal.css — Estilos para el modal de importación masiva */
+
+.im-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.im-modal {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.im-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.im-modal__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.im-modal__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    transition: background 0.15s, color 0.15s;
+}
+
+.im-modal__close:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.im-modal__close:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.im-modal__body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ── Sección ──────────────────────────────────────────────────── */
+
+.im-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.im-section__heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6366f1;
+}
+
+.im-section__heading h3 {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.im-section__badge {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.im-section__badge--pdf {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.im-section__hint {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.im-section__hint code {
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.8em;
+    color: #475569;
+}
+
+.im-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 20px 0;
+}
+
+/* ── File input ───────────────────────────────────────────────── */
+
+.im-file-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.im-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.im-file-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1.5px dashed #cbd5e1;
+    font-size: 0.8125rem;
+    color: #64748b;
+    cursor: pointer;
+    background: #f8fafc;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.im-file-label:hover {
+    border-color: #6366f1;
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+/* ── Selector de curso ────────────────────────────────────────── */
+
+.im-field-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.im-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.im-select {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 0.8125rem;
+    color: #1e293b;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.im-select:focus {
+    border-color: #6366f1;
+}
+
+.im-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── Botón ────────────────────────────────────────────────────── */
+
+.im-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, opacity 0.15s;
+}
+
+.im-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.im-btn--primary {
+    background: #4f46e5;
+    color: #fff;
+}
+
+.im-btn--primary:hover:not(:disabled) {
+    background: #4338ca;
+}
+
+/* ── Feedback ─────────────────────────────────────────────────── */
+
+.im-feedback {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.im-feedback--success {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.im-feedback--error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* ── Spinner ──────────────────────────────────────────────────── */
+
+.im-spin {
+    animation: im-spin 0.8s linear infinite;
+}
+
+@keyframes im-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Dark mode ────────────────────────────────────────────────── */
+
+[data-theme="dark"] .im-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .im-modal {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .im-modal__header {
+    border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .im-modal__title {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .im-modal__close {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .im-modal__close:hover:not(:disabled) {
+    background: #334155;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .im-section__heading h3 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .im-section__hint {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .im-section__hint code {
+    background: #334155;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .im-divider {
+    background: #334155;
+}
+
+[data-theme="dark"] .im-file-label {
+    background: #0f172a;
+    border-color: #475569;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .im-file-label:hover {
+    border-color: #6366f1;
+    background: #1e1b4b;
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .im-select {
+    background: #0f172a;
+    border-color: #475569;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .im-label {
+    color: #cbd5e1;
+}

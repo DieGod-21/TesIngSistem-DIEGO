@@ -54,6 +54,20 @@ export interface EstadoTesis {
     graduacion_2?: CursoNotaResumen | null;
 }
 
+export interface ReporteEstudianteTerna {
+    id: number;
+    numero: number;
+    estado: EstadoTerna;
+    promedio: number | null;
+    resolucion: ResolucionTerna;
+    evaluaciones_enviadas: number;
+    total_evaluadores: number;
+}
+
+export interface ReporteEstudiante extends EstadoTesis {
+    terna?: ReporteEstudianteTerna | null;
+}
+
 export type RolUsuario = 'admin' | 'evaluador';
 
 export interface Usuario {

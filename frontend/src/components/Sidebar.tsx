@@ -15,6 +15,7 @@ import {
     Home,
     UserPlus,
     Users,
+    FolderOpen,
     ClipboardList,
     BarChart3,
     LogOut,
@@ -41,6 +42,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Inicio',         to: '/dashboard',    icon: <Home size={20} />,           exact: true },
     { label: 'Nuevo Registro', to: '/students/new', icon: <UserPlus size={20} />,        exact: true },
     { label: 'Estudiantes',    to: '/students',     icon: <Users size={20} />,           exact: true },
+    { label: 'Proyectos',       to: '/proyectos',    icon: <FolderOpen size={20} />,      exact: false },
     { label: 'Ternas',         to: '/ternas',       icon: <ClipboardList size={20} />,   exact: false },
     { label: 'Reportes',       to: '/reports',      icon: <BarChart3 size={20} />,       exact: false, adminOnly: true },
 ];

@@ -1,138 +1,227 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { ChevronLeft, Mail, IdCard, GraduationCap } from 'lucide-react';
+import { ChevronLeft, Mail, IdCard, GraduationCap, ClipboardList, Pencil, Plus } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
+import EditNotaModal from '../components/EditNotaModal';
 import { getEstudianteById } from '../services/estudiantesService';
-import { getTesisEstadoByCarnet } from '../services/tesisService';
-import type { Estudiante, EstadoTesis } from '../types/api';
+import { getReporteEstudiante } from '../services/reportesService';
+import type { CursoNotaResumen, Estudiante, ReporteEstudiante } from '../types/api';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
+import '../styles/student-detail.css';
 
 const CURSO_NAMES: Record<string, string> = {
     '043': 'Proyecto de Graduación I',
     '049': 'Proyecto de Graduación II',
 };
 
+const RESOLUCION_LABEL: Record<string, string> = {
+    aprueba_tesis: 'Aprueba tesis',
+    aprueba_curso: 'Aprueba curso',
+    reprobado:     'Reprobado',
+    pendiente:     'Pendiente',
+};
+
+const ALL_CURSOS: Array<'043' | '049'> = ['043', '049'];
+
 interface State {
     student: Estudiante | null;
-    tesisEstado: EstadoTesis | null;
+    reporte: ReporteEstudiante | null;
     loading: boolean;
     error: string | null;
+}
+
+interface EditModalState {
+    open: boolean;
+    curso: '043' | '049';
+    notaActual: number | null;
 }
 
 const StudentDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
     const [state, setState] = useState<State>({
-        student: null, tesisEstado: null, loading: true, error: null,
+        student: null, reporte: null, loading: true, error: null,
     });
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [editModal, setEditModal] = useState<EditModalState>({ open: false, curso: '043', notaActual: null });
 
     useEffect(() => {
         let canceled = false;
         const numId = Number(id);
         if (!Number.isFinite(numId)) {
-            setState({ student: null, tesisEstado: null, loading: false, error: 'ID inválido.' });
+            setState({ student: null, reporte: null, loading: false, error: 'ID inválido.' });
             return;
         }
+
+        setState((s) => ({ ...s, loading: true, error: null }));
 
         (async () => {
             try {
                 const student = await getEstudianteById(numId);
                 if (canceled) return;
-                const tesisEstado = await getTesisEstadoByCarnet(student.carnet).catch(() => null);
+                const reporte = await getReporteEstudiante(student.carnet).catch(() => null);
                 if (canceled) return;
-                setState({ student, tesisEstado, loading: false, error: null });
+                setState({ student, reporte, loading: false, error: null });
             } catch (e) {
                 if (canceled) return;
                 setState({
-                    student: null, tesisEstado: null, loading: false,
+                    student: null, reporte: null, loading: false,
                     error: e instanceof Error ? e.message : 'No se pudo cargar el estudiante.',
                 });
             }
         })();
 
         return () => { canceled = true; };
-    }, [id]);
+    }, [id, refreshKey]);
 
-    const grads = state.tesisEstado
-        ? [state.tesisEstado.graduacion_1, state.tesisEstado.graduacion_2].filter(Boolean)
+    const grads = state.reporte
+        ? ([state.reporte.graduacion_1, state.reporte.graduacion_2].filter(Boolean) as CursoNotaResumen[])
         : [];
+
+    const existingCursos = new Set(grads.map((g) => g.curso));
+    const missingCursos = ALL_CURSOS.filter((c) => !existingCursos.has(c));
+
+    const openEdit = (curso: '043' | '049', notaActual: number | null) =>
+        setEditModal({ open: true, curso, notaActual });
+
+    const handleSaved = () => {
+        setEditModal((m) => ({ ...m, open: false }));
+        setRefreshKey((k) => k + 1);
+    };
 
     return (
         <div className="ternas-page">
-                <button
-                    type="button"
-                    className="eval-btn eval-btn--secondary"
-                    onClick={() => history.goBack()}
-                    style={{ alignSelf: 'flex-start' }}
-                >
-                    <ChevronLeft size={16} aria-hidden="true" />
-                    Volver
-                </button>
+            <button
+                type="button"
+                className="eval-btn eval-btn--secondary"
+                onClick={() => history.goBack()}
+                style={{ alignSelf: 'flex-start' }}
+            >
+                <ChevronLeft size={16} aria-hidden="true" />
+                Volver
+            </button>
 
-                {state.loading && <StudentDetailSkeleton />}
-                {!state.loading && state.error && <div className="terror" role="alert">{state.error}</div>}
+            {state.loading && <StudentDetailSkeleton />}
+            {!state.loading && state.error && <div className="terror" role="alert">{state.error}</div>}
 
-                {!state.loading && !state.error && state.student && (
-                    <div className="view-transition" key={state.student.id}>
-                        <header className="ternas-page__header">
-                            <h1 className="ternas-page__title">{state.student.nombre}</h1>
-                            <p className="ternas-page__subtitle">
-                                <IdCard size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                                {state.student.carnet}
-                                {state.student.email && (
-                                    <>
-                                        {' · '}
-                                        <Mail size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                                        {state.student.email}
-                                    </>
-                                )}
-                            </p>
-                        </header>
+            {!state.loading && !state.error && state.student && (
+                <div className="view-transition" key={state.student.id}>
+                    <header className="ternas-page__header">
+                        <h1 className="ternas-page__title">{state.student.nombre}</h1>
+                        <p className="ternas-page__subtitle">
+                            <IdCard size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            {state.student.carnet}
+                            {state.student.email && (
+                                <>
+                                    {' · '}
+                                    <Mail size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                                    {state.student.email}
+                                </>
+                            )}
+                        </p>
+                    </header>
 
-                        <div className="terna-detail-grid">
+                    <div className="terna-detail-grid">
+                        <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                             <article className="tdetail-card">
                                 <h2 className="tdetail-card__title">
                                     <GraduationCap size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
                                     Notas registradas
                                 </h2>
 
-                                {grads.length === 0 ? (
-                                    <div className="eval-locked">
-                                        Aún no hay notas registradas para este estudiante.
-                                    </div>
-                                ) : (
-                                    <div className="tdetail-evaluators">
-                                        {grads.map((g) => (
-                                            <div key={g!.curso} className="tdetail-evaluator">
-                                                <span className="tdetail-evaluator__name">
-                                                    {g!.curso} · {CURSO_NAMES[g!.curso] ?? g!.curso}
-                                                    <small style={{ display: 'block', color: '#64748b', fontWeight: 400 }}>
-                                                        {g!.ciclo}
-                                                    </small>
-                                                </span>
-                                                <span className="tdetail-evaluator__score">{g!.nota_final}</span>
-                                                <span
-                                                    className={`tdetail-evaluator__estado ${
-                                                        g!.estado === 'APROBADO' ? 'eval-enviada'
-                                                        : g!.estado === 'NSP'     ? 'eval-empty'
-                                                        : 'eval-borrador'
-                                                    }`}
-                                                >
-                                                    {g!.estado}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                <div className="tdetail-evaluators">
+                                    {grads.map((g) => (
+                                        <div key={g.curso} className="tdetail-evaluator">
+                                            <span className="tdetail-evaluator__name">
+                                                {g.curso} · {CURSO_NAMES[g.curso] ?? g.curso}
+                                                <small style={{ display: 'block', color: '#64748b', fontWeight: 400 }}>
+                                                    {g.ciclo}
+                                                </small>
+                                            </span>
+                                            <span className="tdetail-evaluator__score">{g.nota_final}</span>
+                                            <span
+                                                className={`tdetail-evaluator__estado ${
+                                                    g.estado === 'APROBADO' ? 'eval-enviada'
+                                                    : g.estado === 'NSP'    ? 'eval-empty'
+                                                    : 'eval-borrador'
+                                                }`}
+                                            >
+                                                {g.estado}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="nota-edit-btn"
+                                                onClick={() => openEdit(g.curso as '043' | '049', Number(g.nota_final))}
+                                                aria-label={`Editar nota de ${CURSO_NAMES[g.curso] ?? g.curso}`}
+                                            >
+                                                <Pencil size={14} aria-hidden="true" />
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    {missingCursos.map((curso) => (
+                                        <div key={curso} className="nota-add-row">
+                                            <span className="nota-add-row__label">
+                                                {curso} · {CURSO_NAMES[curso]}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="nota-add-btn"
+                                                onClick={() => openEdit(curso, null)}
+                                            >
+                                                <Plus size={12} aria-hidden="true" />
+                                                Registrar
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </article>
 
-                            {state.tesisEstado && (
-                                <ThesisStatusBadge estado={state.tesisEstado} title="Estado de Tesis (PG1 + PG2)" />
+                            {state.reporte?.terna && (
+                                <article className="tdetail-card">
+                                    <h2 className="tdetail-card__title">
+                                        <ClipboardList size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                                        Resultado de Terna
+                                    </h2>
+                                    <dl className="tdetail-meta">
+                                        <dt>Terna</dt>
+                                        <dd>#{String(state.reporte.terna.numero).padStart(2, '0')}</dd>
+                                        <dt>Promedio</dt>
+                                        <dd>
+                                            {state.reporte.terna.promedio != null
+                                                ? Number(state.reporte.terna.promedio).toFixed(2)
+                                                : '— (pendiente)'}
+                                        </dd>
+                                        <dt>Resolución</dt>
+                                        <dd>{RESOLUCION_LABEL[state.reporte.terna.resolucion] ?? state.reporte.terna.resolucion}</dd>
+                                        <dt>Evaluaciones</dt>
+                                        <dd>
+                                            {state.reporte.terna.evaluaciones_enviadas} de{' '}
+                                            {state.reporte.terna.total_evaluadores}
+                                        </dd>
+                                    </dl>
+                                </article>
                             )}
-                        </div>
+                        </section>
+
+                        {state.reporte && (
+                            <ThesisStatusBadge estado={state.reporte} title="Estado de Tesis (PG1 + PG2)" />
+                        )}
                     </div>
-                )}
+                </div>
+            )}
+
+            {state.student && (
+                <EditNotaModal
+                    open={editModal.open}
+                    carnet={state.student.carnet}
+                    initialCurso={editModal.curso}
+                    initialNota={editModal.notaActual}
+                    onClose={() => setEditModal((m) => ({ ...m, open: false }))}
+                    onSaved={handleSaved}
+                />
+            )}
         </div>
     );
 };

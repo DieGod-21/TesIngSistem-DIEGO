@@ -19,7 +19,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import {
     Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight,
-    RefreshCw, Users, X, CheckCircle2, AlertTriangle,
+    RefreshCw, Users, X, CheckCircle2, AlertTriangle, Upload,
 } from 'lucide-react';
 import { useEstudiantesList } from '../hooks/useEstudiantesList';
 import { initials } from '../utils/strings';
@@ -28,6 +28,7 @@ import type { Estudiante } from '../types/api';
 import {
     getAprobadosTesis, getReprobadosTesis, type TesisEstudiante,
 } from '../services/tesisService';
+import ImportModal from '../components/ImportModal';
 import '../styles/students-list.css';
 import '../styles/student-new.css';
 import '../styles/transitions.css';
@@ -62,9 +63,12 @@ const StudentsListPage: React.FC = () => {
         () => parseQuery(location.search),
         [location.search],
     );
+    const [importOpen, setImportOpen] = useState(false);
 
     return (
         <div className="sl-body">
+                <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
+
                 <nav className="sn-breadcrumb" aria-label="Navegación secundaria">
                     <span className="sn-breadcrumb__item">Inicio</span>
                     <ChevronRight size={14} className="sn-breadcrumb__sep" />
@@ -82,6 +86,14 @@ const StudentsListPage: React.FC = () => {
                             Consulta la información, notas y elegibilidad de tesis de los estudiantes registrados.
                         </p>
                     </div>
+                    <button
+                        type="button"
+                        className="sn-btn-primary"
+                        onClick={() => setImportOpen(true)}
+                    >
+                        <Upload size={16} aria-hidden="true" />
+                        Importar
+                    </button>
                 </div>
 
                 {filter && (

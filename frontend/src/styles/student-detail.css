@@ -1,0 +1,281 @@
+/* ── Edit nota button (inline in grade row) ──────────────────────────── */
+.nota-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+.nota-edit-btn:hover {
+    background: #f1f5f9;
+    color: #003366;
+}
+
+/* ── Add nota row (for missing courses) ─────────────────────────────── */
+.nota-add-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-top: 1px solid #f1f5f9;
+    gap: 8px;
+}
+.nota-add-row__label {
+    font-size: 0.82rem;
+    color: #94a3b8;
+}
+.nota-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border: 1px dashed #cbd5e1;
+    background: transparent;
+    border-radius: 6px;
+    color: #64748b;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s;
+}
+.nota-add-btn:hover {
+    border-color: #003366;
+    color: #003366;
+}
+
+/* ── Edit nota modal ─────────────────────────────────────────────────── */
+.en-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    backdrop-filter: blur(2px);
+}
+
+.en-modal {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    width: 100%;
+    max-width: 420px;
+    overflow: hidden;
+}
+
+.en-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.en-modal__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.en-modal__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.en-modal__close:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.en-modal__close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.en-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.en-modal__footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-top: 4px;
+}
+
+.en-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.en-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.en-input,
+.en-select,
+.en-textarea {
+    padding: 8px 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #0f172a;
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    font-family: inherit;
+}
+.en-input:focus,
+.en-select:focus,
+.en-textarea:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+.en-input--error {
+    border-color: #ef4444;
+}
+.en-textarea {
+    resize: vertical;
+    min-height: 72px;
+}
+
+.en-field-error {
+    font-size: 0.78rem;
+    color: #ef4444;
+}
+
+.en-api-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: #dc2626;
+}
+
+.en-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s, opacity 0.15s;
+}
+.en-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.en-btn--secondary {
+    background: #f1f5f9;
+    color: #374151;
+}
+.en-btn--secondary:hover:not(:disabled) {
+    background: #e2e8f0;
+}
+.en-btn--primary {
+    background: #003366;
+    color: #fff;
+}
+.en-btn--primary:hover:not(:disabled) {
+    background: #002244;
+}
+
+.en-spin {
+    animation: en-spin 0.8s linear infinite;
+}
+@keyframes en-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────── */
+[data-theme="dark"] .nota-edit-btn:hover {
+    background: #334155;
+    color: #93c5fd;
+}
+[data-theme="dark"] .nota-add-row {
+    border-color: #334155;
+}
+[data-theme="dark"] .nota-add-row__label {
+    color: #64748b;
+}
+[data-theme="dark"] .nota-add-btn {
+    border-color: #475569;
+    color: #94a3b8;
+}
+[data-theme="dark"] .nota-add-btn:hover {
+    border-color: #93c5fd;
+    color: #93c5fd;
+}
+
+[data-theme="dark"] .en-modal {
+    background: #1e293b;
+}
+[data-theme="dark"] .en-modal__header {
+    border-color: #334155;
+}
+[data-theme="dark"] .en-modal__title {
+    color: #f1f5f9;
+}
+[data-theme="dark"] .en-modal__close:hover:not(:disabled) {
+    background: #334155;
+    color: #f1f5f9;
+}
+[data-theme="dark"] .en-label {
+    color: #cbd5e1;
+}
+[data-theme="dark"] .en-input,
+[data-theme="dark"] .en-select,
+[data-theme="dark"] .en-textarea {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+[data-theme="dark"] .en-input:focus,
+[data-theme="dark"] .en-select:focus,
+[data-theme="dark"] .en-textarea:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+}
+[data-theme="dark"] .en-api-error {
+    background: #450a0a;
+    border-color: #7f1d1d;
+    color: #fca5a5;
+}
+[data-theme="dark"] .en-btn--secondary {
+    background: #334155;
+    color: #cbd5e1;
+}
+[data-theme="dark"] .en-btn--secondary:hover:not(:disabled) {
+    background: #475569;
+}
+[data-theme="dark"] .en-btn--primary {
+    background: #1e40af;
+}
+[data-theme="dark"] .en-btn--primary:hover:not(:disabled) {
+    background: #1d4ed8;
+}

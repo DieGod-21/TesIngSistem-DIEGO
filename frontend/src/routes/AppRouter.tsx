@@ -28,6 +28,7 @@ import TernaDetailPage from '../features/ternas/pages/TernaDetailPage';
 import StudentDetailPage from '../pages/StudentDetailPage';
 import ReportesPage from '../features/reportes/pages/ReportesPage';
 import ReportDetailPage from '../features/reportes/pages/ReportDetailPage';
+import ProyectosListPage from '../features/proyectos/pages/ProyectosListPage';
 
 // ─── Auth loading screen ─────────────────────────────────────────────
 const AuthLoadingScreen: React.FC = () => (
@@ -97,6 +98,7 @@ const AuthenticatedLayout: React.FC = () => {
                 <Route path="/students/new" exact><StudentNewPage /></Route>
                 <Route path="/students/:id" exact><StudentDetailPage /></Route>
                 <Route path="/students" exact><StudentsListPage /></Route>
+                <Route path="/proyectos" exact><ProyectosListPage /></Route>
                 <Route path="/ternas/:id" exact><TernaDetailPage /></Route>
                 <Route path="/ternas" exact><TernasListPage /></Route>
                 <Route path="/reports/:id" exact><ReportDetailPage /></Route>
