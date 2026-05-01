@@ -55,6 +55,14 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.proy-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: #c7d2fe;
 }
 
 .proy-card__top {
@@ -146,6 +154,15 @@
     background: #4338ca;
 }
 
+.proy-btn--primary:active {
+    transform: scale(0.97);
+}
+
+.proy-btn:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+}
+
 /* ── Empty / Error states ───────────────────────────────────────── */
 
 .proy-empty,
@@ -176,6 +193,7 @@
     justify-content: center;
     z-index: 1000;
     padding: 16px;
+    backdrop-filter: blur(2px);
 }
 
 .np-modal {
@@ -188,6 +206,7 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    animation: modal-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ── Modal header ────────────────────────────────────────────────── */
@@ -289,6 +308,7 @@
 .np-textarea:focus,
 .np-select:focus {
     border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .np-input--error,
@@ -357,6 +377,11 @@
     background: #4338ca;
 }
 
+.np-btn--primary:active:not(:disabled) {
+    background: #3730a3;
+    transform: scale(0.97);
+}
+
 .np-btn--secondary {
     background: #f1f5f9;
     color: #374151;
@@ -364,6 +389,16 @@
 
 .np-btn--secondary:hover:not(:disabled) {
     background: #e2e8f0;
+}
+
+.np-btn--secondary:active:not(:disabled) {
+    background: #cbd5e1;
+    transform: scale(0.97);
+}
+
+.np-btn:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
 }
 
 /* ── Spinner ─────────────────────────────────────────────────────── */

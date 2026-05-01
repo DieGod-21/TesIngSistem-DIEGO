@@ -43,7 +43,7 @@ const TernasListPage: React.FC = () => {
     const [filter, setFilter] = useState<FilterValue>('all');
 
     const estado = filter === 'all' ? undefined : filter;
-    const { ternas, loading, error } = useTernas(estado);
+    const { ternas, loading, error, reload } = useTernas(estado);
 
     const counts = useMemo(() => ({
         total:      ternas.length,
@@ -87,7 +87,14 @@ const TernasListPage: React.FC = () => {
                 {loading && <TernasSkeleton />}
 
                 {!loading && error && (
-                    <div className="terror" role="alert">{error}</div>
+                    <div className="terror" role="alert">
+                        {error}
+                        <div style={{ marginTop: 10 }}>
+                            <button type="button" className="ternas-chip" onClick={reload}>
+                                Reintentar
+                            </button>
+                        </div>
+                    </div>
                 )}
 
                 {!loading && !error && ternas.length === 0 && (

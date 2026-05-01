@@ -170,7 +170,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         <button
                             type="submit"
                             className="np-btn np-btn--primary"
-                            disabled={loading}
+                            disabled={loading || !form.titulo.trim() || !form.descripcion.trim()}
                         >
                             {loading
                                 ? <><Loader2 size={14} className="np-spin" aria-hidden="true" /> Creando…</>

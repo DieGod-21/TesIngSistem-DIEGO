@@ -15,6 +15,25 @@ import { ResolutionBadge } from './ReportesPage';
 import '../styles/reportes.css';
 import '../../ternas/styles/ternas.css';
 
+const ReportDetailSkeleton: React.FC = () => (
+    <div className="report-detail-grid" aria-busy="true" aria-label="Cargando reporte…">
+        {[0, 1].map((i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div className="report-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div className="skeleton skeleton--line skeleton--short" />
+                    <div className="skeleton skeleton--line skeleton--medium" />
+                    <div className="skeleton skeleton--line skeleton--short" />
+                </div>
+                <div className="report-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div className="skeleton skeleton--line skeleton--medium" />
+                    <div className="skeleton skeleton--line skeleton--medium" />
+                    <div className="skeleton skeleton--line skeleton--short" />
+                </div>
+            </div>
+        ))}
+    </div>
+);
+
 const ReportDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
@@ -23,6 +42,18 @@ const ReportDetailPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const load = React.useCallback(async (numId: number) => {
+        setLoading(true);
+        setError(null);
+        try {
+            setReport(await getTernaReport(numId));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo cargar el reporte.');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         const numId = Number(id);
         if (!Number.isFinite(numId)) {
@@ -30,18 +61,8 @@ const ReportDetailPage: React.FC = () => {
             setLoading(false);
             return;
         }
-        (async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                setReport(await getTernaReport(numId));
-            } catch (e) {
-                setError(e instanceof Error ? e.message : 'No se pudo cargar el reporte.');
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, [id]);
+        load(numId);
+    }, [id, load]);
 
     if (!isAdmin) {
         return (
@@ -63,8 +84,24 @@ const ReportDetailPage: React.FC = () => {
                     Volver a reportes
                 </button>
 
-                {loading && <div className="tloading">Cargando reporte…</div>}
-                {!loading && error && <div className="terror" role="alert">{error}</div>}
+                {loading && <ReportDetailSkeleton />}
+                {!loading && error && (
+                    <div className="terror" role="alert">
+                        {error}
+                        <div style={{ marginTop: 10 }}>
+                            <button
+                                type="button"
+                                className="ternas-chip"
+                                onClick={() => { const n = Number(id); if (Number.isFinite(n)) load(n); }}
+                            >
+                                Reintentar
+                            </button>
+                        </div>
+                    </div>
+                )}
+                {!loading && !error && !report && (
+                    <div className="tempty">No se encontró el reporte solicitado.</div>
+                )}
 
                 {!loading && !error && report && (
                     <>

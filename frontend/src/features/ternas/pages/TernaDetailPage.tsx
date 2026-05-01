@@ -29,6 +29,22 @@ const RESOLUCION_LABEL = {
     pendiente:     'Pendiente',
 } as const;
 
+const TernaDetailSkeleton: React.FC = () => (
+    <div className="terna-detail-grid" aria-busy="true" aria-label="Cargando terna…">
+        {[0, 1].map((i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {[0, 1, 2].map((j) => (
+                    <div key={j} className="tdetail-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div className="skeleton skeleton--line skeleton--short" />
+                        <div className="skeleton skeleton--line skeleton--medium" />
+                        <div className="skeleton skeleton--line skeleton--short" />
+                    </div>
+                ))}
+            </div>
+        ))}
+    </div>
+);
+
 const TernaDetailPage: React.FC = () => {
     const history = useHistory();
     const { id } = useParams<{ id: string }>();
@@ -49,8 +65,18 @@ const TernaDetailPage: React.FC = () => {
                     Volver a Ternas
                 </button>
 
-                {loading && <div className="tloading">Cargando terna…</div>}
-                {!loading && error && <div className="terror" role="alert">{error}</div>}
+                {loading && <TernaDetailSkeleton />}
+                {!loading && error && (
+                    <div className="terror" role="alert">
+                        {error}
+                        <div style={{ marginTop: 10 }}>
+                            <button type="button" className="ternas-chip" onClick={reload}>Reintentar</button>
+                        </div>
+                    </div>
+                )}
+                {!loading && !error && !terna && (
+                    <div className="tempty">No se encontró la terna solicitada.</div>
+                )}
 
                 {!loading && !error && terna && (
                     <>

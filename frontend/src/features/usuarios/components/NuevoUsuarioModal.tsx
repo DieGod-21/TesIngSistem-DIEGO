@@ -175,7 +175,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         <button
                             type="submit"
                             className="nu-btn nu-btn--primary"
-                            disabled={loading}
+                            disabled={loading || !form.nombre.trim() || !form.email.trim()}
                         >
                             {loading
                                 ? <><Loader2 size={14} className="nu-spin" aria-hidden="true" /> Creando…</>

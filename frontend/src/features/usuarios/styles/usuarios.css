@@ -53,6 +53,13 @@
 .usr-btn--primary:hover {
     background: #002244;
 }
+.usr-btn--primary:active {
+    transform: scale(0.97);
+}
+.usr-btn:focus-visible {
+    outline: 2px solid #003366;
+    outline-offset: 2px;
+}
 
 /* ── List ───────────────────────────────────────────────────────────── */
 .usr-list {
@@ -188,6 +195,7 @@
     width: 100%;
     max-width: 440px;
     overflow: hidden;
+    animation: modal-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .nu-modal__header {
@@ -300,8 +308,11 @@
 .nu-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .nu-btn--secondary { background: #f1f5f9; color: #374151; }
 .nu-btn--secondary:hover:not(:disabled) { background: #e2e8f0; }
+.nu-btn--secondary:active:not(:disabled) { background: #cbd5e1; transform: scale(0.97); }
 .nu-btn--primary { background: #003366; color: #fff; }
 .nu-btn--primary:hover:not(:disabled) { background: #002244; }
+.nu-btn--primary:active:not(:disabled) { transform: scale(0.97); }
+.nu-btn:focus-visible { outline: 2px solid #003366; outline-offset: 2px; }
 
 .nu-spin {
     animation: nu-spin 0.8s linear infinite;
