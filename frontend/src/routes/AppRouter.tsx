@@ -29,6 +29,7 @@ import StudentDetailPage from '../pages/StudentDetailPage';
 import ReportesPage from '../features/reportes/pages/ReportesPage';
 import ReportDetailPage from '../features/reportes/pages/ReportDetailPage';
 import ProyectosListPage from '../features/proyectos/pages/ProyectosListPage';
+import UsuariosPage from '../features/usuarios/pages/UsuariosPage';
 
 // ─── Auth loading screen ─────────────────────────────────────────────
 const AuthLoadingScreen: React.FC = () => (
@@ -103,6 +104,7 @@ const AuthenticatedLayout: React.FC = () => {
                 <Route path="/ternas" exact><TernasListPage /></Route>
                 <Route path="/reports/:id" exact><ReportDetailPage /></Route>
                 <Route path="/reports" exact><ReportesPage /></Route>
+                <Route path="/usuarios" exact><UsuariosPage /></Route>
                 <Route exact path="/evaluation"><Redirect to="/ternas" /></Route>
                 <Route exact path="/evaluation/:panelId"><Redirect to="/ternas" /></Route>
                 <Route exact path="/"><Redirect to="/dashboard" /></Route>

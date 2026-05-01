@@ -18,6 +18,7 @@ import {
     FolderOpen,
     ClipboardList,
     BarChart3,
+    UserCog,
     LogOut,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -45,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Proyectos',       to: '/proyectos',    icon: <FolderOpen size={20} />,      exact: false },
     { label: 'Ternas',         to: '/ternas',       icon: <ClipboardList size={20} />,   exact: false },
     { label: 'Reportes',       to: '/reports',      icon: <BarChart3 size={20} />,       exact: false, adminOnly: true },
+    { label: 'Usuarios',       to: '/usuarios',     icon: <UserCog size={20} />,         exact: false, adminOnly: true },
 ];
 
 // ─── Componente ──────────────────────────────────────────────────────

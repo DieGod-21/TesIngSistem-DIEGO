@@ -4,9 +4,15 @@
  * Acceso a /api/usuarios/*. Útil para el flujo de admin.
  */
 
-import { apiGet } from './apiClient';
+import { apiGet, apiPost } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 import type { Usuario, RolUsuario } from '../types/api';
+
+export interface CreateUsuarioDto {
+    nombre: string;
+    email: string;
+    rol: RolUsuario;
+}
 
 export async function getMe(): Promise<Usuario> {
     const data = await apiGet<{ usuario: Usuario } | Usuario>(API_PATHS.usuarios.me);
@@ -23,4 +29,8 @@ export async function listUsuarios(rol?: RolUsuario): Promise<Usuario[]> {
     );
     if (Array.isArray(data)) return data;
     return data?.usuarios ?? [];
+}
+
+export async function createUsuario(dto: CreateUsuarioDto): Promise<Usuario> {
+    return apiPost<Usuario>(API_PATHS.usuarios.list, dto);
 }
