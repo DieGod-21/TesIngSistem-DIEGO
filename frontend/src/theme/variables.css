@@ -99,10 +99,10 @@
     --surface-raised: #253347;
     --surface-float:  #2d3f55;
 
-    /* Texto */
-    --dash-text-primary:   #f1f5f9;
-    --dash-text-secondary: #94a3b8;
-    --dash-text-muted:     #64748b;
+    /* Texto — escalado para contraste WCAG AA sobre fondos oscuros */
+    --dash-text-primary:   #f1f5f9;   /* ~15:1 sobre #1e293b */
+    --dash-text-secondary: #94a3b8;   /* ~5.8:1 */
+    --dash-text-muted:     #7d93aa;   /* ~3.8:1 — subido de #64748b (3.2:1 insuficiente) */
 
     /* Sombras más pronunciadas en oscuro */
     --shadow-sm:  0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);

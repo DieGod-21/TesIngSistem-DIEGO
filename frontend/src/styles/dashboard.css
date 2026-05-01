@@ -753,6 +753,26 @@ button.kpi-card {
     background: #eff6ff;
 }
 
+.dash-table__row--clickable {
+    cursor: pointer;
+}
+
+.dash-table__row--clickable:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: -2px;
+    background: #eff6ff;
+}
+
+.dash-table__row--clickable:active {
+    background: #dbeafe;
+}
+
+.dash-table__row--loading {
+    opacity: 0.6;
+    cursor: wait;
+    pointer-events: none;
+}
+
 .dash-table__td {
     padding: 16px 24px;
     vertical-align: middle;
@@ -1830,3 +1850,18 @@ button.kpi-card {
 
 /* ── Bloque de error: borde rojo translúcido ── */
 [data-theme="dark"] .dash-error-block { border-color: rgba(220, 38, 38, 0.30); }
+
+/* ── Filas clickeables en dark: focus y active visibles ── */
+[data-theme="dark"] .dash-table__row--clickable:focus-visible {
+    outline-color: #60a5fa;
+    background: rgba(37, 99, 235, 0.15);
+}
+
+[data-theme="dark"] .dash-table__row--clickable:active {
+    background: rgba(37, 99, 235, 0.22);
+}
+
+/* ── KPI clickeable: focus ring visible en dark ── */
+[data-theme="dark"] .kpi-card--clickable:focus-visible {
+    outline-color: #60a5fa;
+}

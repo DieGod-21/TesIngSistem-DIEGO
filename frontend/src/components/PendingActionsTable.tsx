@@ -7,8 +7,9 @@
  * Los datos vienen de dashboardService — sin data quemada aquí.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { getEstudianteByCarnet } from '../services/estudiantesService';
 import type { PendingAction } from '../services/dashboardService';
 
 interface PendingActionsTableProps {
@@ -17,6 +18,25 @@ interface PendingActionsTableProps {
 
 const PendingActionsTable: React.FC<PendingActionsTableProps> = ({ actions }) => {
     const history = useHistory();
+    const [navigating, setNavigating] = useState<string | null>(null);
+
+    const goToStudent = async (carnet: string) => {
+        if (navigating) return;
+        setNavigating(carnet);
+        try {
+            const student = await Promise.race([
+                getEstudianteByCarnet(carnet),
+                new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('timeout')), 1500),
+                ),
+            ]);
+            history.push(`/students/${student.id}`);
+        } catch {
+            history.push(`/students?search=${encodeURIComponent(carnet)}`);
+        } finally {
+            setNavigating(null);
+        }
+    };
 
     return (
         <section className="dash-table-card">
@@ -43,7 +63,16 @@ const PendingActionsTable: React.FC<PendingActionsTableProps> = ({ actions }) =>
                     </thead>
                     <tbody>
                         {actions.map((row) => (
-                            <tr key={row.id} className="dash-table__row">
+                            <tr
+                                key={row.id}
+                                className={`dash-table__row dash-table__row--clickable${navigating === row.studentId ? ' dash-table__row--loading' : ''}`}
+                                onClick={() => goToStudent(row.studentId)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToStudent(row.studentId); } }}
+                                tabIndex={0}
+                                role="button"
+                                aria-label={`Ver detalle de ${row.studentName}`}
+                                aria-disabled={navigating === row.studentId}
+                            >
                                 {/* Estudiante */}
                                 <td className="dash-table__td">
                                     <div className="dash-table__student">

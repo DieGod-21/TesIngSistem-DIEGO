@@ -1,6 +1,7 @@
 import React from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, HelpCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import type { EstadoTesis, CursoNotaResumen, EstadoNota } from '../../types/api';
+import { computeEstadoTesis, extractGradesFromReporte } from '../../utils/thesisStatus';
 import './thesis-status.css';
 
 interface Props {
@@ -9,7 +10,7 @@ interface Props {
     title?: string;
 }
 
-type VisualStatus = 'eligible' | 'partial' | 'not_eligible' | 'pending';
+type VisualStatus = 'eligible' | 'not_eligible' | 'pending';
 
 interface GradeRow {
     label: 'PG1' | 'PG2';
@@ -21,26 +22,20 @@ interface GradeRow {
 
 const STATUS_META: Record<VisualStatus, { label: string; headline: string; Icon: React.ElementType; modifier: string }> = {
     eligible: {
-        label:    'Apto para Tesis',
+        label:    'Aprobado',
         headline: 'Cumple requisito de tesis',
         Icon:     CheckCircle2,
         modifier: 'tsb--eligible',
     },
-    partial: {
-        label:    'Parcial',
-        headline: 'No cumple requisito aún',
-        Icon:     AlertTriangle,
-        modifier: 'tsb--partial',
-    },
     not_eligible: {
-        label:    'No Apto',
+        label:    'Reprobado',
         headline: 'No cumple requisito',
         Icon:     XCircle,
         modifier: 'tsb--not-eligible',
     },
     pending: {
-        label:    'Sin notas',
-        headline: 'Pendiente',
+        label:    'Pendiente',
+        headline: 'Sin notas registradas',
         Icon:     HelpCircle,
         modifier: 'tsb--pending',
     },
@@ -52,14 +47,10 @@ const CURSO_META: Record<string, { label: 'PG1' | 'PG2'; name: string }> = {
 };
 
 function deriveStatus(estado: EstadoTesis): VisualStatus {
-    if (estado.aprueba_tesis) return 'eligible';
-    const g1 = estado.graduacion_1;
-    const g2 = estado.graduacion_2;
-    if (!g1 && !g2) return 'pending';
-    const min = estado.nota_minima;
-    const passes1 = g1 != null && g1.nota_final >= min && g1.estado !== 'NSP';
-    const passes2 = g2 != null && g2.nota_final >= min && g2.estado !== 'NSP';
-    if (passes1 || passes2) return 'partial';
+    const grades = extractGradesFromReporte(estado);
+    const result = computeEstadoTesis(grades).estado;
+    if (result === 'APROBADO')  return 'eligible';
+    if (result === 'PENDIENTE') return 'pending';
     return 'not_eligible';
 }
 

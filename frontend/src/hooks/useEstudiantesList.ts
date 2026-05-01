@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { listEstudiantes, type EstudiantesPaginatedResponse } from '../services/estudiantesService';
+import { normalizeText } from '../utils/text';
 import type { Estudiante } from '../types/api';
 
 interface Pagination {
@@ -31,7 +32,7 @@ export function useEstudiantesList(initial: { limit?: number; search?: string } 
         setSearchRaw(value);
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
-            setDebouncedSearch(value.trim());
+            setDebouncedSearch(normalizeText(value));
             setPagination((p) => ({ ...p, page: 1 }));
         }, 300);
     }, []);

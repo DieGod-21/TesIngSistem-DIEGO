@@ -5,7 +5,16 @@ import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
 import { getEstudianteById } from '../services/estudiantesService';
 import { getReporteEstudiante } from '../services/reportesService';
-import type { CursoNotaResumen, Estudiante, ReporteEstudiante } from '../types/api';
+import { getNotasByEstudianteId } from '../services/notasService';
+import {
+    buildCursosResumen,
+    computeEstadoTesis,
+    extractGradesFromNotas,
+    extractGradesFromReporte,
+    mergeGrades,
+} from '../utils/thesisStatus';
+import { THESIS_MIN_GRADE } from '../config/apiConfig';
+import type { CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 import '../styles/student-detail.css';
@@ -27,8 +36,9 @@ const ALL_CURSOS: Array<'043' | '049'> = ['043', '049'];
 interface State {
     student: Estudiante | null;
     reporte: ReporteEstudiante | null;
+    notas:   Nota[] | null;
     loading: boolean;
-    error: string | null;
+    error:   string | null;
 }
 
 interface EditModalState {
@@ -41,7 +51,7 @@ const StudentDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
     const [state, setState] = useState<State>({
-        student: null, reporte: null, loading: true, error: null,
+        student: null, reporte: null, notas: null, loading: true, error: null,
     });
     const [refreshKey, setRefreshKey] = useState(0);
     const [editModal, setEditModal] = useState<EditModalState>({ open: false, curso: '043', notaActual: null });
@@ -50,7 +60,7 @@ const StudentDetailPage: React.FC = () => {
         let canceled = false;
         const numId = Number(id);
         if (!Number.isFinite(numId)) {
-            setState({ student: null, reporte: null, loading: false, error: 'ID inválido.' });
+            setState({ student: null, reporte: null, notas: null, loading: false, error: 'ID inválido.' });
             return;
         }
 
@@ -62,11 +72,20 @@ const StudentDetailPage: React.FC = () => {
                 if (canceled) return;
                 const reporte = await getReporteEstudiante(student.carnet).catch(() => null);
                 if (canceled) return;
-                setState({ student, reporte, loading: false, error: null });
+
+                const fromReporte = extractGradesFromReporte(reporte);
+                let notas: Nota[] | null = null;
+                if (fromReporte.pg1 == null || fromReporte.pg2 == null) {
+                    const notasResp = await getNotasByEstudianteId(numId).catch(() => null);
+                    if (canceled) return;
+                    notas = notasResp?.notas ?? null;
+                }
+
+                setState({ student, reporte, notas, loading: false, error: null });
             } catch (e) {
                 if (canceled) return;
                 setState({
-                    student: null, reporte: null, loading: false,
+                    student: null, reporte: null, notas: null, loading: false,
                     error: e instanceof Error ? e.message : 'No se pudo cargar el estudiante.',
                 });
             }
@@ -75,12 +94,33 @@ const StudentDetailPage: React.FC = () => {
         return () => { canceled = true; };
     }, [id, refreshKey]);
 
-    const grads = state.reporte
-        ? ([state.reporte.graduacion_1, state.reporte.graduacion_2].filter(Boolean) as CursoNotaResumen[])
-        : [];
-
+    const grads: CursoNotaResumen[] = buildCursosResumen(state.reporte, state.notas);
     const existingCursos = new Set(grads.map((g) => g.curso));
     const missingCursos = ALL_CURSOS.filter((c) => !existingCursos.has(c));
+
+    const pgGrades = mergeGrades(
+        extractGradesFromReporte(state.reporte),
+        extractGradesFromNotas(state.notas),
+    );
+    const tesisResult = computeEstadoTesis(pgGrades);
+
+    const tesisInput: EstadoTesis | null = state.student
+        ? {
+            carnet:        state.student.carnet,
+            nombre:        state.student.nombre,
+            email:         state.student.email,
+            aprueba_tesis: tesisResult.aprobado,
+            razon:         tesisResult.estado === 'APROBADO'
+                ? `Cumple con la nota mínima (${THESIS_MIN_GRADE}) en PG1 y PG2.`
+                : tesisResult.estado === 'PENDIENTE'
+                    ? 'Faltan notas de PG1 y/o PG2.'
+                    : `No alcanza la nota mínima (${THESIS_MIN_GRADE}) en PG1 y/o PG2.`,
+            nota_minima:   THESIS_MIN_GRADE,
+            promedio:      state.reporte?.promedio ?? null,
+            graduacion_1:  grads.find((g) => g.curso === '043') ?? null,
+            graduacion_2:  grads.find((g) => g.curso === '049') ?? null,
+        }
+        : null;
 
     const openEdit = (curso: '043' | '049', notaActual: number | null) =>
         setEditModal({ open: true, curso, notaActual });
@@ -131,6 +171,11 @@ const StudentDetailPage: React.FC = () => {
                                 </h2>
 
                                 <div className="tdetail-evaluators">
+                                    {grads.length === 0 && missingCursos.length === ALL_CURSOS.length && (
+                                        <div className="eval-empty" style={{ color: '#64748b', fontSize: '0.875rem', padding: '6px 0' }}>
+                                            Sin notas registradas
+                                        </div>
+                                    )}
                                     {grads.map((g) => (
                                         <div key={g.curso} className="tdetail-evaluator">
                                             <span className="tdetail-evaluator__name">
@@ -205,8 +250,8 @@ const StudentDetailPage: React.FC = () => {
                             )}
                         </section>
 
-                        {state.reporte && (
-                            <ThesisStatusBadge estado={state.reporte} title="Estado de Tesis (PG1 + PG2)" />
+                        {tesisInput && (
+                            <ThesisStatusBadge estado={tesisInput} title="Estado de Tesis (PG1 + PG2)" />
                         )}
                     </div>
                 </div>
