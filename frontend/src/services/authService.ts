@@ -12,13 +12,12 @@
 
 import { apiFetch, apiData, type ApiEnvelope } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
-import { isDevBypass, DEV_MOCK_USER } from '../config/devBypass';
 
 // Claves de sessionStorage — deben coincidir con apiClient.ts
-const ACCESS_TOKEN_KEY  = 'auth_access_token';
+const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
-const EXPIRES_AT_KEY    = 'auth_expires_at';
-const USER_KEY          = 'auth_user';
+const EXPIRES_AT_KEY = 'auth_expires_at';
+const USER_KEY = 'auth_user';
 
 export interface User {
     id: string;
@@ -54,12 +53,12 @@ function adaptUsuario(dto: UsuarioDTO | { usuario?: UsuarioDTO }): User {
     const id = raw.id ?? raw.usuario_id;
     if (id == null) throw new Error('Respuesta de usuario inválida (sin id).');
     return {
-        id:        String(id),
+        id: String(id),
         usuarioId: Number(id),
-        nombre:    String(raw.nombre ?? '—'),
-        email:     String(raw.email ?? raw.correo ?? ''),
-        role:      (raw.rol ?? raw.role ?? 'evaluador') as 'admin' | 'evaluador',
-        fotoUrl:   (raw.foto_url ?? null) as string | null,
+        nombre: String(raw.nombre ?? '—'),
+        email: String(raw.email ?? raw.correo ?? ''),
+        role: (raw.rol ?? raw.role ?? 'evaluador') as 'admin' | 'evaluador',
+        fotoUrl: (raw.foto_url ?? null) as string | null,
     };
 }
 
@@ -98,20 +97,8 @@ export function readPersistedSession(): { user: User } | null {
 // ─── API pública ──────────────────────────────────────────────────────────
 
 export const login = async (email: string, password: string): Promise<User> => {
-    if (isDevBypass()) {
-        // Persist mock session exactly like a real login so that storage-aware
-        // components (e.g. apiClient token readers) behave identically.
-        persistSession(
-            DEV_MOCK_USER,
-            DEV_BYPASS_TOKEN,
-            DEV_BYPASS_TOKEN,
-            Date.now() + 8 * 60 * 60 * 1000, // 8 h TTL — arbitrary, never validated
-        );
-        return DEV_MOCK_USER;
-    }
-
     if (!email.trim()) throw new Error('El correo electrónico es requerido.');
-    if (!password)     throw new Error('La contraseña es requerida.');
+    if (!password) throw new Error('La contraseña es requerida.');
 
     const raw = await apiFetch<ApiEnvelope<LoginResponseData> | LoginResponseData>(
         API_PATHS.auth.login,
@@ -128,7 +115,6 @@ export const login = async (email: string, password: string): Promise<User> => {
 };
 
 export const logout = async (): Promise<void> => {
-    if (isDevBypass()) return;
     const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
     try {
         if (refreshToken) {
@@ -151,7 +137,6 @@ export const logout = async (): Promise<void> => {
  * Actualiza el perfil persistido si tiene éxito.
  */
 export const verifySession = async (): Promise<User | null> => {
-    if (isDevBypass()) return DEV_MOCK_USER;
     try {
         const dto = await apiData<UsuarioDTO | { usuario: UsuarioDTO }>(API_PATHS.usuarios.me);
         const user = adaptUsuario(dto);

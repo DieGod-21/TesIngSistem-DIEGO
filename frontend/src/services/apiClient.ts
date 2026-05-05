@@ -40,9 +40,6 @@ export class ApiError extends Error {
 }
 
 function readAccessToken(): string | null {
-    if (import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH_BYPASS === 'true') {
-        return '__dev_bypass_token__';
-    }
     return sessionStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
