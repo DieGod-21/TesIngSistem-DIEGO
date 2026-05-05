@@ -4,6 +4,11 @@
  * Contexto global de autenticación JWT.
  * Lee la sesión persistida en sessionStorage al montar y la verifica
  * contra /api/usuarios/yo para mantener el perfil actualizado.
+ *
+ * DEV bypass:
+ *   Si import.meta.env.DEV && VITE_DEV_AUTH_BYPASS === 'true' y no hay sesión
+ *   persistida, se ejecuta un auto-login usando authService.login() que retorna
+ *   el usuario mock sin llamar a la API real.
  */
 
 import React, {
@@ -15,6 +20,7 @@ import React, {
 } from 'react';
 import * as authService from '../services/authService';
 import type { User } from '../services/authService';
+import { isDevBypass } from '../config/devBypass';
 
 // ─── Tipos ────────────────────────────────────────────────────────────
 
@@ -47,10 +53,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let canceled = false;
         const hydrate = async () => {
             const session = authService.readPersistedSession();
+
             if (!session) {
+                // ── DEV bypass auto-login ──────────────────────────────
+                // Strictly guarded: import.meta.env.DEV is always false in
+                // production builds (Vite strips it at compile time).
+                if (import.meta.env.DEV && isDevBypass()) {
+                    try {
+                        // login() detects bypass and persists mock tokens to
+                        // sessionStorage without calling the real API.
+                        const bypassUser = await authService.login('', '');
+                        if (!canceled) setUser(bypassUser);
+                    } catch {
+                        // Should never throw in bypass mode; fail silently.
+                    } finally {
+                        if (!canceled) setAuthLoading(false);
+                    }
+                    return;
+                }
+
                 if (!canceled) setAuthLoading(false);
                 return;
             }
+
             // Optimista: mostramos usuario persistido y verificamos en background
             if (!canceled) setUser(session.user);
             try {

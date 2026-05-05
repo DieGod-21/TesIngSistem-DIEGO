@@ -85,7 +85,6 @@ function clearSession(): void {
 }
 
 export function readPersistedSession(): { user: User } | null {
-    if (isDevBypass()) return { user: DEV_MOCK_USER };
     try {
         const raw = sessionStorage.getItem(USER_KEY);
         if (!raw) return null;
@@ -99,7 +98,17 @@ export function readPersistedSession(): { user: User } | null {
 // ─── API pública ──────────────────────────────────────────────────────────
 
 export const login = async (email: string, password: string): Promise<User> => {
-    if (isDevBypass()) return DEV_MOCK_USER;
+    if (isDevBypass()) {
+        // Persist mock session exactly like a real login so that storage-aware
+        // components (e.g. apiClient token readers) behave identically.
+        persistSession(
+            DEV_MOCK_USER,
+            DEV_BYPASS_TOKEN,
+            DEV_BYPASS_TOKEN,
+            Date.now() + 8 * 60 * 60 * 1000, // 8 h TTL — arbitrary, never validated
+        );
+        return DEV_MOCK_USER;
+    }
 
     if (!email.trim()) throw new Error('El correo electrónico es requerido.');
     if (!password)     throw new Error('La contraseña es requerida.');
