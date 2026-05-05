@@ -755,6 +755,11 @@ button.kpi-card {
 
 .dash-table__row--clickable {
     cursor: pointer;
+    transition: background var(--dash-transition), box-shadow var(--dash-transition);
+}
+
+.dash-table__row--clickable:hover {
+    box-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.55);
 }
 
 .dash-table__row--clickable:focus-visible {
@@ -765,12 +770,36 @@ button.kpi-card {
 
 .dash-table__row--clickable:active {
     background: #dbeafe;
+    box-shadow: inset 3px 0 0 #1d4ed8;
 }
 
 .dash-table__row--loading {
     opacity: 0.6;
     cursor: wait;
     pointer-events: none;
+}
+
+/* Chevron affordance: appears on row hover to signal navigation */
+.dash-table__row--clickable .dash-table__td:last-child {
+    position: relative;
+    padding-right: 36px;
+}
+.dash-table__row--clickable .dash-table__td:last-child::after {
+    content: '›';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-4px);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dash-text-muted);
+    opacity: 0;
+    transition: opacity 150ms ease, transform 150ms ease;
+    pointer-events: none;
+}
+.dash-table__row--clickable:hover .dash-table__td:last-child::after {
+    opacity: 0.6;
+    transform: translateY(-50%) translateX(0);
 }
 
 .dash-table__td {
@@ -1270,19 +1299,32 @@ button.kpi-card {
 /* Estado vacío (búsqueda sin resultados) */
 .dash-empty-block {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     padding: 48px 24px;
     background: var(--dash-card-bg);
     border: 1px solid var(--dash-border);
     border-radius: 12px;
+    text-align: center;
+}
+
+.dash-empty-block__icon {
+    color: var(--dash-text-muted);
+    opacity: 0.45;
 }
 
 .dash-empty-block__msg {
     font-size: 0.9rem;
     color: var(--dash-text-secondary);
     margin: 0;
-    text-align: center;
+}
+
+.dash-empty-block__hint {
+    font-size: 0.8rem;
+    color: var(--dash-text-muted);
+    margin: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1404,14 +1446,6 @@ button.kpi-card {
     font-size: 0.875rem;
     font-weight: 600;
     transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
-}
-
-.dash-qa-card:hover {
-    background: var(--umg-navy);
-    color: #ffffff;
-    border-color: var(--umg-navy);
-    box-shadow: 0 4px 12px rgba(0, 51, 102, 0.2);
-    transform: translateX(3px);
 }
 
 .dash-qa-card__icon {
@@ -1647,6 +1681,12 @@ button.kpi-card {
     transform: translateY(-2px);
 }
 
+.dash-qa-card:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px rgba(26, 35, 64, 0.15);
+    transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
 /* ── KPI strip estudiantes: acentos semánticos ───────────────────── */
 .dash-skpi--total    { border-left: 3px solid var(--umg-navy); }
 .dash-skpi--approved { border-left: 3px solid var(--color-success); }
@@ -1864,4 +1904,17 @@ button.kpi-card {
 /* ── KPI clickeable: focus ring visible en dark ── */
 [data-theme="dark"] .kpi-card--clickable:focus-visible {
     outline-color: #60a5fa;
+}
+
+/* ── Tabla: inset shadow en dark para filas clickeables ── */
+[data-theme="dark"] .dash-table__row--clickable:hover {
+    box-shadow: inset 3px 0 0 rgba(96, 165, 250, 0.55);
+}
+[data-theme="dark"] .dash-table__row--clickable:active {
+    box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+/* ── Acciones rápidas: pressed state en dark ── */
+[data-theme="dark"] .dash-qa-card:hover {
+    box-shadow: 0 4px 16px rgba(29, 78, 216, 0.30);
 }

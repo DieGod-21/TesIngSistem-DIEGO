@@ -10,7 +10,7 @@ import React from 'react';
 import { useHistory } from 'react-router-dom';
 import {
     Plus, Users, Upload,
-    AlertCircle, RefreshCw, ArrowRight,
+    AlertCircle, RefreshCw, ArrowRight, CheckCircle2,
 } from 'lucide-react';
 
 import AppFooter from '../components/AppFooter';
@@ -149,11 +149,18 @@ const DashboardPage: React.FC = () => {
                         </div>
                     ) : tableState.status === 'success' && tableState.data.length === 0 ? (
                         <div className="dash-empty-block" role="status">
+                            {searchQuery
+                                ? <AlertCircle size={32} className="dash-empty-block__icon" aria-hidden="true" />
+                                : <CheckCircle2 size={32} className="dash-empty-block__icon" aria-hidden="true" />
+                            }
                             <p className="dash-empty-block__msg">
                                 {searchQuery
                                     ? <><span>Sin expedientes para </span><strong>"{searchQuery}"</strong></>
-                                    : 'No hay estudiantes reprobados en este momento.'}
+                                    : 'Todo al día — sin estudiantes reprobados.'}
                             </p>
+                            {!searchQuery && (
+                                <p className="dash-empty-block__hint">Los expedientes con pendientes aparecerán aquí.</p>
+                            )}
                         </div>
                     ) : tableState.status === 'success' ? (
                         <PendingActionsTable actions={tableState.data} />

@@ -1,49 +1,57 @@
-/**
- * LoginForm.tsx
- *
- * El API Control de Notas no expone un endpoint de login con password.
- * La autenticación es por header X-Usuario-Id (entero) que el coordinador
- * proporciona a evaluadores y administradores.
- *
- * Este formulario solicita ese ID y valida llamando a /api/usuarios/yo.
- */
-
 import React, { useState } from 'react';
 import { IonButton, IonInput, IonSpinner, IonToast } from '@ionic/react';
 import { useAuth } from '../context/AuthContext';
+import { SESSION_MSG_KEY } from '../services/apiClient';
 import umgLogo from '../assets/umg_logo.png';
 
 const LoginForm: React.FC = () => {
-    const { loginByUserId, loading, error } = useAuth();
+    const { login, loading, error } = useAuth();
 
-    const [userId, setUserId] = useState('');
-    const [touched, setTouched] = useState(false);
+    const [email, setEmail]       = useState('');
+    const [password, setPassword] = useState('');
+    const [touched, setTouched]   = useState({ email: false, password: false });
     const [showToast, setShowToast] = useState(false);
+    const [sessionMsg, setSessionMsg] = useState<string | null>(null);
 
     React.useEffect(() => { if (error) setShowToast(true); }, [error]);
 
-    const idError = (() => {
-        if (!touched) return null;
-        if (userId.trim() === '') return 'Ingresa tu ID de usuario.';
-        const n = Number(userId);
-        if (!Number.isFinite(n) || n <= 0 || !Number.isInteger(n)) {
-            return 'El ID debe ser un número entero positivo.';
+    React.useEffect(() => {
+        const msg = sessionStorage.getItem(SESSION_MSG_KEY);
+        if (msg) {
+            setSessionMsg(msg);
+            sessionStorage.removeItem(SESSION_MSG_KEY);
         }
+    }, []);
+
+    const emailError = (() => {
+        if (!touched.email) return null;
+        if (!email.trim()) return 'Ingresa tu correo electrónico.';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return 'Correo electrónico inválido.';
+        return null;
+    })();
+
+    const passwordError = (() => {
+        if (!touched.password) return null;
+        if (!password) return 'Ingresa tu contraseña.';
         return null;
     })();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setTouched(true);
-        if (idError || userId.trim() === '') return;
+        setTouched({ email: true, password: true });
+        if (emailError || passwordError || !email.trim() || !password) return;
         try {
-            await loginByUserId(Number(userId));
+            await login(email.trim(), password);
         } catch {
-            // El AuthContext ya almacena el error y dispara el toast
+            // AuthContext almacena el error y dispara el toast
         }
     };
 
-    const isFormValid = userId.trim() !== '' && idError === null;
+    const isFormValid =
+        email.trim() !== '' &&
+        password !== '' &&
+        emailError === null &&
+        passwordError === null;
 
     return (
         <>
@@ -55,6 +63,14 @@ const LoginForm: React.FC = () => {
                 color="danger"
                 position="top"
             />
+            <IonToast
+                isOpen={sessionMsg !== null}
+                onDidDismiss={() => setSessionMsg(null)}
+                message={sessionMsg ?? ''}
+                duration={5000}
+                color="warning"
+                position="top"
+            />
 
             <div className="auth-mobile-logo">
                 <img src={umgLogo} alt="Logo Universidad Mariano Gálvez" />
@@ -64,35 +80,51 @@ const LoginForm: React.FC = () => {
             <div className="auth-form-header">
                 <h2 className="auth-form-header__title">Bienvenido</h2>
                 <p className="auth-form-header__subtitle">
-                    Ingresa tu ID de usuario para acceder al sistema de evaluación de tesis.
+                    Ingresa tus credenciales para acceder al sistema de evaluación de tesis.
                 </p>
             </div>
 
             <form className="auth-form" onSubmit={handleSubmit} data-testid="login-form" noValidate>
                 <div className="auth-form__field">
-                    <label htmlFor="user-id" className="auth-form__label">
-                        ID de Usuario
+                    <label htmlFor="email" className="auth-form__label">
+                        Correo electrónico
                     </label>
-                    <div className={`auth-input-wrapper${idError ? ' auth-input-wrapper--error' : ''}`}>
+                    <div className={`auth-input-wrapper${emailError ? ' auth-input-wrapper--error' : ''}`}>
                         <IonInput
-                            id="user-id"
-                            type="number"
-                            inputmode="numeric"
-                            value={userId}
-                            placeholder="Ej. 1"
-                            autocomplete="off"
-                            onIonInput={(e) => setUserId(String(e.detail.value ?? ''))}
-                            onIonBlur={() => setTouched(true)}
+                            id="email"
+                            type="email"
+                            inputmode="email"
+                            value={email}
+                            placeholder="usuario@umg.edu.gt"
+                            autocomplete="email"
+                            onIonInput={(e) => setEmail(String(e.detail.value ?? ''))}
+                            onIonBlur={() => setTouched(t => ({ ...t, email: true }))}
                         />
                     </div>
                     <div className="auth-field-error" aria-live="polite">
-                        {idError ?? ''}
+                        {emailError ?? ''}
                     </div>
                 </div>
 
-                <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '4px 0 8px' }}>
-                    Si no conoces tu ID, contacta al coordinador del programa de graduación.
-                </p>
+                <div className="auth-form__field">
+                    <label htmlFor="password" className="auth-form__label">
+                        Contraseña
+                    </label>
+                    <div className={`auth-input-wrapper${passwordError ? ' auth-input-wrapper--error' : ''}`}>
+                        <IonInput
+                            id="password"
+                            type="password"
+                            value={password}
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            onIonInput={(e) => setPassword(String(e.detail.value ?? ''))}
+                            onIonBlur={() => setTouched(t => ({ ...t, password: true }))}
+                        />
+                    </div>
+                    <div className="auth-field-error" aria-live="polite">
+                        {passwordError ?? ''}
+                    </div>
+                </div>
 
                 <IonButton
                     expand="block"

@@ -10,6 +10,11 @@
 // ─── Endpoints reales (Control de Notas) ──────────────────────────────────
 
 export const API_PATHS = {
+    auth: {
+        login:   '/api/auth/login',
+        refresh: '/api/auth/refresh',
+        logout:  '/api/auth/logout',
+    },
     usuarios: {
         me:    '/api/usuarios/yo',
         list:  '/api/usuarios',

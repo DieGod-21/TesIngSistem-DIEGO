@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { ChevronLeft, Mail, IdCard, GraduationCap, ClipboardList, Pencil, Plus } from 'lucide-react';
+import { ChevronLeft, Mail, IdCard, GraduationCap, ClipboardList, Pencil, Plus, Inbox } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
 import { getEstudianteById } from '../services/estudiantesService';
@@ -147,7 +147,7 @@ const StudentDetailPage: React.FC = () => {
 
             {!state.loading && !state.error && state.student && (
                 <div className="view-transition" key={state.student.id}>
-                    <header className="ternas-page__header">
+                    <header className="ternas-page__header sd-student-header">
                         <h1 className="ternas-page__title">{state.student.nombre}</h1>
                         <p className="ternas-page__subtitle">
                             <IdCard size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
@@ -170,28 +170,28 @@ const StudentDetailPage: React.FC = () => {
                                     Notas registradas
                                 </h2>
 
-                                <div className="tdetail-evaluators">
+                                <div className="tdetail-evaluators sd-grade-rows">
                                     {grads.length === 0 && missingCursos.length === ALL_CURSOS.length && (
-                                        <div className="eval-empty" style={{ color: '#64748b', fontSize: '0.875rem', padding: '6px 0' }}>
-                                            Sin notas registradas
+                                        <div className="sd-empty-grades">
+                                            <Inbox size={32} className="sd-empty-grades__icon" aria-hidden="true" />
+                                            <p className="sd-empty-grades__msg">Sin notas registradas</p>
                                         </div>
                                     )}
-                                    {grads.map((g) => (
-                                        <div key={g.curso} className="tdetail-evaluator">
+                                    {grads.map((g) => {
+                                        const rowMod = g.estado === 'APROBADO' ? 'sd-row--pass'
+                                                     : g.estado === 'NSP'      ? 'sd-row--nsp'
+                                                     : 'sd-row--fail';
+                                        const chipMod = g.estado === 'APROBADO' ? 'eval-enviada'
+                                                      : g.estado === 'NSP'      ? 'eval-empty'
+                                                      : 'eval-borrador';
+                                        return (
+                                        <div key={g.curso} className={`tdetail-evaluator ${rowMod}`}>
                                             <span className="tdetail-evaluator__name">
                                                 {g.curso} · {CURSO_NAMES[g.curso] ?? g.curso}
-                                                <small style={{ display: 'block', color: '#64748b', fontWeight: 400 }}>
-                                                    {g.ciclo}
-                                                </small>
+                                                <span className="sd-ciclo">{g.ciclo}</span>
                                             </span>
                                             <span className="tdetail-evaluator__score">{g.nota_final}</span>
-                                            <span
-                                                className={`tdetail-evaluator__estado ${
-                                                    g.estado === 'APROBADO' ? 'eval-enviada'
-                                                    : g.estado === 'NSP'    ? 'eval-empty'
-                                                    : 'eval-borrador'
-                                                }`}
-                                            >
+                                            <span className={`tdetail-evaluator__estado ${chipMod}`}>
                                                 {g.estado}
                                             </span>
                                             <button
@@ -203,7 +203,8 @@ const StudentDetailPage: React.FC = () => {
                                                 <Pencil size={14} aria-hidden="true" />
                                             </button>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
 
                                     {missingCursos.map((curso) => (
                                         <div key={curso} className="nota-add-row">

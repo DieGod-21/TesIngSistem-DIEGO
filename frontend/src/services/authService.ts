@@ -1,25 +1,28 @@
 /**
  * authService.ts
  *
- * El API Control de Notas no expone /auth/login con JWT.
- * La autenticación se realiza mediante el header `X-Usuario-Id` (entero).
+ * Autenticación JWT.
+ * Tokens almacenados en sessionStorage (se limpian al cerrar pestaña).
  *
  * Flujo:
- *   1. El usuario ingresa su ID de evaluador o admin (proporcionado por el coordinador).
- *   2. Persistimos el ID en localStorage.
- *   3. apiClient adjunta el header automáticamente en cada request.
- *   4. `verifyUser` valida el ID llamando a /api/usuarios/yo.
+ *   login(email, password) → POST /api/auth/login → guarda accessToken + refreshToken
+ *   logout()               → POST /api/auth/logout (envía refreshToken) → limpia sesión
+ *   verifySession()        → GET  /api/usuarios/yo  → refresca perfil del usuario
  */
 
-import { apiData, USER_ID_KEY } from './apiClient';
+import { apiFetch, apiData, type ApiEnvelope } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
-import { isDevBypass, DEV_BYPASS_USER_ID, DEV_MOCK_USER } from '../config/devBypass';
+import { isDevBypass, DEV_MOCK_USER } from '../config/devBypass';
 
-const USER_KEY = 'auth_user';
+// Claves de sessionStorage — deben coincidir con apiClient.ts
+const ACCESS_TOKEN_KEY  = 'auth_access_token';
+const REFRESH_TOKEN_KEY = 'auth_refresh_token';
+const EXPIRES_AT_KEY    = 'auth_expires_at';
+const USER_KEY          = 'auth_user';
 
 export interface User {
     id: string;
-    /** ID numérico tal como lo espera la API (X-Usuario-Id). */
+    /** Numérico para compatibilidad con componentes existentes. */
     usuarioId: number;
     nombre: string;
     email: string;
@@ -39,118 +42,117 @@ interface UsuarioDTO {
     [key: string]: unknown;
 }
 
-/** Adapta la respuesta del backend al modelo interno User. */
+interface LoginResponseData {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    usuario: UsuarioDTO;
+}
+
 function adaptUsuario(dto: UsuarioDTO | { usuario?: UsuarioDTO }): User {
     const raw = ('usuario' in dto && dto.usuario ? dto.usuario : dto) as UsuarioDTO;
     const id = raw.id ?? raw.usuario_id;
-    if (id == null) {
-        throw new Error('Respuesta de usuario inválida (sin id).');
-    }
-    const role = (raw.rol ?? raw.role ?? 'evaluador') as 'admin' | 'evaluador';
+    if (id == null) throw new Error('Respuesta de usuario inválida (sin id).');
     return {
         id:        String(id),
         usuarioId: Number(id),
         nombre:    String(raw.nombre ?? '—'),
         email:     String(raw.email ?? raw.correo ?? ''),
-        role,
+        role:      (raw.rol ?? raw.role ?? 'evaluador') as 'admin' | 'evaluador',
         fotoUrl:   (raw.foto_url ?? null) as string | null,
     };
 }
 
 // ─── Persistencia ─────────────────────────────────────────────────────────
 
-export function readPersistedSession(): { user: User; usuarioId: number } | null {
-    if (isDevBypass()) {
-        return { user: DEV_MOCK_USER, usuarioId: DEV_BYPASS_USER_ID };
-    }
+function persistSession(
+    user: User,
+    accessToken: string,
+    refreshToken: string,
+    expiresAt: number,
+): void {
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    sessionStorage.setItem(EXPIRES_AT_KEY, String(expiresAt));
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+}
 
+function clearSession(): void {
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem(EXPIRES_AT_KEY);
+    sessionStorage.removeItem(USER_KEY);
+}
+
+export function readPersistedSession(): { user: User } | null {
+    if (isDevBypass()) return { user: DEV_MOCK_USER };
     try {
-        const id = localStorage.getItem(USER_ID_KEY);
-        const raw = localStorage.getItem(USER_KEY);
-        if (!id || !raw) return null;
-        const user = JSON.parse(raw) as User;
-        return { user, usuarioId: Number(id) };
+        const raw = sessionStorage.getItem(USER_KEY);
+        if (!raw) return null;
+        return { user: JSON.parse(raw) as User };
     } catch {
-        localStorage.removeItem(USER_ID_KEY);
-        localStorage.removeItem(USER_KEY);
+        clearSession();
         return null;
     }
 }
 
-function persistSession(user: User): void {
-    localStorage.setItem(USER_ID_KEY, String(user.usuarioId));
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-}
-
-function clearSession(): void {
-    localStorage.removeItem(USER_ID_KEY);
-    localStorage.removeItem(USER_KEY);
-}
-
 // ─── API pública ──────────────────────────────────────────────────────────
 
-/**
- * Autentica al usuario por su ID. Como el API no provee /auth/login,
- * persistimos primero el ID y luego validamos con /api/usuarios/yo.
- * Si el ID no existe o devuelve 401, limpiamos y lanzamos error.
- */
-export const loginByUserId = async (usuarioId: number): Promise<User> => {
+export const login = async (email: string, password: string): Promise<User> => {
     if (isDevBypass()) return DEV_MOCK_USER;
 
-    if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
-        throw new Error('ID de usuario inválido. Debe ser un número entero positivo.');
-    }
+    if (!email.trim()) throw new Error('El correo electrónico es requerido.');
+    if (!password)     throw new Error('La contraseña es requerida.');
 
-    // Persistimos temporalmente para que apiClient adjunte el header
-    localStorage.setItem(USER_ID_KEY, String(usuarioId));
-    try {
-        const dto = await apiData<UsuarioDTO | { usuario: UsuarioDTO }>(API_PATHS.usuarios.me);
-        const user = adaptUsuario(dto);
-        persistSession(user);
-        return user;
-    } catch (err) {
-        clearSession();
-        throw err;
-    }
-};
-
-/**
- * Mantiene la firma legacy (email/password) para no romper LoginForm.
- * Si el "email" parece un número, lo trata como ID; si no, lanza error.
- */
-export const login = async (emailOrId: string, _password: string): Promise<User> => {
-    const trimmed = emailOrId.trim();
-    const numericId = Number(trimmed);
-    if (Number.isFinite(numericId) && numericId > 0) {
-        return loginByUserId(numericId);
-    }
-    throw new Error(
-        'Este sistema autentica por ID de usuario. Ingresa el ID numérico que te proporcionó tu coordinador.',
+    const raw = await apiFetch<ApiEnvelope<LoginResponseData> | LoginResponseData>(
+        API_PATHS.auth.login,
+        { method: 'POST', body: { email: email.trim(), password }, requireAuth: false, skipRefresh: true },
     );
+
+    const data = (raw && typeof raw === 'object' && 'data' in raw)
+        ? (raw as ApiEnvelope<LoginResponseData>).data
+        : raw as LoginResponseData;
+
+    const user = adaptUsuario(data.usuario);
+    persistSession(user, data.accessToken, data.refreshToken, Date.now() + data.expiresIn * 1000);
+    return user;
 };
 
 export const logout = async (): Promise<void> => {
-    clearSession();
+    if (isDevBypass()) return;
+    const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
+    try {
+        if (refreshToken) {
+            await apiFetch(API_PATHS.auth.logout, {
+                method: 'POST',
+                body: { refreshToken },
+                requireAuth: false,
+                skipRefresh: true,
+            });
+        }
+    } catch {
+        // Ignorar errores de red — la sesión local se limpia de todas formas
+    } finally {
+        clearSession();
+    }
 };
 
 /**
- * Verifica que el ID persistido siga siendo válido contra el backend.
- * Devuelve el usuario actualizado o null si la sesión es inválida.
+ * Verifica que el token vigente sea válido llamando a /api/usuarios/yo.
+ * Actualiza el perfil persistido si tiene éxito.
  */
 export const verifySession = async (): Promise<User | null> => {
     if (isDevBypass()) return DEV_MOCK_USER;
     try {
         const dto = await apiData<UsuarioDTO | { usuario: UsuarioDTO }>(API_PATHS.usuarios.me);
         const user = adaptUsuario(dto);
-        persistSession(user);
+        sessionStorage.setItem(USER_KEY, JSON.stringify(user));
         return user;
     } catch {
         return null;
     }
 };
 
-/** Compatibilidad con código legado que llama verifyToken. */
-export const verifyToken = async (_token?: string): Promise<boolean> => {
-    const user = await verifySession();
-    return user !== null;
-};
+/** @deprecated — compatibilidad legacy. */
+export const verifyToken = async (_token?: string): Promise<boolean> =>
+    (await verifySession()) !== null;

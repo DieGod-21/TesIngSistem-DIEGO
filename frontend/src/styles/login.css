@@ -649,6 +649,11 @@ ion-content::part(scroll) {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.auth-submit-btn::part(native):focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+}
+
 /* ─── Logo flotante ──────────────────────────────────────────────── */
 .logo-float {
   animation: floatLogo 4s ease-in-out infinite;

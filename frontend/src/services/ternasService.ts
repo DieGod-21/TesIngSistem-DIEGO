@@ -2,7 +2,7 @@
  * ternasService.ts
  *
  * Acceso al módulo de Ternas:
- *   - Listado (filtrado por usuario via X-Usuario-Id)
+ *   - Listado (filtrado por usuario autenticado)
  *   - Detalle con evaluadores y resultado
  *   - Guardar borrador, enviar evaluación, reabrir (admin)
  */

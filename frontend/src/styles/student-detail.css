@@ -9,12 +9,13 @@
     border-radius: 6px;
     color: #94a3b8;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
     flex-shrink: 0;
 }
 .nota-edit-btn:hover {
     background: #f1f5f9;
     color: #003366;
+    transform: scale(1.15);
 }
 
 /* ── Add nota row (for missing courses) ─────────────────────────────── */
@@ -47,6 +48,7 @@
 .nota-add-btn:hover {
     border-color: #003366;
     color: #003366;
+    background: rgba(0, 51, 102, 0.05);
 }
 
 /* ── Edit nota modal ─────────────────────────────────────────────────── */
@@ -185,7 +187,7 @@
     font-weight: 500;
     cursor: pointer;
     border: none;
-    transition: background 0.15s, opacity 0.15s;
+    transition: background 0.15s, opacity 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 .en-btn:disabled {
     opacity: 0.6;
@@ -208,6 +210,7 @@
 }
 .en-btn--primary:hover:not(:disabled) {
     background: #002244;
+    box-shadow: 0 4px 14px rgba(0, 51, 102, 0.28);
 }
 .en-btn--primary:active:not(:disabled) {
     transform: scale(0.97);
@@ -290,4 +293,162 @@
 }
 [data-theme="dark"] .en-btn--primary:hover:not(:disabled) {
     background: #1d4ed8;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STUDENT DETAIL — polished header & grade rows
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Student info header card ────────────────────────────────────── */
+.sd-student-header {
+    background: var(--dash-card-bg, #fff);
+    border: 1px solid var(--dash-border, #e2e8f0);
+    border-top: 3px solid #1d4ed8;
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 180ms ease, transform 180ms ease;
+}
+.sd-student-header:hover {
+    box-shadow: 0 4px 16px rgba(29, 78, 216, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+/* ── Grade rows: 4-column grid (name | score | chip | edit btn) ── */
+.sd-grade-rows .tdetail-evaluator {
+    grid-template-columns: 1fr auto auto auto;
+    transition: background 150ms ease;
+    animation: sd-row-in 200ms ease both;
+}
+
+/* Row accent by grade result — inset shadow avoids layout shift */
+.tdetail-evaluator.sd-row--pass {
+    box-shadow: inset 3px 0 0 #10b981;
+    background: rgba(16, 185, 129, 0.05);
+}
+.tdetail-evaluator.sd-row--fail {
+    box-shadow: inset 3px 0 0 #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+.tdetail-evaluator.sd-row--nsp {
+    box-shadow: inset 3px 0 0 #94a3b8;
+}
+
+/* Score color by result */
+.sd-row--pass .tdetail-evaluator__score { color: #10b981; }
+.sd-row--fail .tdetail-evaluator__score { color: #ef4444; }
+
+/* Ciclo year sub-label (replaces inline style) */
+.sd-ciclo {
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 400;
+    color: var(--dash-text-secondary, #64748b);
+    margin-top: 1px;
+}
+
+/* ── Empty grades state ──────────────────────────────────────────── */
+.sd-empty-grades {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 28px 16px;
+    color: var(--dash-text-muted, #94a3b8);
+    text-align: center;
+}
+.sd-empty-grades__icon { opacity: 0.38; }
+.sd-empty-grades__msg {
+    font-size: 0.875rem;
+    margin: 0;
+    color: var(--dash-text-secondary, #64748b);
+}
+
+/* ── focus-visible ring on edit button ──────────────────────────── */
+.nota-edit-btn:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────────────── */
+[data-theme="dark"] .sd-student-header {
+    background: var(--dash-card-bg);
+    border-color: var(--dash-border);
+    border-top-color: #3b82f6;
+}
+[data-theme="dark"] .tdetail-evaluator.sd-row--pass {
+    background: rgba(16, 185, 129, 0.08);
+    box-shadow: inset 3px 0 0 rgba(16, 185, 129, 0.55);
+}
+[data-theme="dark"] .tdetail-evaluator.sd-row--fail {
+    background: rgba(239, 68, 68, 0.08);
+    box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.55);
+}
+[data-theme="dark"] .tdetail-evaluator.sd-row--nsp {
+    box-shadow: inset 3px 0 0 rgba(148, 163, 184, 0.4);
+}
+[data-theme="dark"] .sd-row--pass .tdetail-evaluator__score { color: #6ee7b7; }
+[data-theme="dark"] .sd-row--fail .tdetail-evaluator__score { color: #fca5a5; }
+[data-theme="dark"] .sd-ciclo { color: var(--dash-text-muted); }
+[data-theme="dark"] .nota-add-row__label { color: var(--dash-text-muted); }
+[data-theme="dark"] .nota-edit-btn:focus-visible { outline-color: #60a5fa; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   INTERACTIVITY POLISH — motion, hover states
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Grade row entry stagger animation ──────────────────────────── */
+@keyframes sd-row-in {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.sd-grade-rows .tdetail-evaluator:nth-child(2) { animation-delay: 70ms; }
+.sd-grade-rows .tdetail-evaluator:nth-child(3) { animation-delay: 140ms; }
+
+/* ── Grade row hover feedback ────────────────────────────────────── */
+.sd-grade-rows .tdetail-evaluator:hover                       { background: rgba(241, 245, 249, 0.9); }
+.sd-grade-rows .tdetail-evaluator.sd-row--pass:hover          { background: rgba(16, 185, 129, 0.10); }
+.sd-grade-rows .tdetail-evaluator.sd-row--fail:hover          { background: rgba(239, 68, 68, 0.10); }
+.sd-grade-rows .tdetail-evaluator.sd-row--nsp:hover           { background: rgba(148, 163, 184, 0.08); }
+
+/* ── nota-add-btn: active press ──────────────────────────────────── */
+.nota-add-btn:active {
+    transform: scale(0.97);
+    transition: transform 80ms ease;
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .sd-grade-rows .tdetail-evaluator { animation: none; }
+    .sd-student-header { transition: box-shadow 0ms; }
+    .nota-edit-btn { transition: background 0ms, color 0ms; }
+}
+
+/* ── Dark mode: grade row hover ──────────────────────────────────── */
+[data-theme="dark"] .sd-student-header:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+[data-theme="dark"] .sd-grade-rows .tdetail-evaluator:hover {
+    background: rgba(51, 65, 85, 0.55);
+}
+[data-theme="dark"] .sd-grade-rows .tdetail-evaluator.sd-row--pass:hover {
+    background: rgba(16, 185, 129, 0.14);
+}
+[data-theme="dark"] .sd-grade-rows .tdetail-evaluator.sd-row--fail:hover {
+    background: rgba(239, 68, 68, 0.14);
+}
+[data-theme="dark"] .sd-grade-rows .tdetail-evaluator.sd-row--nsp:hover {
+    background: rgba(148, 163, 184, 0.10);
+}
+[data-theme="dark"] .nota-add-btn:hover {
+    background: rgba(147, 197, 253, 0.08);
+}
+[data-theme="dark"] .nota-edit-btn:hover {
+    background: #334155;
+    color: #93c5fd;
+    transform: scale(1.15);
+}
+[data-theme="dark"] .en-btn--primary:hover:not(:disabled) {
+    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.40);
 }
