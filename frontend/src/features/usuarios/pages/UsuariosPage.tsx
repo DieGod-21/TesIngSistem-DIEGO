@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Users, User } from 'lucide-react';
+import { Plus, Users, User, UserPlus, AlertTriangle, RefreshCw } from 'lucide-react';
 import { listUsuarios } from '../../../services/usuariosService';
 import type { Usuario } from '../../../types/api';
 import NuevoUsuarioModal from '../components/NuevoUsuarioModal';
+import { Button, Badge, PageHeader, EmptyState } from '../../../components/ui';
 import '../styles/usuarios.css';
 
 const ROL_LABEL: Record<string, string> = {
@@ -48,41 +49,50 @@ const UsuariosPage: React.FC = () => {
 
     return (
         <div className="usr-page">
-            <header className="usr-page__header">
-                <div>
-                    <h1 className="usr-page__title">
-                        <Users size={22} aria-hidden="true" />
-                        Usuarios
-                    </h1>
-                    {!loading && !error && (
-                        <p className="usr-page__subtitle">
-                            {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''} registrado{usuarios.length !== 1 ? 's' : ''}
-                        </p>
-                    )}
-                </div>
-                <button
-                    type="button"
-                    className="usr-btn usr-btn--primary"
-                    onClick={() => setModalOpen(true)}
-                >
-                    <Plus size={16} aria-hidden="true" />
-                    Nuevo Usuario
-                </button>
-            </header>
+            <PageHeader
+                kicker="Administración"
+                icon={<Users size={22} />}
+                title="Usuarios"
+                subtitle={
+                    !loading && !error
+                        ? `${usuarios.length} usuario${usuarios.length !== 1 ? 's' : ''} registrado${usuarios.length !== 1 ? 's' : ''}`
+                        : 'Gestiona el acceso de evaluadores y administradores'
+                }
+                actions={
+                    <Button onClick={() => setModalOpen(true)}>
+                        <Plus size={16} aria-hidden="true" />
+                        Nuevo Usuario
+                    </Button>
+                }
+            />
 
             {loading && <UsuariosSkeleton />}
 
             {!loading && error && (
-                <div className="usr-error" role="alert">{error}</div>
+                <EmptyState
+                    tone="danger"
+                    icon={<AlertTriangle size={26} />}
+                    title="No se pudieron cargar los usuarios"
+                    description={error}
+                    action={
+                        <Button variant="secondary" onClick={fetchUsuarios}>
+                            <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                        </Button>
+                    }
+                />
             )}
 
             {!loading && !error && usuarios.length === 0 && (
-                <div className="usr-empty">
-                    <p style={{ margin: 0, fontWeight: 600 }}>No hay usuarios registrados</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>
-                        Crea el primer usuario con el botón "Nuevo Usuario".
-                    </p>
-                </div>
+                <EmptyState
+                    icon={<UserPlus size={26} />}
+                    title="No hay usuarios registrados"
+                    description="Crea el primer usuario para dar acceso a evaluadores y administradores."
+                    action={
+                        <Button onClick={() => setModalOpen(true)}>
+                            <Plus size={16} aria-hidden="true" /> Nuevo Usuario
+                        </Button>
+                    }
+                />
             )}
 
             {!loading && !error && usuarios.length > 0 && (
@@ -96,9 +106,9 @@ const UsuariosPage: React.FC = () => {
                                 <p className="usr-info__name">{u.nombre}</p>
                                 <p className="usr-info__email">{u.email}</p>
                             </div>
-                            <span className={`usr-badge usr-badge--${u.rol}`}>
+                            <Badge tone={u.rol === 'admin' ? 'primary' : 'success'}>
                                 {ROL_LABEL[u.rol] ?? u.rol}
-                            </span>
+                            </Badge>
                         </div>
                     ))}
                 </div>

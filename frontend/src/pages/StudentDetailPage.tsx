@@ -15,6 +15,7 @@ import {
 } from '../utils/thesisStatus';
 import { THESIS_MIN_GRADE } from '../config/apiConfig';
 import type { CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
+import { Button } from '../components/ui';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 import '../styles/student-detail.css';
@@ -132,15 +133,14 @@ const StudentDetailPage: React.FC = () => {
 
     return (
         <div className="ternas-page">
-            <button
-                type="button"
-                className="eval-btn eval-btn--secondary"
+            <Button
+                variant="secondary"
                 onClick={() => history.goBack()}
                 style={{ alignSelf: 'flex-start' }}
             >
                 <ChevronLeft size={16} aria-hidden="true" />
                 Volver
-            </button>
+            </Button>
 
             {state.loading && <StudentDetailSkeleton />}
             {!state.loading && state.error && <div className="terror" role="alert">{state.error}</div>}

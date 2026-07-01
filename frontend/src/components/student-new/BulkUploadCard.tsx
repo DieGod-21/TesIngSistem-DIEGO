@@ -11,6 +11,7 @@ import React, { useRef, useState } from 'react';
 import { IonToast } from '@ionic/react';
 import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { importarEstudiantes, type ImportarEstudiantesResult } from '../../services/importarService';
+import { Button } from '../ui';
 
 const ACCEPTED_EXT = ['.xlsx', '.xls', '.pdf'];
 const ACCEPTED_MIME = [
@@ -181,24 +182,21 @@ const BulkUploadCard: React.FC = () => {
                 )}
 
                 <div className="sn-form__actions">
-                    <button
-                        type="button"
-                        className="sn-btn-primary"
+                    <Button
                         onClick={upload}
+                        loading={uploading}
                         disabled={!file || uploading}
-                        aria-busy={uploading}
                     >
-                        <UploadCloud size={16} />
+                        {!uploading && <UploadCloud size={16} />}
                         {uploading ? 'Importando…' : 'Importar archivo'}
-                    </button>
-                    <button
-                        type="button"
-                        className="sn-btn-secondary"
+                    </Button>
+                    <Button
+                        variant="secondary"
                         onClick={clear}
                         disabled={uploading || (!file && !result && !error)}
                     >
                         Limpiar
-                    </button>
+                    </Button>
                 </div>
             </div>
 

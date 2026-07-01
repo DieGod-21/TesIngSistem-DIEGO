@@ -49,7 +49,7 @@
 .proy-card {
     background: #fff;
     border: 1px solid #e2e8f0;
-    border-top: 3px solid #4f46e5;
+    border-top: 3px solid var(--color-primary);
     border-radius: 14px;
     padding: 18px 20px;
     display: flex;
@@ -119,8 +119,8 @@
 }
 
 .proy-badge--pg1 {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
 }
 
 .proy-badge--pg2 {
@@ -146,12 +146,12 @@
 }
 
 .proy-btn--primary {
-    background: #4f46e5;
+    background: var(--color-primary);
     color: #fff;
 }
 
 .proy-btn--primary:hover {
-    background: #4338ca;
+    background: var(--color-primary-hover);
 }
 
 .proy-btn--primary:active {
@@ -159,7 +159,7 @@
 }
 
 .proy-btn:focus-visible {
-    outline: 2px solid #6366f1;
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
 
@@ -307,7 +307,7 @@
 .np-input:focus,
 .np-textarea:focus,
 .np-select:focus {
-    border-color: #6366f1;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
@@ -369,16 +369,16 @@
 }
 
 .np-btn--primary {
-    background: #4f46e5;
+    background: var(--color-primary);
     color: #fff;
 }
 
 .np-btn--primary:hover:not(:disabled) {
-    background: #4338ca;
+    background: var(--color-primary-hover);
 }
 
 .np-btn--primary:active:not(:disabled) {
-    background: #3730a3;
+    background: var(--color-primary-active);
     transform: scale(0.97);
 }
 
@@ -397,7 +397,7 @@
 }
 
 .np-btn:focus-visible {
-    outline: 2px solid #6366f1;
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
 
@@ -419,7 +419,7 @@
 [data-theme="dark"] .proy-card {
     background: #1e293b;
     border-color: #334155;
-    border-top-color: #6366f1;
+    border-top-color: var(--color-primary);
 }
 
 [data-theme="dark"] .proy-card__title { color: #f1f5f9; }

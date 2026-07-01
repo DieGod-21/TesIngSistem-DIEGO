@@ -60,15 +60,15 @@
 }
 
 .sl-kpi-item {
-    background: var(--dash-card-bg);
+    background: var(--surface-card-grad), var(--dash-card-bg);
     border: 1px solid var(--dash-border);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 16px 20px;
-    box-shadow: var(--dash-shadow-sm);
+    box-shadow: var(--shadow-sm), var(--hairline);
     display: flex;
     flex-direction: column;
     gap: 4px;
-    transition: box-shadow 180ms ease, transform 180ms ease;
+    transition: box-shadow 200ms var(--ease-out-expo), transform 200ms var(--ease-out-expo);
 }
 
 .sl-kpi-item:hover {
@@ -139,7 +139,7 @@
 }
 
 .sl-filter-search:focus-within .sl-filter-search__icon {
-    color: #2563eb;
+    color: var(--color-primary);
     transform: translateY(-50%) scale(1.18);
 }
 
@@ -157,7 +157,7 @@
 }
 
 .sl-filter-search__input:focus {
-    border-color: #2563eb;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     background: #ffffff;
 }
@@ -216,10 +216,10 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 .sl-table-wrap {
-    background: var(--dash-card-bg);
+    background: var(--surface-card-grad), var(--dash-card-bg);
     border: 1px solid var(--dash-border);
-    border-radius: 12px;
-    box-shadow: var(--dash-shadow-sm);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm), var(--hairline);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -540,15 +540,9 @@
     .sl-avatar { animation: none; transition: none; }
 }
 
-/* KPI strip: colores semánticos por posición */
-.sl-kpi-item:nth-child(1) { border-top: 3px solid var(--umg-navy); }
-.sl-kpi-item:nth-child(2) { border-top: 3px solid var(--color-success); }
-.sl-kpi-item:nth-child(3) { border-top: 3px solid var(--color-warning); }
-.sl-kpi-item:nth-child(4) { border-top: 3px solid var(--color-info); }
-
-/* Hover de KPI con sombra azul suave */
+/* Hover de KPI con sombra de marca suave (sin franjas de color) */
 .sl-kpi-item:hover {
-    box-shadow: 0 4px 16px rgba(26,35,64,0.10);
+    box-shadow: var(--shadow-md);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -627,7 +621,7 @@
 /* ── Tab activo ── */
 [data-theme="dark"] .sl-status-tab--active {
     background: #1d4ed8;
-    border-color: #2563eb;
+    border-color: var(--color-primary);
 }
 /* ═══════════════════════════════════════════════════════════════════
    CLICKABLE ROW + STATUS CHIP + PAGER (extensiones)

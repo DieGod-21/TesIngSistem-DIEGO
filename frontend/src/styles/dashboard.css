@@ -48,21 +48,12 @@
     box-sizing: border-box;
 }
 
-/* ─── Sidebar — gradiente cobalt/imperial blue animado ──────────── */
+/* ─── Sidebar — índigo profundo sólido (premium sobrio, sin animación) ─── */
 .dash-sidebar {
     width: var(--dash-sidebar-width);
-    background-color: #1e40af;
-    background-image: linear-gradient(
-        160deg,
-        #1e40af  0%,
-        #2255cc  35%,
-        #2d6adf  70%,
-        #4080f0  100%
-    );
-    background-size: 300% 300%;
-    animation: sidebar-wave 10s ease infinite;
-    will-change: background-position;
-    color: #ffffff;
+    background: var(--indigo-900);
+    background-image: linear-gradient(180deg, var(--indigo-900) 0%, var(--indigo-800) 100%);
+    color: var(--color-primary-contrast);
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -70,16 +61,8 @@
     left: 0;
     height: 100%;
     z-index: 200;
+    border-right: 1px solid oklch(1 0 0 / 0.06);
     transition: transform var(--dash-transition);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .dash-sidebar {
-        animation: none;
-        background-image: none;
-        background-color: #2255cc;
-        will-change: auto;
-    }
 }
 
 /* Brand / Logo */
@@ -156,12 +139,10 @@
 }
 
 .dash-sidebar__nav-item--active {
-    background: rgba(255, 255, 255, 0.18);
+    background: oklch(1 0 0 / 0.14);
     color: #ffffff;
-    border-left: 3px solid rgba(255, 255, 255, 0.9);
-    padding-left: 9px;
-    /* compensa el border-left */
     font-weight: 600;
+    box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06);
 }
 
 .dash-sidebar__nav-item--disabled {
@@ -269,7 +250,7 @@
 }
 
 .dash-header__search-wrapper:focus-within .dash-header__search-icon {
-    color: #2563eb;
+    color: var(--color-primary);
     transform: translateY(-50%) scale(1.18);
 }
 
@@ -286,7 +267,7 @@
 }
 
 .dash-header__search:focus {
-    border-color: #2563eb;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     background: #ffffff;
 }
@@ -410,6 +391,62 @@
     flex: 1;
 }
 
+/* ── Hero de bienvenida (superficie insignia) ────────────────────── */
+.dash-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+}
+.dash-hero__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: oklch(0.86 0.06 275);
+    margin: 0 0 0.75rem;
+}
+.dash-hero__kicker::before {
+    content: '';
+    width: 1.5rem;
+    height: 2px;
+    border-radius: 2px;
+    background: oklch(1 0 0 / 0.7);
+}
+.dash-hero__title {
+    font-size: clamp(1.6rem, 3.2vw, 2.15rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin: 0 0 0.5rem;
+    color: #fff;
+}
+.dash-hero__title strong {
+    font-weight: 800;
+    /* nombre resaltado con la firma cian de la aurora */
+    color: oklch(0.86 0.11 225);
+}
+.dash-hero__subtitle {
+    font-size: 0.92rem;
+    color: oklch(0.88 0.03 275);
+    margin: 0;
+    max-width: 60ch;
+}
+.dash-hero__actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+@media (max-width: 640px) {
+    .dash-hero__actions { width: 100%; }
+    .dash-hero__actions .ui-btn { flex: 1; }
+}
+
 /* Título de página */
 .dash-page-header {
     display: flex;
@@ -432,32 +469,37 @@
     margin: 0;
 }
 
-/* Botón primario — rojo sólido para acciones críticas */
+/* Botón primario — índigo de marca para la acción principal */
 .dash-btn-primary {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--umg-red);
-    color: #ffffff;
+    background: var(--color-primary);
+    color: var(--color-primary-contrast);
     border: none;
     padding: 10px 20px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: var(--dash-shadow-md);
+    box-shadow: var(--dash-shadow-sm);
     white-space: nowrap;
-    transition: opacity var(--dash-transition), transform var(--dash-transition);
+    transition: background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-fast);
 }
 
 .dash-btn-primary:hover {
-    background: var(--umg-red-dark);
-    box-shadow: 0 6px 18px rgba(200, 16, 46, 0.30);
-    transform: scale(1.03);
+    background: var(--color-primary-hover);
+    box-shadow: 0 6px 18px var(--color-primary-ring);
+    transform: translateY(-1px);
 }
 
 .dash-btn-primary:active {
-    transform: scale(0.97);
+    transform: translateY(0) scale(0.98);
+}
+
+.dash-btn-primary:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 /* KPI Grid */
@@ -482,19 +524,60 @@
     gap: 24px;
 }
 
+/* ── Composición insignia: contenido principal + rail lateral ──────── */
+.dash-flagship-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 28px;
+    align-items: start;
+}
+.dash-flagship-main {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+}
+.dash-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 88px; /* deja respirar bajo el header sticky */
+}
+
+@media (max-width: 1100px) {
+    .dash-flagship-grid { grid-template-columns: 1fr; }
+    .dash-aside { position: static; }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    4. KPI CARDS
 ═══════════════════════════════════════════════════════════════════ */
 
 .kpi-card {
-    background: var(--dash-card-bg);
+    background: var(--surface-card-grad), var(--dash-card-bg);
     border: 1px solid var(--dash-border);
-    border-radius: 14px;
-    padding: 24px;
-    box-shadow: var(--dash-shadow-sm);
+    border-radius: 16px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow-sm), var(--hairline);
     position: relative;
-    transition: box-shadow var(--dash-transition), transform var(--dash-transition);
+    overflow: hidden;
+    transition: box-shadow 220ms var(--ease-out-expo), transform 220ms var(--ease-out-expo);
 }
+/* Halo de marca sutil en la esquina superior derecha */
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 55%;
+    height: 120%;
+    background: radial-gradient(circle, color-mix(in oklch, var(--color-primary) 12%, transparent) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 260ms ease;
+    pointer-events: none;
+}
+.kpi-card:hover::before { opacity: 1; }
 
 /* Aparición animada al montar — stagger por posición nth-child */
 .kpi-card--appear {
@@ -545,7 +628,7 @@ button.kpi-card {
 }
 
 .kpi-card--clickable:focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
 
@@ -588,6 +671,10 @@ button.kpi-card {
     }
     .kpi-card--clickable::after {
         transition: none;
+    }
+    .kpi-card:hover,
+    .kpi-card:hover .kpi-card__icon-box {
+        transform: none;
     }
 }
 
@@ -636,22 +723,27 @@ button.kpi-card {
 
 /* Icono */
 .kpi-card__icon-box {
-    padding: 8px;
-    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.5), var(--shadow-xs);
+    transition: transform 220ms var(--ease-spring);
 }
 
+.kpi-card:hover .kpi-card__icon-box { transform: scale(1.08) rotate(-3deg); }
+
 .kpi-card__icon-box--blue {
-    background: #dbeafe;
-    color: #1e40af;
+    background: linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-primary-soft-2) 100%);
+    color: var(--color-primary);
 }
 
 .kpi-card__icon-box--red {
-    background: #fee2e2;
-    color: #dc2626;
+    background: linear-gradient(135deg, var(--color-danger-light) 0%, color-mix(in oklch, var(--color-danger) 18%, var(--color-danger-light)) 100%);
+    color: var(--color-danger);
 }
 
 /* Barra de progreso — usa CSS custom property --kpi-progress
@@ -679,10 +771,10 @@ button.kpi-card {
 ═══════════════════════════════════════════════════════════════════ */
 
 .dash-table-card {
-    background: var(--dash-card-bg);
+    background: var(--surface-card-grad), var(--dash-card-bg);
     border: 1px solid var(--dash-border);
-    border-radius: 12px;
-    box-shadow: var(--dash-shadow-sm);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm), var(--hairline);
     overflow: hidden;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -763,14 +855,14 @@ button.kpi-card {
 }
 
 .dash-table__row--clickable:focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--color-primary);
     outline-offset: -2px;
     background: #eff6ff;
 }
 
 .dash-table__row--clickable:active {
     background: #dbeafe;
-    box-shadow: inset 3px 0 0 #1d4ed8;
+    box-shadow: inset 3px 0 0 var(--color-primary-hover);
 }
 
 .dash-table__row--loading {
@@ -1009,7 +1101,7 @@ button.kpi-card {
 
 .dash-avatar--blue {
     background: #dbeafe;
-    color: #1d4ed8;
+    color: var(--color-primary-hover);
 }
 
 .dash-avatar--green {
@@ -1647,20 +1739,17 @@ button.kpi-card {
    Aquí solo se ajustan elementos secundarios al tema azul.
 ═══════════════════════════════════════════════════════════════════ */
 
-/* ── Header: separador azul inferior ─────────────────────────────── */
+/* ── Header: separador neutro fino (premium sobrio) ──────────────── */
 .dash-header {
-    border-bottom: 2px solid #1d4ed8;
-    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-card);
 }
 
-/* ── KPI Cards: borde superior azul en hover ─────────────────────── */
-.kpi-card {
-    border-top: 3px solid transparent;
-    transition: box-shadow 180ms ease, transform 180ms ease, border-color 180ms ease;
-}
-
+/* ── KPI Cards: elevación premium en hover (sin franja de color) ──── */
 .kpi-card:hover {
-    border-top-color: #1d4ed8;
+    box-shadow: var(--shadow-md), var(--hairline);
+    border-color: color-mix(in oklch, var(--color-primary) 30%, var(--dash-border));
+    transform: translateY(-3px);
 }
 
 /* ── Tabla: hover de fila azul ───────────────────────────────────── */
@@ -1687,19 +1776,14 @@ button.kpi-card {
     transition: transform 80ms ease, box-shadow 80ms ease;
 }
 
-/* ── KPI strip estudiantes: acentos semánticos ───────────────────── */
-.dash-skpi--total    { border-left: 3px solid var(--umg-navy); }
-.dash-skpi--approved { border-left: 3px solid var(--color-success); }
-.dash-skpi--pending  { border-left: 3px solid var(--color-warning); }
-
-/* ── Títulos de sección: línea izquierda azul ────────────────────── */
+/* ── Títulos de sección: etiqueta limpia, sin franja lateral ──────── */
 .dash-section-title {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 700;
-    color: var(--dash-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dash-text-secondary);
     margin: 0 0 16px;
-    padding-left: 10px;
-    border-left: 3px solid #1d4ed8;
 }
 
 /* ─── Toggle de tema (claro / oscuro) ────────────────────────────── */
@@ -1720,7 +1804,7 @@ button.kpi-card {
 .dash-header__theme-toggle:hover {
     background: var(--dash-bg);
     color: var(--dash-text-primary);
-    border-color: #1d4ed8;
+    border-color: var(--color-primary-hover);
     transform: rotate(15deg);
 }
 
@@ -1734,7 +1818,7 @@ button.kpi-card {
 
 [data-theme="dark"] .dash-header {
     background: var(--dash-card-bg);
-    border-bottom-color: #1d4ed8;
+    border-bottom-color: var(--border);
 }
 
 [data-theme="dark"] .dash-table__head {
@@ -1849,16 +1933,11 @@ button.kpi-card {
     background: var(--dash-card-bg);
 }
 
-/* ── Sidebar oscuro (gradiente profundo) ── */
+/* ── Sidebar oscuro — superficie profunda sólida y estable ── */
 [data-theme="dark"] .dash-sidebar {
-    background-color: #0c1220;
-    background-image: linear-gradient(
-        160deg,
-        #0c1220  0%,
-        #16243e  35%,
-        #1a3460  70%,
-        #1d4ed8  100%
-    );
+    background: oklch(0.235 0.045 275);
+    background-image: linear-gradient(180deg, oklch(0.235 0.045 275) 0%, oklch(0.205 0.035 275) 100%);
+    border-right-color: oklch(1 0 0 / 0.05);
 }
 
 /* ── Títulos de página ── */
@@ -1884,8 +1963,8 @@ button.kpi-card {
 
 /* ── Tabs de filtro reciente ── */
 [data-theme="dark"] .dash-recent-filter__tab--active {
-    background: #1d4ed8;
-    border-color: #2563eb;
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary);
 }
 
 /* ── Bloque de error: borde rojo translúcido ── */

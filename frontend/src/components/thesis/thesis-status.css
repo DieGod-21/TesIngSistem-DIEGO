@@ -35,19 +35,25 @@
   border: 1px solid var(--tsb-border);
   border-radius: 14px;
   padding: 18px 20px;
-  background: #ffffff;
+  background: var(--surface-card-grad), var(--surface-card);
+  box-shadow: var(--shadow-sm), var(--hairline);
   display: flex;
   flex-direction: column;
   gap: 14px;
   position: relative;
   overflow: hidden;
 }
+/* Halo de acento en la esquina (reemplaza la franja superior) */
 .tsb-card::before {
   content: "";
   position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  background: var(--accent, #cbd5e1);
+  top: -45%;
+  right: -18%;
+  width: 52%;
+  height: 130%;
+  background: radial-gradient(circle, color-mix(in oklch, var(--accent, var(--border)) 28%, transparent) 0%, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
 }
 .tsb-card.tsb--eligible     { --accent: var(--tsb-eligible); }
 .tsb-card.tsb--partial      { --accent: var(--tsb-partial); }
@@ -244,9 +250,9 @@
   --tsb-border: var(--dash-border);
 }
 
-/* ── Card surface ── */
+/* ── Card surface (mantiene profundidad en capas) ── */
 [data-theme="dark"] .tsb-card {
-  background: var(--dash-card-bg);
+  background: var(--surface-card-grad), var(--surface-card);
 }
 
 /* ── Text: headings and labels ── */

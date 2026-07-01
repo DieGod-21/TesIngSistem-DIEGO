@@ -17,7 +17,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { Button } from './ui';
 
 type Variant = 'danger' | 'primary' | 'warning';
 
@@ -76,48 +77,38 @@ const ConfirmModal: React.FC<Props> = ({
         };
     }, [loading, onCancel]);
 
-    const btnClass = variant === 'primary'
-        ? 'em-btn em-btn--primary'
-        : variant === 'warning'
-        ? 'em-btn em-btn--warning'
-        : 'em-btn em-btn--danger';
+    // El botón primario usa la variante de peligro salvo confirmaciones neutras.
+    const confirmVariant = variant === 'danger' ? 'danger' : 'primary';
 
     return ReactDOM.createPortal(
         <div
-            className="em-overlay"
+            className="ui-modal-overlay"
             onClick={(e) => { if (!loading && e.target === e.currentTarget) onCancel(); }}
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="cfm-title"
             aria-describedby="cfm-msg"
         >
-            <div className="cfm-panel">
+            <div className="ui-modal">
                 {displayIcon && (
-                    <div className={`cfm-icon cfm-icon--${variant}`} aria-hidden="true">
+                    <div className={`ui-modal__icon ui-modal__icon--${variant}`} aria-hidden="true">
                         <AlertTriangle size={22} />
                     </div>
                 )}
-                <p className="cfm-title" id="cfm-title">{title}</p>
-                <div className="cfm-msg" id="cfm-msg">{message}</div>
-                <div className="cfm-actions">
-                    <button
-                        type="button"
-                        className="em-btn em-btn--ghost"
-                        onClick={onCancel}
-                        disabled={loading}
-                    >
+                <p className="ui-modal__title" id="cfm-title">{title}</p>
+                <div className="ui-modal__msg" id="cfm-msg">{message}</div>
+                <div className="ui-modal__actions">
+                    <Button variant="secondary" onClick={onCancel} disabled={loading}>
                         {cancelText}
-                    </button>
-                    <button
-                        type="button"
+                    </Button>
+                    <Button
                         ref={confirmBtnRef}
-                        className={btnClass}
+                        variant={confirmVariant}
                         onClick={() => onConfirm()}
-                        disabled={loading}
+                        loading={loading}
                     >
-                        {loading && <Loader2 size={14} className="em-spin" aria-hidden="true" />}
                         {label}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>,

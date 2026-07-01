@@ -12,6 +12,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { getGlobalTernasReport } from '../../../services/reportesService';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
+import { Button, PageHeader } from '../../../components/ui';
 import '../styles/reportes.css';
 import '../../../styles/transitions.css';
 
@@ -86,15 +87,12 @@ const ReportesPage: React.FC = () => {
 
     return (
         <div className="reportes-page">
-            <header className="ternas-page__header">
-                    <h1 className="ternas-page__title">
-                        <BarChart3 size={22} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                        Reportes de Ternas
-                    </h1>
-                    <p className="ternas-page__subtitle">
-                        Resultado ponderado de todas las ternas del sistema, con resolución final por estudiante.
-                    </p>
-                </header>
+            <PageHeader
+                    kicker="Analítica"
+                    icon={<BarChart3 size={22} />}
+                    title="Reportes de Ternas"
+                    subtitle="Resultado ponderado de todas las ternas del sistema, con resolución final por estudiante."
+                />
 
                 {!loading && !error && (
                     <section className="reportes-summary" aria-label="Resumen global">
@@ -131,10 +129,10 @@ const ReportesPage: React.FC = () => {
                             </button>
                         ))}
                     </div>
-                    <button type="button" className="sn-btn-primary" onClick={load} disabled={loading} aria-label="Refrescar reporte">
+                    <Button variant="secondary" onClick={load} disabled={loading} aria-label="Refrescar reporte">
                         <RefreshCw size={16} aria-hidden="true" />
                         Refrescar
-                    </button>
+                    </Button>
                 </div>
 
                 {loading && <ReportesSkeleton />}
@@ -142,7 +140,7 @@ const ReportesPage: React.FC = () => {
                     <div className="terror" role="alert">
                         {error}
                         <div style={{ marginTop: 10 }}>
-                            <button type="button" className="sn-btn-primary" onClick={load}>Reintentar</button>
+                            <Button variant="secondary" size="sm" onClick={load}>Reintentar</Button>
                         </div>
                     </div>
                 )}

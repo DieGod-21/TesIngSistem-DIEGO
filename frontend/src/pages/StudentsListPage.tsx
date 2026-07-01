@@ -29,6 +29,7 @@ import {
     getAprobadosTesis, getReprobadosTesis, type TesisEstudiante,
 } from '../services/tesisService';
 import ImportModal from '../components/ImportModal';
+import { Button, Badge } from '../components/ui';
 import '../styles/students-list.css';
 import '../styles/student-new.css';
 import '../styles/transitions.css';
@@ -86,14 +87,10 @@ const StudentsListPage: React.FC = () => {
                             Consulta la información, notas y elegibilidad de tesis de los estudiantes registrados.
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        className="sn-btn-primary"
-                        onClick={() => setImportOpen(true)}
-                    >
+                    <Button onClick={() => setImportOpen(true)}>
                         <Upload size={16} aria-hidden="true" />
                         Importar
-                    </button>
+                    </Button>
                 </div>
 
                 {filter && (
@@ -178,16 +175,15 @@ const DefaultStudentsView: React.FC<{
                         {LIMIT_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
                     </select>
                 </label>
-                <button
-                    type="button"
-                    className="sn-btn-primary"
+                <Button
+                    variant="secondary"
                     onClick={reload}
                     disabled={loading}
                     aria-label="Refrescar listado"
                 >
                     <RefreshCw size={16} aria-hidden="true" />
                     Refrescar
-                </button>
+                </Button>
             </div>
 
             <div className="sl-table-wrap">
@@ -210,9 +206,9 @@ const DefaultStudentsView: React.FC<{
                                     <div className="sl-empty" role="alert" style={{ color: '#b91c1c' }}>
                                         <p className="sl-empty__title">No se pudieron cargar los estudiantes</p>
                                         <p className="sl-empty__sub">{error}</p>
-                                        <button type="button" className="sn-btn-primary" onClick={reload} style={{ marginTop: 10 }}>
+                                        <Button variant="secondary" size="sm" onClick={reload} style={{ marginTop: 10 }}>
                                             Reintentar
-                                        </button>
+                                        </Button>
                                     </div>
                                 </td>
                             </tr>
@@ -256,15 +252,12 @@ const DefaultStudentsView: React.FC<{
                                     <span style={{ fontSize: '0.88rem', color: '#475569' }}>{s.email || '—'}</span>
                                 </td>
                                 <td className="sl-table__td">
-                                    <span className="sl-phase-badge" style={{ background: '#f1f5f9', color: '#1e293b' }}>
-                                        {s.carrera || '—'}
-                                    </span>
+                                    <Badge tone="neutral">{s.carrera || '—'}</Badge>
                                 </td>
                                 <td className="sl-table__td">
-                                    <span className={`sl-status-chip ${s.activo ? 'sl-status-chip--active' : 'sl-status-chip--inactive'}`}>
-                                        <span className="sl-status-chip__dot" aria-hidden="true" />
+                                    <Badge tone={s.activo ? 'success' : 'neutral'} dot>
                                         {s.activo ? 'Activo' : 'Inactivo'}
-                                    </span>
+                                    </Badge>
                                 </td>
                                 <td className="sl-table__td sl-table__td--center">
                                     <ChevronRight size={18} aria-hidden="true" style={{ color: '#94a3b8' }} />
@@ -347,16 +340,15 @@ const TesisFilteredView: React.FC<{
                         aria-label="Buscar estudiante"
                     />
                 </div>
-                <button
-                    type="button"
-                    className="sn-btn-primary"
+                <Button
+                    variant="secondary"
                     onClick={load}
                     disabled={loading}
                     aria-label="Refrescar listado"
                 >
                     <RefreshCw size={16} aria-hidden="true" />
                     Refrescar
-                </button>
+                </Button>
             </div>
 
             <div className="sl-table-wrap">
@@ -378,9 +370,9 @@ const TesisFilteredView: React.FC<{
                                     <div className="sl-empty" role="alert" style={{ color: '#b91c1c' }}>
                                         <p className="sl-empty__title">No se pudo cargar el listado</p>
                                         <p className="sl-empty__sub">{error}</p>
-                                        <button type="button" className="sn-btn-primary" onClick={load} style={{ marginTop: 10 }}>
+                                        <Button variant="secondary" size="sm" onClick={load} style={{ marginTop: 10 }}>
                                             Reintentar
-                                        </button>
+                                        </Button>
                                     </div>
                                 </td>
                             </tr>
@@ -417,10 +409,9 @@ const TesisFilteredView: React.FC<{
                                 <td className="sl-table__td">{s.nota_grad1 ?? '—'}</td>
                                 <td className="sl-table__td">{s.nota_grad2 ?? '—'}</td>
                                 <td className="sl-table__td">
-                                    <span className={`sl-status-chip ${filter === 'aprobados' ? 'sl-status-chip--active' : 'sl-status-chip--inactive'}`}>
-                                        <span className="sl-status-chip__dot" aria-hidden="true" />
+                                    <Badge tone={filter === 'aprobados' ? 'success' : 'danger'} dot>
                                         {filter === 'aprobados' ? 'Aprueba tesis' : 'No cumple'}
-                                    </span>
+                                    </Badge>
                                 </td>
                             </tr>
                         ))}

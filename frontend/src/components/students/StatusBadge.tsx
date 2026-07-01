@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { CheckCircle2, Clock } from 'lucide-react';
+import { Badge } from '../ui';
 
 interface StatusBadgeProps {
     approved: boolean;
@@ -16,15 +17,15 @@ interface StatusBadgeProps {
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ approved }) =>
     approved ? (
-        <span className="sl-badge sl-badge--approved">
-            <CheckCircle2 size={11} />
+        <Badge tone="success">
+            <CheckCircle2 size={11} aria-hidden="true" />
             Aprobado
-        </span>
+        </Badge>
     ) : (
-        <span className="sl-badge sl-badge--pending">
-            <Clock size={11} />
+        <Badge tone="warning">
+            <Clock size={11} aria-hidden="true" />
             Pendiente
-        </span>
+        </Badge>
     );
 
 export default StatusBadge;

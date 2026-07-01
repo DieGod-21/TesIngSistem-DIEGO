@@ -2,11 +2,12 @@ import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
     X, Upload, CheckCircle2, AlertTriangle,
-    Loader2, FileText, Users,
+    FileText, Users,
 } from 'lucide-react';
 import { importarEstudiantes, importarNotas } from '../services/importarService';
 import type { ImportarResult } from '../services/importarService';
 import { COURSE_CODES } from '../config/apiConfig';
+import { Button } from './ui';
 import '../styles/import-modal.css';
 
 interface SectionState {
@@ -174,16 +175,15 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                             <label htmlFor="im-est-file" className="im-file-label">
                                 {est.file ? est.file.name : 'Seleccionar archivo…'}
                             </label>
-                            <button
-                                type="button"
-                                className="im-btn im-btn--primary"
+                            <Button
+                                size="sm"
                                 onClick={uploadEst}
+                                loading={est.loading}
                                 disabled={est.loading || !est.file}
                             >
-                                {est.loading
-                                    ? <><Loader2 size={14} className="im-spin" aria-hidden="true" /> Importando…</>
-                                    : <><Upload size={14} aria-hidden="true" /> Importar</>}
-                            </button>
+                                {!est.loading && <Upload size={14} aria-hidden="true" />}
+                                {est.loading ? 'Importando…' : 'Importar'}
+                            </Button>
                         </div>
                         {est.status !== 'idle' && (
                             <Feedback status={est.status} message={est.message} />
@@ -229,16 +229,15 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                             <label htmlFor="im-not-file" className="im-file-label">
                                 {not.file ? not.file.name : 'Seleccionar archivo…'}
                             </label>
-                            <button
-                                type="button"
-                                className="im-btn im-btn--primary"
+                            <Button
+                                size="sm"
                                 onClick={uploadNot}
+                                loading={not.loading}
                                 disabled={not.loading || !not.file}
                             >
-                                {not.loading
-                                    ? <><Loader2 size={14} className="im-spin" aria-hidden="true" /> Importando…</>
-                                    : <><Upload size={14} aria-hidden="true" /> Importar</>}
-                            </button>
+                                {!not.loading && <Upload size={14} aria-hidden="true" />}
+                                {not.loading ? 'Importando…' : 'Importar'}
+                            </Button>
                         </div>
                         {not.status !== 'idle' && (
                             <Feedback status={not.status} message={not.message} />

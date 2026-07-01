@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, UserPlus, X } from 'lucide-react';
+import { UserPlus, X } from 'lucide-react';
 import { createUsuario } from '../../../services/usuariosService';
 import type { RolUsuario } from '../../../types/api';
+import { Button } from '../../../components/ui';
 
 interface Props {
     open: boolean;
@@ -164,23 +165,16 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                     )}
 
                     <footer className="nu-modal__footer">
-                        <button
-                            type="button"
-                            className="nu-btn nu-btn--secondary"
-                            onClick={handleClose}
-                            disabled={loading}
-                        >
+                        <Button variant="secondary" onClick={handleClose} disabled={loading}>
                             Cancelar
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
-                            className="nu-btn nu-btn--primary"
+                            loading={loading}
                             disabled={loading || !form.nombre.trim() || !form.email.trim()}
                         >
-                            {loading
-                                ? <><Loader2 size={14} className="nu-spin" aria-hidden="true" /> Creando…</>
-                                : 'Crear Usuario'}
-                        </button>
+                            {loading ? 'Creando…' : 'Crear Usuario'}
+                        </Button>
                     </footer>
                 </form>
             </div>

@@ -14,7 +14,7 @@
 }
 .nota-edit-btn:hover {
     background: #f1f5f9;
-    color: #003366;
+    color: var(--color-primary);
     transform: scale(1.15);
 }
 
@@ -46,8 +46,8 @@
     transition: border-color 0.15s, color 0.15s;
 }
 .nota-add-btn:hover {
-    border-color: #003366;
-    color: #003366;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
     background: rgba(0, 51, 102, 0.05);
 }
 
@@ -152,7 +152,7 @@
 .en-input:focus,
 .en-select:focus,
 .en-textarea:focus {
-    border-color: #4f46e5;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 .en-input--error {
@@ -205,7 +205,7 @@
     transform: scale(0.97);
 }
 .en-btn--primary {
-    background: #003366;
+    background: var(--color-primary);
     color: #fff;
 }
 .en-btn--primary:hover:not(:disabled) {
@@ -216,7 +216,7 @@
     transform: scale(0.97);
 }
 .en-btn:focus-visible {
-    outline: 2px solid #003366;
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
 
@@ -289,10 +289,10 @@
     background: #475569;
 }
 [data-theme="dark"] .en-btn--primary {
-    background: #1e40af;
+    background: var(--color-primary);
 }
 [data-theme="dark"] .en-btn--primary:hover:not(:disabled) {
-    background: #1d4ed8;
+    background: var(--color-primary-hover);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -303,14 +303,13 @@
 .sd-student-header {
     background: var(--dash-card-bg, #fff);
     border: 1px solid var(--dash-border, #e2e8f0);
-    border-top: 3px solid #1d4ed8;
     border-radius: 14px;
     padding: 20px 24px;
     box-shadow: var(--shadow-sm);
     transition: box-shadow 180ms ease, transform 180ms ease;
 }
 .sd-student-header:hover {
-    box-shadow: 0 4px 16px rgba(29, 78, 216, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-md);
     transform: translateY(-1px);
 }
 
@@ -366,7 +365,7 @@
 
 /* ── focus-visible ring on edit button ──────────────────────────── */
 .nota-edit-btn:focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
 
@@ -374,7 +373,6 @@
 [data-theme="dark"] .sd-student-header {
     background: var(--dash-card-bg);
     border-color: var(--dash-border);
-    border-top-color: #3b82f6;
 }
 [data-theme="dark"] .tdetail-evaluator.sd-row--pass {
     background: rgba(16, 185, 129, 0.08);

@@ -12,6 +12,7 @@ import { ChevronLeft, FileText, Users } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getTernaReport, type ReporteTernaDetalle } from '../../../services/reportesService';
 import { ResolutionBadge } from './ReportesPage';
+import { Button } from '../../../components/ui';
 import '../styles/reportes.css';
 import '../../ternas/styles/ternas.css';
 
@@ -74,28 +75,27 @@ const ReportDetailPage: React.FC = () => {
 
     return (
         <div className="reportes-page">
-                <button
-                    type="button"
-                    className="eval-btn eval-btn--secondary"
+                <Button
+                    variant="secondary"
                     onClick={() => history.push('/reports')}
                     style={{ alignSelf: 'flex-start' }}
                 >
                     <ChevronLeft size={16} aria-hidden="true" />
                     Volver a reportes
-                </button>
+                </Button>
 
                 {loading && <ReportDetailSkeleton />}
                 {!loading && error && (
                     <div className="terror" role="alert">
                         {error}
                         <div style={{ marginTop: 10 }}>
-                            <button
-                                type="button"
-                                className="ternas-chip"
+                            <Button
+                                variant="secondary"
+                                size="sm"
                                 onClick={() => { const n = Number(id); if (Number.isFinite(n)) load(n); }}
                             >
                                 Reintentar
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}

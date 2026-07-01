@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FolderPlus, Loader2 } from 'lucide-react';
+import { X, FolderPlus } from 'lucide-react';
 import { createProyecto } from '../../../services/proyectosService';
 import type { FaseProyecto } from '../../../types/api';
+import { Button } from '../../../components/ui';
 
 interface Props {
     open: boolean;
@@ -159,23 +160,16 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                     )}
 
                     <footer className="np-modal__footer">
-                        <button
-                            type="button"
-                            className="np-btn np-btn--secondary"
-                            onClick={handleClose}
-                            disabled={loading}
-                        >
+                        <Button variant="secondary" onClick={handleClose} disabled={loading}>
                             Cancelar
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
-                            className="np-btn np-btn--primary"
+                            loading={loading}
                             disabled={loading || !form.titulo.trim() || !form.descripcion.trim()}
                         >
-                            {loading
-                                ? <><Loader2 size={14} className="np-spin" aria-hidden="true" /> Creando…</>
-                                : 'Crear Proyecto'}
-                        </button>
+                            {loading ? 'Creando…' : 'Crear Proyecto'}
+                        </Button>
                     </footer>
                 </form>
             </div>

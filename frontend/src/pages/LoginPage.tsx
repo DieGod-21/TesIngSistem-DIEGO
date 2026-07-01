@@ -1,8 +1,15 @@
 import React from 'react';
+import { GraduationCap, ClipboardCheck, BarChart3 } from 'lucide-react';
 import AuthLayout from '../layout/AuthLayout';
 import LoginForm from '../components/LoginForm';
 import '../styles/login.css';
 import umgLogo from '../assets/umg_logo.png';
+
+const FEATURES = [
+    { icon: GraduationCap,  text: 'Seguimiento de PG1 y PG2 en un solo lugar' },
+    { icon: ClipboardCheck, text: 'Evaluación por ternas con trazabilidad' },
+    { icon: BarChart3,      text: 'Reportes y elegibilidad de tesis al instante' },
+] as const;
 
 /**
  * LoginPage.tsx
@@ -48,6 +55,17 @@ const LoginPage: React.FC = () => {
                                 Plataforma de seguimiento de trabajos de graduación para
                                 estudiantes y catedráticos.
                             </p>
+
+                            <ul className="auth-features">
+                                {FEATURES.map(({ icon: Icon, text }) => (
+                                    <li key={text} className="auth-feature">
+                                        <span className="auth-feature__icon" aria-hidden="true">
+                                            <Icon size={16} />
+                                        </span>
+                                        {text}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                     </div>
 

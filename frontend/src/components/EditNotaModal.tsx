@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, Save, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import { upsertNota } from '../services/notasService';
+import { Button } from './ui';
 
 const CURSOS = [
     { code: '043' as const, label: 'Proyecto de Graduación I' },
@@ -168,23 +169,13 @@ const EditNotaModal: React.FC<Props> = ({
                     )}
 
                     <footer className="en-modal__footer">
-                        <button
-                            type="button"
-                            className="en-btn en-btn--secondary"
-                            onClick={handleClose}
-                            disabled={loading}
-                        >
+                        <Button variant="secondary" onClick={handleClose} disabled={loading}>
                             Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            className="en-btn en-btn--primary"
-                            disabled={loading}
-                        >
-                            {loading
-                                ? <><Loader2 size={14} className="en-spin" aria-hidden="true" /> Guardando…</>
-                                : <><Save size={14} aria-hidden="true" /> Guardar</>}
-                        </button>
+                        </Button>
+                        <Button type="submit" loading={loading} disabled={loading}>
+                            {!loading && <Save size={14} aria-hidden="true" />}
+                            {loading ? 'Guardando…' : 'Guardar'}
+                        </Button>
                     </footer>
                 </form>
             </div>

@@ -9,15 +9,8 @@
  * Las variables CSS permiten cambiar colores de la marca desde un solo lugar.
  */
 
-/* ─── Variables de Marca UMG ─────────────────────────────────────── */
-:root {
-  --umg-dark: #00264d;
-  --umg-blue: #003366;
-  --umg-red: #cc0000;
-  --umg-light: #f3f6f9;
-  --umg-gradient: linear-gradient(135deg, #003366 0%, #001a33 100%);
-  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
-}
+/* Los tokens de marca viven en theme/variables.css (fuente única de verdad).
+   Este módulo consume esos tokens; no redefine :root para evitar colisiones. */
 
 /* ─── Contenedor principal tipo split-screen ─────────────────────── */
 .auth-screen {
@@ -39,12 +32,13 @@
   display: none;
   position: relative;
   overflow: hidden;
-  /* Paleta premium oscura con gradiente animado */
-  background: linear-gradient(135deg, #001a33, #003366, #00264d, #001022);
-  background-size: 300% 300%;
-  animation:
-    gradientMove 18s ease infinite,
-    fadeSlideLeft 0.8s ease forwards;
+  isolation: isolate;
+  /* Firma aurora en capas sobre índigo profundo (identidad "engineering-grade") */
+  background:
+    radial-gradient(90% 80% at 85% 8%, color-mix(in oklch, var(--aurora-2) 55%, transparent) 0%, transparent 55%),
+    radial-gradient(80% 90% at 10% 100%, color-mix(in oklch, var(--aurora-3) 45%, transparent) 0%, transparent 55%),
+    linear-gradient(155deg, var(--indigo-900) 0%, var(--indigo-800) 58%, var(--indigo-700) 100%);
+  animation: fadeSlideLeft 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   color: #ffffff;
   padding: 3rem;
   flex-direction: column;
@@ -52,6 +46,42 @@
   align-items: center;
   text-align: center;
   gap: 2rem;
+}
+
+/* Aurora que deriva muy lentamente — un solo movimiento, sutil */
+.auth-branding::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  z-index: -2;
+  background:
+    radial-gradient(38% 38% at 30% 25%, color-mix(in oklch, var(--aurora-1) 70%, transparent) 0%, transparent 60%),
+    radial-gradient(34% 34% at 75% 70%, color-mix(in oklch, var(--aurora-2) 55%, transparent) 0%, transparent 60%);
+  filter: blur(30px);
+  opacity: 0.65;
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+/* Malla de puntos técnica, desvanecida hacia el centro */
+.auth-branding::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--texture-dots);
+  background-size: var(--texture-dots-size);
+  opacity: 0.4;
+  -webkit-mask-image: radial-gradient(110% 90% at 80% 10%, #000 0%, transparent 65%);
+  mask-image: radial-gradient(110% 90% at 80% 10%, #000 0%, transparent 65%);
+  pointer-events: none;
+}
+
+@keyframes aurora-drift {
+  from { transform: translate3d(-4%, -2%, 0) scale(1);    }
+  to   { transform: translate3d(5%, 3%, 0)  scale(1.12);  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-branding::before { animation: none; }
 }
 
 @media (min-width: 768px) {
@@ -140,6 +170,41 @@
   color: #bfdbfe;
   line-height: 1.6;
   margin: 0;
+}
+
+/* ── Capacidades del producto (señales de confianza) ── */
+.auth-features {
+  list-style: none;
+  margin: 2.25rem auto 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-align: left;
+  max-width: 22rem;
+}
+.auth-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: oklch(0.93 0.02 275);
+}
+.auth-feature__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  flex-shrink: 0;
+  color: oklch(0.90 0.09 225);
+  background: oklch(1 0 0 / 0.10);
+  border: 1px solid oklch(1 0 0 / 0.16);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.12);
 }
 
 /* Footer – panel izquierdo (desktop) */
@@ -333,12 +398,12 @@
 
 /* Botón de submit */
 .auth-submit-btn {
-  --background: var(--umg-blue);
-  --background-hover: var(--umg-dark);
-  --background-activated: var(--umg-dark);
+  --background: var(--gradient-brand);
+  --background-hover: var(--color-primary-hover);
+  --background-activated: var(--color-primary-active);
   --color: #ffffff;
-  --border-radius: 0.5rem;
-  --box-shadow: 0 10px 15px -3px rgba(0, 51, 102, 0.3);
+  --border-radius: 0.625rem;
+  --box-shadow: var(--shadow-primary);
   font-weight: 700;
   font-size: 1rem;
   height: 3.25rem;
@@ -635,13 +700,14 @@ ion-content::part(scroll) {
 
 .auth-submit-btn::part(native) {
   transition: all 0.2s ease;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  background: var(--gradient-brand);
+  box-shadow: var(--shadow-md);
 }
 
 .auth-submit-btn::part(native):hover {
-  background: var(--umg-dark);
+  filter: saturate(1.08) brightness(1.04);
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-primary);
 }
 
 .auth-submit-btn::part(native):active {
@@ -654,24 +720,7 @@ ion-content::part(scroll) {
   outline-offset: 3px;
 }
 
-/* ─── Logo flotante ──────────────────────────────────────────────── */
-.logo-float {
-  animation: floatLogo 4s ease-in-out infinite;
-}
-
-@keyframes floatLogo {
-  0% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-
-  100% {
-    transform: translateY(0px);
-  }
-}
+/* Logo estático (premium sobrio: sin flotación permanente). */
 
 /* ═══ PREMIUM ADDITIONS ══════════════════════════════════════════════ */
 
@@ -703,10 +752,10 @@ ion-content::part(scroll) {
   transform: translateX(-50%);
   width: 260px;
   height: 260px;
-  background: radial-gradient(circle, rgba(100, 160, 255, 0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, oklch(0.606 0.205 275 / 0.22) 0%, transparent 70%);
   border-radius: 50%;
-  filter: blur(32px);
-  animation: glowPulse 6s ease-in-out infinite;
+  filter: blur(38px);
+  opacity: 0.7;
   pointer-events: none;
   z-index: 0;
 }
@@ -738,7 +787,6 @@ ion-content::part(scroll) {
   width: 100%;
   overflow: hidden;
   line-height: 0;
-  animation: waveShift 8s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
 }
@@ -783,7 +831,7 @@ ion-content::part(scroll) {
 
 @media (max-width: 767px) {
   .auth-screen {
-    background: linear-gradient(160deg, #001a33 0%, #003366 50%, #00264d 100%);
+    background: linear-gradient(160deg, var(--indigo-900) 0%, var(--indigo-800) 55%, var(--indigo-700) 100%);
   }
 
   .auth-form-section {

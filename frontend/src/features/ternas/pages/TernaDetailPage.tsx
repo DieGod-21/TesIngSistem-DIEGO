@@ -14,6 +14,7 @@ import ThesisStatusBadge from '../../../components/thesis/ThesisStatusBadge';
 import EvaluationForm from '../components/EvaluationForm';
 import { useTernaDetalle } from '../hooks/useTernaDetalle';
 import type { EvaluadorTerna } from '../../../types/api';
+import { Button } from '../../../components/ui';
 import '../styles/ternas.css';
 
 const ESTADO_LABEL = {
@@ -55,22 +56,21 @@ const TernaDetailPage: React.FC = () => {
 
     return (
         <div className="ternas-page">
-                <button
-                    type="button"
-                    className="eval-btn eval-btn--secondary"
+                <Button
+                    variant="secondary"
                     onClick={() => history.push('/ternas')}
                     style={{ alignSelf: 'flex-start' }}
                 >
                     <ChevronLeft size={16} aria-hidden="true" />
                     Volver a Ternas
-                </button>
+                </Button>
 
                 {loading && <TernaDetailSkeleton />}
                 {!loading && error && (
                     <div className="terror" role="alert">
                         {error}
                         <div style={{ marginTop: 10 }}>
-                            <button type="button" className="ternas-chip" onClick={reload}>Reintentar</button>
+                            <Button variant="secondary" size="sm" onClick={reload}>Reintentar</Button>
                         </div>
                     </div>
                 )}

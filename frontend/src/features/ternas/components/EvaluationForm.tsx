@@ -17,6 +17,7 @@ import { saveDraft, submitEvaluation, reopenEvaluation } from '../../../services
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import ConfirmModal from '../../../components/ConfirmModal';
+import { Button } from '../../../components/ui';
 import type { TernaDetalle, EvaluadorTerna } from '../../../types/api';
 
 interface Props {
@@ -202,24 +203,19 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                     </div>
 
                     <div className="eval-form__actions">
-                        <button
-                            type="button"
-                            className="eval-btn eval-btn--secondary"
+                        <Button
+                            variant="secondary"
                             onClick={handleDraft}
+                            loading={busy === 'draft'}
                             disabled={busy !== null}
                         >
-                            <Save size={16} aria-hidden="true" />
+                            {busy !== 'draft' && <Save size={16} aria-hidden="true" />}
                             {busy === 'draft' ? 'Guardando…' : 'Guardar borrador'}
-                        </button>
-                        <button
-                            type="button"
-                            className="eval-btn eval-btn--primary"
-                            onClick={askSubmit}
-                            disabled={busy !== null}
-                        >
+                        </Button>
+                        <Button onClick={askSubmit} disabled={busy !== null}>
                             <Send size={16} aria-hidden="true" />
                             Enviar evaluación
-                        </button>
+                        </Button>
                     </div>
                 </>
             ) : null}
@@ -233,16 +229,16 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                         {terna.evaluadores
                             .filter((e) => e.eval_estado === 'enviada' && (e.id ?? e.usuario_id) != null)
                             .map((ev) => (
-                                <button
+                                <Button
                                     key={(ev.id ?? ev.usuario_id)!.toString()}
-                                    type="button"
-                                    className="eval-btn eval-btn--danger"
+                                    variant="danger"
+                                    size="sm"
                                     onClick={() => askReopen(ev)}
                                     disabled={busy !== null}
                                 >
                                     <RotateCw size={14} aria-hidden="true" />
                                     Reabrir evaluación de {ev.nombre}
-                                </button>
+                                </Button>
                             ))}
                     </div>
                 </details>

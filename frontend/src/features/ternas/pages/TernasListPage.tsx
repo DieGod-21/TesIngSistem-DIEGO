@@ -8,10 +8,11 @@
 
 import React, { useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { ClipboardList, Users } from 'lucide-react';
+import { ClipboardList, Users, AlertTriangle, RefreshCw, Inbox } from 'lucide-react';
 import TernaCard from '../components/TernaCard';
 import { useTernas } from '../hooks/useTernas';
 import { useAuth } from '../../../context/AuthContext';
+import { PageHeader, Button, EmptyState } from '../../../components/ui';
 import type { EstadoTerna } from '../../../types/api';
 import '../styles/ternas.css';
 
@@ -54,17 +55,16 @@ const TernasListPage: React.FC = () => {
 
     return (
         <div className="ternas-page">
-                <header className="ternas-page__header">
-                    <h1 className="ternas-page__title">
-                        <ClipboardList size={22} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                        Ternas de Evaluación
-                    </h1>
-                    <p className="ternas-page__subtitle">
-                        {isAdmin
+                <PageHeader
+                    kicker="Evaluación"
+                    icon={<ClipboardList size={22} />}
+                    title="Ternas de Evaluación"
+                    subtitle={
+                        isAdmin
                             ? `Estás viendo todas las ternas como administrador (${counts.total}).`
-                            : `Hola ${user?.nombre ?? ''}. Estas son las ternas que tienes asignadas.`}
-                    </p>
-                </header>
+                            : `Hola ${user?.nombre ?? ''}. Estas son las ternas que tienes asignadas.`
+                    }
+                />
 
                 <div className="ternas-toolbar" role="group" aria-label="Filtrar ternas">
                     {FILTERS.map((f) => (
@@ -87,25 +87,29 @@ const TernasListPage: React.FC = () => {
                 {loading && <TernasSkeleton />}
 
                 {!loading && error && (
-                    <div className="terror" role="alert">
-                        {error}
-                        <div style={{ marginTop: 10 }}>
-                            <button type="button" className="ternas-chip" onClick={reload}>
-                                Reintentar
-                            </button>
-                        </div>
-                    </div>
+                    <EmptyState
+                        tone="danger"
+                        icon={<AlertTriangle size={26} />}
+                        title="No se pudieron cargar las ternas"
+                        description={error}
+                        action={
+                            <Button variant="secondary" onClick={reload}>
+                                <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                            </Button>
+                        }
+                    />
                 )}
 
                 {!loading && !error && ternas.length === 0 && (
-                    <div className="tempty">
-                        <p style={{ margin: 0, fontWeight: 600 }}>No hay ternas que mostrar</p>
-                        <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>
-                            {isAdmin
+                    <EmptyState
+                        icon={<Inbox size={26} />}
+                        title="No hay ternas que mostrar"
+                        description={
+                            isAdmin
                                 ? 'Aún no se han creado ternas en el sistema.'
-                                : 'No tienes ternas asignadas en este momento.'}
-                        </p>
-                    </div>
+                                : 'No tienes ternas asignadas en este momento.'
+                        }
+                    />
                 )}
 
                 {!loading && !error && ternas.length > 0 && (

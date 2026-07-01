@@ -12,6 +12,7 @@ import { createStudent } from '../../services/studentsService';
 import type { StudentPayload } from '../../services/studentsService';
 import { useForm } from '../../hooks/useForm';
 import { runValidators, validators } from '../../utils/validators';
+import { Button } from '../ui';
 
 type FormFields = {
     nombreCompleto:      string;
@@ -157,24 +158,14 @@ const StudentManualForm: React.FC = () => {
                     </div>
 
                     <div className="sn-form__actions">
-                        <button
-                            type="submit"
-                            className="sn-btn-primary"
-                            disabled={submitting}
-                            aria-busy={submitting}
-                        >
-                            <Save size={16} />
+                        <Button type="submit" loading={submitting} disabled={submitting}>
+                            {!submitting && <Save size={16} />}
                             {submitting ? 'Registrando…' : 'Registrar Estudiante'}
-                        </button>
-                        <button
-                            type="button"
-                            className="sn-btn-secondary"
-                            onClick={reset}
-                            disabled={submitting}
-                        >
+                        </Button>
+                        <Button variant="secondary" onClick={reset} disabled={submitting}>
                             <Trash2 size={16} />
                             Limpiar Formulario
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

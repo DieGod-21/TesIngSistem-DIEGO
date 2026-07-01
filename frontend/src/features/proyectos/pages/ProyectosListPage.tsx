@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FolderOpen, Plus } from 'lucide-react';
+import { FolderOpen, FolderPlus, Plus, AlertTriangle, RefreshCw } from 'lucide-react';
 import { listProyectos } from '../../../services/proyectosService';
 import type { Proyecto } from '../../../types/api';
 import ProyectoCard from '../components/ProyectoCard';
 import NuevoProyectoModal from '../components/NuevoProyectoModal';
+import { Button, PageHeader, EmptyState } from '../../../components/ui';
 import '../styles/proyectos.css';
 
 const ProyectosSkeleton: React.FC = () => (
@@ -44,41 +45,50 @@ const ProyectosListPage: React.FC = () => {
 
     return (
         <div className="proy-page">
-            <header className="proy-page__header">
-                <div>
-                    <h1 className="proy-page__title">
-                        <FolderOpen size={22} aria-hidden="true" />
-                        Proyectos
-                    </h1>
-                    {!loading && !error && (
-                        <p className="proy-page__subtitle">
-                            {proyectos.length} proyecto{proyectos.length !== 1 ? 's' : ''} registrado{proyectos.length !== 1 ? 's' : ''}
-                        </p>
-                    )}
-                </div>
-                <button
-                    type="button"
-                    className="proy-btn proy-btn--primary"
-                    onClick={() => setModalOpen(true)}
-                >
-                    <Plus size={16} aria-hidden="true" />
-                    Nuevo Proyecto
-                </button>
-            </header>
+            <PageHeader
+                kicker="Gestión académica"
+                icon={<FolderOpen size={22} />}
+                title="Proyectos"
+                subtitle={
+                    !loading && !error
+                        ? `${proyectos.length} proyecto${proyectos.length !== 1 ? 's' : ''} registrado${proyectos.length !== 1 ? 's' : ''}`
+                        : 'Anteproyectos y trabajos de graduación'
+                }
+                actions={
+                    <Button onClick={() => setModalOpen(true)}>
+                        <Plus size={16} aria-hidden="true" />
+                        Nuevo Proyecto
+                    </Button>
+                }
+            />
 
             {loading && <ProyectosSkeleton />}
 
             {!loading && error && (
-                <div className="proy-error" role="alert">{error}</div>
+                <EmptyState
+                    tone="danger"
+                    icon={<AlertTriangle size={26} />}
+                    title="No se pudieron cargar los proyectos"
+                    description={error}
+                    action={
+                        <Button variant="secondary" onClick={fetchProyectos}>
+                            <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                        </Button>
+                    }
+                />
             )}
 
             {!loading && !error && proyectos.length === 0 && (
-                <div className="proy-empty">
-                    <p style={{ margin: 0, fontWeight: 600 }}>No hay proyectos registrados</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>
-                        Crea el primer proyecto con el botón "Nuevo Proyecto".
-                    </p>
-                </div>
+                <EmptyState
+                    icon={<FolderPlus size={26} />}
+                    title="No hay proyectos registrados"
+                    description="Crea el primer proyecto de graduación para comenzar el seguimiento."
+                    action={
+                        <Button onClick={() => setModalOpen(true)}>
+                            <Plus size={16} aria-hidden="true" /> Nuevo Proyecto
+                        </Button>
+                    }
+                />
             )}
 
             {!loading && !error && proyectos.length > 0 && (
