@@ -14,21 +14,16 @@
  *   - prefers-reduced-motion: respeta preferencias de accesibilidad
  */
 
-/* ─── Páginas autenticadas: fade-in + slide from bottom ─── */
-@keyframes page-enter-from-bottom {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* ─── Páginas autenticadas: fade puro (sin desplazamiento del layout) ───
+   Estabilidad ante todo: el contenido aparece solo con opacidad, sin mover
+   el layout en ningún eje. El sidebar permanece fijo desde el primer frame. */
+@keyframes page-enter-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 .page-enter-animate {
-    animation: page-enter-from-bottom 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: page-enter-fade 220ms ease-out both;
 }
 
 /* ─── Login page: fade-in + slide from right ─── */

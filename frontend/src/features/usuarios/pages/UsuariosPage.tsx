@@ -1,9 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Users, User, UserPlus, AlertTriangle, RefreshCw } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Plus, Users, UserPlus, AlertTriangle, RefreshCw, Search } from 'lucide-react';
 import { listUsuarios } from '../../../services/usuariosService';
 import type { Usuario } from '../../../types/api';
 import NuevoUsuarioModal from '../components/NuevoUsuarioModal';
-import { Button, Badge, PageHeader, EmptyState } from '../../../components/ui';
+import { Button, Badge, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import { useToast } from '../../../context/ToastContext';
+import { initials } from '../../../utils/strings';
+import { matchesText } from '../../../utils/text';
 import '../styles/usuarios.css';
 
 const ROL_LABEL: Record<string, string> = {
@@ -11,26 +14,37 @@ const ROL_LABEL: Record<string, string> = {
     evaluador: 'Evaluador',
 };
 
+type RoleFilter = 'all' | 'admin' | 'evaluador';
+
+const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
+    { value: 'all',       label: 'Todos' },
+    { value: 'admin',     label: 'Administradores' },
+    { value: 'evaluador', label: 'Evaluadores' },
+];
+
 const UsuariosSkeleton: React.FC = () => (
     <div className="usr-skeleton" aria-busy="true" aria-label="Cargando usuarios…">
         {[0, 1, 2].map((i) => (
             <div key={i} className="usr-skeleton-row">
-                <div className="skeleton skeleton--box" style={{ width: 38, height: 38, borderRadius: '50%' }} />
+                <Skeleton variant="box" width={44} height={44} radius="50%" />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div className="skeleton skeleton--line skeleton--medium" />
-                    <div className="skeleton skeleton--line skeleton--short" />
+                    <Skeleton size="medium" />
+                    <Skeleton size="short" />
                 </div>
-                <div className="skeleton skeleton--line" style={{ width: 72, height: 22, borderRadius: 20 }} />
+                <Skeleton width={72} height={22} radius={20} />
             </div>
         ))}
     </div>
 );
 
 const UsuariosPage: React.FC = () => {
+    const { toast } = useToast();
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
     const [loading, setLoading]   = useState(true);
     const [error, setError]       = useState<string | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [search, setSearch]       = useState('');
+    const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
 
     const fetchUsuarios = useCallback(async () => {
         setLoading(true);
@@ -39,7 +53,7 @@ const UsuariosPage: React.FC = () => {
             const data = await listUsuarios();
             setUsuarios(data);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Error al cargar los usuarios.');
+            setError(e instanceof Error ? e.message : 'No pudimos cargar los usuarios. Revisa tu conexión e inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }
@@ -47,17 +61,28 @@ const UsuariosPage: React.FC = () => {
 
     useEffect(() => { fetchUsuarios(); }, [fetchUsuarios]);
 
+    const roleCounts = useMemo(() => ({
+        admin:     usuarios.filter((u) => u.rol === 'admin').length,
+        evaluador: usuarios.filter((u) => u.rol === 'evaluador').length,
+    }), [usuarios]);
+
+    const filtered = useMemo(
+        () => usuarios.filter((u) =>
+            (roleFilter === 'all' || u.rol === roleFilter) &&
+            matchesText(`${u.nombre ?? ''} ${u.email ?? ''}`, search),
+        ),
+        [usuarios, roleFilter, search],
+    );
+
+    const clearFilters = () => { setSearch(''); setRoleFilter('all'); };
+
     return (
         <div className="usr-page">
             <PageHeader
                 kicker="Administración"
                 icon={<Users size={22} />}
                 title="Usuarios"
-                subtitle={
-                    !loading && !error
-                        ? `${usuarios.length} usuario${usuarios.length !== 1 ? 's' : ''} registrado${usuarios.length !== 1 ? 's' : ''}`
-                        : 'Gestiona el acceso de evaluadores y administradores'
-                }
+                subtitle="El acceso se otorga por invitación. Administra evaluadores y administradores del sistema."
                 actions={
                     <Button onClick={() => setModalOpen(true)}>
                         <Plus size={16} aria-hidden="true" />
@@ -85,7 +110,7 @@ const UsuariosPage: React.FC = () => {
             {!loading && !error && usuarios.length === 0 && (
                 <EmptyState
                     icon={<UserPlus size={26} />}
-                    title="No hay usuarios registrados"
+                    title="Aún no hay usuarios"
                     description="Crea el primer usuario para dar acceso a evaluadores y administradores."
                     action={
                         <Button onClick={() => setModalOpen(true)}>
@@ -96,29 +121,93 @@ const UsuariosPage: React.FC = () => {
             )}
 
             {!loading && !error && usuarios.length > 0 && (
-                <div className="usr-list">
-                    {usuarios.map((u) => (
-                        <div key={u.id} className="usr-list-item">
-                            <div className="usr-avatar" aria-hidden="true">
-                                <User size={18} />
-                            </div>
-                            <div className="usr-info">
-                                <p className="usr-info__name">{u.nombre}</p>
-                                <p className="usr-info__email">{u.email}</p>
-                            </div>
-                            <Badge tone={u.rol === 'admin' ? 'primary' : 'success'}>
-                                {ROL_LABEL[u.rol] ?? u.rol}
-                            </Badge>
+                <>
+                    <div className="ui-stat-grid">
+                        <div className="ui-stat">
+                            <span className="ui-stat__label">Usuarios</span>
+                            <span className="ui-stat__value">{usuarios.length}</span>
+                            <span className="ui-stat__sub">Total registrados</span>
                         </div>
-                    ))}
-                </div>
+                        <div className="ui-stat" style={{ '--stat-accent': 'var(--color-primary)' } as React.CSSProperties}>
+                            <span className="ui-stat__label">Administradores</span>
+                            <span className="ui-stat__value">{roleCounts.admin}</span>
+                            <span className="ui-stat__sub">Acceso completo</span>
+                        </div>
+                        <div className="ui-stat" style={{ '--stat-accent': 'var(--color-success)' } as React.CSSProperties}>
+                            <span className="ui-stat__label">Evaluadores</span>
+                            <span className="ui-stat__value">{roleCounts.evaluador}</span>
+                            <span className="ui-stat__sub">Evalúan ternas</span>
+                        </div>
+                    </div>
+
+                    <div className="usr-toolbar">
+                        <div className="ui-search usr-toolbar__search">
+                            <Search size={15} className="ui-search__icon" aria-hidden="true" />
+                            <input
+                                type="text"
+                                className="ui-search__input"
+                                placeholder="Buscar por nombre o correo…"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                aria-label="Buscar usuarios"
+                            />
+                        </div>
+                        <div className="usr-toolbar__filters" role="group" aria-label="Filtrar por rol">
+                            {ROLE_FILTERS.map((f) => (
+                                <button
+                                    key={f.value}
+                                    type="button"
+                                    className={`ternas-chip${roleFilter === f.value ? ' ternas-chip--active' : ''}`}
+                                    onClick={() => setRoleFilter(f.value)}
+                                    aria-pressed={roleFilter === f.value}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {filtered.length === 0 ? (
+                        <EmptyState
+                            icon={<Search size={26} />}
+                            title="Sin resultados"
+                            description="Ningún usuario coincide con la búsqueda o el filtro seleccionado."
+                            action={
+                                <Button variant="secondary" onClick={clearFilters}>
+                                    Limpiar filtros
+                                </Button>
+                            }
+                        />
+                    ) : (
+                        <div className="usr-list">
+                            {filtered.map((u) => (
+                                <div key={u.id} className="usr-list-item">
+                                    <span
+                                        className={`usr-avatar usr-avatar--${u.rol === 'admin' ? 'admin' : 'evaluador'}`}
+                                        aria-hidden="true"
+                                    >
+                                        {initials(u.nombre)}
+                                    </span>
+                                    <div className="usr-info">
+                                        <p className="usr-info__name">{u.nombre}</p>
+                                        <p className="usr-info__email">{u.email}</p>
+                                    </div>
+                                    <Badge tone={u.rol === 'admin' ? 'primary' : 'success'}>
+                                        {ROL_LABEL[u.rol] ?? u.rol}
+                                    </Badge>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
 
             <NuevoUsuarioModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                onCreated={() => {
+                onCreated={(nombre) => {
                     setModalOpen(false);
+                    toast.success(`${nombre} ya tiene acceso al sistema.`);
                     fetchUsuarios();
                 }}
             />

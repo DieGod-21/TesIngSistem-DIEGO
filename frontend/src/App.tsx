@@ -36,7 +36,16 @@ import './theme/variables.css';
 /* Layout reset: corrige scroll en Ionic + 100dvh móvil + overflow */
 import './styles/layout-reset.css';
 
-setupIonicReact();
+/*
+ * animated: false → desactiva las transiciones de página nativas de Ionic.
+ * Motivo: Ionic aplica un `transform` al `.ion-page` durante la transición de
+ * ruta; como el sidebar es `position: fixed`, queda contenido por ese ancestro
+ * transformado y "se desliza" para luego reajustarse al terminar (el rebote
+ * horizontal del sidebar). Sin la transformación de página, el sidebar queda
+ * estable desde el primer frame y el contenido entra con un fade CSS propio
+ * (.page-enter-animate), sin movimientos horizontales del layout.
+ */
+setupIonicReact({ animated: false });
 
 /**
  * App.tsx

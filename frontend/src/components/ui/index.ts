@@ -16,3 +16,5 @@ export { default as PageHeader } from './PageHeader';
 export type { PageHeaderProps } from './PageHeader';
 export { default as EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
+export { default as Skeleton } from './Skeleton';
+export type { SkeletonProps } from './Skeleton';

@@ -1,26 +1,32 @@
 import React, { useState } from 'react';
-import { IonButton, IonInput, IonSpinner, IonToast } from '@ionic/react';
+import { IonButton, IonInput, IonSpinner } from '@ionic/react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { SESSION_MSG_KEY } from '../services/apiClient';
 import umgLogo from '../assets/umg_logo.png';
 
 const LoginForm: React.FC = () => {
     const { login, loading, error } = useAuth();
+    const { toast } = useToast();
 
     const [email, setEmail]       = useState('');
     const [password, setPassword] = useState('');
     const [touched, setTouched]   = useState({ email: false, password: false });
-    const [showToast, setShowToast] = useState(false);
-    const [sessionMsg, setSessionMsg] = useState<string | null>(null);
 
-    React.useEffect(() => { if (error) setShowToast(true); }, [error]);
+    // Feedback unificado: el login usa el mismo sistema de toasts que el resto
+    // de la app (no el IonToast de Ionic) para una experiencia coherente.
+    React.useEffect(() => {
+        if (error) toast.error(error, 4000);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [error]);
 
     React.useEffect(() => {
         const msg = sessionStorage.getItem(SESSION_MSG_KEY);
         if (msg) {
-            setSessionMsg(msg);
+            toast.warning(msg, 5000);
             sessionStorage.removeItem(SESSION_MSG_KEY);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const emailError = (() => {
@@ -55,23 +61,6 @@ const LoginForm: React.FC = () => {
 
     return (
         <>
-            <IonToast
-                isOpen={showToast}
-                onDidDismiss={() => setShowToast(false)}
-                message={error ?? 'No se pudo iniciar sesión'}
-                duration={4000}
-                color="danger"
-                position="top"
-            />
-            <IonToast
-                isOpen={sessionMsg !== null}
-                onDidDismiss={() => setSessionMsg(null)}
-                message={sessionMsg ?? ''}
-                duration={5000}
-                color="warning"
-                position="top"
-            />
-
             <div className="auth-mobile-logo">
                 <img src={umgLogo} alt="Logo Universidad Mariano Gálvez" />
                 <span className="auth-mobile-logo__title">Gestión PG1-PG2</span>

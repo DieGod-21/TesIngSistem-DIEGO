@@ -1,19 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Search, Menu, Sun, Moon } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Search, Menu, Sun, Moon, CornerDownLeft } from 'lucide-react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useStudentSearch } from '../hooks/useStudentSearch';
+import { initials } from '../utils/strings';
 
 interface TopHeaderProps {
     onMenuToggle?: () => void;
 }
 
 /**
- * Buscador global:
- *  - En /students: sincroniza el input con el query param `search`
- *    usando history.replace para mantener una URL compartible.
- *  - En otras rutas: al presionar Enter o tras debounce (≥ 2 chars)
- *    navega a /students?search=<query>.
+ * Buscador único del sistema.
+ *
+ * No navega automáticamente: mientras se escribe (≥ 2 caracteres) muestra un
+ * panel de sugerencias bajo el input, sin romper el contexto de la pantalla
+ * actual. La navegación solo ocurre al:
+ *   - seleccionar un estudiante (→ detalle), o
+ *   - presionar Enter (→ listado filtrado por el término).
  */
 const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
     const { user } = useAuth();
@@ -22,49 +26,122 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
     const location = useLocation();
 
     const [inputValue, setInputValue] = useState('');
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const inputRef    = useRef<HTMLInputElement>(null);
+    const [focused, setFocused] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(-1);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    // Sincroniza el input cuando cambia la URL manualmente (p.ej. botón atrás,
-    // clic en KPI o navegación directa).
+    const { suggestions, loading, minChars } = useStudentSearch(inputValue, focused);
+
+    /*
+     * Única fuente de verdad para la sincronización: la URL. Un solo efecto
+     * refleja ?search= en el input al entrar/estar en /students (URL
+     * compartible). El texto que el usuario escribe vive en `inputValue` y NO
+     * navega automáticamente; la navegación es siempre explícita (Enter o
+     * selección). El resto de estado (activeIndex, focused) se deriva de
+     * eventos, no de efectos, para evitar acoplamiento entre useEffect.
+     */
     useEffect(() => {
         if (location.pathname === '/students') {
             const params = new URLSearchParams(location.search);
-            const q = params.get('search') ?? params.get('q') ?? '';
-            setInputValue(q);
+            setInputValue(params.get('search') ?? params.get('q') ?? '');
         } else {
             setInputValue('');
         }
     }, [location.pathname, location.search]);
 
-    // Debounce de búsqueda: empuja el término a la URL.
-    useEffect(() => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            const q = inputValue.trim();
-            if (location.pathname === '/students') {
-                const current = new URLSearchParams(window.location.search).get('search') ?? '';
-                if (q === current) return;
-                const params = new URLSearchParams(window.location.search);
-                if (q) params.set('search', q); else params.delete('search');
-                // limpiamos el alias legacy ?q=
-                params.delete('q');
-                history.replace(`/students${params.toString() ? `?${params}` : ''}`);
-            } else if (q.length >= 2) {
-                history.push(`/students?search=${encodeURIComponent(q)}`);
-            }
-        }, 400);
-        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [inputValue]);
+    const query = inputValue.trim();
+    const panelOpen = focused && query.length >= minChars;
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const q = inputValue.trim();
-        if (!q) return;
-        if (debounceRef.current) clearTimeout(debounceRef.current);
+    const onInputChange = (value: string) => {
+        setInputValue(value);
+        setActiveIndex(-1); // reset del resaltado al teclear (sin efecto aparte)
+    };
+
+    const goToList = (q: string) => {
+        inputRef.current?.blur();
         history.push(`/students?search=${encodeURIComponent(q)}`);
     };
+
+    const goToStudent = (id: number) => {
+        setInputValue('');
+        inputRef.current?.blur();
+        history.push(`/students/${id}`);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'ArrowDown') {
+            if (!panelOpen || suggestions.length === 0) return;
+            e.preventDefault();
+            setActiveIndex((i) => Math.min(i + 1, suggestions.length - 1));
+        } else if (e.key === 'ArrowUp') {
+            if (!panelOpen || suggestions.length === 0) return;
+            e.preventDefault();
+            setActiveIndex((i) => Math.max(i - 1, -1));
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeIndex >= 0 && suggestions[activeIndex]) {
+                goToStudent(suggestions[activeIndex].id);
+            } else if (query.length >= minChars) {
+                goToList(query);
+            }
+        } else if (e.key === 'Escape') {
+            if (panelOpen) {
+                e.preventDefault();
+                inputRef.current?.blur();
+            }
+        }
+    };
+
+    const listboxId = 'th-search-listbox';
+
+    /*
+     * Anuncio conciso para lectores de pantalla. Un solo mensaje de estado
+     * (aria-live="polite") evita que se relea toda la lista en cada tecla:
+     * comunica cuántas coincidencias hay y cómo navegarlas.
+     */
+    const searchStatus = !panelOpen
+        ? ''
+        : loading
+            ? 'Buscando estudiantes…'
+            : suggestions.length === 0
+                ? `Sin coincidencias para ${query}`
+                : `${suggestions.length} estudiante${suggestions.length !== 1 ? 's' : ''} encontrado${suggestions.length !== 1 ? 's' : ''}. Usa las flechas para navegar y Enter para abrir.`;
+
+    const panelBody = useMemo(() => {
+        if (loading) {
+            return <div className="dash-search-panel__state">Buscando estudiantes…</div>;
+        }
+        if (suggestions.length === 0) {
+            return (
+                <div className="dash-search-panel__state">
+                    Sin coincidencias para <strong>“{query}”</strong>
+                </div>
+            );
+        }
+        return (
+            <ul className="dash-search-panel__list" role="listbox" id={listboxId} aria-label="Sugerencias de estudiantes">
+                {suggestions.map((s, i) => (
+                    <li key={s.id} role="option" id={`th-sug-${i}`} aria-selected={i === activeIndex}>
+                        <button
+                            type="button"
+                            className={`dash-search-sug${i === activeIndex ? ' dash-search-sug--active' : ''}`}
+                            // Evita que el blur del input dispare antes del click.
+                            onMouseDown={(e) => e.preventDefault()}
+                            onMouseEnter={() => setActiveIndex(i)}
+                            onClick={() => goToStudent(s.id)}
+                        >
+                            <span className="ui-avatar ui-avatar--sm" aria-hidden="true">{initials(s.nombre)}</span>
+                            <span className="dash-search-sug__text">
+                                <span className="dash-search-sug__name">{s.nombre}</span>
+                                <span className="dash-search-sug__meta">{s.carnet}{s.carrera ? ` · ${s.carrera}` : ''}</span>
+                            </span>
+                        </button>
+                    </li>
+                ))}
+            </ul>
+        );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, suggestions, activeIndex, query]);
 
     return (
         <header className="dash-header">
@@ -76,22 +153,46 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                 <Menu size={24} />
             </button>
 
-            <form
+            <div
                 className="dash-header__search-wrapper"
-                onSubmit={handleSubmit}
                 role="search"
             >
                 <Search size={16} className="dash-header__search-icon" aria-hidden="true" />
                 <input
                     ref={inputRef}
-                    type="search"
+                    type="text"
                     className="dash-header__search"
-                    placeholder="Buscar por nombre o carné…"
-                    aria-label="Buscar estudiante por nombre o carné"
+                    placeholder="Buscar estudiantes..."
+                    aria-label="Buscar estudiantes"
+                    role="combobox"
+                    aria-expanded={panelOpen}
+                    aria-controls={listboxId}
+                    aria-autocomplete="list"
+                    aria-activedescendant={activeIndex >= 0 ? `th-sug-${activeIndex}` : undefined}
+                    autoComplete="off"
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={(e) => onInputChange(e.target.value)}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    onKeyDown={handleKeyDown}
                 />
-            </form>
+
+                <span className="ui-sr-only" role="status" aria-live="polite">
+                    {searchStatus}
+                </span>
+
+                {panelOpen && (
+                    <div className="dash-header__search-panel" role="presentation">
+                        {panelBody}
+                        {suggestions.length > 0 && (
+                            <div className="dash-search-panel__hint">
+                                <CornerDownLeft size={13} aria-hidden="true" />
+                                <span>Enter para ver todos los resultados</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             <div className="dash-header__actions">
                 <button

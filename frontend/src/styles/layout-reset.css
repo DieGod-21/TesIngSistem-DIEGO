@@ -60,6 +60,14 @@ ion-content {
 ion-content::part(scroll) {
     overflow-y: auto;
     overflow-x: auto;
+    /*
+     * Reserva SIEMPRE el canal de la barra de scroll vertical. Sin esto, las
+     * rutas con poco contenido (sin scroll) y las que sí tienen scroll difieren
+     * ~15px de ancho, y el contenido "salta" horizontalmente al navegar (el
+     * micro-desplazamiento percibido junto al sidebar). Con gutter estable el
+     * ancho del contenido es constante y el layout no se mueve.
+     */
+    scrollbar-gutter: stable;
     /* momentum scroll en iOS */
     -webkit-overflow-scrolling: touch;
     /* impide que el scroll se "escape" al contenedor padre */

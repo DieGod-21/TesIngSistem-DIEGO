@@ -37,16 +37,30 @@ interface NavItem {
     icon: React.ReactNode;
     exact?: boolean;
     adminOnly?: boolean;
+    /**
+     * Resaltado por sección: mantiene el ítem activo también en rutas de detalle
+     * (p. ej. /students/:id resalta "Estudiantes"). Si se define, gobierna el
+     * estado activo por completo (ignora `exact`).
+     */
+    matchSection?: (pathname: string) => boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
     { label: 'Inicio',         to: '/dashboard',    icon: <Home size={20} />,           exact: true },
     { label: 'Nuevo Registro', to: '/students/new', icon: <UserPlus size={20} />,        exact: true },
-    { label: 'Estudiantes',    to: '/students',     icon: <Users size={20} />,           exact: true },
-    { label: 'Proyectos',       to: '/proyectos',    icon: <FolderOpen size={20} />,      exact: false },
-    { label: 'Ternas',         to: '/ternas',       icon: <ClipboardList size={20} />,   exact: false },
-    { label: 'Reportes',       to: '/reports',      icon: <BarChart3 size={20} />,       exact: false, adminOnly: true },
-    { label: 'Usuarios',       to: '/usuarios',     icon: <UserCog size={20} />,         exact: false, adminOnly: true },
+    {
+        label: 'Estudiantes', to: '/students', icon: <Users size={20} />,
+        // Activo en /students y /students/:id, pero NO en /students/new (ítem propio).
+        matchSection: (p) => p === '/students' || (p.startsWith('/students/') && p !== '/students/new'),
+    },
+    { label: 'Proyectos',       to: '/proyectos',    icon: <FolderOpen size={20} />,
+        matchSection: (p) => p === '/proyectos' || p.startsWith('/proyectos/') },
+    { label: 'Ternas',         to: '/ternas',       icon: <ClipboardList size={20} />,
+        matchSection: (p) => p === '/ternas' || p.startsWith('/ternas/') },
+    { label: 'Reportes',       to: '/reports',      icon: <BarChart3 size={20} />,       adminOnly: true,
+        matchSection: (p) => p === '/reports' || p.startsWith('/reports/') },
+    { label: 'Usuarios',       to: '/usuarios',     icon: <UserCog size={20} />,         adminOnly: true,
+        matchSection: (p) => p === '/usuarios' || p.startsWith('/usuarios/') },
 ];
 
 // ─── Componente ──────────────────────────────────────────────────────
@@ -94,6 +108,11 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                             key={item.label}
                             to={item.to}
                             exact={item.exact}
+                            isActive={
+                                item.matchSection
+                                    ? (_, location) => item.matchSection!(location.pathname)
+                                    : undefined
+                            }
                             className="dash-sidebar__nav-item"
                             activeClassName="dash-sidebar__nav-item--active"
                             onClick={onClose}

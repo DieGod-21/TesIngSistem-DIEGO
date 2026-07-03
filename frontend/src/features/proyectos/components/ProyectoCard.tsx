@@ -1,4 +1,5 @@
 import React from 'react';
+import { Badge } from '../../../components/ui';
 import type { Proyecto } from '../../../types/api';
 
 const FASE_LABEL: Record<string, string> = {
@@ -13,9 +14,9 @@ interface Props {
 const ProyectoCard: React.FC<Props> = ({ proyecto }) => (
     <article className="proy-card">
         <div className="proy-card__top">
-            <span className={`proy-badge proy-badge--${proyecto.fase.toLowerCase()}`}>
+            <Badge tone={proyecto.fase === 'PG1' ? 'primary' : 'info'}>
                 {proyecto.fase}
-            </span>
+            </Badge>
         </div>
         <h3 className="proy-card__title">{proyecto.titulo}</h3>
         {proyecto.descripcion && (

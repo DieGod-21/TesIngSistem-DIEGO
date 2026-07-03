@@ -4,7 +4,8 @@ import { listProyectos } from '../../../services/proyectosService';
 import type { Proyecto } from '../../../types/api';
 import ProyectoCard from '../components/ProyectoCard';
 import NuevoProyectoModal from '../components/NuevoProyectoModal';
-import { Button, PageHeader, EmptyState } from '../../../components/ui';
+import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import { useToast } from '../../../context/ToastContext';
 import '../styles/proyectos.css';
 
 const ProyectosSkeleton: React.FC = () => (
@@ -12,17 +13,18 @@ const ProyectosSkeleton: React.FC = () => (
         {[0, 1, 2, 3].map((i) => (
             <div key={i} className="proy-card" style={{ pointerEvents: 'none' }}>
                 <div className="proy-card__top">
-                    <div className="skeleton skeleton--line" style={{ height: 18, width: 40 }} />
+                    <Skeleton height={18} width={40} />
                 </div>
-                <div className="skeleton skeleton--line" style={{ height: 16, width: '75%' }} />
-                <div className="skeleton skeleton--line skeleton--medium" />
-                <div className="skeleton skeleton--line skeleton--short" />
+                <Skeleton height={16} width="75%" />
+                <Skeleton size="medium" />
+                <Skeleton size="short" />
             </div>
         ))}
     </div>
 );
 
 const ProyectosListPage: React.FC = () => {
+    const { toast } = useToast();
     const [proyectos, setProyectos] = useState<Proyecto[]>([]);
     const [loading, setLoading]     = useState(true);
     const [error, setError]         = useState<string | null>(null);
@@ -35,7 +37,7 @@ const ProyectosListPage: React.FC = () => {
             const data = await listProyectos();
             setProyectos(data);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Error al cargar los proyectos.');
+            setError(e instanceof Error ? e.message : 'No pudimos cargar los proyectos. Revisa tu conexión e inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }
@@ -102,8 +104,9 @@ const ProyectosListPage: React.FC = () => {
             <NuevoProyectoModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                onCreated={() => {
+                onCreated={(titulo) => {
                     setModalOpen(false);
+                    toast.success(`Proyecto «${titulo}» creado.`);
                     fetchProyectos();
                 }}
             />

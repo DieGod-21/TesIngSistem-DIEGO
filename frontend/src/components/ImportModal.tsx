@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import {
     X, Upload, CheckCircle2, AlertTriangle,
     FileText, Users,
@@ -64,8 +65,6 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
     const estRef = useRef<HTMLInputElement>(null);
     const notRef = useRef<HTMLInputElement>(null);
 
-    if (!open) return null;
-
     const busy = est.loading || not.loading;
 
     const handleClose = () => {
@@ -74,6 +73,10 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
         setNot(blank());
         onClose();
     };
+
+    const modalRef = useFocusTrap<HTMLDivElement>(open, handleClose);
+
+    if (!open) return null;
 
     const pickEstFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] ?? null;
@@ -137,7 +140,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
             aria-label="Importación masiva"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="im-modal">
+            <div className="im-modal" ref={modalRef}>
                 <header className="im-modal__header">
                     <h2 className="im-modal__title">Importación masiva</h2>
                     <button

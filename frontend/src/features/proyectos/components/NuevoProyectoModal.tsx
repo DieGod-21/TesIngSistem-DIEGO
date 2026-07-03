@@ -4,11 +4,13 @@ import { X, FolderPlus } from 'lucide-react';
 import { createProyecto } from '../../../services/proyectosService';
 import type { FaseProyecto } from '../../../types/api';
 import { Button } from '../../../components/ui';
+import { useFocusTrap } from '../../../hooks/useFocusTrap';
 
 interface Props {
     open: boolean;
     onClose: () => void;
-    onCreated: () => void;
+    /** Recibe el título del proyecto creado para el mensaje de confirmación. */
+    onCreated: (titulo: string) => void;
 }
 
 interface FormState {
@@ -30,8 +32,6 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
 
-    if (!open) return null;
-
     const handleClose = () => {
         if (loading) return;
         setForm(INITIAL);
@@ -39,6 +39,10 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         setApiError(null);
         onClose();
     };
+
+    const modalRef = useFocusTrap<HTMLDivElement>(open, handleClose);
+
+    if (!open) return null;
 
     const validate = (): boolean => {
         const e: FormErrors = {};
@@ -62,17 +66,18 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         if (!validate()) return;
         setLoading(true);
         setApiError(null);
+        const titulo = form.titulo.trim();
         try {
             await createProyecto({
-                titulo: form.titulo.trim(),
+                titulo,
                 descripcion: form.descripcion.trim(),
                 fase: form.fase,
             });
             setForm(INITIAL);
             setErrors({});
-            onCreated();
+            onCreated(titulo);
         } catch (err) {
-            setApiError(err instanceof Error ? err.message : 'Error al crear el proyecto.');
+            setApiError(err instanceof Error ? err.message : 'No se pudo crear el proyecto. Inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }
@@ -86,7 +91,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
             aria-labelledby="np-title"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="np-modal">
+            <div className="np-modal" ref={modalRef}>
                 <header className="np-modal__header">
                     <h2 id="np-title" className="np-modal__title">
                         <FolderPlus size={18} aria-hidden="true" />
@@ -110,6 +115,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         </label>
                         <input
                             id="np-titulo"
+                            data-autofocus
                             type="text"
                             className={`np-input${errors.titulo ? ' np-input--error' : ''}`}
                             value={form.titulo}

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Save, X } from 'lucide-react';
 import { upsertNota } from '../services/notasService';
 import { Button } from './ui';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 const CURSOS = [
     { code: '043' as const, label: 'Proyecto de Graduación I' },
@@ -49,9 +50,10 @@ const EditNotaModal: React.FC<Props> = ({
         }
     }, [open, initialCurso, initialNota]);
 
-    if (!open) return null;
-
     const handleClose = () => { if (!loading) onClose(); };
+    const modalRef = useFocusTrap<HTMLDivElement>(open, handleClose);
+
+    if (!open) return null;
 
     const validate = (): boolean => {
         const val = Number(form.nota);
@@ -81,7 +83,7 @@ const EditNotaModal: React.FC<Props> = ({
             });
             onSaved();
         } catch (err) {
-            setApiError(err instanceof Error ? err.message : 'Error al guardar la nota.');
+            setApiError(err instanceof Error ? err.message : 'No se pudo guardar la nota. Inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }
@@ -95,7 +97,7 @@ const EditNotaModal: React.FC<Props> = ({
             aria-labelledby="en-title"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="en-modal">
+            <div className="en-modal" ref={modalRef}>
                 <header className="en-modal__header">
                     <h2 id="en-title" className="en-modal__title">Editar Nota</h2>
                     <button
@@ -114,6 +116,7 @@ const EditNotaModal: React.FC<Props> = ({
                         <label htmlFor="en-curso" className="en-label">Curso</label>
                         <select
                             id="en-curso"
+                            data-autofocus
                             className="en-select"
                             value={form.curso}
                             onChange={(e) => setForm((s) => ({ ...s, curso: e.target.value as '043' | '049' }))}

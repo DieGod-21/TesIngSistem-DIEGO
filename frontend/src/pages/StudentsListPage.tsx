@@ -29,7 +29,7 @@ import {
     getAprobadosTesis, getReprobadosTesis, type TesisEstudiante,
 } from '../services/tesisService';
 import ImportModal from '../components/ImportModal';
-import { Button, Badge } from '../components/ui';
+import { Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
 import '../styles/students-list.css';
 import '../styles/student-new.css';
 import '../styles/transitions.css';
@@ -76,22 +76,18 @@ const StudentsListPage: React.FC = () => {
                     <span className="sn-breadcrumb__item sn-breadcrumb__item--active">Estudiantes</span>
                 </nav>
 
-                <div className="sl-page-header">
-                    <div className="sl-page-title-group">
-                        <h1 className="sl-page-title">
-                            <Users size={20} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                            Estudiantes
-                            {filter && <FilterPill filter={filter} />}
-                        </h1>
-                        <p className="sl-page-subtitle">
-                            Consulta la información, notas y elegibilidad de tesis de los estudiantes registrados.
-                        </p>
-                    </div>
-                    <Button onClick={() => setImportOpen(true)}>
-                        <Upload size={16} aria-hidden="true" />
-                        Importar
-                    </Button>
-                </div>
+                <PageHeader
+                    kicker="Gestión académica"
+                    icon={<Users size={22} />}
+                    title={<span className="ui-title-inline">Estudiantes{filter && <FilterPill filter={filter} />}</span>}
+                    subtitle="Consulta la información, notas y elegibilidad de tesis de los estudiantes registrados."
+                    actions={
+                        <Button onClick={() => setImportOpen(true)}>
+                            <Upload size={16} aria-hidden="true" />
+                            Importar
+                        </Button>
+                    }
+                />
 
                 {filter && (
                     <FilterBanner
@@ -116,7 +112,7 @@ const DefaultStudentsView: React.FC<{
     history: ReturnType<typeof useHistory>;
 }> = ({ initialSearch, history }) => {
     const {
-        estudiantes, pagination, search, loading, error,
+        estudiantes, pagination, totalAll, atLimit, search, loading, error,
         setSearch, setPage, setLimit, reload,
     } = useEstudiantesList({ limit: 20, search: initialSearch });
 
@@ -131,39 +127,28 @@ const DefaultStudentsView: React.FC<{
 
     return (
         <>
-            <div className="sl-kpi-strip">
-                <div className="sl-kpi-item">
-                    <span className="sl-kpi-item__label">Total registrados</span>
-                    <span className="sl-kpi-item__value">{pagination.total}</span>
-                    <span className="sl-kpi-item__sub">En el sistema</span>
+            <div className="ui-stat-grid">
+                <div className="ui-stat">
+                    <span className="ui-stat__label">Total registrados</span>
+                    <span className="ui-stat__value">{totalAll}</span>
+                    <span className="ui-stat__sub">En el sistema</span>
                 </div>
-                <div className="sl-kpi-item">
-                    <span className="sl-kpi-item__label">Mostrando</span>
-                    <span className="sl-kpi-item__value">{estudiantes.length}</span>
-                    <span className="sl-kpi-item__sub">En esta página</span>
+                <div className="ui-stat">
+                    <span className="ui-stat__label">{search.trim() ? 'Coincidencias' : 'Mostrando'}</span>
+                    <span className="ui-stat__value">{pagination.total}</span>
+                    <span className="ui-stat__sub">{search.trim() ? `Para "${search.trim()}"` : 'En el listado'}</span>
                 </div>
-                <div className="sl-kpi-item">
-                    <span className="sl-kpi-item__label">Página</span>
-                    <span className="sl-kpi-item__value">
-                        {pagination.page}<span style={{ fontSize: '0.8em', color: '#94a3b8' }}> / {pagination.pages || 1}</span>
+                <div className="ui-stat">
+                    <span className="ui-stat__label">Página</span>
+                    <span className="ui-stat__value">
+                        {pagination.page}<span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}> / {pagination.pages || 1}</span>
                     </span>
-                    <span className="sl-kpi-item__sub">{pagination.limit} por página</span>
+                    <span className="ui-stat__sub">{pagination.limit} por página</span>
                 </div>
             </div>
 
             <div className="sl-filters">
-                <div className="sl-filter-search">
-                    <Search size={14} className="sl-filter-search__icon" aria-hidden="true" />
-                    <input
-                        type="text"
-                        className="sl-filter-search__input"
-                        placeholder="Buscar por nombre o carnet…"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        aria-label="Buscar estudiante"
-                    />
-                </div>
-                <label className="sl-filter-count" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <label className="sl-filter-count" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
                     <span>Por página:</span>
                     <select
                         value={pagination.limit}
@@ -186,6 +171,26 @@ const DefaultStudentsView: React.FC<{
                 </Button>
             </div>
 
+            {atLimit && !loading && !error && (
+                <div
+                    role="status"
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '10px 14px', marginBottom: 16, borderRadius: 10,
+                        fontSize: '0.82rem',
+                        color: 'var(--color-warning)',
+                        background: 'color-mix(in oklch, var(--color-warning) 12%, transparent)',
+                        border: '1px solid color-mix(in oklch, var(--color-warning) 30%, transparent)',
+                    }}
+                >
+                    <AlertTriangle size={15} aria-hidden="true" />
+                    <span>
+                        Se cargaron los primeros {totalAll} estudiantes. Si falta alguien, refina la búsqueda;
+                        el listado completo requerirá búsqueda en servidor.
+                    </span>
+                </div>
+            )}
+
             <div className="sl-table-wrap">
                 <table className="sl-table" aria-label="Listado de estudiantes">
                     <thead>
@@ -203,13 +208,17 @@ const DefaultStudentsView: React.FC<{
                         {!loading && error && (
                             <tr>
                                 <td colSpan={5} className="sl-table__td">
-                                    <div className="sl-empty" role="alert" style={{ color: '#b91c1c' }}>
-                                        <p className="sl-empty__title">No se pudieron cargar los estudiantes</p>
-                                        <p className="sl-empty__sub">{error}</p>
-                                        <Button variant="secondary" size="sm" onClick={reload} style={{ marginTop: 10 }}>
-                                            Reintentar
-                                        </Button>
-                                    </div>
+                                    <EmptyState
+                                        tone="danger"
+                                        icon={<AlertTriangle size={26} />}
+                                        title="No se pudieron cargar los estudiantes"
+                                        description={error}
+                                        action={
+                                            <Button variant="secondary" onClick={reload}>
+                                                <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                                            </Button>
+                                        }
+                                    />
                                 </td>
                             </tr>
                         )}
@@ -217,14 +226,13 @@ const DefaultStudentsView: React.FC<{
                         {!loading && !error && estudiantes.length === 0 && (
                             <tr>
                                 <td colSpan={5} className="sl-table__td">
-                                    <div className="sl-empty">
-                                        <p className="sl-empty__title">Sin resultados</p>
-                                        <p className="sl-empty__sub">
-                                            {search.trim()
-                                                ? `No se encontró "${search}".`
-                                                : 'Aún no hay estudiantes registrados.'}
-                                        </p>
-                                    </div>
+                                    <EmptyState
+                                        icon={search.trim() ? <Search size={26} /> : <Users size={26} />}
+                                        title="Sin resultados"
+                                        description={search.trim()
+                                            ? `No se encontró "${search}".`
+                                            : 'Aún no hay estudiantes registrados.'}
+                                    />
                                 </td>
                             </tr>
                         )}
@@ -249,7 +257,7 @@ const DefaultStudentsView: React.FC<{
                                     </div>
                                 </td>
                                 <td className="sl-table__td">
-                                    <span style={{ fontSize: '0.88rem', color: '#475569' }}>{s.email || '—'}</span>
+                                    <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{s.email || '—'}</span>
                                 </td>
                                 <td className="sl-table__td">
                                     <Badge tone="neutral">{s.carrera || '—'}</Badge>
@@ -260,7 +268,7 @@ const DefaultStudentsView: React.FC<{
                                     </Badge>
                                 </td>
                                 <td className="sl-table__td sl-table__td--center">
-                                    <ChevronRight size={18} aria-hidden="true" style={{ color: '#94a3b8' }} />
+                                    <ChevronRight size={18} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />
                                 </td>
                             </tr>
                         ))}
@@ -290,7 +298,6 @@ const TesisFilteredView: React.FC<{
     const [all, setAll]         = useState<TesisEstudiante[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError]     = useState<string | null>(null);
-    const [query, setQuery]     = useState(initialSearch);
 
     const load = async () => {
         setLoading(true);
@@ -309,42 +316,32 @@ const TesisFilteredView: React.FC<{
     useEffect(() => { load(); }, [filter]);
 
     const filtered = useMemo(
-        () => all.filter((s) => matchesText(s.nombre, query) || matchesText(s.carnet, query)),
-        [all, query],
+        () => all.filter((s) => matchesText(`${s.nombre ?? ''} ${s.carnet ?? ''}`, initialSearch)),
+        [all, initialSearch],
     );
 
     return (
         <>
-            <div className="sl-kpi-strip">
-                <div className="sl-kpi-item">
-                    <span className="sl-kpi-item__label">Total {filter === 'aprobados' ? 'aprobados' : 'no aprobados'}</span>
-                    <span className="sl-kpi-item__value">{all.length}</span>
-                    <span className="sl-kpi-item__sub">{filter === 'aprobados' ? 'Cumplen tesis' : 'No cumplen tesis'}</span>
+            <div className="ui-stat-grid">
+                <div className="ui-stat">
+                    <span className="ui-stat__label">Total {filter === 'aprobados' ? 'aprobados' : 'no aprobados'}</span>
+                    <span className="ui-stat__value">{all.length}</span>
+                    <span className="ui-stat__sub">{filter === 'aprobados' ? 'Cumplen tesis' : 'No cumplen tesis'}</span>
                 </div>
-                <div className="sl-kpi-item">
-                    <span className="sl-kpi-item__label">Mostrando</span>
-                    <span className="sl-kpi-item__value">{filtered.length}</span>
-                    <span className="sl-kpi-item__sub">Resultados del filtro</span>
+                <div className="ui-stat">
+                    <span className="ui-stat__label">Mostrando</span>
+                    <span className="ui-stat__value">{filtered.length}</span>
+                    <span className="ui-stat__sub">Resultados del filtro</span>
                 </div>
             </div>
 
             <div className="sl-filters">
-                <div className="sl-filter-search">
-                    <Search size={14} className="sl-filter-search__icon" aria-hidden="true" />
-                    <input
-                        type="text"
-                        className="sl-filter-search__input"
-                        placeholder="Buscar por nombre o carnet…"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        aria-label="Buscar estudiante"
-                    />
-                </div>
                 <Button
                     variant="secondary"
                     onClick={load}
                     disabled={loading}
                     aria-label="Refrescar listado"
+                    style={{ marginLeft: 'auto' }}
                 >
                     <RefreshCw size={16} aria-hidden="true" />
                     Refrescar
@@ -367,13 +364,17 @@ const TesisFilteredView: React.FC<{
                         {!loading && error && (
                             <tr>
                                 <td colSpan={4} className="sl-table__td">
-                                    <div className="sl-empty" role="alert" style={{ color: '#b91c1c' }}>
-                                        <p className="sl-empty__title">No se pudo cargar el listado</p>
-                                        <p className="sl-empty__sub">{error}</p>
-                                        <Button variant="secondary" size="sm" onClick={load} style={{ marginTop: 10 }}>
-                                            Reintentar
-                                        </Button>
-                                    </div>
+                                    <EmptyState
+                                        tone="danger"
+                                        icon={<AlertTriangle size={26} />}
+                                        title="No se pudo cargar el listado"
+                                        description={error}
+                                        action={
+                                            <Button variant="secondary" onClick={load}>
+                                                <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                                            </Button>
+                                        }
+                                    />
                                 </td>
                             </tr>
                         )}
@@ -381,16 +382,15 @@ const TesisFilteredView: React.FC<{
                         {!loading && !error && filtered.length === 0 && (
                             <tr>
                                 <td colSpan={4} className="sl-table__td">
-                                    <div className="sl-empty">
-                                        <p className="sl-empty__title">Sin resultados</p>
-                                        <p className="sl-empty__sub">
-                                            {query.trim()
-                                                ? `No se encontró "${query}".`
-                                                : filter === 'aprobados'
-                                                    ? 'Aún no hay estudiantes que aprueben tesis.'
-                                                    : 'No hay estudiantes reprobados o pendientes.'}
-                                        </p>
-                                    </div>
+                                    <EmptyState
+                                        icon={initialSearch.trim() ? <Search size={26} /> : <Users size={26} />}
+                                        title="Sin resultados"
+                                        description={initialSearch.trim()
+                                            ? `No se encontró "${initialSearch}".`
+                                            : filter === 'aprobados'
+                                                ? 'Aún no hay estudiantes que aprueben tesis.'
+                                                : 'No hay estudiantes reprobados o pendientes.'}
+                                    />
                                 </td>
                             </tr>
                         )}
@@ -446,9 +446,9 @@ const FilterBanner: React.FC<{ filter: TesisFilter; onClear: () => void }> = ({ 
             style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 14px', borderRadius: 10, marginBottom: 16,
-                background: isApproved ? '#ecfdf5' : '#fef2f2',
-                color:      isApproved ? '#065f46' : '#991b1b',
-                border: `1px solid ${isApproved ? '#a7f3d0' : '#fecaca'}`,
+                background: `color-mix(in oklch, ${isApproved ? 'var(--color-success)' : 'var(--color-danger)'} 14%, transparent)`,
+                color:      isApproved ? 'var(--color-success)' : 'var(--color-danger)',
+                border: `1px solid color-mix(in oklch, ${isApproved ? 'var(--color-success)' : 'var(--color-danger)'} 30%, transparent)`,
             }}
         >
             {isApproved
@@ -479,16 +479,16 @@ const TableSkeleton: React.FC<{ rows: number; cols: number }> = ({ rows, cols })
             <tr key={i} className="sl-table__tr">
                 <td className="sl-table__td">
                     <div className="sl-student-cell">
-                        <div className="skeleton skeleton--circle" />
+                        <Skeleton variant="circle" />
                         <div>
-                            <div className="skeleton skeleton--line skeleton--medium" />
-                            <div className="skeleton skeleton--line skeleton--short" style={{ marginTop: 4 }} />
+                            <Skeleton size="medium" />
+                            <Skeleton size="short" style={{ marginTop: 4 }} />
                         </div>
                     </div>
                 </td>
                 {Array.from({ length: cols - 1 }).map((_, j) => (
                     <td key={j} className="sl-table__td">
-                        <div className="skeleton skeleton--line skeleton--medium" />
+                        <Skeleton size="medium" />
                     </td>
                 ))}
             </tr>
@@ -523,7 +523,7 @@ const Pager: React.FC<PagerProps> = ({ page, pages, total, limit, onChange }) =>
                     <ChevronLeft size={16} aria-hidden="true" />
                 </button>
                 <span className="sl-pager__current" aria-current="page">
-                    {page} <span style={{ color: '#94a3b8' }}>/ {pages || 1}</span>
+                    {page} <span style={{ color: 'var(--text-muted)' }}>/ {pages || 1}</span>
                 </span>
                 <button type="button" className="sl-pager__btn" disabled={!canNext} onClick={() => onChange(page + 1)} aria-label="Página siguiente">
                     <ChevronRight size={16} aria-hidden="true" />

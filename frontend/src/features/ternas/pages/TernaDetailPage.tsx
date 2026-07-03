@@ -9,12 +9,12 @@
 
 import React from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { ChevronLeft, FileText, GraduationCap } from 'lucide-react';
+import { ChevronLeft, FileText, GraduationCap, AlertTriangle, RefreshCw, ClipboardList } from 'lucide-react';
 import ThesisStatusBadge from '../../../components/thesis/ThesisStatusBadge';
 import EvaluationForm from '../components/EvaluationForm';
 import { useTernaDetalle } from '../hooks/useTernaDetalle';
 import type { EvaluadorTerna } from '../../../types/api';
-import { Button } from '../../../components/ui';
+import { Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
 import '../styles/ternas.css';
 
 const ESTADO_LABEL = {
@@ -36,9 +36,9 @@ const TernaDetailSkeleton: React.FC = () => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {[0, 1, 2].map((j) => (
                     <div key={j} className="tdetail-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <div className="skeleton skeleton--line skeleton--short" />
-                        <div className="skeleton skeleton--line skeleton--medium" />
-                        <div className="skeleton skeleton--line skeleton--short" />
+                        <Skeleton size="short" />
+                        <Skeleton size="medium" />
+                        <Skeleton size="short" />
                     </div>
                 ))}
             </div>
@@ -67,31 +67,41 @@ const TernaDetailPage: React.FC = () => {
 
                 {loading && <TernaDetailSkeleton />}
                 {!loading && error && (
-                    <div className="terror" role="alert">
-                        {error}
-                        <div style={{ marginTop: 10 }}>
-                            <Button variant="secondary" size="sm" onClick={reload}>Reintentar</Button>
-                        </div>
-                    </div>
+                    <EmptyState
+                        tone="danger"
+                        icon={<AlertTriangle size={26} />}
+                        title="No se pudo cargar la terna"
+                        description={error}
+                        action={
+                            <Button variant="secondary" onClick={reload}>
+                                <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                            </Button>
+                        }
+                    />
                 )}
                 {!loading && !error && !terna && (
-                    <div className="tempty">No se encontró la terna solicitada.</div>
+                    <EmptyState
+                        icon={<FileText size={26} />}
+                        title="Terna no encontrada"
+                        description="No se encontró la terna solicitada."
+                    />
                 )}
 
                 {!loading && !error && terna && (
                     <>
-                        <header className="ternas-page__header">
-                            <h1 className="ternas-page__title">
-                                Terna #{String(terna.numero).padStart(2, '0')}{' '}
-                                <span className={`terna-card__estado estado-${terna.estado}`} style={{ marginLeft: 8 }}>
-                                    {ESTADO_LABEL[terna.estado]}
+                        <PageHeader
+                            kicker="Evaluación"
+                            icon={<ClipboardList size={22} />}
+                            title={
+                                <span className="ui-title-inline">
+                                    Terna #{String(terna.numero).padStart(2, '0')}
+                                    <span className={`terna-card__estado estado-${terna.estado}`}>
+                                        {ESTADO_LABEL[terna.estado]}
+                                    </span>
                                 </span>
-                            </h1>
-                            <p className="ternas-page__subtitle">
-                                <FileText size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                                {terna.titulo || 'Sin título de proyecto'}
-                            </p>
-                        </header>
+                            }
+                            subtitle={terna.titulo || 'Sin título de proyecto'}
+                        />
 
                         <div className="terna-detail-grid">
                             {/* Columna izquierda: estudiante + evaluadores + form */}

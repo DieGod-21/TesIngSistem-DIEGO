@@ -33,7 +33,7 @@
 /* Tarjeta principal */
 .tsb-card {
   border: 1px solid var(--tsb-border);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   padding: 18px 20px;
   background: var(--surface-card-grad), var(--surface-card);
   box-shadow: var(--shadow-sm), var(--hairline);

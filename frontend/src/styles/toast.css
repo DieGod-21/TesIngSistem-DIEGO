@@ -53,25 +53,25 @@
 .toast--success {
     background: var(--toast-success-bg);
     border-color: var(--toast-success-border);
-    color: #166534;
+    color: var(--toast-success-text);
 }
 
 .toast--error {
     background: var(--toast-error-bg);
     border-color: var(--toast-error-border);
-    color: #9f1239;
+    color: var(--toast-error-text);
 }
 
 .toast--info {
     background: var(--toast-info-bg);
     border-color: var(--toast-info-border);
-    color: #1e40af;
+    color: var(--toast-info-text);
 }
 
 .toast--warning {
     background: var(--toast-warning-bg);
     border-color: var(--toast-warning-border);
-    color: #92400e;
+    color: var(--toast-warning-text);
 }
 
 /* ─── Partes del toast ─────────────────────────────────────────────── */

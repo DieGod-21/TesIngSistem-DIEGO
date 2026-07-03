@@ -47,6 +47,26 @@ export const API_PATHS = {
         byId:           (id: number) => `/api/proyectos/${id}`,
         byEstudiante:   (estudianteId: number) => `/api/proyectos/estudiante/${estudianteId}`,
     },
+    /*
+     * TERNAS.
+     *
+     * NOTA — Creación de ternas (paneles) NO soportada por el backend:
+     *   El API expone lectura (list, byId), asignación de evaluadores sobre una
+     *   terna YA existente (addEvaluador/removeEvaluador) y el ciclo de
+     *   evaluación (draft/submit/reopen), pero NO un endpoint para crear la
+     *   terna en sí. Falta, como mínimo:
+     *
+     *     POST /api/ternas
+     *       body sugerido: { estudiante_id | carnet, proyecto_id, numero, fase }
+     *       respuesta:     { terna: { id, ... } }
+     *
+     *   (Opcional para gestión completa: DELETE /api/ternas/:id.)
+     *
+     *   Sin `POST /api/ternas`, `addEvaluador` no basta: no hay terna padre a la
+     *   cual asignar evaluadores. Por eso el frontend NO ofrece "crear panel":
+     *   el sistema se consume como caja negra y no se inventa lógica de servidor.
+     *   Cuando el backend publique el endpoint, añadirlo aquí y crear el flujo.
+     */
     ternas: {
         list:               '/api/ternas',
         byId:               (id: number) => `/api/ternas/${id}`,
@@ -77,3 +97,11 @@ export const COURSE_CODES = {
 
 /** Nota mínima requerida en cada curso para aprobar la tesis. */
 export const THESIS_MIN_GRADE = 70;
+
+/**
+ * Límite alto para traer el padrón completo en una sola petición y así permitir
+ * búsqueda/paginación en cliente (ver decisión en useEstudiantesList). Si la API
+ * devuelve exactamente este número, el conjunto podría estar truncado: los hooks
+ * activan una salvaguarda (`atLimit` + warning) sugiriendo migrar a server-side.
+ */
+export const FETCH_ALL_LIMIT = 1000;

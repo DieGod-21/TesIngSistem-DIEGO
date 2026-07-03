@@ -47,22 +47,22 @@
 /* ── Card ────────────────────────────────────────────────────────── */
 
 .proy-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--surface-card-grad), var(--surface-card);
+    border: 1px solid var(--border);
     border-top: 3px solid var(--color-primary);
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     padding: 18px 20px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-sm), var(--hairline);
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .proy-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: var(--shadow-md);
-    border-color: #c7d2fe;
+    border-color: var(--border-strong);
 }
 
 .proy-card__top {
@@ -75,14 +75,14 @@
     margin: 0;
     font-size: 0.9375rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--text-primary);
     line-height: 1.35;
 }
 
 .proy-card__desc {
     margin: 0;
     font-size: 0.8125rem;
-    color: #64748b;
+    color: var(--text-secondary);
     line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -93,40 +93,21 @@
 .proy-card__fase {
     margin: 4px 0 0;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-weight: 500;
 }
 
 .proy-card__student {
     margin: 0;
     font-size: 0.8rem;
-    color: #475569;
+    color: var(--text-secondary);
     font-weight: 600;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--border);
     padding-top: 8px;
     margin-top: 4px;
 }
 
-/* ── Badge ───────────────────────────────────────────────────────── */
-
-.proy-badge {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 2px 8px;
-    border-radius: 99px;
-}
-
-.proy-badge--pg1 {
-    background: var(--color-primary-soft);
-    color: var(--color-primary-hover);
-}
-
-.proy-badge--pg2 {
-    background: #ede9fe;
-    color: #6d28d9;
-}
+/* La fase del proyecto usa la primitiva <Badge> del sistema de diseño. */
 
 /* ── Buttons (page level) ────────────────────────────────────────── */
 
@@ -163,24 +144,7 @@
     outline-offset: 2px;
 }
 
-/* ── Empty / Error states ───────────────────────────────────────── */
-
-.proy-empty,
-.proy-error {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 40px 24px;
-    text-align: center;
-    color: #475569;
-    font-size: 0.9rem;
-}
-
-.proy-error {
-    color: #b91c1c;
-    border-color: #fecaca;
-    background: #fef2f2;
-}
+/* Los estados vacío/error usan la primitiva <EmptyState> del sistema de diseño. */
 
 /* ── Modal overlay ───────────────────────────────────────────────── */
 
@@ -416,19 +380,7 @@
 [data-theme="dark"] .proy-page__title { color: #f1f5f9; }
 [data-theme="dark"] .proy-page__subtitle { color: #94a3b8; }
 
-[data-theme="dark"] .proy-card {
-    background: #1e293b;
-    border-color: #334155;
-    border-top-color: var(--color-primary);
-}
-
-[data-theme="dark"] .proy-card__title { color: #f1f5f9; }
-[data-theme="dark"] .proy-card__desc { color: #94a3b8; }
-[data-theme="dark"] .proy-card__fase { color: #64748b; }
-[data-theme="dark"] .proy-card__student { color: #94a3b8; border-top-color: #334155; }
-
-[data-theme="dark"] .proy-empty { background: #1e293b; border-color: #334155; color: #94a3b8; }
-[data-theme="dark"] .proy-error { background: #450a0a; border-color: #7f1d1d; color: #fca5a5; }
+/* .proy-card usa tokens semánticos: el modo oscuro se resuelve por herencia. */
 
 [data-theme="dark"] .np-overlay { background: rgba(0, 0, 0, 0.7); }
 

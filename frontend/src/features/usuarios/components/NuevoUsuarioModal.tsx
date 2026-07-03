@@ -4,11 +4,13 @@ import { UserPlus, X } from 'lucide-react';
 import { createUsuario } from '../../../services/usuariosService';
 import type { RolUsuario } from '../../../types/api';
 import { Button } from '../../../components/ui';
+import { useFocusTrap } from '../../../hooks/useFocusTrap';
 
 interface Props {
     open: boolean;
     onClose: () => void;
-    onCreated: () => void;
+    /** Recibe el nombre del usuario creado para el mensaje de confirmación. */
+    onCreated: (nombre: string) => void;
 }
 
 interface FormState {
@@ -30,8 +32,6 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
 
-    if (!open) return null;
-
     const handleClose = () => {
         if (loading) return;
         setForm(INITIAL);
@@ -39,6 +39,10 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         setApiError(null);
         onClose();
     };
+
+    const modalRef = useFocusTrap<HTMLDivElement>(open, handleClose);
+
+    if (!open) return null;
 
     const set =
         (field: keyof FormState) =>
@@ -66,17 +70,18 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         if (!validate()) return;
         setLoading(true);
         setApiError(null);
+        const nombre = form.nombre.trim();
         try {
             await createUsuario({
-                nombre: form.nombre.trim(),
+                nombre,
                 email: form.email.trim(),
                 rol: form.rol,
             });
             setForm(INITIAL);
             setErrors({});
-            onCreated();
+            onCreated(nombre);
         } catch (err) {
-            setApiError(err instanceof Error ? err.message : 'Error al crear el usuario.');
+            setApiError(err instanceof Error ? err.message : 'No se pudo crear el usuario. Inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }
@@ -90,7 +95,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
             aria-labelledby="nu-title"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="nu-modal">
+            <div className="nu-modal" ref={modalRef}>
                 <header className="nu-modal__header">
                     <h2 id="nu-title" className="nu-modal__title">
                         <UserPlus size={18} aria-hidden="true" />
@@ -114,6 +119,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         </label>
                         <input
                             id="nu-nombre"
+                            data-autofocus
                             type="text"
                             className={`nu-input${errors.nombre ? ' nu-input--error' : ''}`}
                             value={form.nombre}

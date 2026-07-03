@@ -16,11 +16,12 @@ import {
 import AppFooter from '../components/AppFooter';
 import KpiCard from '../components/KpiCard';
 import PendingActionsTable from '../components/PendingActionsTable';
-import { Button, Card } from '../components/ui';
-import { AcademicProgressCard, DeadlinesWidget, ActivityWidget } from '../components/dashboard/DashboardAside';
+import { Button, Card, Skeleton, EmptyState } from '../components/ui';
+import { AcademicProgressCard } from '../components/dashboard/DashboardAside';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../context/AuthContext';
+import { THESIS_MIN_GRADE } from '../config/apiConfig';
 import type { KpiData } from '../services/dashboardService';
 
 import '../styles/dashboard.css';
@@ -64,9 +65,9 @@ const KpiSkeleton: React.FC = () => (
     <div className="dash-kpi-grid" aria-busy="true" aria-label="Cargando indicadores…">
         {[0, 1, 2, 3].map((i) => (
             <div key={i} className="kpi-card kpi-skeleton">
-                <div className="skeleton skeleton--line skeleton--short" />
-                <div className="skeleton skeleton--line skeleton--large" />
-                <div className="skeleton skeleton--line skeleton--medium" />
+                <Skeleton size="short" />
+                <Skeleton size="large" />
+                <Skeleton size="medium" />
             </div>
         ))}
     </div>
@@ -75,18 +76,18 @@ const KpiSkeleton: React.FC = () => (
 const TableSkeleton: React.FC = () => (
     <div className="dash-table-card" aria-busy="true" aria-label="Cargando expedientes…">
         <div className="dash-table-card__header">
-            <div className="skeleton skeleton--line skeleton--medium" />
+            <Skeleton size="medium" />
         </div>
         <div className="dash-skeleton-rows">
             {[0, 1, 2].map((i) => (
                 <div key={i} className="dash-skeleton-row">
-                    <div className="skeleton skeleton--circle" />
+                    <Skeleton variant="circle" />
                     <div className="dash-skeleton-row__lines">
-                        <div className="skeleton skeleton--line skeleton--medium" />
-                        <div className="skeleton skeleton--line skeleton--short" />
+                        <Skeleton size="medium" />
+                        <Skeleton size="short" />
                     </div>
-                    <div className="skeleton skeleton--line skeleton--medium" />
-                    <div className="skeleton skeleton--line skeleton--short" />
+                    <Skeleton size="medium" />
+                    <Skeleton size="short" />
                 </div>
             ))}
         </div>
@@ -129,16 +130,28 @@ const DashboardPage: React.FC = () => {
 
                 {(summary.status === 'loading' || summary.status === 'idle') && <KpiSkeleton />}
                 {summary.status === 'error' && (
-                    <div className="dash-error-block" role="alert">
-                        <AlertCircle size={20} className="dash-error-block__icon" aria-hidden="true" />
-                        <p className="dash-error-block__msg">{summary.message}</p>
-                        <button className="dash-error-block__btn" onClick={loadSummary}>
-                            <RefreshCw size={14} aria-hidden="true" /> Reintentar
-                        </button>
-                    </div>
+                    <EmptyState
+                        tone="danger"
+                        icon={<AlertCircle size={26} />}
+                        title="No se pudieron cargar los indicadores"
+                        description={summary.message}
+                        action={
+                            <Button variant="secondary" onClick={loadSummary}>
+                                <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                            </Button>
+                        }
+                    />
                 )}
                 {summary.status === 'success' && (
                     <section aria-label="Indicadores de gestión académica">
+                        <div className="ui-section-head">
+                            <div className="ui-section-head__text">
+                                <h2 className="ui-section-head__title">Estado de la cohorte</h2>
+                                <p className="ui-section-head__subtitle">
+                                    Una lectura rápida de cómo avanza PG1–PG2 este ciclo. Toca un indicador para ver el detalle.
+                                </p>
+                            </div>
+                        </div>
                         <div className="dash-kpi-grid">
                             {summary.data.kpis.map((kpi) => (
                                 <KpiCard key={kpi.id} data={kpi} />
@@ -150,7 +163,14 @@ const DashboardPage: React.FC = () => {
                 <div className="dash-flagship-grid">
                     <div className="dash-flagship-main">
                         <section className="dash-quick-actions" aria-label="Gestión académica">
-                            <h2 className="dash-section-title">Gestión Académica</h2>
+                            <div className="ui-section-head">
+                                <div className="ui-section-head__text">
+                                    <h2 className="ui-section-head__title">Gestión Académica</h2>
+                                    <p className="ui-section-head__subtitle">
+                                        Accesos directos a las tareas más frecuentes de la coordinación.
+                                    </p>
+                                </div>
+                            </div>
                             <div className="dash-qa-grid">
                                 <button
                                     className="dash-qa-card"
@@ -184,41 +204,43 @@ const DashboardPage: React.FC = () => {
 
                         <section aria-label="Expedientes que requieren atención">
                             <div className="ui-section-head">
-                                <h2 className="ui-section-head__title">Requieren atención</h2>
+                                <div className="ui-section-head__text">
+                                    <h2 className="ui-section-head__title">Requieren atención</h2>
+                                    <p className="ui-section-head__subtitle">
+                                        Estudiantes que aún no cumplen el requisito de tesis: alguna nota por debajo de {THESIS_MIN_GRADE} o pendiente de registrar.
+                                    </p>
+                                </div>
                             </div>
                             {tableState.status === 'loading' ? (
                                 <TableSkeleton />
                             ) : tableState.status === 'error' ? (
-                                <div className="dash-error-block" role="alert">
-                                    <AlertCircle size={20} className="dash-error-block__icon" aria-hidden="true" />
-                                    <p className="dash-error-block__msg">{tableState.message}</p>
-                                    <button className="dash-error-block__btn"
-                                        onClick={() => loadActions(searchQuery)}>
-                                        <RefreshCw size={14} aria-hidden="true" /> Reintentar
-                                    </button>
-                                </div>
-                            ) : tableState.status === 'success' && tableState.data.length === 0 ? (
-                                <div className="dash-empty-block" role="status">
-                                    {searchQuery
-                                        ? <AlertCircle size={32} className="dash-empty-block__icon" aria-hidden="true" />
-                                        : <CheckCircle2 size={32} className="dash-empty-block__icon" aria-hidden="true" />
+                                <EmptyState
+                                    tone="danger"
+                                    icon={<AlertCircle size={26} />}
+                                    title="No se pudieron cargar los expedientes"
+                                    description={tableState.message}
+                                    action={
+                                        <Button variant="secondary" onClick={() => loadActions(searchQuery)}>
+                                            <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                                        </Button>
                                     }
-                                    <p className="dash-empty-block__msg">
-                                        {searchQuery
-                                            ? <><span>Sin expedientes para </span><strong>"{searchQuery}"</strong></>
-                                            : 'Todo al día — sin estudiantes reprobados.'}
-                                    </p>
-                                    {!searchQuery && (
-                                        <p className="dash-empty-block__hint">Los expedientes con pendientes aparecerán aquí.</p>
-                                    )}
-                                </div>
+                                />
+                            ) : tableState.status === 'success' && tableState.data.length === 0 ? (
+                                <EmptyState
+                                    tone={searchQuery ? 'neutral' : 'success'}
+                                    icon={searchQuery ? <AlertCircle size={26} /> : <CheckCircle2 size={26} />}
+                                    title={searchQuery ? `Sin expedientes para "${searchQuery}"` : 'Todo al día'}
+                                    description={searchQuery
+                                        ? 'Prueba con otro término de búsqueda.'
+                                        : 'No hay estudiantes reprobados. Los expedientes con pendientes aparecerán aquí.'}
+                                />
                             ) : tableState.status === 'success' ? (
                                 <PendingActionsTable actions={tableState.data} />
                             ) : null}
                         </section>
                     </div>
 
-                    <aside className="dash-aside" aria-label="Resumen y actividad">
+                    <aside className="dash-aside" aria-label="Progreso académico">
                         {progress ? (
                             <AcademicProgressCard
                                 total={progress.total}
@@ -229,12 +251,10 @@ const DashboardPage: React.FC = () => {
                         ) : (
                             <Card padded className="dash-widget" aria-busy="true">
                                 <span className="ui-kicker">Progreso académico</span>
-                                <div className="skeleton skeleton--line skeleton--large" />
-                                <div className="skeleton skeleton--line skeleton--medium" />
+                                <Skeleton size="large" />
+                                <Skeleton size="medium" />
                             </Card>
                         )}
-                        <DeadlinesWidget />
-                        <ActivityWidget />
                     </aside>
                 </div>
             </div>

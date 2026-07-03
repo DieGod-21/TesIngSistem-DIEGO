@@ -10,6 +10,22 @@
  */
 
 /* ═══════════════════════════════════════════════════════════════════
+   ACCESIBILIDAD — Contenido solo para lectores de pantalla
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    BUTTON
 ═══════════════════════════════════════════════════════════════════ */
 
@@ -187,7 +203,7 @@
 .ui-card {
     background: var(--surface-card-grad), var(--surface-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-card);
     box-shadow: var(--shadow-sm), var(--hairline);
 }
 
@@ -259,6 +275,14 @@
     line-height: 1.1;
 }
 
+/* Título con elementos inline (pill de filtro, estado, resolución) alineados */
+.ui-title-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
 .ui-page-header__subtitle {
     font-size: 0.9rem;
     color: var(--text-secondary);
@@ -306,6 +330,35 @@
 .ui-input--error:focus {
     box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-danger) 30%, transparent);
 }
+
+/* Buscador inline (icono + input): patrón único para filtros de lista. */
+.ui-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.ui-search:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+.ui-search__icon { color: var(--text-muted); flex-shrink: 0; }
+.ui-search__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    outline: none;
+    padding: 0.55rem 0;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+.ui-search__input::placeholder { color: var(--text-muted); }
 
 /* ═══════════════════════════════════════════════════════════════════
    MODAL (overlay + panel) — usado por ConfirmModal y futuros diálogos
@@ -438,10 +491,16 @@
 
 .ui-section-head {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
     margin: 0 0 1rem;
+}
+.ui-section-head__text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
 }
 .ui-section-head__title {
     font-size: 1.05rem;
@@ -450,24 +509,59 @@
     color: var(--text-primary);
     margin: 0;
 }
+.ui-section-head__subtitle {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 62ch;
+}
 
 /* ═══════════════════════════════════════════════════════════════════
-   STAT — presentación de métrica (valor + etiqueta)
+   STAT — tarjeta de métrica (lenguaje único para KPIs)
+   Un solo patrón: chrome + tipografía compartidos; el color contextual del
+   valor (--stat-accent) es la única diferencia entre variantes.
 ═══════════════════════════════════════════════════════════════════ */
 
+.ui-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.ui-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: var(--surface-card-grad), var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm), var(--hairline);
+    transition: box-shadow 200ms var(--ease-out-expo), transform 200ms var(--ease-out-expo);
+}
+.ui-stat:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
 .ui-stat__value {
-    font-size: clamp(1.6rem, 2.4vw, 2rem);
+    font-size: 1.9rem;
     font-weight: 800;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    color: var(--text-primary);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--stat-accent, var(--text-primary));
     font-variant-numeric: tabular-nums;
 }
 .ui-stat__label {
     font-size: 0.72rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+.ui-stat__sub {
+    font-size: 0.75rem;
     color: var(--text-muted);
 }
 
@@ -539,3 +633,34 @@
 .ui-empty__title { margin: 0; font-size: 0.98rem; font-weight: 700; color: var(--text-primary); }
 .ui-empty__desc { margin: 0; font-size: 0.85rem; color: var(--text-muted); max-width: 42ch; line-height: 1.5; }
 .ui-empty__action { margin-top: 0.85rem; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SKELETON — placeholder de carga (shimmer)
+   Construido sobre tokens: el modo oscuro funciona por herencia.
+═══════════════════════════════════════════════════════════════════ */
+
+.skeleton {
+    background: linear-gradient(90deg,
+            color-mix(in oklch, var(--text-muted) 15%, var(--surface-card)) 25%,
+            color-mix(in oklch, var(--text-muted) 7%, var(--surface-card)) 50%,
+            color-mix(in oklch, var(--text-muted) 15%, var(--surface-card)) 75%);
+    background-size: 200% 100%;
+    animation: ui-shimmer 1.4s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+.skeleton--line   { height: 14px; }
+.skeleton--short  { width: 40%; }
+.skeleton--medium { width: 65%; }
+.skeleton--large  { height: 36px; width: 55%; margin-top: 8px; }
+.skeleton--circle { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+.skeleton--box    { width: 56px; height: 56px; border-radius: var(--radius-md); flex-shrink: 0; }
+
+@keyframes ui-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton { animation: none; opacity: 0.75; }
+}

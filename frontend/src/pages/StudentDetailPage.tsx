@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { ChevronLeft, Mail, IdCard, GraduationCap, ClipboardList, Pencil, Plus, Inbox } from 'lucide-react';
+import { ChevronLeft, Mail, IdCard, GraduationCap, ClipboardList, Pencil, Plus, Inbox, AlertTriangle } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
 import { getEstudianteById } from '../services/estudiantesService';
@@ -14,8 +14,9 @@ import {
     mergeGrades,
 } from '../utils/thesisStatus';
 import { THESIS_MIN_GRADE } from '../config/apiConfig';
+import { useToast } from '../context/ToastContext';
 import type { CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
-import { Button } from '../components/ui';
+import { Button, EmptyState, Skeleton } from '../components/ui';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 import '../styles/student-detail.css';
@@ -51,6 +52,7 @@ interface EditModalState {
 const StudentDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
+    const { toast } = useToast();
     const [state, setState] = useState<State>({
         student: null, reporte: null, notas: null, loading: true, error: null,
     });
@@ -129,6 +131,7 @@ const StudentDetailPage: React.FC = () => {
     const handleSaved = () => {
         setEditModal((m) => ({ ...m, open: false }));
         setRefreshKey((k) => k + 1);
+        toast.success('Nota guardada correctamente.');
     };
 
     return (
@@ -143,23 +146,48 @@ const StudentDetailPage: React.FC = () => {
             </Button>
 
             {state.loading && <StudentDetailSkeleton />}
-            {!state.loading && state.error && <div className="terror" role="alert">{state.error}</div>}
+            {!state.loading && state.error && (
+                <EmptyState
+                    tone="danger"
+                    icon={<AlertTriangle size={26} />}
+                    title="No se pudo cargar el estudiante"
+                    description={state.error}
+                />
+            )}
 
             {!state.loading && !state.error && state.student && (
                 <div className="view-transition" key={state.student.id}>
                     <header className="ternas-page__header sd-student-header">
-                        <h1 className="ternas-page__title">{state.student.nombre}</h1>
-                        <p className="ternas-page__subtitle">
-                            <IdCard size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                            {state.student.carnet}
-                            {state.student.email && (
-                                <>
-                                    {' · '}
-                                    <Mail size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                                    {state.student.email}
-                                </>
-                            )}
-                        </p>
+                        <div className="sd-record__identity">
+                            <p className="sd-record__kicker">Expediente académico · PG1–PG2</p>
+                            <h1 className="sd-student-name">{state.student.nombre}</h1>
+                            <div className="sd-student-meta">
+                                <span className="sd-id-chip">
+                                    <IdCard size={15} aria-hidden="true" />
+                                    <span className="sd-id-chip__label">Carné</span>
+                                    <span className="sd-id-chip__value">{state.student.carnet}</span>
+                                </span>
+                                {state.student.email && (
+                                    <a className="sd-email" href={`mailto:${state.student.email}`}>
+                                        <Mail size={15} aria-hidden="true" />
+                                        {state.student.email}
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+
+                        {tesisInput && (
+                            <div className="sd-record__status">
+                                <span className="sd-record__status-label">Estado de tesis</span>
+                                <ThesisStatusBadge estado={tesisInput} variant="badge" />
+                                {tesisInput.promedio != null && (
+                                    <span className="sd-record__avg">
+                                        Promedio general
+                                        <strong>{Number(tesisInput.promedio).toFixed(2)}</strong>
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </header>
 
                     <div className="terna-detail-grid">
@@ -251,9 +279,11 @@ const StudentDetailPage: React.FC = () => {
                             )}
                         </section>
 
-                        {tesisInput && (
-                            <ThesisStatusBadge estado={tesisInput} title="Estado de Tesis (PG1 + PG2)" />
-                        )}
+                        <aside className="sd-detail-side">
+                            {tesisInput && (
+                                <ThesisStatusBadge estado={tesisInput} title="Estado de Tesis (PG1 + PG2)" />
+                            )}
+                        </aside>
                     </div>
                 </div>
             )}
@@ -275,38 +305,38 @@ const StudentDetailPage: React.FC = () => {
 const StudentDetailSkeleton: React.FC = () => (
     <div className="tdetail-skeleton" aria-busy="true" aria-label="Cargando información del estudiante">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div className="skeleton skeleton--line" style={{ height: 26, width: '45%' }} />
-            <div className="skeleton skeleton--line" style={{ height: 14, width: '35%' }} />
+            <Skeleton height={26} width="45%" />
+            <Skeleton height={14} width="35%" />
         </div>
 
         <div className="terna-detail-grid">
             <div className="tdetail-card">
-                <div className="skeleton skeleton--line" style={{ height: 11, width: '30%' }} />
+                <Skeleton height={11} width="30%" />
                 {[...Array(2)].map((_, i) => (
                     <div key={i} className="dash-skeleton-row">
                         <div className="dash-skeleton-row__lines" style={{ flex: 1 }}>
-                            <div className="skeleton skeleton--line skeleton--medium" />
-                            <div className="skeleton skeleton--line skeleton--short" />
+                            <Skeleton size="medium" />
+                            <Skeleton size="short" />
                         </div>
-                        <div className="skeleton skeleton--line" style={{ width: 36 }} />
-                        <div className="skeleton skeleton--line" style={{ width: 60 }} />
+                        <Skeleton width={36} />
+                        <Skeleton width={60} />
                     </div>
                 ))}
             </div>
 
             <div className="tdetail-card" style={{ gap: 16 }}>
-                <div className="skeleton skeleton--line" style={{ height: 11, width: '55%' }} />
+                <Skeleton height={11} width="55%" />
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <div className="skeleton skeleton--box" />
+                    <Skeleton variant="box" />
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <div className="skeleton skeleton--line" style={{ height: 18, width: '70%' }} />
-                        <div className="skeleton skeleton--line skeleton--short" />
+                        <Skeleton height={18} width="70%" />
+                        <Skeleton size="short" />
                     </div>
                 </div>
                 {[...Array(2)].map((_, i) => (
                     <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <div className="skeleton skeleton--line skeleton--medium" />
-                        <div className="skeleton skeleton--line" style={{ height: 8, width: '100%' }} />
+                        <Skeleton size="medium" />
+                        <Skeleton height={8} width="100%" />
                     </div>
                 ))}
             </div>

@@ -209,8 +209,8 @@
     align-items: center;
     gap: 16px;
     padding: 16px 32px;
-    background: var(--dash-card-bg);
-    border-bottom: 1px solid var(--dash-border);
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -251,7 +251,6 @@
 
 .dash-header__search-wrapper:focus-within .dash-header__search-icon {
     color: var(--color-primary);
-    transform: translateY(-50%) scale(1.18);
 }
 
 .dash-header__search {
@@ -268,8 +267,96 @@
 
 .dash-header__search:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    background: #ffffff;
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+    background: var(--surface-card);
+}
+
+/* ── Buscador: panel de sugerencias (estilo command palette) ─────── */
+.dash-header__search-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 300;
+    background: var(--surface-float);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg), var(--hairline);
+    overflow: hidden;
+    animation: th-panel-in 140ms var(--ease-out-expo) both;
+}
+@keyframes th-panel-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .dash-header__search-panel { animation: none; }
+}
+
+.dash-search-panel__list {
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    max-height: 340px;
+    overflow-y: auto;
+}
+.dash-search-panel__list li { margin: 0; }
+
+.dash-search-sug {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text-primary);
+    font: inherit;
+}
+.dash-search-sug--active,
+.dash-search-sug:hover {
+    background: var(--surface-raised);
+}
+.dash-search-sug__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.dash-search-sug__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dash-search-sug__meta {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-search-panel__state {
+    padding: 18px 16px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.dash-search-panel__hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: var(--surface-raised);
 }
 
 /* Acciones derechas */
@@ -555,9 +642,9 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 .kpi-card {
-    background: var(--surface-card-grad), var(--dash-card-bg);
-    border: 1px solid var(--dash-border);
-    border-radius: 16px;
+    background: var(--surface-card-grad), var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
     padding: 22px 24px;
     box-shadow: var(--shadow-sm), var(--hairline);
     position: relative;
@@ -599,11 +686,6 @@
     }
 }
 
-.kpi-card:hover {
-    box-shadow: var(--dash-shadow-md);
-    transform: translateY(-2px);
-}
-
 /* Botón-KPI (clickeable) — reset nativo del <button> + foco accesible */
 button.kpi-card {
     display: block;
@@ -619,12 +701,12 @@ button.kpi-card {
 }
 
 .kpi-card--clickable:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(29, 78, 216, 0.14), 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .kpi-card--clickable:active {
-    transform: translateY(0) scale(1.01);
+    transform: translateY(0);
 }
 
 .kpi-card--clickable:focus-visible {
@@ -731,10 +813,7 @@ button.kpi-card {
     justify-content: center;
     flex-shrink: 0;
     box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.5), var(--shadow-xs);
-    transition: transform 220ms var(--ease-spring);
 }
-
-.kpi-card:hover .kpi-card__icon-box { transform: scale(1.08) rotate(-3deg); }
 
 .kpi-card__icon-box--blue {
     background: linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-primary-soft-2) 100%);
@@ -752,7 +831,7 @@ button.kpi-card {
 .kpi-card__progress-track {
     width: 100%;
     height: 8px;
-    background: #e2e8f0;
+    background: var(--border);
     border-radius: 99px;
     overflow: hidden;
     margin-top: 8px;
@@ -773,7 +852,7 @@ button.kpi-card {
 .dash-table-card {
     background: var(--surface-card-grad), var(--dash-card-bg);
     border: 1px solid var(--dash-border);
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     box-shadow: var(--shadow-sm), var(--hairline);
     overflow: hidden;
     overflow-x: auto;
@@ -842,7 +921,7 @@ button.kpi-card {
 }
 
 .dash-table__row:hover {
-    background: #eff6ff;
+    background: var(--color-primary-soft);
 }
 
 .dash-table__row--clickable {
@@ -851,18 +930,17 @@ button.kpi-card {
 }
 
 .dash-table__row--clickable:hover {
-    box-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.55);
+    background: var(--color-primary-soft);
 }
 
 .dash-table__row--clickable:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: -2px;
-    background: #eff6ff;
+    background: var(--color-primary-soft);
 }
 
 .dash-table__row--clickable:active {
-    background: #dbeafe;
-    box-shadow: inset 3px 0 0 var(--color-primary-hover);
+    background: var(--color-primary-soft-2);
 }
 
 .dash-table__row--loading {
@@ -1114,47 +1192,7 @@ button.kpi-card {
     color: #475569;
 }
 
-/* Badges */
-.dash-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    line-height: 1.6;
-}
-
-/* Fase */
-.dash-badge--phase-pg1 {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.dash-badge--phase-pg2 {
-    background: #e0e7ff;
-    color: #3730a3;
-}
-
-/* Estado (pills más redondeados) */
-.dash-badge--status {
-    border-radius: 99px;
-    padding: 4px 12px;
-}
-
-.dash-badge--danger {
-    background: #fef2f2;
-    color: #dc2626;
-}
-
-.dash-badge--warning {
-    background: #fffbeb;
-    color: #d97706;
-}
-
-.dash-badge--urgent {
-    background: #fee2e2;
-    color: #b91c1c;
-}
+/* Los badges de fase/estado usan la primitiva <Badge> del sistema de diseño. */
 
 /* ═══════════════════════════════════════════════════════════════════
    8. RESPONSIVE
@@ -1255,59 +1293,8 @@ button.kpi-card {
    9. SKELETON / LOADING STATES
 ═══════════════════════════════════════════════════════════════════ */
 
-/* Animación shimmer compartida */
-@keyframes shimmer {
-    0% {
-        background-position: -600px 0;
-    }
-
-    100% {
-        background-position: 600px 0;
-    }
-}
-
-.skeleton {
-    background: linear-gradient(90deg,
-            #e2e8f0 25%,
-            #f1f5f9 50%,
-            #e2e8f0 75%);
-    background-size: 600px 100%;
-    animation: shimmer 1.4s ease-in-out infinite;
-    border-radius: 6px;
-}
-
-/* Variantes de tamaño */
-.skeleton--line {
-    height: 14px;
-}
-
-.skeleton--short {
-    width: 40%;
-}
-
-.skeleton--medium {
-    width: 65%;
-}
-
-.skeleton--large {
-    height: 36px;
-    width: 55%;
-    margin-top: 8px;
-}
-
-.skeleton--circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.skeleton--box {
-    width: 56px;
-    height: 56px;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
+/* La primitiva .skeleton (base + variantes + shimmer) vive en components/ui/ui.css,
+   tokenizada y con modo oscuro por herencia. Aquí solo quedan los wrappers de layout. */
 
 /* KPI skeleton */
 .kpi-skeleton {
@@ -1339,85 +1326,8 @@ button.kpi-card {
     flex: 1;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   10. ESTADOS DE ERROR Y VACÍO
-═══════════════════════════════════════════════════════════════════ */
-
-/* Bloque de error */
-.dash-error-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 40px 24px;
-    background: var(--dash-card-bg);
-    border: 1px solid #fecaca;
-    border-radius: 12px;
-    text-align: center;
-    margin-bottom: 32px;
-}
-
-.dash-error-block__icon {
-    color: var(--umg-red);
-}
-
-.dash-error-block__msg {
-    font-size: 0.875rem;
-    color: var(--dash-text-secondary);
-    margin: 0;
-    max-width: 320px;
-}
-
-.dash-error-block__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 18px;
-    background: var(--umg-navy);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity var(--dash-transition);
-}
-
-.dash-error-block__btn:hover {
-    opacity: 0.85;
-}
-
-/* Estado vacío (búsqueda sin resultados) */
-.dash-empty-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 48px 24px;
-    background: var(--dash-card-bg);
-    border: 1px solid var(--dash-border);
-    border-radius: 12px;
-    text-align: center;
-}
-
-.dash-empty-block__icon {
-    color: var(--dash-text-muted);
-    opacity: 0.45;
-}
-
-.dash-empty-block__msg {
-    font-size: 0.9rem;
-    color: var(--dash-text-secondary);
-    margin: 0;
-}
-
-.dash-empty-block__hint {
-    font-size: 0.8rem;
-    color: var(--dash-text-muted);
-    margin: 0;
-}
+/* Los estados de error y vacío del dashboard usan la primitiva <EmptyState>
+   del sistema de diseño (components/ui). Sin estilos locales aquí. */
 
 /* ═══════════════════════════════════════════════════════════════════
    QUICK ROW — KPIs estudiantes + Acciones rápidas
@@ -1430,14 +1340,6 @@ button.kpi-card {
     margin-bottom: 24px;
 }
 
-.dash-section-title {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--dash-text-muted);
-    margin: 0 0 12px;
-}
 
 /* ── Student KPI mini-strip ── */
 .dash-student-kpis {
@@ -1739,22 +1641,11 @@ button.kpi-card {
    Aquí solo se ajustan elementos secundarios al tema azul.
 ═══════════════════════════════════════════════════════════════════ */
 
-/* ── Header: separador neutro fino (premium sobrio) ──────────────── */
-.dash-header {
-    border-bottom: 1px solid var(--border);
-    background: var(--surface-card);
-}
-
 /* ── KPI Cards: elevación premium en hover (sin franja de color) ──── */
 .kpi-card:hover {
     box-shadow: var(--shadow-md), var(--hairline);
     border-color: color-mix(in oklch, var(--color-primary) 30%, var(--dash-border));
-    transform: translateY(-3px);
-}
-
-/* ── Tabla: hover de fila azul ───────────────────────────────────── */
-.dash-table__row:hover {
-    background: #eff6ff;
+    transform: translateY(-2px);
 }
 
 /* ── Acciones rápidas: hover azul marino ─────────────────────────── */
@@ -1776,15 +1667,7 @@ button.kpi-card {
     transition: transform 80ms ease, box-shadow 80ms ease;
 }
 
-/* ── Títulos de sección: etiqueta limpia, sin franja lateral ──────── */
-.dash-section-title {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--dash-text-secondary);
-    margin: 0 0 16px;
-}
+/* Los títulos de sección usan la primitiva .ui-section-head (título + subtítulo). */
 
 /* ─── Toggle de tema (claro / oscuro) ────────────────────────────── */
 .dash-header__theme-toggle {
@@ -1805,11 +1688,10 @@ button.kpi-card {
     background: var(--dash-bg);
     color: var(--dash-text-primary);
     border-color: var(--color-primary-hover);
-    transform: rotate(15deg);
 }
 
 .dash-header__theme-toggle:active {
-    transform: rotate(30deg) scale(0.92);
+    transform: scale(0.94);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1843,10 +1725,6 @@ button.kpi-card {
 
 [data-theme="dark"] .dash-resources__link {
     color: var(--dash-text-secondary);
-}
-
-[data-theme="dark"] .kpi-card__progress-track {
-    background: #334155;
 }
 
 [data-theme="dark"] .kpi-card__icon-box--blue {
@@ -1883,31 +1761,6 @@ button.kpi-card {
     color: #94a3b8;
 }
 
-[data-theme="dark"] .dash-badge--phase-pg1 {
-    background: rgba(30, 64, 175, 0.22);
-    color: #93c5fd;
-}
-
-[data-theme="dark"] .dash-badge--phase-pg2 {
-    background: rgba(55, 48, 163, 0.22);
-    color: #a5b4fc;
-}
-
-[data-theme="dark"] .dash-badge--danger {
-    background: rgba(220, 38, 38, 0.18);
-    color: #fca5a5;
-}
-
-[data-theme="dark"] .dash-badge--warning {
-    background: rgba(217, 119, 6, 0.18);
-    color: #fcd34d;
-}
-
-[data-theme="dark"] .dash-badge--urgent {
-    background: rgba(185, 28, 28, 0.22);
-    color: #fca5a5;
-}
-
 [data-theme="dark"] .dash-skpi {
     background: var(--surface-raised);
 }
@@ -1924,10 +1777,6 @@ button.kpi-card {
     background: #1e293b;
 }
 
-[data-theme="dark"] .skeleton {
-    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-    background-size: 600px 100%;
-}
 
 [data-theme="dark"] .dash-header__search:focus {
     background: var(--dash-card-bg);
@@ -1967,9 +1816,6 @@ button.kpi-card {
     border-color: var(--color-primary);
 }
 
-/* ── Bloque de error: borde rojo translúcido ── */
-[data-theme="dark"] .dash-error-block { border-color: rgba(220, 38, 38, 0.30); }
-
 /* ── Filas clickeables en dark: focus y active visibles ── */
 [data-theme="dark"] .dash-table__row--clickable:focus-visible {
     outline-color: #60a5fa;
@@ -1985,13 +1831,8 @@ button.kpi-card {
     outline-color: #60a5fa;
 }
 
-/* ── Tabla: inset shadow en dark para filas clickeables ── */
-[data-theme="dark"] .dash-table__row--clickable:hover {
-    box-shadow: inset 3px 0 0 rgba(96, 165, 250, 0.55);
-}
-[data-theme="dark"] .dash-table__row--clickable:active {
-    box-shadow: inset 3px 0 0 #3b82f6;
-}
+/* Las filas clickeables usan fondo suave (var(--color-primary-soft*)) en ambos
+   temas; el hover/active dark se cubre arriba con fondos, sin franja lateral. */
 
 /* ── Acciones rápidas: pressed state en dark ── */
 [data-theme="dark"] .dash-qa-card:hover {

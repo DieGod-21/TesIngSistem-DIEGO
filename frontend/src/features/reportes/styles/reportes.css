@@ -13,13 +13,17 @@
 .reportes-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .rep-stat {
-  background: var(--surface-card-grad), var(--surface-card);
+  /* Glow acuarela suave desde el borde superior (profundidad, no neón) +
+     gradiente de superficie + base. Todo tokenizado, adapta a dark. */
+  background:
+    radial-gradient(135% 85% at 50% -22%, color-mix(in oklch, var(--rs-accent) 8%, transparent) 0%, transparent 60%),
+    var(--surface-card-grad), var(--surface-card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   padding: 18px 20px;
   position: relative;
   overflow: hidden;
@@ -45,13 +49,14 @@
   color: var(--text-muted);
   position: relative;
 }
+/* Derivados: valor secundario; el % del total refuerza que dependen del Total. */
 .rep-stat__value {
-  font-size: 1.9rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: var(--rs-accent);
   margin: 4px 0 2px;
   font-variant-numeric: tabular-nums;
-  line-height: 1.15;
+  line-height: 1.1;
   letter-spacing: -0.02em;
   position: relative;
 }
@@ -66,6 +71,12 @@
 .rep-stat--reprobado     { --rs-accent: var(--color-danger); }
 .rep-stat--pendiente     { --rs-accent: var(--text-secondary); }
 .rep-stat--total         { --rs-accent: var(--color-primary); }
+
+/* TOTAL = dato dominante: número mayor, el resto se lee como derivado. */
+.rep-stat--total .rep-stat__value {
+  font-size: 2.6rem;
+  line-height: 1.02;
+}
 
 .reportes-table-card {
   background: var(--surface-card-grad), var(--surface-card);
@@ -194,15 +205,15 @@
 .report-detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: 18px;
+  gap: 20px;
 }
 @media (max-width: 1024px) {
   .report-detail-grid { grid-template-columns: 1fr; }
 }
 
 .report-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px 20px;
   display: flex;
@@ -215,7 +226,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .report-evaluator {
@@ -224,32 +235,39 @@
   gap: 12px;
   align-items: baseline;
   padding: 10px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
-.report-evaluator__name { font-weight: 600; color: #0f172a; font-size: 0.9rem; }
+.report-evaluator__name { font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
 .report-evaluator__score {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   font-size: 1rem;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 .report-evaluator__comment {
   grid-column: 1 / -1;
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--text-secondary);
   line-height: 1.45;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed var(--border);
   padding-top: 8px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
    DARK THEME — overrides
 ═══════════════════════════════════════════════════════════════════ */
-[data-theme="dark"] .rep-stat,
 [data-theme="dark"] .reportes-table-card,
 [data-theme="dark"] .report-card {
     background: var(--dash-card-bg);
+    border-color: var(--dash-border);
+    color: var(--dash-text-primary);
+}
+/* KPI cards: conservan el glow acuarela (un poco más presente sobre superficie oscura) */
+[data-theme="dark"] .rep-stat {
+    background:
+        radial-gradient(135% 85% at 50% -22%, color-mix(in oklch, var(--rs-accent) 15%, transparent) 0%, transparent 60%),
+        var(--surface-card-grad), var(--surface-card);
     border-color: var(--dash-border);
     color: var(--dash-text-primary);
 }
@@ -319,12 +337,19 @@
 /* ═══════════════════════════════════════════════════════════════════
    CARD HOVER ELEVATION (light + dark)
 ═══════════════════════════════════════════════════════════════════ */
-.rep-stat,
-.report-card {
-    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+/* Stat cards (pequeñas, tipo KPI): elevación sutil intencional. */
+.rep-stat {
+    transition: transform 200ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
 }
-.rep-stat:hover,
+.rep-stat:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+/* Tarjetas de detalle informativas: estables (sin desplazamiento en hover). */
+.report-card {
+    transition: box-shadow 200ms var(--ease-out-expo), border-color 200ms var(--ease-out-expo);
+}
 .report-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--dash-shadow-md);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
 }

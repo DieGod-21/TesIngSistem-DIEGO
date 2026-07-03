@@ -7,12 +7,12 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { BarChart3, Search, RefreshCw, ChevronRight } from 'lucide-react';
+import { BarChart3, Search, RefreshCw, ChevronRight, Lock, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getGlobalTernasReport } from '../../../services/reportesService';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
-import { Button, PageHeader } from '../../../components/ui';
+import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
 import '../styles/reportes.css';
 import '../../../styles/transitions.css';
 
@@ -74,9 +74,12 @@ const ReportesPage: React.FC = () => {
     if (!isAdmin) {
         return (
             <div className="reportes-page">
-                <div className="terror" role="alert">
-                    Esta sección es solo para administradores.
-                </div>
+                <EmptyState
+                    tone="neutral"
+                    icon={<Lock size={26} />}
+                    title="Acceso restringido"
+                    description="Esta sección es solo para administradores."
+                />
             </div>
         );
     }
@@ -105,11 +108,11 @@ const ReportesPage: React.FC = () => {
                 )}
 
                 <div className="reportes-toolbar" style={loading ? { display: 'none' } : undefined}>
-                    <div className="sl-filter-search" style={{ flex: 1, minWidth: 220 }}>
-                        <Search size={14} className="sl-filter-search__icon" aria-hidden="true" />
+                    <div className="ui-search" style={{ flex: 1, minWidth: 220 }}>
+                        <Search size={15} className="ui-search__icon" aria-hidden="true" />
                         <input
                             type="text"
-                            className="sl-filter-search__input"
+                            className="ui-search__input"
                             placeholder="Buscar por estudiante, carnet o proyecto…"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
@@ -137,24 +140,26 @@ const ReportesPage: React.FC = () => {
 
                 {loading && <ReportesSkeleton />}
                 {!loading && error && (
-                    <div className="terror" role="alert">
-                        {error}
-                        <div style={{ marginTop: 10 }}>
-                            <Button variant="secondary" size="sm" onClick={load}>Reintentar</Button>
-                        </div>
-                    </div>
+                    <EmptyState
+                        tone="danger"
+                        icon={<AlertTriangle size={26} />}
+                        title="No se pudo cargar el reporte"
+                        description={error}
+                        action={
+                            <Button variant="secondary" onClick={load}>
+                                <RefreshCw size={16} aria-hidden="true" /> Reintentar
+                            </Button>
+                        }
+                    />
                 )}
                 {!loading && !error && filtered.length === 0 && (
-                    <div className="tempty">
-                        <p style={{ margin: 0, fontWeight: 600 }}>
-                            {ternas.length === 0 ? 'No hay ternas registradas' : 'Sin resultados para los filtros actuales'}
-                        </p>
-                        <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>
-                            {ternas.length === 0
-                                ? 'El reporte global está vacío.'
-                                : 'Prueba ajustar la búsqueda o el filtro de resolución.'}
-                        </p>
-                    </div>
+                    <EmptyState
+                        icon={<BarChart3 size={26} />}
+                        title={ternas.length === 0 ? 'No hay ternas registradas' : 'Sin resultados'}
+                        description={ternas.length === 0
+                            ? 'El reporte global está vacío.'
+                            : 'Prueba ajustar la búsqueda o el filtro de resolución.'}
+                    />
                 )}
 
                 {!loading && !error && filtered.length > 0 && (
@@ -199,7 +204,7 @@ const ReportesPage: React.FC = () => {
                                             )}
                                         </td>
                                         <td><ResolutionBadge value={t.resolucion} /></td>
-                                        <td style={{ textAlign: 'right', color: '#94a3b8' }}>
+                                        <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
                                             <ChevronRight size={16} aria-hidden="true" />
                                         </td>
                                     </tr>
@@ -220,9 +225,9 @@ const ReportesSkeleton: React.FC = () => (
         <div className="reportes-summary">
             {[...Array(5)].map((_, i) => (
                 <div key={i} className="rep-stat" style={{ pointerEvents: 'none' }}>
-                    <div className="skeleton skeleton--line skeleton--short" style={{ marginBottom: 10 }} />
-                    <div className="skeleton skeleton--large" />
-                    <div className="skeleton skeleton--line skeleton--medium" style={{ marginTop: 8 }} />
+                    <Skeleton size="short" style={{ marginBottom: 10 }} />
+                    <Skeleton size="large" />
+                    <Skeleton size="medium" style={{ marginTop: 8 }} />
                 </div>
             ))}
         </div>
@@ -230,13 +235,13 @@ const ReportesSkeleton: React.FC = () => (
         <div className="reportes-table-card" style={{ overflow: 'hidden' }}>
             {[...Array(6)].map((_, i) => (
                 <div key={i} className="dash-skeleton-row">
-                    <div className="skeleton" style={{ width: 28, height: 28, borderRadius: 6, flexShrink: 0 }} />
+                    <Skeleton width={28} height={28} radius={6} style={{ flexShrink: 0 }} />
                     <div className="dash-skeleton-row__lines">
-                        <div className="skeleton skeleton--line skeleton--medium" />
-                        <div className="skeleton skeleton--line skeleton--short" />
+                        <Skeleton size="medium" />
+                        <Skeleton size="short" />
                     </div>
-                    <div className="skeleton skeleton--line" style={{ width: 70 }} />
-                    <div className="skeleton skeleton--line" style={{ width: 90 }} />
+                    <Skeleton width={70} />
+                    <Skeleton width={90} />
                 </div>
             ))}
         </div>

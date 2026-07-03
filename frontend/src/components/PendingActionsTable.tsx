@@ -10,7 +10,15 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { getEstudianteByCarnet } from '../services/estudiantesService';
+import { Badge, type BadgeTone } from './ui';
 import type { PendingAction } from '../services/dashboardService';
+
+/** Traduce el énfasis de la acción a un tono del sistema de diseño. */
+const ACTION_TONE: Record<PendingAction['actionVariant'], BadgeTone> = {
+    danger:  'danger',
+    warning: 'warning',
+    urgent:  'danger',
+};
 
 interface PendingActionsTableProps {
     actions: PendingAction[];
@@ -92,18 +100,14 @@ const PendingActionsTable: React.FC<PendingActionsTableProps> = ({ actions }) =>
                                 {/* Proyecto / Fase */}
                                 <td className="dash-table__td">
                                     <p className="dash-table__project">{row.projectTitle}</p>
-                                    <span className={`dash-badge dash-badge--phase-${row.phase.toLowerCase()}`}>
-                                        {row.phase}
-                                    </span>
+                                    <Badge tone="neutral">{row.phase}</Badge>
                                 </td>
 
                                 {/* Acción */}
                                 <td className="dash-table__td">
-                                    <span
-                                        className={`dash-badge dash-badge--status dash-badge--${row.actionVariant}`}
-                                    >
+                                    <Badge tone={ACTION_TONE[row.actionVariant]} dot>
                                         {row.actionLabel}
-                                    </span>
+                                    </Badge>
                                 </td>
 
                                 {/* Límite */}

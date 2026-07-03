@@ -12,7 +12,7 @@ import { ClipboardList, Users, AlertTriangle, RefreshCw, Inbox } from 'lucide-re
 import TernaCard from '../components/TernaCard';
 import { useTernas } from '../hooks/useTernas';
 import { useAuth } from '../../../context/AuthContext';
-import { PageHeader, Button, EmptyState } from '../../../components/ui';
+import { PageHeader, Button, EmptyState, Skeleton } from '../../../components/ui';
 import type { EstadoTerna } from '../../../types/api';
 import '../styles/ternas.css';
 
@@ -29,10 +29,10 @@ const TernasSkeleton: React.FC = () => (
     <div className="ternas-grid" aria-busy="true" aria-label="Cargando ternas…">
         {[0, 1, 2, 3].map((i) => (
             <div key={i} className="terna-card" style={{ pointerEvents: 'none' }}>
-                <div className="skeleton skeleton--line skeleton--short" />
-                <div className="skeleton skeleton--line skeleton--medium" />
-                <div className="skeleton skeleton--line skeleton--medium" />
-                <div className="skeleton skeleton--line skeleton--short" />
+                <Skeleton size="short" />
+                <Skeleton size="medium" />
+                <Skeleton size="medium" />
+                <Skeleton size="short" />
             </div>
         ))}
     </div>
@@ -78,7 +78,7 @@ const TernasListPage: React.FC = () => {
                             {f.label}
                         </button>
                     ))}
-                    <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: '#64748b' }}>
+                    <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                         <Users size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
                         {ternas.length} resultado{ternas.length !== 1 ? 's' : ''}
                     </span>

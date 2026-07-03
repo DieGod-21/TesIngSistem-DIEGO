@@ -15,10 +15,11 @@
  *   - Restaura foco al elemento que lo abrió
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from './ui';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 type Variant = 'danger' | 'primary' | 'warning';
 
@@ -49,33 +50,18 @@ const ConfirmModal: React.FC<Props> = ({
     onCancel,
     showIcon,
 }) => {
-    const confirmBtnRef = useRef<HTMLButtonElement>(null);
-    const previousFocusRef = useRef<HTMLElement | null>(null);
     const label = confirmText ?? confirmLabel ?? (variant === 'danger' ? 'Eliminar' : 'Confirmar');
     const displayIcon = showIcon ?? variant === 'danger';
 
+    // Foco inicial (botón confirmar via data-autofocus), Escape y focus-trap.
+    const modalRef = useFocusTrap<HTMLDivElement>(true, () => { if (!loading) onCancel(); });
+
+    // Bloquea scroll del body mientras está abierto.
     useEffect(() => {
-        previousFocusRef.current = document.activeElement as HTMLElement | null;
-        confirmBtnRef.current?.focus();
-
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && !loading) {
-                e.stopPropagation();
-                onCancel();
-            }
-        };
-        document.addEventListener('keydown', onKey);
-
-        // Bloquea scroll del body mientras está abierto
         const prevOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
-
-        return () => {
-            document.removeEventListener('keydown', onKey);
-            document.body.style.overflow = prevOverflow;
-            previousFocusRef.current?.focus?.();
-        };
-    }, [loading, onCancel]);
+        return () => { document.body.style.overflow = prevOverflow; };
+    }, []);
 
     // El botón primario usa la variante de peligro salvo confirmaciones neutras.
     const confirmVariant = variant === 'danger' ? 'danger' : 'primary';
@@ -89,7 +75,7 @@ const ConfirmModal: React.FC<Props> = ({
             aria-labelledby="cfm-title"
             aria-describedby="cfm-msg"
         >
-            <div className="ui-modal">
+            <div className="ui-modal" ref={modalRef}>
                 {displayIcon && (
                     <div className={`ui-modal__icon ui-modal__icon--${variant}`} aria-hidden="true">
                         <AlertTriangle size={22} />
@@ -102,7 +88,7 @@ const ConfirmModal: React.FC<Props> = ({
                         {cancelText}
                     </Button>
                     <Button
-                        ref={confirmBtnRef}
+                        data-autofocus
                         variant={confirmVariant}
                         onClick={() => onConfirm()}
                         loading={loading}

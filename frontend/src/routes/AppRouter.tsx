@@ -39,7 +39,7 @@ const AuthLoadingScreen: React.FC = () => (
             alignItems: 'center',
             justifyContent: 'center',
             height: '100vh',
-            background: '#f1f5f9',
+            background: 'var(--surface-base)',
         }}
         aria-label="Verificando sesión…"
         role="status"
@@ -48,8 +48,8 @@ const AuthLoadingScreen: React.FC = () => (
             style={{
                 width: 40,
                 height: 40,
-                border: '3px solid #e2e8f0',
-                borderTopColor: '#003366',
+                border: '3px solid var(--border)',
+                borderTopColor: 'var(--color-primary)',
                 borderRadius: '50%',
                 animation: 'spin 0.8s linear infinite',
             }}

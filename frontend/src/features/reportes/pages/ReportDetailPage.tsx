@@ -8,11 +8,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
-import { ChevronLeft, FileText, Users } from 'lucide-react';
+import { ChevronLeft, FileText, Users, Lock, AlertTriangle, RefreshCw, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getTernaReport, type ReporteTernaDetalle } from '../../../services/reportesService';
 import { ResolutionBadge } from './ReportesPage';
-import { Button } from '../../../components/ui';
+import { Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
 import '../styles/reportes.css';
 import '../../ternas/styles/ternas.css';
 
@@ -21,14 +21,14 @@ const ReportDetailSkeleton: React.FC = () => (
         {[0, 1].map((i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div className="report-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div className="skeleton skeleton--line skeleton--short" />
-                    <div className="skeleton skeleton--line skeleton--medium" />
-                    <div className="skeleton skeleton--line skeleton--short" />
+                    <Skeleton size="short" />
+                    <Skeleton size="medium" />
+                    <Skeleton size="short" />
                 </div>
                 <div className="report-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div className="skeleton skeleton--line skeleton--medium" />
-                    <div className="skeleton skeleton--line skeleton--medium" />
-                    <div className="skeleton skeleton--line skeleton--short" />
+                    <Skeleton size="medium" />
+                    <Skeleton size="medium" />
+                    <Skeleton size="short" />
                 </div>
             </div>
         ))}
@@ -68,7 +68,12 @@ const ReportDetailPage: React.FC = () => {
     if (!isAdmin) {
         return (
             <div className="reportes-page">
-                <div className="terror" role="alert">Esta sección es solo para administradores.</div>
+                <EmptyState
+                    tone="neutral"
+                    icon={<Lock size={26} />}
+                    title="Acceso restringido"
+                    description="Esta sección es solo para administradores."
+                />
             </div>
         );
     }
@@ -86,46 +91,51 @@ const ReportDetailPage: React.FC = () => {
 
                 {loading && <ReportDetailSkeleton />}
                 {!loading && error && (
-                    <div className="terror" role="alert">
-                        {error}
-                        <div style={{ marginTop: 10 }}>
+                    <EmptyState
+                        tone="danger"
+                        icon={<AlertTriangle size={26} />}
+                        title="No se pudo cargar el reporte"
+                        description={error}
+                        action={
                             <Button
                                 variant="secondary"
-                                size="sm"
                                 onClick={() => { const n = Number(id); if (Number.isFinite(n)) load(n); }}
                             >
-                                Reintentar
+                                <RefreshCw size={16} aria-hidden="true" /> Reintentar
                             </Button>
-                        </div>
-                    </div>
+                        }
+                    />
                 )}
                 {!loading && !error && !report && (
-                    <div className="tempty">No se encontró el reporte solicitado.</div>
+                    <EmptyState
+                        icon={<FileText size={26} />}
+                        title="Reporte no encontrado"
+                        description="No se encontró el reporte solicitado."
+                    />
                 )}
 
                 {!loading && !error && report && (
                     <>
-                        <header className="ternas-page__header">
-                            <h1 className="ternas-page__title">
-                                Reporte Terna #{String(report.numero).padStart(2, '0')}
-                                {' '}
-                                <ResolutionBadge value={report.resultado?.resolucion ?? 'pendiente'} />
-                            </h1>
-                            <p className="ternas-page__subtitle">
-                                <FileText size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                                {report.proyecto?.titulo || 'Sin título'}
-                                {report.proyecto?.fase && <span style={{ marginLeft: 8 }}>· {report.proyecto.fase}</span>}
-                            </p>
-                        </header>
+                        <PageHeader
+                            kicker="Analítica"
+                            icon={<BarChart3 size={22} />}
+                            title={
+                                <span className="ui-title-inline">
+                                    Reporte Terna #{String(report.numero).padStart(2, '0')}
+                                    <ResolutionBadge value={report.resultado?.resolucion ?? 'pendiente'} />
+                                </span>
+                            }
+                            subtitle={`${report.proyecto?.titulo || 'Sin título'}${report.proyecto?.fase ? ` · ${report.proyecto.fase}` : ''}`}
+                        />
 
                         <div className="report-detail-grid">
                             <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                 <article className="report-card">
                                     <h2 className="report-card__title">Estudiante</h2>
-                                    <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>
+                                    <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                                         {report.estudiante?.nombre}
                                     </p>
-                                    <p style={{ margin: 0, color: '#64748b' }}>
+                                    <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
                                         <span className="rep-carnet">{report.estudiante?.carnet}</span>
                                         {report.estudiante?.email && <> · {report.estudiante.email}</>}
                                     </p>
@@ -171,7 +181,7 @@ const ReportDetailPage: React.FC = () => {
                                     <h2 className="report-card__title">Resultado ponderado</h2>
                                     <dl className="tdetail-meta">
                                         <dt>Promedio</dt>
-                                        <dd style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a' }}>
+                                        <dd style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                                             {report.resultado?.promedio != null
                                                 ? Number(report.resultado.promedio).toFixed(2)
                                                 : '— (faltan evaluaciones)'}
@@ -191,7 +201,7 @@ const ReportDetailPage: React.FC = () => {
                                 {report.razon && (
                                     <article className="report-card">
                                         <h2 className="report-card__title">Conclusión</h2>
-                                        <p style={{ margin: 0, color: '#334155', lineHeight: 1.5 }}>
+                                        <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                                             {report.razon}
                                         </p>
                                     </article>

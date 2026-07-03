@@ -161,7 +161,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                 <>
                     <div className="eval-form__row">
                         <label htmlFor="ev-score" className="eval-form__label">
-                            Calificación <small style={{ color: '#94a3b8' }}>(0–100)</small>
+                            Calificación <small style={{ color: 'var(--text-muted)' }}>(0–100)</small>
                         </label>
                         <input
                             id="ev-score"
@@ -178,7 +178,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                             aria-describedby={scoreError ? 'ev-score-error' : 'ev-score-hint'}
                         />
                         {scoreError ? (
-                            <span id="ev-score-error" className="eval-form__hint" style={{ color: '#b91c1c' }}>
+                            <span id="ev-score-error" className="eval-form__hint" style={{ color: 'var(--color-danger)' }}>
                                 {scoreError}
                             </span>
                         ) : (
@@ -222,7 +222,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
 
             {isAdmin && terna.evaluadores.some((e) => e.eval_estado === 'enviada') && (
                 <details style={{ marginTop: 14 }}>
-                    <summary style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#475569' }}>
+                    <summary style={{ cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         Acciones de administrador
                     </summary>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
@@ -253,7 +253,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                             <br />
                             Una vez enviada no podrás modificarla (solo el administrador puede reabrirla).
                             <br />
-                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                                 ¿Deseas continuar?
                             </span>
                         </>

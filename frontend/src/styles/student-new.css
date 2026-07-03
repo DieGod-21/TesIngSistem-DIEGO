@@ -389,7 +389,6 @@
 
 .sn-dropzone__icon {
     color: var(--color-primary);
-    animation: sn-float 3.2s ease-in-out infinite;
     transition: color 200ms ease;
 }
 
@@ -707,16 +706,6 @@
 
 @keyframes sn-spin {
     to { transform: rotate(360deg); }
-}
-
-@keyframes dropzone-pulse {
-    0%, 100% { box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.08); }
-    50%       { box-shadow: 0 0 0 10px rgba(200, 16, 46, 0.03); }
-}
-
-@keyframes sn-float {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-7px); }
 }
 
 .sn-uploading__text {
