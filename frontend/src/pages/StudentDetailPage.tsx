@@ -190,8 +190,8 @@ const StudentDetailPage: React.FC = () => {
                         )}
                     </header>
 
-                    <div className="terna-detail-grid">
-                        <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div className="terna-detail-grid sd-detail-grid">
+                        <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                             <article className="tdetail-card">
                                 <h2 className="tdetail-card__title">
                                     <GraduationCap size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />

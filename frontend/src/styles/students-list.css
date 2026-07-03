@@ -31,6 +31,23 @@
    Margen inferior propio de esta página para separar de la barra de filtros. */
 .sl-body .ui-stat-grid { margin-bottom: 24px; }
 
+/* Segmento de alcance (Todos / Aprueban / No aprueban): filtro nativo del módulo,
+   siempre visible. Reutiliza .sl-status-tabs / .sl-status-tab. */
+.sl-scope {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.sl-scope__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--dash-text-muted);
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    3. BARRA DE FILTROS
 ═══════════════════════════════════════════════════════════════════ */

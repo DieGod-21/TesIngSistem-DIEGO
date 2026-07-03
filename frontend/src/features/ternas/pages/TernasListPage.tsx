@@ -106,7 +106,7 @@ const TernasListPage: React.FC = () => {
                         title="No hay ternas que mostrar"
                         description={
                             isAdmin
-                                ? 'Aún no se han creado ternas en el sistema.'
+                                ? 'Las ternas se generan en el sistema de Control de Notas al asignar evaluadores a un proyecto. Aparecerán aquí automáticamente en cuanto existan.'
                                 : 'No tienes ternas asignadas en este momento.'
                         }
                     />

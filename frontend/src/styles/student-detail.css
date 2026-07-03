@@ -194,8 +194,8 @@
     background: var(--surface-card-grad), var(--surface-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
-    padding: 24px 28px;
-    box-shadow: var(--shadow-sm), var(--hairline);
+    padding: 28px 32px;
+    box-shadow: var(--shadow-md), var(--hairline);
 }
 
 /* Bloque de identidad (izquierda) */
@@ -327,12 +327,27 @@
 .sd-detail-side {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     min-width: 0;
 }
 
+/* ── Detalle de estudiante: más aire y tarjetas "flotantes" (Product Polish).
+   Ámbito acotado a .sd-detail-grid para no alterar el detalle de Ternas. ── */
+.sd-detail-grid { gap: 24px; }
+.sd-detail-grid .tdetail-card {
+    padding: 22px 24px;
+    box-shadow: var(--shadow-md), var(--hairline);
+}
+.sd-detail-grid .tdetail-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-strong);
+}
+.sd-detail-grid .tsb-card {
+    box-shadow: var(--shadow-md), var(--hairline);
+}
+
 /* ── Grade rows: 4-column grid (name | score | chip | edit btn) ── */
-.sd-grade-rows { gap: 10px; }
+.sd-grade-rows { gap: 12px; }
 .sd-grade-rows .tdetail-evaluator {
     grid-template-columns: 1fr auto auto auto;
     gap: 4px 18px;

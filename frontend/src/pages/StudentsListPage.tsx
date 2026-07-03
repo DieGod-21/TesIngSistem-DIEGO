@@ -19,7 +19,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import {
     Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight,
-    RefreshCw, Users, X, CheckCircle2, AlertTriangle, Upload,
+    RefreshCw, Users, AlertTriangle, Upload,
 } from 'lucide-react';
 import { useEstudiantesList } from '../hooks/useEstudiantesList';
 import { initials } from '../utils/strings';
@@ -37,6 +37,13 @@ import '../styles/transitions.css';
 const LIMIT_OPTIONS = [10, 20, 50, 100] as const;
 
 type TesisFilter = 'aprobados' | 'reprobados';
+
+/** Segmentos de alcance del módulo: filtro nativo de estudiantes por estado de tesis. */
+const SCOPES: { label: string; match: TesisFilter | null; status: 'approved' | 'failed' | null }[] = [
+    { label: 'Todos',          match: null,         status: null },
+    { label: 'Aprueban tesis', match: 'aprobados',  status: 'approved' },
+    { label: 'No aprueban',    match: 'reprobados',  status: 'failed' },
+];
 
 /**
  * Acepta tanto ?status=approved|failed (preferido) como ?filter=aprobados|reprobados
@@ -66,12 +73,28 @@ const StudentsListPage: React.FC = () => {
     );
     const [importOpen, setImportOpen] = useState(false);
 
+    /** Cambia el alcance conservando la búsqueda activa; normaliza el alias heredado `filter`. */
+    const buildScopeTo = (status: 'approved' | 'failed' | null): string => {
+        const qp = new URLSearchParams(location.search);
+        qp.delete('filter');
+        if (status) qp.set('status', status);
+        else qp.delete('status');
+        const q = qp.toString();
+        return q ? `/students?${q}` : '/students';
+    };
+
     return (
         <div className="sl-body">
                 <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
                 <nav className="sn-breadcrumb" aria-label="Navegación secundaria">
-                    <span className="sn-breadcrumb__item">Inicio</span>
+                    <button
+                        type="button"
+                        className="sn-breadcrumb__item sn-breadcrumb__link"
+                        onClick={() => history.push('/')}
+                    >
+                        Inicio
+                    </button>
                     <ChevronRight size={14} className="sn-breadcrumb__sep" />
                     <span className="sn-breadcrumb__item sn-breadcrumb__item--active">Estudiantes</span>
                 </nav>
@@ -79,7 +102,7 @@ const StudentsListPage: React.FC = () => {
                 <PageHeader
                     kicker="Gestión académica"
                     icon={<Users size={22} />}
-                    title={<span className="ui-title-inline">Estudiantes{filter && <FilterPill filter={filter} />}</span>}
+                    title="Estudiantes"
                     subtitle="Consulta la información, notas y elegibilidad de tesis de los estudiantes registrados."
                     actions={
                         <Button onClick={() => setImportOpen(true)}>
@@ -89,12 +112,22 @@ const StudentsListPage: React.FC = () => {
                     }
                 />
 
-                {filter && (
-                    <FilterBanner
-                        filter={filter}
-                        onClear={() => history.replace('/students')}
-                    />
-                )}
+                <div className="sl-scope" role="group" aria-label="Filtrar estudiantes por estado de tesis">
+                    <span className="sl-scope__label">Ver</span>
+                    <div className="sl-status-tabs">
+                        {SCOPES.map((s) => (
+                            <button
+                                key={s.label}
+                                type="button"
+                                className={`sl-status-tab${filter === s.match ? ' sl-status-tab--active' : ''}`}
+                                aria-pressed={filter === s.match}
+                                onClick={() => history.push(buildScopeTo(s.status))}
+                            >
+                                {s.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 <div key={filter ?? 'default'} className="view-transition">
                     {filter
@@ -423,55 +456,6 @@ const TesisFilteredView: React.FC<{
 };
 
 // ─── Subcomponentes ──────────────────────────────────────────────────────
-
-const FilterPill: React.FC<{ filter: TesisFilter }> = ({ filter }) => {
-    const isApproved = filter === 'aprobados';
-    return (
-        <span
-            className="sl-filter-pill"
-            aria-label={`Filtro activo: ${isApproved ? 'aprobados' : 'no aprobados'}`}
-        >
-            <span className="sl-filter-pill__dot" aria-hidden="true" />
-            {isApproved ? 'Aprobados' : 'No aprobados'}
-        </span>
-    );
-};
-
-const FilterBanner: React.FC<{ filter: TesisFilter; onClear: () => void }> = ({ filter, onClear }) => {
-    const isApproved = filter === 'aprobados';
-    return (
-        <div
-            role="status"
-            className="sl-filter-banner"
-            style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 14px', borderRadius: 10, marginBottom: 16,
-                background: `color-mix(in oklch, ${isApproved ? 'var(--color-success)' : 'var(--color-danger)'} 14%, transparent)`,
-                color:      isApproved ? 'var(--color-success)' : 'var(--color-danger)',
-                border: `1px solid color-mix(in oklch, ${isApproved ? 'var(--color-success)' : 'var(--color-danger)'} 30%, transparent)`,
-            }}
-        >
-            {isApproved
-                ? <CheckCircle2 size={18} aria-hidden="true" />
-                : <AlertTriangle size={18} aria-hidden="true" />}
-            <span style={{ fontWeight: 600 }}>
-                Filtro activo: {isApproved ? 'Aprueban tesis' : 'No aprueban tesis'}
-            </span>
-            <button
-                type="button"
-                onClick={onClear}
-                aria-label="Limpiar filtro"
-                style={{
-                    marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
-                    background: 'transparent', border: 0, cursor: 'pointer',
-                    color: 'inherit', fontWeight: 600, padding: '4px 8px', borderRadius: 6,
-                }}
-            >
-                <X size={14} aria-hidden="true" /> Limpiar
-            </button>
-        </div>
-    );
-};
 
 const TableSkeleton: React.FC<{ rows: number; cols: number }> = ({ rows, cols }) => (
     <>
