@@ -27,20 +27,20 @@ interface TesisListResp {
 }
 
 /** GET /api/tesis/aprobados — estudiantes que aprueban tesis. */
-export async function getAprobadosTesis(): Promise<TesisListResp> {
-    const data = await apiGet<TesisListResp>(API_PATHS.tesis.aprobados);
+export async function getAprobadosTesis(opts: { signal?: AbortSignal } = {}): Promise<TesisListResp> {
+    const data = await apiGet<TesisListResp>(API_PATHS.tesis.aprobados, { signal: opts.signal });
     return normalize(data);
 }
 
 /** GET /api/tesis/reprobados — estudiantes que no cumplen con tesis. */
-export async function getReprobadosTesis(): Promise<TesisListResp> {
-    const data = await apiGet<TesisListResp>(API_PATHS.tesis.reprobados);
+export async function getReprobadosTesis(opts: { signal?: AbortSignal } = {}): Promise<TesisListResp> {
+    const data = await apiGet<TesisListResp>(API_PATHS.tesis.reprobados, { signal: opts.signal });
     return normalize(data);
 }
 
 /** GET /api/tesis/estado/{carnet} — estado de tesis calculado por el servidor. */
-export async function getTesisEstadoByCarnet(carnet: string): Promise<EstadoTesis> {
-    return apiGet<EstadoTesis>(API_PATHS.tesis.byCarnet(carnet));
+export async function getTesisEstadoByCarnet(carnet: string, opts: { signal?: AbortSignal } = {}): Promise<EstadoTesis> {
+    return apiGet<EstadoTesis>(API_PATHS.tesis.byCarnet(carnet), { signal: opts.signal });
 }
 
 function normalize(d: Partial<TesisListResp> | null | undefined): TesisListResp {

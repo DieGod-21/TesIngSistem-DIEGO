@@ -8,6 +8,7 @@
 
 import { apiFetch } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { invalidateEstudiantes } from './estudiantesService';
 import type { StudentDTO } from '../types/dto';
 import type { Student } from '../types/student';
 import { adaptStudent } from '../adapters/studentAdapter';
@@ -35,5 +36,7 @@ export async function createStudent(payload: StudentPayload): Promise<Student> {
             email:  payload.correoInstitucional.trim(),
         }),
     });
+    // Alta de estudiante: invalidar el padrón cacheado para reflejarla.
+    invalidateEstudiantes();
     return adaptStudent(dto);
 }

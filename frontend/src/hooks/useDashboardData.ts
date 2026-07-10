@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { getDashboardSummary, getPendingActions } from '../services/dashboardService';
+import { isCancel } from '../services/apiClient';
 import type { DashboardSummary, PendingAction } from '../services/dashboardService';
 import type { AsyncState } from '../types/async';
 
@@ -21,12 +22,14 @@ export function useDashboardData() {
 
     // ── Carga de resumen ─────────────────────────────────────────────
 
-    const loadSummary = useCallback(async () => {
+    const loadSummary = useCallback(async (signal?: AbortSignal) => {
         setSummary({ status: 'loading' });
         try {
-            const data = await getDashboardSummary();
+            const data = await getDashboardSummary({ signal });
+            if (signal?.aborted) return;
             setSummary({ status: 'success', data });
         } catch (err) {
+            if (signal?.aborted || isCancel(err)) return;
             setSummary({
                 status: 'error',
                 message: err instanceof Error ? err.message : 'Error al cargar datos',
@@ -36,12 +39,14 @@ export function useDashboardData() {
 
     // ── Carga de acciones pendientes ─────────────────────────────────
 
-    const loadActions = useCallback(async (query: string) => {
+    const loadActions = useCallback(async (query: string, signal?: AbortSignal) => {
         setTableState({ status: 'loading' });
         try {
-            const data = await getPendingActions(query);
+            const data = await getPendingActions(query, { signal });
+            if (signal?.aborted) return;
             setTableState({ status: 'success', data });
         } catch (err) {
+            if (signal?.aborted || isCancel(err)) return;
             setTableState({
                 status: 'error',
                 message: err instanceof Error ? err.message : 'Error al cargar expedientes',
@@ -50,13 +55,19 @@ export function useDashboardData() {
     }, []);
 
     // ── Efectos de carga inicial ─────────────────────────────────────
+    // Resumen y expedientes son independientes → se cargan concurrentemente
+    // (efectos separados). Cada uno se cancela por su cuenta al navegar.
 
     useEffect(() => {
-        loadSummary();
+        const controller = new AbortController();
+        loadSummary(controller.signal);
+        return () => controller.abort();
     }, [loadSummary]);
 
     useEffect(() => {
-        loadActions(searchQuery);
+        const controller = new AbortController();
+        loadActions(searchQuery, controller.signal);
+        return () => controller.abort();
     }, [searchQuery, loadActions]);
 
     // ── Handler para búsqueda ────────────────────────────────────────

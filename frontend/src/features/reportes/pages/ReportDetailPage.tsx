@@ -11,6 +11,7 @@ import { useHistory, useParams } from 'react-router-dom';
 import { ChevronLeft, FileText, Users, AlertTriangle, RefreshCw, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getTernaReport, type ReporteTernaDetalle } from '../../../services/reportesService';
+import { isCancel } from '../../../services/apiClient';
 import { ResolutionBadge } from './ReportesPage';
 import { Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
@@ -44,15 +45,18 @@ const ReportDetailPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const load = React.useCallback(async (numId: number) => {
+    const load = React.useCallback(async (numId: number, signal?: AbortSignal) => {
         setLoading(true);
         setError(null);
         try {
-            setReport(await getTernaReport(numId));
+            const report = await getTernaReport(numId, { signal });
+            if (signal?.aborted) return;
+            setReport(report);
         } catch (e) {
+            if (signal?.aborted || isCancel(e)) return;
             setError(e instanceof Error ? e.message : 'No se pudo cargar el reporte.');
         } finally {
-            setLoading(false);
+            if (!signal?.aborted) setLoading(false);
         }
     }, []);
 
@@ -63,7 +67,9 @@ const ReportDetailPage: React.FC = () => {
             setLoading(false);
             return;
         }
-        load(numId);
+        const controller = new AbortController();
+        load(numId, controller.signal);
+        return () => controller.abort();
     }, [id, load]);
 
     // Defensa en profundidad: la ruta ya está protegida por RoleRoute; la página

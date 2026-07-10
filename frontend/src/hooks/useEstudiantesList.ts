@@ -12,19 +12,18 @@
  *   volumen actual de una coordinación de PG (decenas/cientos de registros).
  *
  * SALVAGUARDA:
- *   Se pide hasta `FETCH_ALL_LIMIT` registros. Si la API devuelve exactamente
- *   ese número, es probable que existan más y el conjunto esté truncado: la
- *   búsqueda/paginación local sería incompleta. En ese caso `atLimit` se pone a
- *   true (para avisar en la UI) y se emite un warning. Si esto ocurre de forma
- *   habitual, migrar a búsqueda + paginación server-side con normalización de
- *   acentos (ver deuda técnica).
+ *   El padrón se obtiene del registro COMPARTIDO (`getEstudiantesRegistry`),
+ *   cacheado y deduplicado. La detección de truncamiento usa la metadata de
+ *   paginación del backend (no se asume `length == total`): si el conjunto
+ *   podría estar incompleto, `atLimit` se pone a true (aviso en UI) y el
+ *   servicio emite telemetría + warning en desarrollo. Si ocurre de forma
+ *   habitual, migrar a búsqueda + paginación server-side (ver deuda técnica).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { listEstudiantes } from '../services/estudiantesService';
+import { getEstudiantesRegistry } from '../services/estudiantesService';
 import { isCancel } from '../services/apiClient';
 import { matchesText } from '../utils/text';
-import { FETCH_ALL_LIMIT } from '../config/apiConfig';
 import type { Estudiante } from '../types/api';
 
 interface Pagination {
@@ -44,22 +43,18 @@ export function useEstudiantesList(initial: { limit?: number; search?: string } 
     const [limit, setLimitState] = useState(initial.limit ?? 20);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const load = useCallback(async (signal?: AbortSignal) => {
+    const load = useCallback(async (opts: { signal?: AbortSignal; force?: boolean } = {}) => {
+        const { signal, force } = opts;
         setLoading(true);
         setError(null);
         try {
-            const res = await listEstudiantes({ limit: FETCH_ALL_LIMIT }, { signal });
+            // Padrón COMPARTIDO (caché + deduplicación): la misma descarga sirve al
+            // Listado y al Buscador. `isTruncated` y la telemetría se resuelven en
+            // el servicio a partir de la metadata de paginación (no de un límite).
+            const res = await getEstudiantesRegistry({ force });
             if (signal?.aborted) return;
-            const list = res.estudiantes ?? [];
-            setAll(list);
-            const truncated = list.length >= FETCH_ALL_LIMIT;
-            setAtLimit(truncated);
-            if (truncated) {
-                console.warn(
-                    `[useEstudiantesList] Se alcanzó el límite de ${FETCH_ALL_LIMIT} registros; ` +
-                    'la búsqueda/paginación local puede estar incompleta. Migrar a server-side.',
-                );
-            }
+            setAll(res.estudiantes);
+            setAtLimit(res.isTruncated);
         } catch (e) {
             // Cancelación: nunca es un error de UI.
             if (signal?.aborted || isCancel(e)) return;
@@ -72,7 +67,7 @@ export function useEstudiantesList(initial: { limit?: number; search?: string } 
 
     useEffect(() => {
         const controller = new AbortController();
-        load(controller.signal);
+        load({ signal: controller.signal });
         return () => controller.abort();
     }, [load]);
 
@@ -126,6 +121,7 @@ export function useEstudiantesList(initial: { limit?: number; search?: string } 
         setSearch,
         setPage,
         setLimit,
-        reload: () => load(),
+        // Reintento manual: fuerza refetch saltando la caché compartida.
+        reload: () => load({ force: true }),
     } as const;
 }

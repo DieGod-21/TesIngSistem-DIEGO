@@ -8,21 +8,21 @@
 
 import { apiGet } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { unwrapEntity } from './normalize';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteEstudiante } from '../types/api';
 
-export async function getGlobalTernasReport(): Promise<ReporteTernasGlobal> {
-    const raw = await apiGet<unknown>(API_PATHS.reportes.ternas);
+export async function getGlobalTernasReport(opts: { signal?: AbortSignal } = {}): Promise<ReporteTernasGlobal> {
+    const raw = await apiGet<unknown>(API_PATHS.reportes.ternas, { signal: opts.signal });
     return normalizeGlobal(raw);
 }
 
 function normalizeGlobal(raw: unknown): ReporteTernasGlobal {
-    const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {};
-    // Posibles envolturas: { reporte: {...} } o { data: {...} } o directo.
-    const src = (obj.reporte && typeof obj.reporte === 'object')
-        ? obj.reporte as Record<string, unknown>
-        : (obj.data && typeof obj.data === 'object')
-            ? obj.data as Record<string, unknown>
-            : obj;
+    // Envolturas posibles: { reporte: {...} } o { data: {...} } o directo.
+    // `unwrapEntity` desenvuelve la clave semántica y reporta formas no-objeto.
+    const withReporte = unwrapEntity<Record<string, unknown>>(raw, 'reporte', API_PATHS.reportes.ternas);
+    const src = (withReporte && typeof withReporte === 'object' && withReporte.data && typeof withReporte.data === 'object')
+        ? withReporte.data as Record<string, unknown>
+        : (withReporte && typeof withReporte === 'object' ? withReporte : {});
 
     const resumen = (src.resumen && typeof src.resumen === 'object')
         ? src.resumen as ReporteTernasGlobal['resumen']
@@ -65,15 +65,11 @@ export interface ReporteTernaDetalle {
     razon?: string;
 }
 
-export async function getReporteEstudiante(carnet: string): Promise<ReporteEstudiante> {
-    return apiGet<ReporteEstudiante>(API_PATHS.reportes.estudiante(carnet));
+export async function getReporteEstudiante(carnet: string, opts: { signal?: AbortSignal } = {}): Promise<ReporteEstudiante> {
+    return apiGet<ReporteEstudiante>(API_PATHS.reportes.estudiante(carnet), { signal: opts.signal });
 }
 
-export async function getTernaReport(id: number): Promise<ReporteTernaDetalle> {
-    const raw = await apiGet<unknown>(API_PATHS.reportes.ternaById(id));
-    const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {};
-    const src = (obj.reporte && typeof obj.reporte === 'object')
-        ? obj.reporte as Record<string, unknown>
-        : obj;
-    return src as unknown as ReporteTernaDetalle;
+export async function getTernaReport(id: number, opts: { signal?: AbortSignal } = {}): Promise<ReporteTernaDetalle> {
+    const raw = await apiGet<unknown>(API_PATHS.reportes.ternaById(id), { signal: opts.signal });
+    return unwrapEntity<ReporteTernaDetalle>(raw, 'reporte', API_PATHS.reportes.ternaById(id));
 }

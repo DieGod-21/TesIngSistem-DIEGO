@@ -106,8 +106,8 @@ const AVATAR_VARIANTS: Array<'blue' | 'green' | 'slate'> = ['blue', 'green', 'sl
  * No existe un endpoint /dashboard/summary en el backend; aquí derivamos
  * los KPIs a partir de las estadísticas oficiales de tesis.
  */
-export async function getDashboardSummary(): Promise<DashboardSummary> {
-    const { resumen } = await apiGet<TesisResumenResponse>(API_PATHS.tesis.resumen);
+export async function getDashboardSummary(opts: { signal?: AbortSignal } = {}): Promise<DashboardSummary> {
+    const { resumen } = await apiGet<TesisResumenResponse>(API_PATHS.tesis.resumen, { signal: opts.signal });
 
     const { total_estudiantes, aprobados, reprobados, porcentaje_aprobacion } = resumen;
     const pending = Math.max(total_estudiantes - aprobados - reprobados, 0);
@@ -168,9 +168,10 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
  * (paginado). El backend no expone un endpoint "recent-students", pero
  * la primera página del listado cumple el mismo propósito.
  */
-export async function getRecentStudentsSummary(limit = 5): Promise<RecentStudent[]> {
+export async function getRecentStudentsSummary(limit = 5, opts: { signal?: AbortSignal } = {}): Promise<RecentStudent[]> {
     const res = await apiGet<EstudiantesListResponse>(
-        `${API_PATHS.estudiantes.list}?page=1&limit=${limit}`
+        `${API_PATHS.estudiantes.list}?page=1&limit=${limit}`,
+        { signal: opts.signal },
     );
     return (res.estudiantes ?? []).map((s) => ({
         id:               String(s.id),
@@ -187,7 +188,7 @@ export async function getRecentStudentsSummary(limit = 5): Promise<RecentStudent
  * Acciones pendientes = estudiantes que NO aprueban tesis (GET /api/tesis/reprobados).
  * Es lo más cercano a "sin aprobar" que expone el backend real.
  */
-export async function getPendingActions(query?: string): Promise<PendingAction[]> {
+export async function getPendingActions(query?: string, opts: { signal?: AbortSignal } = {}): Promise<PendingAction[]> {
     interface ReprobadosResp {
         total: number;
         nota_minima: number;
@@ -201,7 +202,7 @@ export async function getPendingActions(query?: string): Promise<PendingAction[]
         }>;
     }
 
-    const { estudiantes } = await apiGet<ReprobadosResp>(API_PATHS.tesis.reprobados);
+    const { estudiantes } = await apiGet<ReprobadosResp>(API_PATHS.tesis.reprobados, { signal: opts.signal });
 
     const q = query?.trim().toLowerCase() ?? '';
     const filtered = q

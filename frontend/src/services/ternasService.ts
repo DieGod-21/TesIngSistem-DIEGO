@@ -9,6 +9,7 @@
 
 import { apiGet, apiPost } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { unwrapEntity, unwrapCollection } from './normalize';
 import type { TernaResumen, TernaDetalle, EstadoTerna } from '../types/api';
 
 interface TernasListEnvelope {
@@ -19,18 +20,17 @@ interface TernasListEnvelope {
 /**
  * Lista las ternas. Backend filtra por rol (admin → todas, evaluador → asignadas).
  */
-export async function listTernas(estado?: EstadoTerna): Promise<TernaResumen[]> {
+export async function listTernas(estado?: EstadoTerna, opts: { signal?: AbortSignal } = {}): Promise<TernaResumen[]> {
     const qs = estado ? `?estado=${estado}` : '';
-    const data = await apiGet<TernaResumen[] | TernasListEnvelope>(`${API_PATHS.ternas.list}${qs}`);
-    if (Array.isArray(data)) return data;
-    return data?.ternas ?? data?.data ?? [];
+    const url = `${API_PATHS.ternas.list}${qs}`;
+    const data = await apiGet<TernaResumen[] | TernasListEnvelope>(url, { signal: opts.signal });
+    return unwrapCollection<TernaResumen>(data, ['ternas', 'data'], url);
 }
 
 /** Detalle de una terna con evaluadores y resultado ponderado. */
-export async function getTernaById(id: number): Promise<TernaDetalle> {
-    const data = await apiGet<{ terna: TernaDetalle } | TernaDetalle>(API_PATHS.ternas.byId(id));
-    if (data && typeof data === 'object' && 'terna' in data) return (data as { terna: TernaDetalle }).terna;
-    return data as TernaDetalle;
+export async function getTernaById(id: number, opts: { signal?: AbortSignal } = {}): Promise<TernaDetalle> {
+    const data = await apiGet<{ terna: TernaDetalle } | TernaDetalle>(API_PATHS.ternas.byId(id), { signal: opts.signal });
+    return unwrapEntity<TernaDetalle>(data, 'terna', API_PATHS.ternas.byId(id));
 }
 
 export interface EvaluacionPayload {

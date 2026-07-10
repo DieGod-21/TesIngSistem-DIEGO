@@ -12,10 +12,9 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { listEstudiantes } from '../services/estudiantesService';
+import { getEstudiantesRegistry } from '../services/estudiantesService';
 import { isCancel } from '../services/apiClient';
 import { matchesText } from '../utils/text';
-import { FETCH_ALL_LIMIT } from '../config/apiConfig';
 import type { Estudiante } from '../types/api';
 
 const MIN_CHARS = 2;
@@ -31,19 +30,13 @@ export function useStudentSearch(query: string, enabled: boolean) {
         const controller = new AbortController();
         loadedRef.current = true;
         setLoading(true);
-        listEstudiantes({ limit: FETCH_ALL_LIMIT }, { signal: controller.signal })
+        // Reutiliza el mismo padrón COMPARTIDO que el Listado: si ya está en
+        // caché no hay descarga; si está en vuelo, se deduplica. La telemetría de
+        // truncamiento se resuelve en el servicio.
+        getEstudiantesRegistry()
             .then((res) => {
                 if (controller.signal.aborted) return;
-                const list = res.estudiantes ?? [];
-                setAll(list);
-                // Salvaguarda: si se alcanza el límite, el padrón puede estar
-                // truncado y faltar sugerencias (ver decisión en useEstudiantesList).
-                if (list.length >= FETCH_ALL_LIMIT) {
-                    console.warn(
-                        `[useStudentSearch] Se alcanzó el límite de ${FETCH_ALL_LIMIT} estudiantes; ` +
-                        'las sugerencias podrían estar incompletas. Migrar a búsqueda server-side.',
-                    );
-                }
+                setAll(res.estudiantes);
             })
             .catch((err) => {
                 // Cancelación: silenciosa, no reintenta ni marca error.

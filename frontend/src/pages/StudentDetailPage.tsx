@@ -6,6 +6,7 @@ import EditNotaModal from '../components/EditNotaModal';
 import { getEstudianteById } from '../services/estudiantesService';
 import { getReporteEstudiante } from '../services/reportesService';
 import { getNotasByEstudianteId } from '../services/notasService';
+import { isCancel } from '../services/apiClient';
 import {
     buildCursosResumen,
     computeEstadoTesis,
@@ -62,7 +63,8 @@ const StudentDetailPage: React.FC = () => {
     const [editModal, setEditModal] = useState<EditModalState>({ open: false, curso: '043', notaActual: null });
 
     useEffect(() => {
-        let canceled = false;
+        const controller = new AbortController();
+        const { signal } = controller;
         const numId = Number(id);
         if (!Number.isFinite(numId)) {
             setState({ student: null, reporte: null, notas: null, loading: false, error: 'ID inválido.' });
@@ -73,22 +75,26 @@ const StudentDetailPage: React.FC = () => {
 
         (async () => {
             try {
-                const student = await getEstudianteById(numId);
-                if (canceled) return;
-                const reporte = await getReporteEstudiante(student.carnet).catch(() => null);
-                if (canceled) return;
+                // Cadena por dependencia: el reporte necesita el carné del
+                // estudiante y las notas son una carga condicional. La señal se
+                // propaga a la red para cancelar de verdad al navegar.
+                const student = await getEstudianteById(numId, { signal });
+                if (signal.aborted) return;
+                const reporte = await getReporteEstudiante(student.carnet, { signal }).catch(() => null);
+                if (signal.aborted) return;
 
                 const fromReporte = extractGradesFromReporte(reporte);
                 let notas: Nota[] | null = null;
                 if (fromReporte.pg1 == null || fromReporte.pg2 == null) {
-                    const notasResp = await getNotasByEstudianteId(numId).catch(() => null);
-                    if (canceled) return;
+                    const notasResp = await getNotasByEstudianteId(numId, { signal }).catch(() => null);
+                    if (signal.aborted) return;
                     notas = notasResp?.notas ?? null;
                 }
 
                 setState({ student, reporte, notas, loading: false, error: null });
             } catch (e) {
-                if (canceled) return;
+                // Cancelación: nunca es un error de UI.
+                if (signal.aborted || isCancel(e)) return;
                 setState({
                     student: null, reporte: null, notas: null, loading: false,
                     error: e instanceof Error ? e.message : 'No se pudo cargar el estudiante.',
@@ -96,7 +102,7 @@ const StudentDetailPage: React.FC = () => {
             }
         })();
 
-        return () => { canceled = true; };
+        return () => controller.abort();
     }, [id, refreshKey]);
 
     const grads: CursoNotaResumen[] = buildCursosResumen(state.reporte, state.notas);

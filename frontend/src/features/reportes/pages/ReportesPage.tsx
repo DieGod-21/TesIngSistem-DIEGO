@@ -10,6 +10,7 @@ import { useHistory } from 'react-router-dom';
 import { BarChart3, Search, RefreshCw, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getGlobalTernasReport } from '../../../services/reportesService';
+import { isCancel } from '../../../services/apiClient';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
 import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
@@ -43,20 +44,28 @@ const ReportesPage: React.FC = () => {
     const [filter, setFilter] = useState<Filter>('all');
     const [query, setQuery] = useState('');
 
-    const load = async () => {
+    const load = async (signal?: AbortSignal) => {
         setLoading(true);
         setError(null);
         try {
-            setData(await getGlobalTernasReport());
+            const report = await getGlobalTernasReport({ signal });
+            if (signal?.aborted) return;
+            setData(report);
         } catch (e) {
+            if (signal?.aborted || isCancel(e)) return;
             setError(e instanceof Error ? e.message : 'No se pudo cargar el reporte.');
             setData(null);
         } finally {
-            setLoading(false);
+            if (!signal?.aborted) setLoading(false);
         }
     };
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => {
+        const controller = new AbortController();
+        load(controller.signal);
+        return () => controller.abort();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const ternas: ReporteTernaItem[] = data?.ternas ?? [];
 
@@ -126,7 +135,7 @@ const ReportesPage: React.FC = () => {
                             </button>
                         ))}
                     </div>
-                    <Button variant="secondary" onClick={load} disabled={loading} aria-label="Refrescar reporte">
+                    <Button variant="secondary" onClick={() => load()} disabled={loading} aria-label="Refrescar reporte">
                         <RefreshCw size={16} aria-hidden="true" />
                         Refrescar
                     </Button>
@@ -140,7 +149,7 @@ const ReportesPage: React.FC = () => {
                         title="No se pudo cargar el reporte"
                         description={error}
                         action={
-                            <Button variant="secondary" onClick={load}>
+                            <Button variant="secondary" onClick={() => load()}>
                                 <RefreshCw size={16} aria-hidden="true" /> Reintentar
                             </Button>
                         }

@@ -7,6 +7,7 @@
 
 import { apiGet, apiPut } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { invalidateEstudiantes } from './estudiantesService';
 import type { Nota, NotasEstudianteResponse } from '../types/api';
 
 export interface UpsertNotaDto {
@@ -16,14 +17,23 @@ export interface UpsertNotaDto {
     observacion?: string | null;
 }
 
-export async function getNotasByEstudianteId(id: number | string): Promise<NotasEstudianteResponse> {
-    return apiGet<NotasEstudianteResponse>(API_PATHS.notas.byEstudiante(id));
+export async function getNotasByEstudianteId(
+    id: number | string,
+    opts: { signal?: AbortSignal } = {},
+): Promise<NotasEstudianteResponse> {
+    return apiGet<NotasEstudianteResponse>(API_PATHS.notas.byEstudiante(id), { signal: opts.signal });
 }
 
-export async function getNotasByCarnet(carnet: string): Promise<NotasEstudianteResponse> {
-    return apiGet<NotasEstudianteResponse>(API_PATHS.notas.byCarnet(carnet));
+export async function getNotasByCarnet(
+    carnet: string,
+    opts: { signal?: AbortSignal } = {},
+): Promise<NotasEstudianteResponse> {
+    return apiGet<NotasEstudianteResponse>(API_PATHS.notas.byCarnet(carnet), { signal: opts.signal });
 }
 
 export async function upsertNota(dto: UpsertNotaDto): Promise<Nota> {
-    return apiPut<Nota>(API_PATHS.notas.upsert, dto);
+    const nota = await apiPut<Nota>(API_PATHS.notas.upsert, dto);
+    // La nota cambia el estado de tesis del estudiante: invalidar el padrón cacheado.
+    invalidateEstudiantes();
+    return nota;
 }

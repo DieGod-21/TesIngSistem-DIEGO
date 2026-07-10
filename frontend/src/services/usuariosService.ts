@@ -6,6 +6,7 @@
 
 import { apiGet, apiPost } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { unwrapEntity, unwrapCollection } from './normalize';
 import type { Usuario, RolUsuario } from '../types/api';
 
 export interface CreateUsuarioDto {
@@ -14,21 +15,16 @@ export interface CreateUsuarioDto {
     rol: RolUsuario;
 }
 
-export async function getMe(): Promise<Usuario> {
-    const data = await apiGet<{ usuario: Usuario } | Usuario>(API_PATHS.usuarios.me);
-    if (data && typeof data === 'object' && 'usuario' in data) {
-        return (data as { usuario: Usuario }).usuario;
-    }
-    return data as Usuario;
+export async function getMe(opts: { signal?: AbortSignal } = {}): Promise<Usuario> {
+    const data = await apiGet<{ usuario: Usuario } | Usuario>(API_PATHS.usuarios.me, { signal: opts.signal });
+    return unwrapEntity<Usuario>(data, 'usuario', API_PATHS.usuarios.me);
 }
 
-export async function listUsuarios(rol?: RolUsuario): Promise<Usuario[]> {
+export async function listUsuarios(rol?: RolUsuario, opts: { signal?: AbortSignal } = {}): Promise<Usuario[]> {
     const qs = rol ? `?rol=${rol}` : '';
-    const data = await apiGet<{ usuarios?: Usuario[] } | Usuario[]>(
-        `${API_PATHS.usuarios.list}${qs}`,
-    );
-    if (Array.isArray(data)) return data;
-    return data?.usuarios ?? [];
+    const url = `${API_PATHS.usuarios.list}${qs}`;
+    const data = await apiGet<{ usuarios?: Usuario[] } | Usuario[]>(url, { signal: opts.signal });
+    return unwrapCollection<Usuario>(data, ['usuarios'], url);
 }
 
 export async function createUsuario(dto: CreateUsuarioDto): Promise<Usuario> {

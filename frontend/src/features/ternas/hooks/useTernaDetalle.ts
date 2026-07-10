@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getTernaById } from '../../../services/ternasService';
 import { getTesisEstadoByCarnet } from '../../../services/tesisService';
 import { getNotasByCarnet } from '../../../services/notasService';
+import { isCancel } from '../../../services/apiClient';
 import {
     buildCursosResumen,
     computeEstadoTesis,
@@ -24,18 +25,24 @@ export function useTernaDetalle(id: number | null) {
         terna: null, eligibility: null, loading: true, error: null,
     });
 
-    const reload = useCallback(async () => {
+    const reload = useCallback(async (signal?: AbortSignal) => {
         if (id == null || Number.isNaN(id)) return;
         setState((s) => ({ ...s, loading: true, error: null }));
         try {
-            const terna = await getTernaById(id);
+            // Cadena por dependencia: la terna aporta el carné; el estado de tesis
+            // y las notas dependen de él, así que no se pueden paralelizar sin
+            // sobre-descargar. La señal se propaga para cancelar en navegación.
+            const terna = await getTernaById(id, { signal });
+            if (signal?.aborted) return;
             let eligibility: EstadoTesis | null = null;
             if (terna?.carnet) {
-                const fromBackend = await getTesisEstadoByCarnet(terna.carnet).catch(() => null);
+                const fromBackend = await getTesisEstadoByCarnet(terna.carnet, { signal }).catch(() => null);
+                if (signal?.aborted) return;
                 const fromReporte = extractGradesFromReporte(fromBackend);
                 let notas = null;
                 if (fromReporte.pg1 == null || fromReporte.pg2 == null) {
-                    const notasResp = await getNotasByCarnet(terna.carnet).catch(() => null);
+                    const notasResp = await getNotasByCarnet(terna.carnet, { signal }).catch(() => null);
+                    if (signal?.aborted) return;
                     notas = notasResp?.notas ?? null;
                 }
                 const cursos = buildCursosResumen(fromBackend, notas);
@@ -56,8 +63,11 @@ export function useTernaDetalle(id: number | null) {
                     graduacion_2:  cursos.find((c) => c.curso === '049') ?? null,
                 };
             }
+            if (signal?.aborted) return;
             setState({ terna, eligibility, loading: false, error: null });
         } catch (e) {
+            // Cancelación: nunca es un error de UI.
+            if (signal?.aborted || isCancel(e)) return;
             setState({
                 terna: null,
                 eligibility: null,
@@ -67,7 +77,11 @@ export function useTernaDetalle(id: number | null) {
         }
     }, [id]);
 
-    useEffect(() => { reload(); }, [reload]);
+    useEffect(() => {
+        const controller = new AbortController();
+        reload(controller.signal);
+        return () => controller.abort();
+    }, [reload]);
 
-    return { ...state, reload };
+    return { ...state, reload: () => reload() };
 }

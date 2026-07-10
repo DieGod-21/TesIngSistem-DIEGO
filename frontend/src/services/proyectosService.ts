@@ -1,5 +1,6 @@
 import { apiGet, apiPost } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { unwrapCollection } from './normalize';
 import type { Proyecto, FaseProyecto } from '../types/api';
 
 export interface CreateProyectoDto {
@@ -8,13 +9,9 @@ export interface CreateProyectoDto {
     fase: FaseProyecto;
 }
 
-export async function listProyectos(): Promise<Proyecto[]> {
-    const data = await apiGet<Proyecto[] | { proyectos: Proyecto[] }>(API_PATHS.proyectos.list);
-    if (Array.isArray(data)) return data;
-    if (data && typeof data === 'object' && 'proyectos' in data) {
-        return (data as { proyectos: Proyecto[] }).proyectos;
-    }
-    return [];
+export async function listProyectos(opts: { signal?: AbortSignal } = {}): Promise<Proyecto[]> {
+    const data = await apiGet<Proyecto[] | { proyectos: Proyecto[] }>(API_PATHS.proyectos.list, { signal: opts.signal });
+    return unwrapCollection<Proyecto>(data, ['proyectos'], API_PATHS.proyectos.list);
 }
 
 export async function createProyecto(dto: CreateProyectoDto): Promise<Proyecto> {

@@ -8,6 +8,7 @@
 
 import { apiFetch, REQUEST_TIMEOUTS } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { invalidateEstudiantes } from './estudiantesService';
 
 export interface ImportarResult {
     total?:      number;
@@ -34,22 +35,28 @@ export async function importarEstudiantes(file: File): Promise<ImportarResult> {
     const form = new FormData();
     form.append('archivo', file, file.name);
     form.append('file', file, file.name);
-    return normalize(
+    const result = normalize(
         await apiFetch<ImportarResult | { data: ImportarResult }>(
             API_PATHS.importar.estudiantes,
             { method: 'POST', body: form, timeout: REQUEST_TIMEOUTS.upload },
         ),
     );
+    // Importación masiva: el padrón cambió → invalidar la caché compartida.
+    invalidateEstudiantes();
+    return result;
 }
 
 export async function importarNotas(cursoCodigo: string, file: File): Promise<ImportarResult> {
     const form = new FormData();
     form.append('archivo', file, file.name);
     form.append('file', file, file.name);
-    return normalize(
+    const result = normalize(
         await apiFetch<ImportarResult | { data: ImportarResult }>(
             API_PATHS.importar.notas(cursoCodigo),
             { method: 'POST', body: form, timeout: REQUEST_TIMEOUTS.upload },
         ),
     );
+    // Las notas importadas cambian el estado de tesis del padrón → invalidar.
+    invalidateEstudiantes();
+    return result;
 }

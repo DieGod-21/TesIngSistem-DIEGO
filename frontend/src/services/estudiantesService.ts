@@ -6,7 +6,9 @@
  */
 
 import { apiGet } from './apiClient';
-import { API_PATHS } from '../config/apiConfig';
+import { API_PATHS, FETCH_ALL_LIMIT } from '../config/apiConfig';
+import { cached, invalidate } from './cache';
+import { unwrapEntity, detectTruncation, reportTruncation } from './normalize';
 import type { Estudiante } from '../types/api';
 
 export interface EstudiantesPaginatedResponse {
@@ -39,22 +41,74 @@ export async function listEstudiantes(
     return data;
 }
 
-export async function getEstudianteById(id: number | string): Promise<Estudiante> {
-    const data = await apiGet<{ estudiante: Estudiante } | Estudiante>(
-        API_PATHS.estudiantes.byId(id),
-    );
-    if (data && typeof data === 'object' && 'estudiante' in data) {
-        return (data as { estudiante: Estudiante }).estudiante;
-    }
-    return data as Estudiante;
+// ─── Registro compartido (padrón completo, cacheado + deduplicado) ──────────
+
+/** Clave de recurso; `invalidate('estudiantes')` limpia todo el padrón. */
+export const ESTUDIANTES_CACHE_KEY = 'estudiantes:registry';
+
+/** TTL del padrón: corto, para no servir datos rancios tras escrituras. */
+const REGISTRY_TTL_MS = 60_000;
+
+export interface EstudiantesRegistry {
+    estudiantes: Estudiante[];
+    /** Total declarado por el backend (o el conteo local si no hay metadata). */
+    total: number;
+    /** true si el padrón podría estar incompleto (ver detectTruncation). */
+    isTruncated: boolean;
 }
 
-export async function getEstudianteByCarnet(carnet: string): Promise<Estudiante> {
+/**
+ * Padrón completo de estudiantes, COMPARTIDO entre Listado, Buscador y
+ * lookups. Se descarga una sola vez (caché + deduplicación) y se reutiliza
+ * mientras esté vigente, eliminando descargas duplicadas.
+ *
+ * La descarga NO recibe la señal de un consumidor individual: es compartida y
+ * no debe cancelarse porque una pantalla se desmonte. Cada consumidor evita
+ * renders obsoletos con su propio AbortSignal.
+ */
+export async function getEstudiantesRegistry(
+    opts: { force?: boolean } = {},
+): Promise<EstudiantesRegistry> {
+    if (opts.force) invalidate(ESTUDIANTES_CACHE_KEY);
+    return cached<EstudiantesRegistry>(
+        ESTUDIANTES_CACHE_KEY,
+        async () => {
+            const res = await listEstudiantes({ limit: FETCH_ALL_LIMIT });
+            const estudiantes = res.estudiantes ?? [];
+            const total = res.pagination?.total ?? estudiantes.length;
+            const isTruncated = detectTruncation(estudiantes.length, res.pagination?.total, FETCH_ALL_LIMIT);
+            if (isTruncated) reportTruncation(API_PATHS.estudiantes.list, estudiantes.length, res.pagination?.total);
+            return { estudiantes, total, isTruncated };
+        },
+        REGISTRY_TTL_MS,
+    );
+}
+
+/** Invalida el padrón cacheado tras una escritura (alta, edición, import). */
+export function invalidateEstudiantes(): void {
+    invalidate(ESTUDIANTES_CACHE_KEY);
+}
+
+// ─── Lecturas individuales ──────────────────────────────────────────────────
+
+export async function getEstudianteById(
+    id: number | string,
+    opts: { signal?: AbortSignal } = {},
+): Promise<Estudiante> {
+    const data = await apiGet<{ estudiante: Estudiante } | Estudiante>(
+        API_PATHS.estudiantes.byId(id),
+        { signal: opts.signal },
+    );
+    return unwrapEntity<Estudiante>(data, 'estudiante', API_PATHS.estudiantes.byId(id));
+}
+
+export async function getEstudianteByCarnet(
+    carnet: string,
+    opts: { signal?: AbortSignal } = {},
+): Promise<Estudiante> {
     const data = await apiGet<{ estudiante: Estudiante } | Estudiante>(
         API_PATHS.estudiantes.byCarnet(carnet),
+        { signal: opts.signal },
     );
-    if (data && typeof data === 'object' && 'estudiante' in data) {
-        return (data as { estudiante: Estudiante }).estudiante;
-    }
-    return data as Estudiante;
+    return unwrapEntity<Estudiante>(data, 'estudiante', API_PATHS.estudiantes.byCarnet(carnet));
 }

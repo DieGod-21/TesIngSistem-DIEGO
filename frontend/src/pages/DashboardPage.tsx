@@ -136,7 +136,7 @@ const DashboardPage: React.FC = () => {
                         title="No se pudieron cargar los indicadores"
                         description={summary.message}
                         action={
-                            <Button variant="secondary" onClick={loadSummary}>
+                            <Button variant="secondary" onClick={() => loadSummary()}>
                                 <RefreshCw size={16} aria-hidden="true" /> Reintentar
                             </Button>
                         }
