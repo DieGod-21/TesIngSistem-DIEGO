@@ -5,6 +5,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AppRouter from './routes/AppRouter';
+import ErrorBoundary from './components/ErrorBoundary';
+import { AppErrorFallback } from './components/ErrorFallback';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -62,15 +64,20 @@ setupIonicReact({ animated: false });
  */
 const App: React.FC = () => (
   <IonApp>
-    <ThemeProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <IonReactRouter>
-            <AppRouter />
-          </IonReactRouter>
-        </ToastProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    {/* Nivel 1 — Boundary de aplicación: cualquier fallo de render en el árbol
+        muestra una pantalla completa de recuperación en lugar de una pantalla
+        en blanco. Envuelve toda la pila de providers y el router. */}
+    <ErrorBoundary level="app" fallback={<AppErrorFallback />}>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <IonReactRouter>
+              <AppRouter />
+            </IonReactRouter>
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </IonApp>
 );
 

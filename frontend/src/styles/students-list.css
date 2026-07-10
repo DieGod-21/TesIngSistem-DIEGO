@@ -17,6 +17,8 @@
     flex: 1;
     max-width: 1280px;
     width: 100%;
+    /* Centrado como Ternas/Reportes/Usuarios (misma composición a 1280px). */
+    margin: 0 auto;
 }
 
 /* Breadcrumb reutiliza clases sn- de student-new.css */
@@ -31,14 +33,33 @@
    Margen inferior propio de esta página para separar de la barra de filtros. */
 .sl-body .ui-stat-grid { margin-bottom: 24px; }
 
-/* Segmento de alcance (Todos / Aprueban / No aprueban): filtro nativo del módulo,
-   siempre visible. Reutiliza .sl-status-tabs / .sl-status-tab. */
+/* Herramienta única del módulo: búsqueda + alcance (Todos / Aprueban / No aprueban)
+   viven juntos en una barra enmarcada. La búsqueda escribe en ?search= (URL
+   compartible, sincronizada con el buscador global). Mismo patrón que Usuarios. */
+.sl-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    background: var(--surface-card-grad), var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sm), var(--hairline);
+}
+.sl-toolbar__search {
+    flex: 1;
+    min-width: 240px;
+}
+
+/* Segmento de alcance: filtro nativo del módulo, dentro de la barra unificada.
+   Reutiliza .sl-status-tabs / .sl-status-tab. */
 .sl-scope {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 20px;
 }
 .sl-scope__label {
     font-size: 0.72rem;
@@ -65,7 +86,8 @@
     box-shadow: var(--dash-shadow-sm);
 }
 
-/* El buscador vive únicamente en el TopHeader (buscador único del sistema). */
+/* La búsqueda del módulo vive en la barra unificada (.sl-toolbar), junto al
+   alcance; el buscador global del TopHeader sigue disponible y sincronizado. */
 
 /* Selector de estado */
 .sl-status-tabs {

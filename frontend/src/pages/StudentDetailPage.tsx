@@ -15,6 +15,7 @@ import {
 } from '../utils/thesisStatus';
 import { THESIS_MIN_GRADE } from '../config/apiConfig';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import type { CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
 import { Button, EmptyState, Skeleton } from '../components/ui';
 import '../features/ternas/styles/ternas.css';
@@ -53,6 +54,7 @@ const StudentDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
     const { toast } = useToast();
+    const { capabilities } = useAuth();
     const [state, setState] = useState<State>({
         student: null, reporte: null, notas: null, loading: true, error: null,
     });
@@ -222,19 +224,21 @@ const StudentDetailPage: React.FC = () => {
                                             <span className={`tdetail-evaluator__estado ${chipMod}`}>
                                                 {g.estado}
                                             </span>
-                                            <button
-                                                type="button"
-                                                className="nota-edit-btn"
-                                                onClick={() => openEdit(g.curso as '043' | '049', Number(g.nota_final))}
-                                                aria-label={`Editar nota de ${CURSO_NAMES[g.curso] ?? g.curso}`}
-                                            >
-                                                <Pencil size={14} aria-hidden="true" />
-                                            </button>
+                                            {capabilities.canEditGrades && (
+                                                <button
+                                                    type="button"
+                                                    className="nota-edit-btn"
+                                                    onClick={() => openEdit(g.curso as '043' | '049', Number(g.nota_final))}
+                                                    aria-label={`Editar nota de ${CURSO_NAMES[g.curso] ?? g.curso}`}
+                                                >
+                                                    <Pencil size={14} aria-hidden="true" />
+                                                </button>
+                                            )}
                                         </div>
                                         );
                                     })}
 
-                                    {missingCursos.map((curso) => (
+                                    {capabilities.canEditGrades && missingCursos.map((curso) => (
                                         <div key={curso} className="nota-add-row">
                                             <span className="nota-add-row__label">
                                                 {curso} · {CURSO_NAMES[curso]}
@@ -288,7 +292,7 @@ const StudentDetailPage: React.FC = () => {
                 </div>
             )}
 
-            {state.student && (
+            {state.student && capabilities.canEditGrades && (
                 <EditNotaModal
                     open={editModal.open}
                     carnet={state.student.carnet}

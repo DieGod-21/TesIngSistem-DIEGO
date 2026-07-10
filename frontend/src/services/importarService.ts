@@ -6,7 +6,7 @@
  *   POST /api/importar/notas/{cursoCodigo}  (multipart, campo `archivo`, PDF)
  */
 
-import { apiFetch } from './apiClient';
+import { apiFetch, REQUEST_TIMEOUTS } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 
 export interface ImportarResult {
@@ -37,7 +37,7 @@ export async function importarEstudiantes(file: File): Promise<ImportarResult> {
     return normalize(
         await apiFetch<ImportarResult | { data: ImportarResult }>(
             API_PATHS.importar.estudiantes,
-            { method: 'POST', body: form },
+            { method: 'POST', body: form, timeout: REQUEST_TIMEOUTS.upload },
         ),
     );
 }
@@ -49,7 +49,7 @@ export async function importarNotas(cursoCodigo: string, file: File): Promise<Im
     return normalize(
         await apiFetch<ImportarResult | { data: ImportarResult }>(
             API_PATHS.importar.notas(cursoCodigo),
-            { method: 'POST', body: form },
+            { method: 'POST', body: form, timeout: REQUEST_TIMEOUTS.upload },
         ),
     );
 }

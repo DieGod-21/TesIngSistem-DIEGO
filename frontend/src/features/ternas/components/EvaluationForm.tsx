@@ -45,7 +45,7 @@ function findMyEvaluation(terna: TernaDetalle, usuarioId: number | null, userNam
 }
 
 const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
-    const { user, isAdmin, usuarioId } = useAuth();
+    const { user, isAdmin, usuarioId, capabilities } = useAuth();
     const { toast } = useToast();
     const mine = findMyEvaluation(terna, usuarioId, user?.nombre);
     const isLocked = mine?.eval_estado === 'enviada';
@@ -220,7 +220,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                 </>
             ) : null}
 
-            {isAdmin && terna.evaluadores.some((e) => e.eval_estado === 'enviada') && (
+            {capabilities.canReopenEvaluations && terna.evaluadores.some((e) => e.eval_estado === 'enviada') && (
                 <details style={{ marginTop: 14 }}>
                     <summary style={{ cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         Acciones de administrador

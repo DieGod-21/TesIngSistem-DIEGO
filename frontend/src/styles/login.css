@@ -245,6 +245,15 @@
 @media (min-width: 768px)  { .auth-form-section { padding: 3rem; } }
 @media (min-width: 1024px) { .auth-form-section { padding: 6rem; } }
 
+/* Costura con profundidad: en escritorio el panel del formulario recibe una
+   sombra interior muy suave desde el borde del hero, reforzando la lectura de
+   dos planos (premium) sin alterar el layout. */
+@media (min-width: 768px) {
+  .auth-form-section {
+    box-shadow: inset 18px 0 40px -34px oklch(0.20 0.02 275 / 0.45);
+  }
+}
+
 .auth-form-container {
   width: 100%;
   max-width: 28rem;
@@ -316,17 +325,22 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--surface-card);
+  /* Material del sistema: profundidad sutil en reposo, como las superficies del DS. */
+  box-shadow: var(--shadow-xs);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.auth-input-wrapper:hover:not(:focus-within) {
+  border-color: color-mix(in oklch, var(--color-primary) 42%, var(--border-strong));
 }
 .auth-input-wrapper:focus-within {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-ring);
+  box-shadow: var(--ring);
 }
 .auth-input-wrapper ion-input {
   --padding-start: 1rem;
   --padding-end: 1rem;
-  --padding-top: 0.75rem;
-  --padding-bottom: 0.75rem;
+  --padding-top: 0.85rem;
+  --padding-bottom: 0.85rem;
   --color: var(--text-primary);
   --placeholder-color: var(--text-muted);
   font-size: 0.95rem;
@@ -381,6 +395,11 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+/* Deshabilitado (formulario incompleto): plano e inactivo, no "elevado pero muerto". */
+.auth-submit-btn.button-disabled::part(native) {
+  box-shadow: none;
+  filter: none;
+}
 .auth-submit-btn .btn-icon {
   width: 1.25rem;
   height: 1.25rem;
@@ -414,7 +433,7 @@
 
 /* Links de ayuda (footer del formulario) */
 .auth-help-links {
-  margin-top: 3rem;
+  margin-top: 2rem;
   display: flex;
   justify-content: center;
   align-items: center;

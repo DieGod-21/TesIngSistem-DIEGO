@@ -27,13 +27,14 @@ export interface ListEstudiantesParams {
 
 export async function listEstudiantes(
     params: ListEstudiantesParams = {},
+    opts: { signal?: AbortSignal } = {},
 ): Promise<EstudiantesPaginatedResponse> {
     const qs = new URLSearchParams();
     if (params.page)   qs.set('page', String(params.page));
     if (params.limit)  qs.set('limit', String(params.limit));
     if (params.search) qs.set('search', params.search);
     const url = `${API_PATHS.estudiantes.list}${qs.toString() ? `?${qs}` : ''}`;
-    const data = await apiGet<EstudiantesPaginatedResponse | Estudiante[]>(url);
+    const data = await apiGet<EstudiantesPaginatedResponse | Estudiante[]>(url, { signal: opts.signal });
     if (Array.isArray(data)) return { estudiantes: data };
     return data;
 }

@@ -10,7 +10,21 @@ const BASE_URL = import.meta.env.DEV
     ? ''
     : (import.meta.env.VITE_API_URL ?? 'https://notas.digicom.com.gt');
 
-const DEFAULT_TIMEOUT_MS = 30_000;
+/**
+ * Timeouts por tipo de operación (ms). Cada petición puede sobrescribirlo con
+ * `timeout` en las opciones. Un timeout NO destruye la sesión: solo aborta la
+ * petición y se clasifica como 'timeout'.
+ */
+export const REQUEST_TIMEOUTS = {
+    /** Autenticación (login/logout/refresh/perfil): red crítica y rápida. */
+    auth: 10_000,
+    /** Peticiones normales de la API. */
+    normal: 20_000,
+    /** Cargas/importaciones grandes: pueden continuar procesándose en servidor. */
+    upload: 120_000,
+} as const;
+
+const DEFAULT_TIMEOUT_MS = REQUEST_TIMEOUTS.normal;
 
 // Claves de sessionStorage — deben coincidir con authService.ts
 const ACCESS_TOKEN_KEY  = 'auth_access_token';
@@ -28,15 +42,98 @@ export interface ApiEnvelope<T> {
     errors?: string[];
 }
 
+/**
+ * Clasificación normalizada de errores de red. Las páginas reciben un `kind`
+ * estable en lugar de inspeccionar códigos HTTP crudos.
+ */
+export type NetworkErrorKind =
+    | 'cancelled'    // el llamador abortó la petición (no es un error de UI)
+    | 'timeout'      // se agotó el tiempo de espera del cliente
+    | 'offline'      // fallo de red / sin conexión
+    | 'unauthorized' // 401
+    | 'forbidden'    // 403
+    | 'notFound'     // 404
+    | 'conflict'     // 409
+    | 'validation'   // 422
+    | 'rateLimited'  // 429
+    | 'server'       // 500 (o 5xx no específico)
+    | 'unavailable'  // 503
+    | 'unknown';     // cualquier otro
+
 export class ApiError extends Error {
     constructor(
         public readonly status: number,
         message: string,
         public readonly payload?: unknown,
+        /** Clasificación estable del error para las páginas. */
+        public readonly kind: NetworkErrorKind = 'unknown',
+        /** Mensajes de validación del backend (`errors: []`), si los hubo. */
+        public readonly errors?: string[],
     ) {
         super(message);
         this.name = 'ApiError';
     }
+}
+
+/**
+ * Error de cancelación: la petición fue abortada por el llamador. NO representa
+ * un fallo; las páginas deben ignorarlo (no mostrar mensaje ni actualizar UI).
+ */
+export class CanceledError extends Error {
+    constructor(message = 'Petición cancelada') {
+        super(message);
+        this.name = 'CanceledError';
+    }
+}
+
+/** Predicado único para detectar cancelaciones en cualquier consumidor. */
+export function isCancel(err: unknown): boolean {
+    return (
+        err instanceof CanceledError ||
+        (err instanceof DOMException && err.name === 'AbortError') ||
+        (err instanceof ApiError && err.kind === 'cancelled')
+    );
+}
+
+/** Traduce un código HTTP a su clasificación. */
+function kindFromStatus(status: number): NetworkErrorKind {
+    switch (status) {
+        case 401: return 'unauthorized';
+        case 403: return 'forbidden';
+        case 404: return 'notFound';
+        case 409: return 'conflict';
+        case 422: return 'validation';
+        case 429: return 'rateLimited';
+        case 503: return 'unavailable';
+        case 500: return 'server';
+        default:  return status >= 500 ? 'server' : 'unknown';
+    }
+}
+
+/** Extrae mensajes de validación de `errors: []` (strings u objetos {message}). */
+function extractErrors(parsed: unknown): string[] | undefined {
+    if (!parsed || typeof parsed !== 'object') return undefined;
+    const raw = (parsed as Record<string, unknown>).errors;
+    if (!Array.isArray(raw)) return undefined;
+    const messages: string[] = [];
+    for (const item of raw) {
+        if (typeof item === 'string') {
+            messages.push(item);
+        } else if (item && typeof item === 'object') {
+            const m = (item as Record<string, unknown>).message;
+            if (typeof m === 'string') messages.push(m);
+        }
+    }
+    return messages.length > 0 ? messages : undefined;
+}
+
+/** Construye un ApiError clasificado a partir de una respuesta no-2xx. */
+function apiErrorFromResponse(status: number, parsed: unknown): ApiError {
+    const errors = extractErrors(parsed);
+    const message = errors && errors.length > 0
+        ? errors.join(' ')
+        : extractErrorMessage(parsed, status);
+    return new ApiError(status, message, parsed, kindFromStatus(status), errors);
 }
 
 function readAccessToken(): string | null {
@@ -54,7 +151,7 @@ function redirectExpiredSession(): never {
     sessionStorage.setItem(SESSION_MSG_KEY, 'Tu sesión expiró. Por favor inicia sesión nuevamente.');
     clearSessionTokens();
     window.location.replace('/login');
-    throw new ApiError(401, 'Sesión expirada. Por favor inicia sesión nuevamente.');
+    throw new ApiError(401, 'Sesión expirada. Por favor inicia sesión nuevamente.', undefined, 'unauthorized');
 }
 
 function extractErrorMessage(parsed: unknown, status: number): string {
@@ -74,13 +171,21 @@ async function doRefresh(): Promise<string> {
     const rt = sessionStorage.getItem(REFRESH_TOKEN_KEY);
     if (!rt) throw new Error('No refresh token available');
 
-    const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ refreshToken: rt }),
-    });
+    // El refresh es autenticación crítica → timeout corto (auth).
+    const link = withTimeout(undefined, REQUEST_TIMEOUTS.auth);
+    let res: Response;
+    try {
+        res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ refreshToken: rt }),
+            signal: link.signal,
+        });
+    } finally {
+        link.cleanup();
+    }
 
-    if (!res.ok) throw new ApiError(res.status, 'No se pudo renovar la sesión');
+    if (!res.ok) throw new ApiError(res.status, 'No se pudo renovar la sesión', undefined, kindFromStatus(res.status));
 
     const json = await res.json();
     const payload = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
@@ -92,12 +197,62 @@ async function doRefresh(): Promise<string> {
     return payload.accessToken as string;
 }
 
-interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
+export interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
     body?: BodyInit | object | null;
     /** Si es false, no adjunta Authorization header (endpoints públicos o de auth). */
     requireAuth?: boolean;
     /** Interno: evita bucle infinito en llamadas de refresh/logout. */
     skipRefresh?: boolean;
+    /** Timeout en ms para esta petición (por defecto REQUEST_TIMEOUTS.normal). */
+    timeout?: number;
+}
+
+/**
+ * Enlaza la señal del llamador con un timeout interno en un único
+ * AbortController: la petición se aborta si el llamador cancela O si vence el
+ * timeout. `state.timedOut` permite distinguir después ambos casos.
+ */
+function withTimeout(callerSignal: AbortSignal | undefined | null, timeoutMs: number) {
+    const controller = new AbortController();
+    const state = { timedOut: false };
+    const timeoutId = setTimeout(() => {
+        state.timedOut = true;
+        controller.abort();
+    }, timeoutMs);
+
+    const onCallerAbort = () => controller.abort();
+    if (callerSignal) {
+        if (callerSignal.aborted) controller.abort();
+        else callerSignal.addEventListener('abort', onCallerAbort, { once: true });
+    }
+
+    const cleanup = () => {
+        clearTimeout(timeoutId);
+        if (callerSignal) callerSignal.removeEventListener('abort', onCallerAbort);
+    };
+
+    return { signal: controller.signal, state, cleanup };
+}
+
+/** Normaliza un fallo de red a ApiError clasificado (timeout/cancelación/offline). */
+function normalizeFetchError(err: unknown, callerSignal: AbortSignal | undefined | null, timedOut: boolean): never {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+        if (timedOut) {
+            throw new ApiError(0, 'La solicitud tardó demasiado. Intenta de nuevo.', undefined, 'timeout');
+        }
+        // Abortada por el llamador → cancelación silenciosa (no es un error de UI).
+        if (callerSignal?.aborted) throw new CanceledError();
+        throw new CanceledError();
+    }
+    if (err instanceof TypeError) {
+        throw new ApiError(
+            0,
+            'No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.',
+            err.message,
+            'offline',
+        );
+    }
+    throw err;
 }
 
 /**
@@ -106,9 +261,10 @@ interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
  * En 401 intenta renovar el token automáticamente antes de fallar.
  */
 export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Promise<T> {
-    const { body, requireAuth = true, skipRefresh = false, headers, ...rest } = init;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+    const { body, requireAuth = true, skipRefresh = false, headers, timeout, ...rest } = init;
+    const timeoutMs = timeout ?? DEFAULT_TIMEOUT_MS;
+    const callerSignal = rest.signal;
+    const link = withTimeout(callerSignal, timeoutMs);
 
     const finalHeaders: Record<string, string> = {
         Accept: 'application/json',
@@ -150,7 +306,7 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
         const res = await fetch(`${BASE_URL}${path}`, {
             ...rest,
             body: finalBody,
-            signal: rest.signal ?? controller.signal,
+            signal: link.signal,
             headers: finalHeaders,
         });
 
@@ -168,16 +324,15 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
                 if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
                     redirectExpiredSession();
                 }
-                throw new ApiError(0, 'No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.');
+                throw new ApiError(0, 'No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.', undefined, 'offline');
             }
 
-            const retryController = new AbortController();
-            const retryTimeoutId = setTimeout(() => retryController.abort(), DEFAULT_TIMEOUT_MS);
+            const retryLink = withTimeout(callerSignal, timeoutMs);
             try {
                 const retryRes = await fetch(`${BASE_URL}${path}`, {
                     ...rest,
                     body: finalBody,
-                    signal: retryController.signal,
+                    signal: retryLink.signal,
                     headers: { ...finalHeaders, Authorization: `Bearer ${newToken}` },
                 });
 
@@ -188,20 +343,13 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
                 try { retryParsed = retryText ? JSON.parse(retryText) : null; } catch { /* */ }
 
                 if (!retryRes.ok) {
-                    throw new ApiError(
-                        retryRes.status,
-                        extractErrorMessage(retryParsed, retryRes.status),
-                        retryParsed,
-                    );
+                    throw apiErrorFromResponse(retryRes.status, retryParsed);
                 }
                 return retryParsed as T;
             } catch (err) {
-                if (err instanceof DOMException && err.name === 'AbortError') {
-                    throw new ApiError(0, 'La solicitud tardó demasiado. Intenta de nuevo.');
-                }
-                throw err;
+                normalizeFetchError(err, callerSignal, retryLink.state.timedOut);
             } finally {
-                clearTimeout(retryTimeoutId);
+                retryLink.cleanup();
             }
         }
         // ─────────────────────────────────────────────────────────────────────
@@ -213,24 +361,16 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
         } catch { /* dejamos parsed como string */ }
 
         if (!res.ok) {
-            throw new ApiError(res.status, extractErrorMessage(parsed, res.status), parsed);
+            throw apiErrorFromResponse(res.status, parsed);
         }
 
         return parsed as T;
     } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') {
-            throw new ApiError(0, 'La solicitud tardó demasiado. Intenta de nuevo.');
-        }
-        if (err instanceof TypeError) {
-            throw new ApiError(
-                0,
-                'No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.',
-                err.message,
-            );
-        }
-        throw err;
+        // ApiError y CanceledError ya están clasificados: se propagan tal cual.
+        if (err instanceof ApiError || err instanceof CanceledError) throw err;
+        normalizeFetchError(err, callerSignal, link.state.timedOut);
     } finally {
-        clearTimeout(timeoutId);
+        link.cleanup();
     }
 }
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Menu, Sun, Moon, CornerDownLeft } from 'lucide-react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getRoleLabel } from '../config/permissions';
 import { useTheme } from '../context/ThemeContext';
 import { useStudentSearch } from '../hooks/useStudentSearch';
 import { initials } from '../utils/strings';
@@ -212,7 +213,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                     <div className="dash-header__profile-info">
                         <p className="dash-header__profile-name">{user?.nombre ?? 'Coordinador'}</p>
                         <p className="dash-header__profile-role">
-                            {user?.role === 'admin' ? 'Administrador' : 'Evaluador'}
+                            {getRoleLabel(user?.role)}
                         </p>
                     </div>
                     <div className="dash-header__avatar" aria-hidden="true">

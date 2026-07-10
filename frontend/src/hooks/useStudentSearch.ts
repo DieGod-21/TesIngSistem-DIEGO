@@ -13,6 +13,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { listEstudiantes } from '../services/estudiantesService';
+import { isCancel } from '../services/apiClient';
 import { matchesText } from '../utils/text';
 import { FETCH_ALL_LIMIT } from '../config/apiConfig';
 import type { Estudiante } from '../types/api';
@@ -30,7 +31,7 @@ export function useStudentSearch(query: string, enabled: boolean) {
         const controller = new AbortController();
         loadedRef.current = true;
         setLoading(true);
-        listEstudiantes({ limit: FETCH_ALL_LIMIT })
+        listEstudiantes({ limit: FETCH_ALL_LIMIT }, { signal: controller.signal })
             .then((res) => {
                 if (controller.signal.aborted) return;
                 const list = res.estudiantes ?? [];
@@ -44,8 +45,9 @@ export function useStudentSearch(query: string, enabled: boolean) {
                     );
                 }
             })
-            .catch(() => {
-                if (controller.signal.aborted) return;
+            .catch((err) => {
+                // Cancelación: silenciosa, no reintenta ni marca error.
+                if (controller.signal.aborted || isCancel(err)) return;
                 loadedRef.current = false; // permite reintentar en el próximo focus
             })
             .finally(() => {

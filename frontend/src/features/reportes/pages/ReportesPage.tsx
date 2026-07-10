@@ -7,12 +7,13 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { BarChart3, Search, RefreshCw, ChevronRight, Lock, AlertTriangle } from 'lucide-react';
+import { BarChart3, Search, RefreshCw, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getGlobalTernasReport } from '../../../services/reportesService';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
 import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import AccessRestricted from '../../../components/AccessRestricted';
 import '../styles/reportes.css';
 import '../../../styles/transitions.css';
 
@@ -34,7 +35,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 ];
 
 const ReportesPage: React.FC = () => {
-    const { isAdmin } = useAuth();
+    const { capabilities } = useAuth();
     const history = useHistory();
     const [data, setData] = useState<ReporteTernasGlobal | null>(null);
     const [loading, setLoading] = useState(true);
@@ -71,17 +72,10 @@ const ReportesPage: React.FC = () => {
         });
     }, [ternas, filter, query]);
 
-    if (!isAdmin) {
-        return (
-            <div className="reportes-page">
-                <EmptyState
-                    tone="neutral"
-                    icon={<Lock size={26} />}
-                    title="Acceso restringido"
-                    description="Esta sección es solo para administradores."
-                />
-            </div>
-        );
+    // Defensa en profundidad: aunque la ruta ya está protegida por RoleRoute,
+    // la página vuelve a verificar la capacidad antes de mostrar datos.
+    if (!capabilities.canViewReports) {
+        return <AccessRestricted />;
     }
 
     const r = data?.resumen;

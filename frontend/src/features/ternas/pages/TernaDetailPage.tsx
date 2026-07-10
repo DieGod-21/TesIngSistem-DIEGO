@@ -33,7 +33,7 @@ const RESOLUCION_LABEL = {
 const TernaDetailSkeleton: React.FC = () => (
     <div className="terna-detail-grid" aria-busy="true" aria-label="Cargando terna…">
         {[0, 1].map((i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 {[0, 1, 2].map((j) => (
                     <div key={j} className="tdetail-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <Skeleton size="short" />
@@ -105,7 +105,7 @@ const TernaDetailPage: React.FC = () => {
 
                         <div className="terna-detail-grid">
                             {/* Columna izquierda: estudiante + evaluadores + form */}
-                            <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                                 <article className="tdetail-card">
                                     <h2 className="tdetail-card__title">Estudiante y proyecto</h2>
                                     <p className="tdetail-student-name">{terna.estudiante_nombre}</p>
@@ -150,7 +150,7 @@ const TernaDetailPage: React.FC = () => {
                             </section>
 
                             {/* Columna derecha: tesis + resultado */}
-                            <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                                 {eligibility && (
                                     <ThesisStatusBadge estado={eligibility} title="Elegibilidad de tesis (PG1 + PG2)" />
                                 )}

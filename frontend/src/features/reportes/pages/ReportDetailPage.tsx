@@ -8,18 +8,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
-import { ChevronLeft, FileText, Users, Lock, AlertTriangle, RefreshCw, BarChart3 } from 'lucide-react';
+import { ChevronLeft, FileText, Users, AlertTriangle, RefreshCw, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getTernaReport, type ReporteTernaDetalle } from '../../../services/reportesService';
 import { ResolutionBadge } from './ReportesPage';
 import { Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
+import AccessRestricted from '../../../components/AccessRestricted';
 import '../styles/reportes.css';
 import '../../ternas/styles/ternas.css';
 
 const ReportDetailSkeleton: React.FC = () => (
     <div className="report-detail-grid" aria-busy="true" aria-label="Cargando reporte…">
         {[0, 1].map((i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div className="report-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <Skeleton size="short" />
                     <Skeleton size="medium" />
@@ -38,7 +39,7 @@ const ReportDetailSkeleton: React.FC = () => (
 const ReportDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
-    const { isAdmin } = useAuth();
+    const { capabilities } = useAuth();
     const [report, setReport] = useState<ReporteTernaDetalle | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -65,17 +66,10 @@ const ReportDetailPage: React.FC = () => {
         load(numId);
     }, [id, load]);
 
-    if (!isAdmin) {
-        return (
-            <div className="reportes-page">
-                <EmptyState
-                    tone="neutral"
-                    icon={<Lock size={26} />}
-                    title="Acceso restringido"
-                    description="Esta sección es solo para administradores."
-                />
-            </div>
-        );
+    // Defensa en profundidad: la ruta ya está protegida por RoleRoute; la página
+    // reconfirma la capacidad antes de renderizar el detalle.
+    if (!capabilities.canViewReports) {
+        return <AccessRestricted />;
     }
 
     return (
@@ -129,7 +123,7 @@ const ReportDetailPage: React.FC = () => {
                         />
 
                         <div className="report-detail-grid">
-                            <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                                 <article className="report-card">
                                     <h2 className="report-card__title">Estudiante</h2>
                                     <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -176,7 +170,7 @@ const ReportDetailPage: React.FC = () => {
                                 </article>
                             </section>
 
-                            <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                                 <article className="report-card">
                                     <h2 className="report-card__title">Resultado ponderado</h2>
                                     <dl className="tdetail-meta">

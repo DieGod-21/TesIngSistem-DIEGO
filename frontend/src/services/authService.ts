@@ -10,7 +10,7 @@
  *   verifySession()        → GET  /api/usuarios/yo  → refresca perfil del usuario
  */
 
-import { apiFetch, apiData, type ApiEnvelope } from './apiClient';
+import { apiFetch, apiData, ApiError, REQUEST_TIMEOUTS, type ApiEnvelope } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 
 // Claves de sessionStorage — deben coincidir con apiClient.ts
@@ -102,7 +102,13 @@ export const login = async (email: string, password: string): Promise<User> => {
 
     const raw = await apiFetch<ApiEnvelope<LoginResponseData> | LoginResponseData>(
         API_PATHS.auth.login,
-        { method: 'POST', body: { email: email.trim(), password }, requireAuth: false, skipRefresh: true },
+        {
+            method: 'POST',
+            body: { email: email.trim(), password },
+            requireAuth: false,
+            skipRefresh: true,
+            timeout: REQUEST_TIMEOUTS.auth,
+        },
     );
 
     const data = (raw && typeof raw === 'object' && 'data' in raw)
@@ -123,6 +129,7 @@ export const logout = async (): Promise<void> => {
                 body: { refreshToken },
                 requireAuth: false,
                 skipRefresh: true,
+                timeout: REQUEST_TIMEOUTS.auth,
             });
         }
     } catch {
@@ -133,20 +140,38 @@ export const logout = async (): Promise<void> => {
 };
 
 /**
- * Verifica que el token vigente sea válido llamando a /api/usuarios/yo.
- * Actualiza el perfil persistido si tiene éxito.
+ * Resultado de la verificación de sesión. Tres estados explícitos: un fallo de
+ * red NO equivale a "no autenticado".
  */
-export const verifySession = async (): Promise<User | null> => {
+export type SessionCheck =
+    | { status: 'authenticated'; user: User }
+    | { status: 'unauthenticated' }
+    | { status: 'unknown' };
+
+/**
+ * Verifica la sesión llamando a /api/usuarios/yo.
+ *   - 2xx                         → authenticated (refresca el perfil persistido)
+ *   - 401/403 (rechazo explícito) → unauthenticated
+ *   - red/timeout/offline/5xx     → unknown (NO destruir la sesión)
+ */
+export const verifySession = async (): Promise<SessionCheck> => {
     try {
-        const dto = await apiData<UsuarioDTO | { usuario: UsuarioDTO }>(API_PATHS.usuarios.me);
+        const dto = await apiData<UsuarioDTO | { usuario: UsuarioDTO }>(
+            API_PATHS.usuarios.me,
+            { timeout: REQUEST_TIMEOUTS.auth },
+        );
         const user = adaptUsuario(dto);
         sessionStorage.setItem(USER_KEY, JSON.stringify(user));
-        return user;
-    } catch {
-        return null;
+        return { status: 'authenticated', user };
+    } catch (err) {
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+            return { status: 'unauthenticated' };
+        }
+        // Fallo de red / timeout / 5xx / desconocido: la sesión se conserva.
+        return { status: 'unknown' };
     }
 };
 
 /** @deprecated — compatibilidad legacy. */
 export const verifyToken = async (_token?: string): Promise<boolean> =>
-    (await verifySession()) !== null;
+    (await verifySession()).status === 'authenticated';

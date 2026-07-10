@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { importarEstudiantes, importarNotas } from '../services/importarService';
 import type { ImportarResult } from '../services/importarService';
+import { ApiError } from '../services/apiClient';
 import { COURSE_CODES } from '../config/apiConfig';
 import { Button } from './ui';
 import '../styles/import-modal.css';
@@ -36,6 +37,13 @@ function summarize(r: ImportarResult): string {
 }
 
 function extractError(e: unknown): string {
+    // Timeout de una importación grande: el proceso puede continuar en el servidor.
+    if (e instanceof ApiError && e.kind === 'timeout') {
+        return 'La importación está tardando más de lo normal. Es posible que continúe procesándose en el servidor; verifica el listado en unos minutos.';
+    }
+    if (e instanceof ApiError && e.kind === 'offline') {
+        return 'Error de red. Verifica tu conexión e intenta de nuevo.';
+    }
     if (!(e instanceof Error)) return 'Error inesperado al importar.';
     const msg = e.message;
     if (!msg) return 'Error inesperado al importar.';

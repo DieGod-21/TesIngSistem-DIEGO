@@ -22,6 +22,7 @@ import {
     LogOut,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import type { Capabilities } from '../config/permissions';
 import umgLogo from '../assets/umg_logo.png';
 
 // ─── Tipos ───────────────────────────────────────────────────────────
@@ -36,7 +37,8 @@ interface NavItem {
     to: string;
     icon: React.ReactNode;
     exact?: boolean;
-    adminOnly?: boolean;
+    /** Capacidad requerida para ver la entrada. Si se omite, es visible para todos. */
+    capability?: keyof Capabilities;
     /**
      * Resaltado por sección: mantiene el ítem activo también en rutas de detalle
      * (p. ej. /students/:id resalta "Estudiantes"). Si se define, gobierna el
@@ -57,18 +59,17 @@ const NAV_ITEMS: NavItem[] = [
         matchSection: (p) => p === '/proyectos' || p.startsWith('/proyectos/') },
     { label: 'Ternas',         to: '/ternas',       icon: <ClipboardList size={20} />,
         matchSection: (p) => p === '/ternas' || p.startsWith('/ternas/') },
-    { label: 'Reportes',       to: '/reports',      icon: <BarChart3 size={20} />,       adminOnly: true,
+    { label: 'Reportes',       to: '/reports',      icon: <BarChart3 size={20} />,       capability: 'canViewReports',
         matchSection: (p) => p === '/reports' || p.startsWith('/reports/') },
-    { label: 'Usuarios',       to: '/usuarios',     icon: <UserCog size={20} />,         adminOnly: true,
+    { label: 'Usuarios',       to: '/usuarios',     icon: <UserCog size={20} />,         capability: 'canManageUsers',
         matchSection: (p) => p === '/usuarios' || p.startsWith('/usuarios/') },
 ];
 
 // ─── Componente ──────────────────────────────────────────────────────
 
 const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
-    const { user, logout } = useAuth();
+    const { capabilities, logout } = useAuth();
     const history = useHistory();
-    const isAdmin = user?.role === 'admin';
 
     const handleLogout = async () => {
         await logout();
@@ -103,7 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
 
                 {/* Navegación principal */}
                 <nav className="dash-sidebar__nav" aria-label="Navegación principal">
-                    {NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) => (
+                    {NAV_ITEMS.filter((item) => !item.capability || capabilities[item.capability]).map((item) => (
                         <NavLink
                             key={item.label}
                             to={item.to}

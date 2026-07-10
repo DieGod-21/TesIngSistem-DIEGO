@@ -15,7 +15,7 @@
  *   - search=<texto>               → búsqueda inicial (ambos modos)
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import {
     Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight,
@@ -29,6 +29,7 @@ import {
     getAprobadosTesis, getReprobadosTesis, type TesisEstudiante,
 } from '../services/tesisService';
 import ImportModal from '../components/ImportModal';
+import { useAuth } from '../context/AuthContext';
 import { Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
 import '../styles/students-list.css';
 import '../styles/student-new.css';
@@ -67,11 +68,34 @@ function parseQuery(search: string) {
 const StudentsListPage: React.FC = () => {
     const history  = useHistory();
     const location = useLocation();
+    const { capabilities } = useAuth();
     const { filter, search: initialSearch } = useMemo(
         () => parseQuery(location.search),
         [location.search],
     );
     const [importOpen, setImportOpen] = useState(false);
+
+    // Búsqueda local integrada con el alcance: escribe en ?search= (URL compartible
+    // y sincronizada con el buscador global del TopHeader). Ambas vistas hijas ya
+    // consumen `initialSearch` desde la URL, por lo que responden a este input.
+    const [searchInput, setSearchInput] = useState(initialSearch);
+    const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => { setSearchInput(initialSearch); }, [initialSearch]);
+    useEffect(() => () => { if (searchDebounce.current) clearTimeout(searchDebounce.current); }, []);
+
+    const onSearchChange = (value: string) => {
+        setSearchInput(value);
+        if (searchDebounce.current) clearTimeout(searchDebounce.current);
+        searchDebounce.current = setTimeout(() => {
+            const qp = new URLSearchParams(location.search);
+            const v = value.trim();
+            if (v) qp.set('search', v);
+            else { qp.delete('search'); qp.delete('q'); }
+            const q = qp.toString();
+            history.replace(q ? `/students?${q}` : '/students');
+        }, 250);
+    };
 
     /** Cambia el alcance conservando la búsqueda activa; normaliza el alias heredado `filter`. */
     const buildScopeTo = (status: 'approved' | 'failed' | null): string => {
@@ -85,7 +109,9 @@ const StudentsListPage: React.FC = () => {
 
     return (
         <div className="sl-body">
-                <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
+                {capabilities.canImportStudents && (
+                    <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
+                )}
 
                 <nav className="sn-breadcrumb" aria-label="Navegación secundaria">
                     <button
@@ -105,27 +131,42 @@ const StudentsListPage: React.FC = () => {
                     title="Estudiantes"
                     subtitle="Consulta la información, notas y elegibilidad de tesis de los estudiantes registrados."
                     actions={
-                        <Button onClick={() => setImportOpen(true)}>
-                            <Upload size={16} aria-hidden="true" />
-                            Importar
-                        </Button>
+                        capabilities.canImportStudents ? (
+                            <Button onClick={() => setImportOpen(true)}>
+                                <Upload size={16} aria-hidden="true" />
+                                Importar
+                            </Button>
+                        ) : undefined
                     }
                 />
 
-                <div className="sl-scope" role="group" aria-label="Filtrar estudiantes por estado de tesis">
-                    <span className="sl-scope__label">Ver</span>
-                    <div className="sl-status-tabs">
-                        {SCOPES.map((s) => (
-                            <button
-                                key={s.label}
-                                type="button"
-                                className={`sl-status-tab${filter === s.match ? ' sl-status-tab--active' : ''}`}
-                                aria-pressed={filter === s.match}
-                                onClick={() => history.push(buildScopeTo(s.status))}
-                            >
-                                {s.label}
-                            </button>
-                        ))}
+                <div className="sl-toolbar">
+                    <div className="ui-search sl-toolbar__search">
+                        <Search size={15} className="ui-search__icon" aria-hidden="true" />
+                        <input
+                            type="text"
+                            className="ui-search__input"
+                            placeholder="Buscar por nombre, carné o correo…"
+                            value={searchInput}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            aria-label="Buscar estudiantes"
+                        />
+                    </div>
+                    <div className="sl-scope" role="group" aria-label="Filtrar estudiantes por estado de tesis">
+                        <span className="sl-scope__label">Ver</span>
+                        <div className="sl-status-tabs">
+                            {SCOPES.map((s) => (
+                                <button
+                                    key={s.label}
+                                    type="button"
+                                    className={`sl-status-tab${filter === s.match ? ' sl-status-tab--active' : ''}`}
+                                    aria-pressed={filter === s.match}
+                                    onClick={() => history.push(buildScopeTo(s.status))}
+                                >
+                                    {s.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

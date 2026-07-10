@@ -26,6 +26,8 @@ import { IonPage, IonContent } from '@ionic/react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/TopHeader';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { PageErrorFallback } from '../components/ErrorFallback';
 import '../styles/dashboard.css';
 import '../styles/transitions.css';
 
@@ -54,9 +56,17 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         <TopHeader
                             onMenuToggle={() => setSidebarOpen((v) => !v)}
                         />
-                        <div key={pathname} className="page-enter-animate">
-                            {children}
-                        </div>
+                        {/*
+                         * Nivel 2 — Boundary de contenido: envuelve SOLO la página.
+                         * Sidebar y header quedan fuera, así que sobreviven a un
+                         * crash de página. La key por pathname re-monta el boundary
+                         * al navegar → recuperación natural, sin lógica de reset.
+                         */}
+                        <ErrorBoundary key={pathname} level="content" fallback={<PageErrorFallback />}>
+                            <div className="page-enter-animate">
+                                {children}
+                            </div>
+                        </ErrorBoundary>
                     </main>
                 </div>
             </IonContent>

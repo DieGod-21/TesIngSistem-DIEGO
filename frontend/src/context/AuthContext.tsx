@@ -7,12 +7,16 @@ import React, {
 } from 'react';
 import * as authService from '../services/authService';
 import type { User } from '../services/authService';
+import { getCapabilities, isAdminRole, type Capabilities } from '../config/permissions';
 
 // ─── Tipos ────────────────────────────────────────────────────────────
 
 interface AuthContextValue {
     user: User | null;
     isAuthenticated: boolean;
+    /** Capacidades de autorización derivadas del rol (fuente única de verdad). */
+    capabilities: Capabilities;
+    /** Compatibilidad: derivado del módulo de permisos, no de comparación directa. */
     isAdmin: boolean;
     /** Numérico — mantenido para compatibilidad con componentes existentes. */
     usuarioId: number | null;
@@ -48,13 +52,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Optimista: mostramos usuario persistido y verificamos en background
             if (!canceled) setUser(session.user);
             try {
-                const verified = await authService.verifySession();
+                const result = await authService.verifySession();
                 if (!canceled) {
-                    if (verified) setUser(verified);
-                    else { await authService.logout(); setUser(null); }
+                    if (result.status === 'authenticated') {
+                        setUser(result.user);
+                    } else if (result.status === 'unauthenticated') {
+                        // Rechazo explícito de autenticación → cerrar sesión.
+                        await authService.logout();
+                        setUser(null);
+                    }
+                    // 'unknown' (red/timeout): se conserva la sesión optimista.
                 }
             } catch {
-                // Error de red: mantenemos sesión optimista
+                // Salvaguarda: cualquier error inesperado mantiene la sesión optimista.
             } finally {
                 if (!canceled) setAuthLoading(false);
             }
@@ -91,7 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const value: AuthContextValue = {
         user,
         isAuthenticated: user !== null,
-        isAdmin: user?.role === 'admin',
+        capabilities: getCapabilities(user?.role),
+        isAdmin: isAdminRole(user?.role),
         usuarioId: user ? user.usuarioId : null,
         isAuthLoading,
         loading,

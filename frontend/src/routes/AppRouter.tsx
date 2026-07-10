@@ -18,6 +18,7 @@ import React from 'react';
 import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
 import { IonRouterOutlet } from '@ionic/react';
 import { useAuth } from '../context/AuthContext';
+import RoleRoute from './RoleRoute';
 import AppShell from '../layout/AppShell';
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
@@ -102,9 +103,9 @@ const AuthenticatedLayout: React.FC = () => {
                 <Route path="/proyectos" exact><ProyectosListPage /></Route>
                 <Route path="/ternas/:id" exact><TernaDetailPage /></Route>
                 <Route path="/ternas" exact><TernasListPage /></Route>
-                <Route path="/reports/:id" exact><ReportDetailPage /></Route>
-                <Route path="/reports" exact><ReportesPage /></Route>
-                <Route path="/usuarios" exact><UsuariosPage /></Route>
+                <RoleRoute path="/reports/:id" exact require="canViewReports"><ReportDetailPage /></RoleRoute>
+                <RoleRoute path="/reports" exact require="canViewReports"><ReportesPage /></RoleRoute>
+                <RoleRoute path="/usuarios" exact require="canManageUsers"><UsuariosPage /></RoleRoute>
                 <Route exact path="/evaluation"><Redirect to="/ternas" /></Route>
                 <Route exact path="/evaluation/:panelId"><Redirect to="/ternas" /></Route>
                 <Route exact path="/"><Redirect to="/dashboard" /></Route>

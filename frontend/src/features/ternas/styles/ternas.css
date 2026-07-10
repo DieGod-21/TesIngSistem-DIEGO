@@ -142,7 +142,7 @@
 .terna-detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: 20px;
+  gap: 24px;
   align-items: start;
 }
 
@@ -168,15 +168,16 @@
   background: var(--surface-card-grad), var(--surface-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 18px 20px;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: var(--shadow-sm), var(--hairline);
+  /* Tarjetas "flotantes": misma presencia y profundidad que Student Detail. */
+  box-shadow: var(--shadow-md), var(--hairline);
 }
 
 .tdetail-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   border-color: var(--border-strong);
 }
 .tdetail-card__title {

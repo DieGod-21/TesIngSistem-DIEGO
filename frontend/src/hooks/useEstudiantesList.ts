@@ -22,6 +22,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { listEstudiantes } from '../services/estudiantesService';
+import { isCancel } from '../services/apiClient';
 import { matchesText } from '../utils/text';
 import { FETCH_ALL_LIMIT } from '../config/apiConfig';
 import type { Estudiante } from '../types/api';
@@ -47,7 +48,7 @@ export function useEstudiantesList(initial: { limit?: number; search?: string } 
         setLoading(true);
         setError(null);
         try {
-            const res = await listEstudiantes({ limit: FETCH_ALL_LIMIT });
+            const res = await listEstudiantes({ limit: FETCH_ALL_LIMIT }, { signal });
             if (signal?.aborted) return;
             const list = res.estudiantes ?? [];
             setAll(list);
@@ -60,7 +61,8 @@ export function useEstudiantesList(initial: { limit?: number; search?: string } 
                 );
             }
         } catch (e) {
-            if (signal?.aborted) return;
+            // Cancelación: nunca es un error de UI.
+            if (signal?.aborted || isCancel(e)) return;
             setError(e instanceof Error ? e.message : 'No se pudo cargar la lista de estudiantes.');
             setAll([]);
         } finally {
