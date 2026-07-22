@@ -5,6 +5,8 @@ interface ImportMetaEnv {
     readonly VITE_API_URL?: string;
     /** Versión de la app para telemetría (opcional). */
     readonly VITE_APP_VERSION?: string;
+    /** Endpoint HTTP de telemetría de producción (opcional; si falta → no-op). */
+    readonly VITE_TELEMETRY_URL?: string;
 }
 
 interface ImportMeta {

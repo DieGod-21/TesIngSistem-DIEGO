@@ -176,7 +176,3 @@ export const verifySession = async (): Promise<SessionCheck> => {
         return { status: 'unknown' };
     }
 };
-
-/** @deprecated — compatibilidad legacy. */
-export const verifyToken = async (_token?: string): Promise<boolean> =>
-    (await verifySession()).status === 'authenticated';

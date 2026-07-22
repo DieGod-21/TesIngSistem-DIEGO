@@ -5,7 +5,8 @@
  *
  * Proveedor por entorno (sin dependencias externas, sin Sentry hardcodeado):
  *   - desarrollo → console.error con contexto diagnóstico.
- *   - producción → no-op silencioso.
+ *   - producción → proveedor HTTP por lotes si `VITE_TELEMETRY_URL` está
+ *     definida; en caso contrario, no-op silencioso.
  * El proveedor puede sustituirse en runtime con `setTelemetryProvider(...)`.
  *
  * SEGURIDAD (regla dura): un reporte SOLO contiene información diagnóstica
@@ -15,6 +16,8 @@
  * de reporte se construye por lista blanca de campos, de modo que ningún dato
  * sensible pueda filtrarse aunque un llamador lo pasara por error.
  */
+
+import { createHttpTelemetryProvider } from './httpTelemetryProvider';
 
 /** Nivel del origen del error. */
 export type BoundaryLevel = 'app' | 'content' | 'global';
@@ -59,14 +62,27 @@ const devProvider: TelemetryProvider = {
     },
 };
 
-/** Proveedor de producción: silencioso. */
+/** Proveedor de producción por defecto: silencioso. */
 const noopProvider: TelemetryProvider = {
     report() {
         /* no-op */
     },
 };
 
-let provider: TelemetryProvider = import.meta.env.DEV ? devProvider : noopProvider;
+/**
+ * Selecciona el proveedor por defecto según el entorno:
+ *   - dev                       → devProvider (console.error).
+ *   - prod + VITE_TELEMETRY_URL → proveedor HTTP por lotes.
+ *   - prod sin endpoint         → no-op (comportamiento previo intacto).
+ */
+function selectDefaultProvider(): TelemetryProvider {
+    if (import.meta.env.DEV) return devProvider;
+    const endpoint = import.meta.env.VITE_TELEMETRY_URL;
+    if (endpoint) return createHttpTelemetryProvider({ endpoint });
+    return noopProvider;
+}
+
+let provider: TelemetryProvider = selectDefaultProvider();
 
 /** Sustituye el proveedor de telemetría (permite integrar otro backend). */
 export function setTelemetryProvider(next: TelemetryProvider): void {

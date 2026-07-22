@@ -16,7 +16,15 @@ export default defineConfig(({ command, mode }) => {
     )
   }
 
+  // Metadata de versión: se prioriza la variable explícita; si no, la versión
+  // de package.json que npm expone como npm_package_version al correr scripts.
+  // Queda disponible en telemetría vía import.meta.env.VITE_APP_VERSION.
+  const appVersion = env.VITE_APP_VERSION ?? process.env.npm_package_version ?? ''
+
   return {
+    define: {
+      'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
+    },
     // Sin @vitejs/plugin-legacy: React 19 + Ionic 8 no soportan navegadores
     // legacy, por lo que el bundle nomodule/SystemJS + polyfills nunca podría
     // ejecutar la app. Se elimina para reducir tamaño y tiempo de build.

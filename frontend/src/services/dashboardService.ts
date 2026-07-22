@@ -25,22 +25,6 @@ interface TesisResumenResponse {
     resumen: TesisResumen;
 }
 
-interface EstudianteApi {
-    id:               number;
-    carnet:           string;
-    nombre:           string;
-    email?:           string | null;
-    carrera?:         string | null;
-    estado_tesis?:    string | null;
-    updated_at?:      string | null;
-    created_at?:      string | null;
-}
-
-interface EstudiantesListResponse {
-    estudiantes: EstudianteApi[];
-    pagination:  { total: number; page: number; limit: number; pages: number };
-}
-
 // ─── Interfaces ────────────────────────────────────────────────────
 
 export interface KpiData {
@@ -73,17 +57,6 @@ export interface PendingAction {
 
 export interface DashboardSummary {
     kpis: KpiData[];
-}
-
-/** Modelo interno para estudiante reciente (camelCase, sin snake_case) */
-export interface RecentStudent {
-    id: string;
-    nombreCompleto: string;
-    carnetId: string;
-    approved: boolean;
-    updatedAt: string;
-    phaseName: string | null;
-    phaseDescription: string | null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -161,27 +134,6 @@ export async function getDashboardSummary(opts: { signal?: AbortSignal } = {}): 
     ];
 
     return { kpis };
-}
-
-/**
- * Obtiene los estudiantes más recientes desde GET /api/estudiantes
- * (paginado). El backend no expone un endpoint "recent-students", pero
- * la primera página del listado cumple el mismo propósito.
- */
-export async function getRecentStudentsSummary(limit = 5, opts: { signal?: AbortSignal } = {}): Promise<RecentStudent[]> {
-    const res = await apiGet<EstudiantesListResponse>(
-        `${API_PATHS.estudiantes.list}?page=1&limit=${limit}`,
-        { signal: opts.signal },
-    );
-    return (res.estudiantes ?? []).map((s) => ({
-        id:               String(s.id),
-        nombreCompleto:   s.nombre,
-        carnetId:         s.carnet,
-        approved:         s.estado_tesis === 'aprobado',
-        updatedAt:        s.updated_at ?? s.created_at ?? '',
-        phaseName:        s.carrera ?? null,
-        phaseDescription: s.carrera ?? null,
-    }));
 }
 
 /**

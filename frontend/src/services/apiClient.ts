@@ -46,8 +46,14 @@ const BASE_URL = resolveBaseUrl();
  * petición y se clasifica como 'timeout'.
  */
 export const REQUEST_TIMEOUTS = {
-    /** Autenticación (login/logout/refresh/perfil): red crítica y rápida. */
-    auth: 10_000,
+    /**
+     * Autenticación (login/logout/refresh/perfil). 15 s: el login es el PRIMER
+     * request contra el backend, sin conexión previa calentada, y puede incurrir
+     * en latencia de arranque en frío del servidor (hosting modesto/serverless).
+     * Un techo de 10 s por debajo del `normal` (20 s) desatendía justo la
+     * operación más expuesta a cold-starts; 15 s da margen sin colgar la UI.
+     */
+    auth: 15_000,
     /** Peticiones normales de la API. */
     normal: 20_000,
     /** Cargas/importaciones grandes: pueden continuar procesándose en servidor. */
@@ -423,6 +429,3 @@ export const apiPut = <T>(path: string, body?: object, init?: Omit<ApiFetchOptio
 
 export const apiDelete = <T>(path: string, init?: Omit<ApiFetchOptions, 'method' | 'body'>) =>
     apiData<T>(path, { ...init, method: 'DELETE' });
-
-/** @deprecated — compatibilidad legacy. */
-export const USER_ID_KEY = 'auth_user_id';
