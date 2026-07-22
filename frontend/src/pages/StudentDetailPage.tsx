@@ -7,6 +7,7 @@ import { getEstudianteById } from '../services/estudiantesService';
 import { getReporteEstudiante } from '../services/reportesService';
 import { getNotasByEstudianteId } from '../services/notasService';
 import { isCancel } from '../services/apiClient';
+import { userMessageFor } from '../services/errorMessages';
 import {
     buildCursosResumen,
     computeEstadoTesis,
@@ -97,7 +98,7 @@ const StudentDetailPage: React.FC = () => {
                 if (signal.aborted || isCancel(e)) return;
                 setState({
                     student: null, reporte: null, notas: null, loading: false,
-                    error: e instanceof Error ? e.message : 'No se pudo cargar el estudiante.',
+                    error: userMessageFor(e),
                 });
             }
         })();

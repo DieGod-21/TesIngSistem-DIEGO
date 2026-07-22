@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getDashboardSummary, getPendingActions } from '../services/dashboardService';
 import { isCancel } from '../services/apiClient';
+import { userMessageFor } from '../services/errorMessages';
 import type { DashboardSummary, PendingAction } from '../services/dashboardService';
 import type { AsyncState } from '../types/async';
 
@@ -32,7 +33,7 @@ export function useDashboardData() {
             if (signal?.aborted || isCancel(err)) return;
             setSummary({
                 status: 'error',
-                message: err instanceof Error ? err.message : 'Error al cargar datos',
+                message: userMessageFor(err),
             });
         }
     }, []);
@@ -49,7 +50,7 @@ export function useDashboardData() {
             if (signal?.aborted || isCancel(err)) return;
             setTableState({
                 status: 'error',
-                message: err instanceof Error ? err.message : 'Error al cargar expedientes',
+                message: userMessageFor(err),
             });
         }
     }, []);

@@ -3,6 +3,7 @@ import { getTernaById } from '../../../services/ternasService';
 import { getTesisEstadoByCarnet } from '../../../services/tesisService';
 import { getNotasByCarnet } from '../../../services/notasService';
 import { isCancel } from '../../../services/apiClient';
+import { userMessageFor } from '../../../services/errorMessages';
 import {
     buildCursosResumen,
     computeEstadoTesis,
@@ -72,7 +73,7 @@ export function useTernaDetalle(id: number | null) {
                 terna: null,
                 eligibility: null,
                 loading: false,
-                error: e instanceof Error ? e.message : 'No se pudo cargar la terna.',
+                error: userMessageFor(e),
             });
         }
     }, [id]);

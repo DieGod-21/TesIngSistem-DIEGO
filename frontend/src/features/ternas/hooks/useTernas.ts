@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { listTernas } from '../../../services/ternasService';
 import { isCancel } from '../../../services/apiClient';
+import { userMessageFor } from '../../../services/errorMessages';
 import type { TernaResumen, EstadoTerna } from '../../../types/api';
 
 export function useTernas(estado?: EstadoTerna) {
@@ -17,7 +18,7 @@ export function useTernas(estado?: EstadoTerna) {
             setTernas(data);
         } catch (e) {
             if (signal?.aborted || isCancel(e)) return;
-            setError(e instanceof Error ? e.message : 'No se pudieron cargar las ternas.');
+            setError(userMessageFor(e));
             setTernas([]);
         } finally {
             if (!signal?.aborted) setLoading(false);

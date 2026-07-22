@@ -23,6 +23,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getEstudiantesRegistry } from '../services/estudiantesService';
 import { isCancel } from '../services/apiClient';
+import { userMessageFor } from '../services/errorMessages';
 import { matchesText } from '../utils/text';
 import type { Estudiante } from '../types/api';
 
@@ -58,7 +59,7 @@ export function useEstudiantesList(initial: { limit?: number; search?: string } 
         } catch (e) {
             // Cancelación: nunca es un error de UI.
             if (signal?.aborted || isCancel(e)) return;
-            setError(e instanceof Error ? e.message : 'No se pudo cargar la lista de estudiantes.');
+            setError(userMessageFor(e));
             setAll([]);
         } finally {
             if (!signal?.aborted) setLoading(false);

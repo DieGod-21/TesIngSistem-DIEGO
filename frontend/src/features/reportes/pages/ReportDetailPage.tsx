@@ -12,6 +12,7 @@ import { ChevronLeft, FileText, Users, AlertTriangle, RefreshCw, BarChart3 } fro
 import { useAuth } from '../../../context/AuthContext';
 import { getTernaReport, type ReporteTernaDetalle } from '../../../services/reportesService';
 import { isCancel } from '../../../services/apiClient';
+import { userMessageFor } from '../../../services/errorMessages';
 import { ResolutionBadge } from './ReportesPage';
 import { Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
@@ -54,7 +55,7 @@ const ReportDetailPage: React.FC = () => {
             setReport(report);
         } catch (e) {
             if (signal?.aborted || isCancel(e)) return;
-            setError(e instanceof Error ? e.message : 'No se pudo cargar el reporte.');
+            setError(userMessageFor(e));
         } finally {
             if (!signal?.aborted) setLoading(false);
         }

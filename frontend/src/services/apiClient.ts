@@ -6,9 +6,39 @@
  * para evitar múltiples llamadas simultáneas al endpoint de refresh.
  */
 
-const BASE_URL = import.meta.env.DEV
-    ? ''
-    : (import.meta.env.VITE_API_URL ?? 'https://notas.digicom.com.gt');
+// Claves de sessionStorage — fuente única en config/storageKeys.ts.
+import {
+    ACCESS_TOKEN_KEY,
+    REFRESH_TOKEN_KEY,
+    EXPIRES_AT_KEY,
+    USER_KEY,
+    SESSION_MSG_KEY,
+} from '../config/storageKeys';
+
+// Re-export para compatibilidad: LoginForm importa SESSION_MSG_KEY desde aquí.
+export { SESSION_MSG_KEY };
+
+/**
+ * Resuelve la URL base de la API con política fail-fast:
+ *   - En desarrollo se usa el proxy de Vite (mismo origen) → cadena vacía.
+ *   - En producción, VITE_API_URL es OBLIGATORIA. NO hay fallback silencioso:
+ *     si falta, la app no arranca en lugar de apuntar a una API no intencionada.
+ * El build también falla antes (guard en vite.config.ts); esto es defensa en
+ * profundidad por si el bundle se sirviera mal configurado.
+ */
+function resolveBaseUrl(): string {
+    if (import.meta.env.DEV) return '';
+    const url = import.meta.env.VITE_API_URL;
+    if (!url) {
+        throw new Error(
+            'Configuración inválida: falta VITE_API_URL. La aplicación no puede ' +
+            'apuntar a una API por defecto. Define VITE_API_URL en el entorno de build.',
+        );
+    }
+    return url;
+}
+
+const BASE_URL = resolveBaseUrl();
 
 /**
  * Timeouts por tipo de operación (ms). Cada petición puede sobrescribirlo con
@@ -25,14 +55,6 @@ export const REQUEST_TIMEOUTS = {
 } as const;
 
 const DEFAULT_TIMEOUT_MS = REQUEST_TIMEOUTS.normal;
-
-// Claves de sessionStorage — deben coincidir con authService.ts
-const ACCESS_TOKEN_KEY  = 'auth_access_token';
-const REFRESH_TOKEN_KEY = 'auth_refresh_token';
-const EXPIRES_AT_KEY    = 'auth_expires_at';
-const USER_KEY          = 'auth_user';
-/** Mensaje de sesión expirada que muestra LoginForm tras un redirect automático. */
-export const SESSION_MSG_KEY = 'auth_session_msg';
 
 export interface ApiEnvelope<T> {
     success: boolean;
@@ -148,9 +170,13 @@ function clearSessionTokens(): void {
 }
 
 function redirectExpiredSession(): never {
-    sessionStorage.setItem(SESSION_MSG_KEY, 'Tu sesión expiró. Por favor inicia sesión nuevamente.');
     clearSessionTokens();
-    window.location.replace('/login');
+    // Evita un bucle/redirect redundante si ya estamos en /login: solo se
+    // redirige (y se deja el mensaje) cuando el usuario está en otra ruta.
+    if (window.location.pathname !== '/login') {
+        sessionStorage.setItem(SESSION_MSG_KEY, 'Tu sesión expiró. Por favor inicia sesión nuevamente.');
+        window.location.replace('/login');
+    }
     throw new ApiError(401, 'Sesión expirada. Por favor inicia sesión nuevamente.', undefined, 'unauthorized');
 }
 

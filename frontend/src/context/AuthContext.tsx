@@ -3,6 +3,7 @@ import React, {
     useCallback,
     useContext,
     useEffect,
+    useMemo,
     useState,
 } from 'react';
 import * as authService from '../services/authService';
@@ -98,7 +99,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, []);
 
-    const value: AuthContextValue = {
+    // Valor memoizado: `useAuth` lo consumen Sidebar, TopHeader, RoleRoute y
+    // todas las páginas. Sin memoizar, cualquier re-render del provider (p. ej.
+    // ThemeProvider al alternar tema, que re-renderiza toda la pila) crea un
+    // objeto nuevo y cascadea un re-render a TODOS los consumidores. Depende de
+    // primitivos + callbacks estables (login/logout ya son useCallback).
+    const value = useMemo<AuthContextValue>(() => ({
         user,
         isAuthenticated: user !== null,
         capabilities: getCapabilities(user?.role),
@@ -109,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error,
         login,
         logout,
-    };
+    }), [user, isAuthLoading, loading, error, login, logout]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

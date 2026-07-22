@@ -12,12 +12,13 @@
 
 import { apiFetch, apiData, ApiError, REQUEST_TIMEOUTS, type ApiEnvelope } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
-
-// Claves de sessionStorage — deben coincidir con apiClient.ts
-const ACCESS_TOKEN_KEY = 'auth_access_token';
-const REFRESH_TOKEN_KEY = 'auth_refresh_token';
-const EXPIRES_AT_KEY = 'auth_expires_at';
-const USER_KEY = 'auth_user';
+import { clear as clearSharedCache } from './cache';
+import {
+    ACCESS_TOKEN_KEY,
+    REFRESH_TOKEN_KEY,
+    EXPIRES_AT_KEY,
+    USER_KEY,
+} from '../config/storageKeys';
 
 export interface User {
     id: string;
@@ -136,6 +137,10 @@ export const logout = async (): Promise<void> => {
         // Ignorar errores de red — la sesión local se limpia de todas formas
     } finally {
         clearSession();
+        // Logout explícito: purga la caché compartida (padrón de estudiantes,
+        // catálogos…) para que un login posterior en la misma pestaña no vea
+        // datos de otro usuario. NO toca la lógica de expiración de sesión.
+        clearSharedCache();
     }
 };
 

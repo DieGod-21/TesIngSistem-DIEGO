@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FolderOpen, FolderPlus, Plus, AlertTriangle, RefreshCw } from 'lucide-react';
 import { listProyectos } from '../../../services/proyectosService';
+import { isCancel } from '../../../services/apiClient';
+import { userMessageFor } from '../../../services/errorMessages';
 import type { Proyecto } from '../../../types/api';
 import ProyectoCard from '../components/ProyectoCard';
 import NuevoProyectoModal from '../components/NuevoProyectoModal';
@@ -30,20 +32,26 @@ const ProyectosListPage: React.FC = () => {
     const [error, setError]         = useState<string | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
 
-    const fetchProyectos = useCallback(async () => {
+    const fetchProyectos = useCallback(async (signal?: AbortSignal) => {
         setLoading(true);
         setError(null);
         try {
-            const data = await listProyectos();
+            const data = await listProyectos({ signal });
+            if (signal?.aborted) return;
             setProyectos(data);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'No pudimos cargar los proyectos. Revisa tu conexión e inténtalo de nuevo.');
+            if (signal?.aborted || isCancel(e)) return;
+            setError(userMessageFor(e));
         } finally {
-            setLoading(false);
+            if (!signal?.aborted) setLoading(false);
         }
     }, []);
 
-    useEffect(() => { fetchProyectos(); }, [fetchProyectos]);
+    useEffect(() => {
+        const controller = new AbortController();
+        fetchProyectos(controller.signal);
+        return () => controller.abort();
+    }, [fetchProyectos]);
 
     return (
         <div className="proy-page">
@@ -73,7 +81,7 @@ const ProyectosListPage: React.FC = () => {
                     title="No se pudieron cargar los proyectos"
                     description={error}
                     action={
-                        <Button variant="secondary" onClick={fetchProyectos}>
+                        <Button variant="secondary" onClick={() => fetchProyectos()}>
                             <RefreshCw size={16} aria-hidden="true" /> Reintentar
                         </Button>
                     }

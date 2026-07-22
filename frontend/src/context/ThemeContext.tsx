@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 
@@ -28,8 +28,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
     }, []);
 
+    // Valor memoizado por consistencia y para no recrear el objeto en renders
+    // ajenos al tema; `toggleTheme` ya es estable.
+    const value = useMemo<ThemeContextValue>(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
+
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={value}>
             {children}
         </ThemeContext.Provider>
     );

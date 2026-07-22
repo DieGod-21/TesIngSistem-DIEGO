@@ -15,7 +15,7 @@
  *   - search=<texto>               → búsqueda inicial (ambos modos)
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import {
     Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight,
@@ -28,6 +28,8 @@ import type { Estudiante } from '../types/api';
 import {
     getAprobadosTesis, getReprobadosTesis, type TesisEstudiante,
 } from '../services/tesisService';
+import { isCancel } from '../services/apiClient';
+import { userMessageFor } from '../services/errorMessages';
 import ImportModal from '../components/ImportModal';
 import { useAuth } from '../context/AuthContext';
 import { Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
@@ -373,21 +375,32 @@ const TesisFilteredView: React.FC<{
     const [loading, setLoading] = useState(true);
     const [error, setError]     = useState<string | null>(null);
 
-    const load = async () => {
+    // Cancelación real: al cambiar de filtro rápidamente, la petición anterior
+    // se aborta y su respuesta (potencialmente obsoleta) se ignora. Reutiliza
+    // la infraestructura existente (AbortController + isCancel).
+    const load = useCallback(async (signal?: AbortSignal) => {
         setLoading(true);
         setError(null);
         try {
-            const resp = filter === 'aprobados' ? await getAprobadosTesis() : await getReprobadosTesis();
+            const resp = filter === 'aprobados'
+                ? await getAprobadosTesis({ signal })
+                : await getReprobadosTesis({ signal });
+            if (signal?.aborted) return;
             setAll(resp.estudiantes);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'No se pudo cargar el listado.');
+            if (signal?.aborted || isCancel(e)) return;
+            setError(userMessageFor(e));
             setAll([]);
         } finally {
-            setLoading(false);
+            if (!signal?.aborted) setLoading(false);
         }
-    };
+    }, [filter]);
 
-    useEffect(() => { load(); }, [filter]);
+    useEffect(() => {
+        const controller = new AbortController();
+        load(controller.signal);
+        return () => controller.abort();
+    }, [load]);
 
     const filtered = useMemo(
         () => all.filter((s) => matchesText(`${s.nombre ?? ''} ${s.carnet ?? ''}`, initialSearch)),
@@ -412,7 +425,7 @@ const TesisFilteredView: React.FC<{
             <div className="sl-filters">
                 <Button
                     variant="secondary"
-                    onClick={load}
+                    onClick={() => load()}
                     disabled={loading}
                     aria-label="Refrescar listado"
                     style={{ marginLeft: 'auto' }}
@@ -444,7 +457,7 @@ const TesisFilteredView: React.FC<{
                                         title="No se pudo cargar el listado"
                                         description={error}
                                         action={
-                                            <Button variant="secondary" onClick={load}>
+                                            <Button variant="secondary" onClick={() => load()}>
                                                 <RefreshCw size={16} aria-hidden="true" /> Reintentar
                                             </Button>
                                         }

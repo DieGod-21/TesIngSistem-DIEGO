@@ -11,6 +11,7 @@ import { BarChart3, Search, RefreshCw, ChevronRight, AlertTriangle } from 'lucid
 import { useAuth } from '../../../context/AuthContext';
 import { getGlobalTernasReport } from '../../../services/reportesService';
 import { isCancel } from '../../../services/apiClient';
+import { userMessageFor } from '../../../services/errorMessages';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
 import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
@@ -53,7 +54,7 @@ const ReportesPage: React.FC = () => {
             setData(report);
         } catch (e) {
             if (signal?.aborted || isCancel(e)) return;
-            setError(e instanceof Error ? e.message : 'No se pudo cargar el reporte.');
+            setError(userMessageFor(e));
             setData(null);
         } finally {
             if (!signal?.aborted) setLoading(false);

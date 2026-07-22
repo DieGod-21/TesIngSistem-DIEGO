@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Users, UserPlus, AlertTriangle, RefreshCw, Search } from 'lucide-react';
 import { listUsuarios } from '../../../services/usuariosService';
+import { isCancel } from '../../../services/apiClient';
+import { userMessageFor } from '../../../services/errorMessages';
 import type { Usuario } from '../../../types/api';
 import NuevoUsuarioModal from '../components/NuevoUsuarioModal';
 import { Button, Badge, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
@@ -46,20 +48,26 @@ const UsuariosPage: React.FC = () => {
     const [search, setSearch]       = useState('');
     const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
 
-    const fetchUsuarios = useCallback(async () => {
+    const fetchUsuarios = useCallback(async (signal?: AbortSignal) => {
         setLoading(true);
         setError(null);
         try {
-            const data = await listUsuarios();
+            const data = await listUsuarios(undefined, { signal });
+            if (signal?.aborted) return;
             setUsuarios(data);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'No pudimos cargar los usuarios. Revisa tu conexión e inténtalo de nuevo.');
+            if (signal?.aborted || isCancel(e)) return;
+            setError(userMessageFor(e));
         } finally {
-            setLoading(false);
+            if (!signal?.aborted) setLoading(false);
         }
     }, []);
 
-    useEffect(() => { fetchUsuarios(); }, [fetchUsuarios]);
+    useEffect(() => {
+        const controller = new AbortController();
+        fetchUsuarios(controller.signal);
+        return () => controller.abort();
+    }, [fetchUsuarios]);
 
     const roleCounts = useMemo(() => ({
         admin:     usuarios.filter((u) => u.rol === 'admin').length,
@@ -100,7 +108,7 @@ const UsuariosPage: React.FC = () => {
                     title="No se pudieron cargar los usuarios"
                     description={error}
                     action={
-                        <Button variant="secondary" onClick={fetchUsuarios}>
+                        <Button variant="secondary" onClick={() => fetchUsuarios()}>
                             <RefreshCw size={16} aria-hidden="true" /> Reintentar
                         </Button>
                     }

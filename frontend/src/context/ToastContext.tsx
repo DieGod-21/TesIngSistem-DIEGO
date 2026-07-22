@@ -12,7 +12,7 @@
  * Renderizado: añadir <ToastContainer /> en AppShell o App.tsx
  */
 
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 // ─── Tipos ────────────────────────────────────────────────────────────
 
@@ -61,15 +61,17 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         timersRef.current[id] = setTimeout(() => removeToast(id), duration);
     }, [removeToast]);
 
-    const api = {
-        success: (msg: string, dur?: number) => addToast('success', msg, dur),
-        error:   (msg: string, dur?: number) => addToast('error',   msg, dur),
-        info:    (msg: string, dur?: number) => addToast('info',    msg, dur),
-        warning: (msg: string, dur?: number) => addToast('warning', msg, dur),
-    };
+    // Valor memoizado: evita que los consumidores de `useToast` (páginas y
+    // acciones) re-rendericen cuando el provider re-renderiza por su padre
+    // (p. ej. ThemeProvider al alternar tema). addToast/removeToast ya son
+    // useCallback estables; el valor solo cambia al cambiar `toasts`.
+    const value = useMemo<ToastContextValue>(
+        () => ({ toasts, addToast, removeToast }),
+        [toasts, addToast, removeToast],
+    );
 
     return (
-        <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
+        <ToastContext.Provider value={value}>
             {children}
             <ToastContainer toasts={toasts} onDismiss={removeToast} />
         </ToastContext.Provider>
@@ -80,15 +82,20 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 export function useToast() {
     const ctx = useContext(ToastContext);
-    if (!ctx) throw new Error('useToast must be used inside <ToastProvider>');
-    return {
+    const addToast = ctx?.addToast;
+    // Retorno estable: `toast` conserva la misma referencia entre renders
+    // (addToast es estable), evitando efectos/renders espurios en consumidores
+    // que lo usen como dependencia.
+    const api = useMemo(() => ({
         toast: {
-            success: (msg: string, dur?: number) => ctx.addToast('success', msg, dur),
-            error:   (msg: string, dur?: number) => ctx.addToast('error',   msg, dur),
-            info:    (msg: string, dur?: number) => ctx.addToast('info',    msg, dur),
-            warning: (msg: string, dur?: number) => ctx.addToast('warning', msg, dur),
+            success: (msg: string, dur?: number) => addToast?.('success', msg, dur),
+            error:   (msg: string, dur?: number) => addToast?.('error',   msg, dur),
+            info:    (msg: string, dur?: number) => addToast?.('info',    msg, dur),
+            warning: (msg: string, dur?: number) => addToast?.('warning', msg, dur),
         },
-    };
+    }), [addToast]);
+    if (!ctx) throw new Error('useToast must be used inside <ToastProvider>');
+    return api;
 }
 
 // ─── Container + Item ─────────────────────────────────────────────────
