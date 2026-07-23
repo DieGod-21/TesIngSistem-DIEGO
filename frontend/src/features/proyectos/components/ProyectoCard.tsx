@@ -12,7 +12,7 @@ interface Props {
 }
 
 const ProyectoCard: React.FC<Props> = ({ proyecto }) => (
-    <article className="proy-card">
+    <article className={`proy-card proy-card--${proyecto.fase === 'PG1' ? 'pg1' : 'pg2'}`}>
         <div className="proy-card__top">
             <Badge tone={proyecto.fase === 'PG1' ? 'primary' : 'info'}>
                 {proyecto.fase}

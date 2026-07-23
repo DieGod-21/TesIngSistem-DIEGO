@@ -67,12 +67,29 @@
 
 /* Brand / Logo */
 .dash-sidebar__brand {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 24px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: radial-gradient(120% 90% at 100% 0%,
+        color-mix(in oklch, var(--aurora-2) 20%, transparent) 0%, transparent 60%);
 }
+/* Malla de puntos técnica (misma firma que el hero/login), apenas perceptible. */
+.dash-sidebar__brand::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--texture-dots);
+    background-size: var(--texture-dots-size);
+    opacity: 0.4;
+    -webkit-mask-image: radial-gradient(120% 100% at 90% 0%, #000 0%, transparent 72%);
+    mask-image: radial-gradient(120% 100% at 90% 0%, #000 0%, transparent 72%);
+    pointer-events: none;
+}
+.dash-sidebar__brand > * { position: relative; z-index: 1; }
 
 .dash-sidebar__logo-box {
     background: #ffffff;
@@ -139,10 +156,29 @@
 }
 
 .dash-sidebar__nav-item--active {
-    background: oklch(1 0 0 / 0.14);
+    position: relative;
+    background: linear-gradient(90deg,
+        color-mix(in oklch, var(--indigo-500) 32%, transparent) 0%,
+        oklch(1 0 0 / 0.05) 100%);
     color: #ffffff;
     font-weight: 600;
-    box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.06);
+    box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.10), 0 4px 12px oklch(0.18 0.03 275 / 0.45);
+}
+/* Rail de acento izquierdo — firma de marca, comunica "estás aquí". */
+.dash-sidebar__nav-item--active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 62%;
+    border-radius: 0 3px 3px 0;
+    background: var(--gradient-brand);
+}
+/* Icono activo con la firma cian de la aurora (igual que el nombre del hero). */
+.dash-sidebar__nav-item--active svg {
+    color: color-mix(in oklch, var(--aurora-3) 82%, white);
 }
 
 .dash-sidebar__nav-item--disabled {
@@ -179,9 +215,12 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.45);
+    background: oklch(0.15 0.03 275 / 0.5);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
     z-index: 199;
 }
+@keyframes overlay-fade { from { opacity: 0; } to { opacity: 1; } }
 
 /* ─── Main ──────────────────────────────────────────────────────── */
 /*
@@ -476,6 +515,11 @@
 .dash-body {
     padding: clamp(16px, 3vw, 32px);
     flex: 1;
+    /* Composición intencional en monitores grandes (sin márgenes gigantes). */
+    width: 100%;
+    max-width: 1600px;
+    margin-inline: auto;
+    box-sizing: border-box;
 }
 
 /* ── Hero de bienvenida (superficie insignia) ────────────────────── */
@@ -1217,19 +1261,26 @@ button.kpi-card {
 
 @media (max-width: 768px) {
 
-    /* Sidebar oculta fuera de pantalla en móvil */
+    /* Sidebar oculta fuera de pantalla en móvil — deslizamiento premium. */
     .dash-sidebar {
         transform: translateX(-100%);
+        transition: transform 280ms var(--ease-out-expo);
     }
 
     .dash-sidebar--open {
         transform: translateX(0);
+        box-shadow: 24px 0 60px -12px oklch(0.15 0.03 275 / 0.55);
     }
+
+    /* Objetivos táctiles más cómodos en el menú móvil. */
+    .dash-sidebar__nav { padding: 18px 14px; gap: 6px; }
+    .dash-sidebar__nav-item { padding: 13px 14px; }
 
     /* Mostrar overlay cuando sidebar abierta */
     .dash-sidebar--open~.dash-main .dash-sidebar-overlay,
     .dash-sidebar-overlay {
         display: block;
+        animation: overlay-fade 220ms ease both;
     }
 
     .dash-main {

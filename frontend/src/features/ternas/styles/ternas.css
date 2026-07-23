@@ -138,7 +138,7 @@
 }
 .terna-card__progress-fill {
   height: 100%;
-  background: var(--color-primary);
+  background: var(--gradient-brand);
   transition: width 280ms ease;
   /* Se rellena desde la izquierda al aparecer la tarjeta (sensación de progreso). */
   transform-origin: left center;
@@ -395,7 +395,9 @@
 }
 [data-theme="dark"] .terna-card__progress { color: var(--dash-text-secondary); }
 [data-theme="dark"] .terna-card__progress-bar { background: rgba(148, 163, 184, 0.18); }
-[data-theme="dark"] .terna-card__progress-fill { background: #60a5fa; }
+[data-theme="dark"] .terna-card__progress-fill {
+    background: linear-gradient(90deg, var(--indigo-400) 0%, var(--aurora-3) 100%);
+}
 
 [data-theme="dark"] .estado-pendiente {
     background: color-mix(in oklch, var(--color-warning) 20%, transparent);

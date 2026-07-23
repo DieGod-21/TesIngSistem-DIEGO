@@ -198,6 +198,8 @@
 
 /* ── Encabezado de expediente: identidad + veredicto en una sola fila ─ */
 .sd-student-header {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -209,6 +211,16 @@
     padding: 28px 32px;
     box-shadow: var(--shadow-md), var(--hairline);
 }
+/* Firma de la aurora, apenas un susurro en la esquina: expediente académico. */
+.sd-student-header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(80% 130% at 100% 0%,
+        color-mix(in oklch, var(--aurora-2) 9%, transparent) 0%, transparent 55%);
+    pointer-events: none;
+}
+.sd-student-header > * { position: relative; z-index: 1; }
 
 /* Bloque de identidad (izquierda) */
 .sd-record__identity {
@@ -346,6 +358,12 @@
 /* ── Detalle de estudiante: más aire y tarjetas "flotantes" (Product Polish).
    Ámbito acotado a .sd-detail-grid para no alterar el detalle de Ternas. ── */
 .sd-detail-grid { gap: 24px; }
+/* Balance de columnas en escritorio: la izquierda respira, la derecha se ancla
+   (sticky) para que el estado de tesis acompañe la lectura y no quede "vacía". */
+@media (min-width: 1025px) {
+    .sd-detail-grid { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+    .sd-detail-side { position: sticky; top: 20px; }
+}
 .sd-detail-grid .tdetail-card {
     padding: 22px 24px;
     box-shadow: var(--shadow-md), var(--hairline);

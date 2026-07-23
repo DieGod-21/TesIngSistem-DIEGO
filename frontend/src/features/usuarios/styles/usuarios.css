@@ -59,7 +59,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 18px 24px;
+    padding: 20px 24px;
     border-bottom: 1px solid var(--border);
     transition: background var(--transition-fast);
 }
@@ -97,15 +97,16 @@
     letter-spacing: 0.02em;
     flex-shrink: 0;
     user-select: none;
-    box-shadow: inset 0 0 0 1px var(--border);
+    color: #fff;
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.25), var(--shadow-xs);
 }
+/* Avatares con gradiente de marca (mismo lenguaje que el listado de Estudiantes),
+   diferenciados por rol mediante tokens semánticos. */
 .usr-avatar--admin {
-    background: var(--color-primary-soft);
-    color: var(--color-primary-hover);
+    background: linear-gradient(135deg, var(--umg-navy) 0%, var(--umg-blue) 100%);
 }
 .usr-avatar--evaluador {
-    background: var(--color-success-light);
-    color: var(--color-success);
+    background: linear-gradient(135deg, var(--color-success) 0%, color-mix(in oklch, var(--color-success), white 20%) 100%);
 }
 
 .usr-info {

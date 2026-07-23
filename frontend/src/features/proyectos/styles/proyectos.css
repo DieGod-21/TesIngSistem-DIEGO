@@ -51,6 +51,7 @@
     border: 1px solid var(--border);
     border-top: 3px solid var(--color-primary);
     border-radius: var(--radius-card);
+    /* El acento superior distingue la fase con tokens de marca (PG1 vs PG2). */
     padding: 18px 20px;
     display: flex;
     flex-direction: column;
@@ -84,6 +85,9 @@
 @media (prefers-reduced-motion: reduce) {
     .proy-card { animation: none; }
 }
+
+.proy-card--pg1 { border-top-color: var(--color-primary); }
+.proy-card--pg2 { border-top-color: var(--color-info); }
 
 .proy-card__top {
     display: flex;
