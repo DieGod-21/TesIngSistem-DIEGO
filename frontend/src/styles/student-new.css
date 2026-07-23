@@ -13,10 +13,12 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 .sn-body {
-    padding: 32px;
+    padding: var(--content-pad);
     flex: 1;
-    max-width: 1200px;
+    max-width: var(--content-max);
     width: 100%;
+    /* Centrado y ancho estándar del marco (alineado con listas/detalle). */
+    margin: 0 auto;
 }
 
 /* Breadcrumb */

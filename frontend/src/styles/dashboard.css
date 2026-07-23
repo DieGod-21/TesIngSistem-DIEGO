@@ -44,8 +44,28 @@
     min-height: 100%;
     /* 100% del viewport de IonContent, no 100vh */
     background-color: var(--dash-bg);
+    /* Atmósfera institucional: luz ambiental continua tras TODO el contenido
+       autenticado (definida una sola vez en el shell → la heredan todos los
+       módulos). Reutiliza los tonos aurora a intensidad de susurro; sin motion,
+       sin parallax. Las superficies (tarjetas, tablas, formularios) son opacas
+       y la cubren: la atmósfera vive siempre por detrás del contenido. */
+    background-image:
+        radial-gradient(1200px 900px at 85% -12%,
+            color-mix(in oklch, var(--aurora-3) 6%, transparent) 0%, transparent 60%),
+        radial-gradient(1100px 950px at 22% -16%,
+            color-mix(in oklch, var(--aurora-1) 6%, transparent) 0%, transparent 58%);
+    background-repeat: no-repeat;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     box-sizing: border-box;
+}
+
+/* Modo oscuro: la misma luz, más profunda (glow ambiental, nunca lavado). */
+[data-theme="dark"] .dash-layout {
+    background-image:
+        radial-gradient(1200px 900px at 85% -12%,
+            color-mix(in oklch, var(--aurora-3) 10%, transparent) 0%, transparent 60%),
+        radial-gradient(1100px 950px at 22% -16%,
+            color-mix(in oklch, var(--aurora-1) 13%, transparent) 0%, transparent 58%);
 }
 
 /* ─── Sidebar — índigo profundo sólido (premium sobrio, sin animación) ─── */
@@ -129,9 +149,12 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    position: relative;   /* ancla del indicador activo que "viaja" */
 }
 
 .dash-sidebar__nav-item {
+    position: relative;
+    z-index: 1;           /* por encima del indicador que viaja detrás */
     display: flex;
     align-items: center;
     gap: 12px;
@@ -147,6 +170,7 @@
     width: 100%;
     transition: background var(--dash-transition), color var(--dash-transition);
 }
+.dash-sidebar__nav-item svg { transition: color var(--dash-transition); }
 
 .dash-sidebar__nav-item:hover {
     background: rgba(255, 255, 255, 0.10);
@@ -155,17 +179,38 @@
     transition: background var(--dash-transition), color var(--dash-transition), transform 150ms ease;
 }
 
+/* Estado activo: solo texto/ícono. El fondo y el rail los aporta el indicador
+   que viaja (una sola pieza en movimiento) — sensación de que la app navega. */
 .dash-sidebar__nav-item--active {
-    position: relative;
+    color: #ffffff;
+    font-weight: 600;
+}
+/* Icono activo con la firma cian de la aurora (igual que el nombre del hero). */
+.dash-sidebar__nav-item--active svg {
+    color: color-mix(in oklch, var(--aurora-3) 82%, white);
+}
+
+/* ── Indicador activo "que viaja" ─────────────────────────────────────
+   Una única pieza posicionada por JS (mide el ítem activo); se desplaza con
+   la misma curva del sistema de movimiento. La primera colocación es instantánea
+   (sin clase --travel) para no deslizar al montar. */
+.dash-sidebar__active-indicator {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 0;
+    height: 0;
+    border-radius: 8px;
     background: linear-gradient(90deg,
         color-mix(in oklch, var(--indigo-500) 32%, transparent) 0%,
         oklch(1 0 0 / 0.05) 100%);
-    color: #ffffff;
-    font-weight: 600;
     box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.10), 0 4px 12px oklch(0.18 0.03 275 / 0.45);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 200ms ease;
 }
-/* Rail de acento izquierdo — firma de marca, comunica "estás aquí". */
-.dash-sidebar__nav-item--active::before {
+.dash-sidebar__active-indicator::before {
     content: '';
     position: absolute;
     left: 0;
@@ -176,9 +221,21 @@
     border-radius: 0 3px 3px 0;
     background: var(--gradient-brand);
 }
-/* Icono activo con la firma cian de la aurora (igual que el nombre del hero). */
-.dash-sidebar__nav-item--active svg {
-    color: color-mix(in oklch, var(--aurora-3) 82%, white);
+.dash-sidebar__active-indicator--travel {
+    transition: transform 300ms var(--ease-out-expo),
+                height    300ms var(--ease-out-expo),
+                opacity   200ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+    .dash-sidebar__active-indicator--travel { transition: opacity 200ms ease; }
+}
+
+@keyframes sidebar-item-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .dash-sidebar--open .dash-sidebar__nav-item { animation: none; }
 }
 
 .dash-sidebar__nav-item--disabled {
@@ -513,11 +570,11 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 .dash-body {
-    padding: clamp(16px, 3vw, 32px);
+    padding: var(--content-pad);
     flex: 1;
     /* Composición intencional en monitores grandes (sin márgenes gigantes). */
     width: 100%;
-    max-width: 1600px;
+    max-width: var(--content-max-wide);
     margin-inline: auto;
     box-sizing: border-box;
 }
@@ -1275,6 +1332,19 @@ button.kpi-card {
     /* Objetivos táctiles más cómodos en el menú móvil. */
     .dash-sidebar__nav { padding: 18px 14px; gap: 6px; }
     .dash-sidebar__nav-item { padding: 13px 14px; }
+    .dash-sidebar__active-indicator { left: 14px; right: 14px; }
+
+    /* Aparición escalonada de los ítems al abrir el menú (sensación premium). */
+    .dash-sidebar--open .dash-sidebar__nav-item {
+        animation: sidebar-item-in 300ms var(--ease-out-expo) backwards;
+    }
+    .dash-sidebar--open .dash-sidebar__nav-item:nth-child(1) { animation-delay: 0.04s; }
+    .dash-sidebar--open .dash-sidebar__nav-item:nth-child(2) { animation-delay: 0.08s; }
+    .dash-sidebar--open .dash-sidebar__nav-item:nth-child(3) { animation-delay: 0.12s; }
+    .dash-sidebar--open .dash-sidebar__nav-item:nth-child(4) { animation-delay: 0.16s; }
+    .dash-sidebar--open .dash-sidebar__nav-item:nth-child(5) { animation-delay: 0.20s; }
+    .dash-sidebar--open .dash-sidebar__nav-item:nth-child(6) { animation-delay: 0.24s; }
+    .dash-sidebar--open .dash-sidebar__nav-item:nth-child(7) { animation-delay: 0.28s; }
 
     /* Mostrar overlay cuando sidebar abierta */
     .dash-sidebar--open~.dash-main .dash-sidebar-overlay,

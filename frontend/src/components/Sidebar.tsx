@@ -9,8 +9,8 @@
  * NavLink detecta la ruta activa automáticamente con `isActive` (v5 API).
  */
 
-import React from 'react';
-import { NavLink, useHistory } from 'react-router-dom';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { NavLink, useHistory, useLocation } from 'react-router-dom';
 import {
     Home,
     UserPlus,
@@ -70,6 +70,39 @@ const NAV_ITEMS: NavItem[] = [
 const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
     const { capabilities, logout } = useAuth();
     const history = useHistory();
+    const location = useLocation();
+
+    const items = NAV_ITEMS.filter((item) => !item.capability || capabilities[item.capability]);
+
+    // ── Indicador activo que "viaja": mide el ítem activo y lo desplaza. ──
+    const navRef = useRef<HTMLElement>(null);
+    const [indicator, setIndicator] = useState<{ y: number; h: number; ready: boolean }>({ y: 0, h: 0, ready: false });
+    const [travel, setTravel] = useState(false);
+
+    const measure = useCallback(() => {
+        const nav = navRef.current;
+        if (!nav) return;
+        const active = nav.querySelector<HTMLElement>('.dash-sidebar__nav-item--active');
+        if (!active) { setIndicator((s) => ({ ...s, ready: false })); return; }
+        setIndicator({ y: active.offsetTop, h: active.offsetHeight, ready: true });
+    }, []);
+
+    // Reposiciona al cambiar de ruta o el conjunto de ítems (capacidades).
+    useLayoutEffect(() => { measure(); }, [location.pathname, items.length, measure]);
+
+    // Habilita la transición de desplazamiento tras la primera colocación
+    // (evita un "salto" desde el origen al montar).
+    useEffect(() => {
+        const id = requestAnimationFrame(() => setTravel(true));
+        return () => cancelAnimationFrame(id);
+    }, []);
+
+    // Recalcula ante cambios de tamaño (padding responsive del menú).
+    useEffect(() => {
+        const onResize = () => measure();
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, [measure]);
 
     const handleLogout = async () => {
         await logout();
@@ -103,15 +136,15 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                 </div>
 
                 {/* Navegación principal */}
-                <nav className="dash-sidebar__nav" aria-label="Navegación principal">
-                    {NAV_ITEMS.filter((item) => !item.capability || capabilities[item.capability]).map((item) => (
+                <nav className="dash-sidebar__nav" aria-label="Navegación principal" ref={navRef}>
+                    {items.map((item) => (
                         <NavLink
                             key={item.label}
                             to={item.to}
                             exact={item.exact}
                             isActive={
                                 item.matchSection
-                                    ? (_, location) => item.matchSection!(location.pathname)
+                                    ? (_, loc) => item.matchSection!(loc.pathname)
                                     : undefined
                             }
                             className="dash-sidebar__nav-item"
@@ -122,6 +155,17 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                             <span>{item.label}</span>
                         </NavLink>
                     ))}
+
+                    {/* Indicador activo que se desplaza entre destinos. */}
+                    <span
+                        className={`dash-sidebar__active-indicator${travel ? ' dash-sidebar__active-indicator--travel' : ''}`}
+                        aria-hidden="true"
+                        style={{
+                            transform: `translateY(${indicator.y}px)`,
+                            height: indicator.h,
+                            opacity: indicator.ready ? 1 : 0,
+                        }}
+                    />
                 </nav>
 
                 <div className="dash-sidebar__footer">
