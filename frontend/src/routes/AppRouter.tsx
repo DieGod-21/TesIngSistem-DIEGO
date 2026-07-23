@@ -20,6 +20,7 @@ import { IonRouterOutlet } from '@ionic/react';
 import { useAuth } from '../context/AuthContext';
 import RoleRoute from './RoleRoute';
 import AppShell from '../layout/AppShell';
+import { Skeleton } from '../components/ui';
 
 // ─── Rutas eager (primer pintado) ─────────────────────────────────────
 // Login (pantalla de entrada del usuario no autenticado) y Dashboard
@@ -77,19 +78,25 @@ const AuthLoadingScreen: React.FC = () => (
 
 // ─── Fallback del área de contenido (carga de chunk de ruta) ──────────
 // Cubre el hueco mientras se descarga el chunk de una página diferida.
-// Vive dentro del AppShell, por lo que usa min-height (no 100vh).
+// Esqueleto genérico (cabecera + filas) en el lenguaje de carga del DS: el
+// contenido se percibe "llegando" en lugar de un spinner neutro.
 const ContentFallback: React.FC = () => (
     <div
-        style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '60vh',
-        }}
+        style={{ padding: '8px 2px', maxWidth: 1280, margin: '0 auto', width: '100%' }}
         aria-label="Cargando módulo…"
         role="status"
     >
-        <Spinner />
+        {/* Cabecera de página */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
+            <Skeleton height={30} width={260} radius={8} />
+            <Skeleton height={16} width={420} radius={8} />
+        </div>
+        {/* Filas / tarjetas de contenido */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} height={56} radius={14} />
+            ))}
+        </div>
     </div>
 );
 

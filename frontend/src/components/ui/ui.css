@@ -430,6 +430,19 @@
     .ui-modal-overlay, .ui-modal { animation: none; }
 }
 
+/* Bottom-sheet en móvil: anclado a la base, ancho completo, ergonomía táctil. */
+@media (max-width: 640px) {
+    .ui-modal-overlay { align-items: flex-end; padding: 0; }
+    .ui-modal {
+        max-width: none;
+        width: 100%;
+        max-height: 92vh;
+        overflow-y: auto;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        animation: sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    HERO — superficie insignia con aurora + textura técnica
 ═══════════════════════════════════════════════════════════════════ */

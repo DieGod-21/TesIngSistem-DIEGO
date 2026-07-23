@@ -36,6 +36,10 @@
   transition: all 150ms;
 }
 .ternas-chip:hover { background: #f8fafc; }
+/* Objetivo táctil cómodo cuando el filtro se opera con el dedo. */
+@media (max-width: 640px) {
+  .ternas-chip { min-height: 40px; display: inline-flex; align-items: center; }
+}
 .ternas-chip--active {
   background: var(--color-primary);
   color: var(--color-primary-contrast);
@@ -136,6 +140,16 @@
   height: 100%;
   background: var(--color-primary);
   transition: width 280ms ease;
+  /* Se rellena desde la izquierda al aparecer la tarjeta (sensación de progreso). */
+  transform-origin: left center;
+  animation: terna-fill 0.62s var(--ease-out-expo) both;
+}
+@keyframes terna-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .terna-card__progress-fill { animation: none; }
 }
 
 /* Detail */

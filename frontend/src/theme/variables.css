@@ -332,3 +332,16 @@ body {
     from { opacity: 0; transform: scale(0.96) translateY(6px); }
     to   { opacity: 1; transform: scale(1)    translateY(0);   }
 }
+
+/* Bottom-sheet móvil: el diálogo emerge desde la base (convención nativa). */
+@keyframes sheet-up {
+    from { opacity: 0; transform: translateY(100%); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* Sin desplazamiento del sheet cuando se reduce el movimiento. */
+@media (prefers-reduced-motion: reduce) {
+    .ui-modal, .en-modal, .im-modal, .np-modal, .nu-modal {
+        animation-duration: 0.01ms !important;
+    }
+}

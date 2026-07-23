@@ -471,7 +471,23 @@ ion-content::part(scroll) {
 /* ─── Responsive móvil: hero como encabezado azul ─────────────────── */
 @media (max-width: 767px) {
   .auth-screen {
+    position: relative;
+    isolation: isolate;
     background: linear-gradient(160deg, var(--indigo-900) 0%, var(--indigo-800) 55%, var(--indigo-700) 100%);
+  }
+  /* Firma "engineering-grade": la misma malla de puntos del hero de escritorio,
+     desvanecida sobre la banda índigo, para una identidad idéntica en móvil. */
+  .auth-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--texture-dots);
+    background-size: var(--texture-dots-size);
+    opacity: 0.35;
+    -webkit-mask-image: radial-gradient(120% 55% at 82% 0%, #000 0%, transparent 72%);
+    mask-image: radial-gradient(120% 55% at 82% 0%, #000 0%, transparent 72%);
+    pointer-events: none;
   }
   .auth-form-section {
     background: transparent;

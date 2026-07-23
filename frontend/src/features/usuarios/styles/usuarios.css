@@ -66,6 +66,25 @@
 .usr-list-item:last-child { border-bottom: none; }
 .usr-list-item:hover { background: var(--surface-raised); }
 
+/* Entrada escalonada — mismo lenguaje de movimiento que el resto de listas. */
+.usr-list-item { animation: usr-row-in 0.22s var(--ease-out-expo) backwards; }
+.usr-list-item:nth-child(1) { animation-delay: 0.03s; }
+.usr-list-item:nth-child(2) { animation-delay: 0.06s; }
+.usr-list-item:nth-child(3) { animation-delay: 0.09s; }
+.usr-list-item:nth-child(4) { animation-delay: 0.12s; }
+.usr-list-item:nth-child(5) { animation-delay: 0.15s; }
+.usr-list-item:nth-child(6) { animation-delay: 0.18s; }
+.usr-list-item:nth-child(7) { animation-delay: 0.21s; }
+.usr-list-item:nth-child(8) { animation-delay: 0.24s; }
+
+@keyframes usr-row-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .usr-list-item { animation: none; }
+}
+
 .usr-avatar {
     display: inline-flex;
     align-items: center;
@@ -151,6 +170,18 @@
     max-width: 440px;
     overflow: hidden;
     animation: modal-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Bottom-sheet en móvil (mismo patrón que el resto de diálogos del DS). */
+@media (max-width: 640px) {
+    .nu-overlay { align-items: flex-end; padding: 0; }
+    .nu-modal {
+        max-width: none;
+        max-height: 92vh;
+        overflow-y: auto;
+        border-radius: 20px 20px 0 0;
+        animation: sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
 }
 
 .nu-modal__header {

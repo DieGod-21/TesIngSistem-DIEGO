@@ -199,6 +199,11 @@
     background: var(--color-primary-soft);
 }
 
+/* Feedback táctil inmediato: en pulsación la fila se asienta un tono más. */
+.sl-table__tr--clickable:active {
+    background: var(--color-primary-soft-2);
+}
+
 .sl-table__td {
     padding: 14px 16px;
     color: var(--dash-text-primary);
@@ -278,6 +283,23 @@
     .sl-status-tabs {
         flex-wrap: wrap;
         justify-content: flex-start;
+    }
+
+    /* Objetivos táctiles cómodos (~44px) cuando la tabla se opera con el dedo. */
+    .sl-status-tab { min-height: 40px; }
+    .sl-pager__btn { width: 40px; height: 40px; }
+
+    /* Columna de identidad congelada: el nombre permanece visible al desplazar
+       la tabla en horizontal; la sombra derecha señala que hay más contenido. */
+    .sl-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: var(--surface-card);
+        box-shadow: 6px 0 12px -8px oklch(0.30 0.03 275 / 0.25);
+    }
+    .sl-table__tr--clickable:active td:first-child {
+        background: var(--color-primary-soft-2);
     }
 
     .sl-filter-count {

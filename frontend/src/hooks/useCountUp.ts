@@ -15,6 +15,16 @@ export function useCountUp(target: number, duration = 900): number {
     const startValueRef = useRef(0);
 
     useEffect(() => {
+        // Respeta la preferencia de movimiento reducido: sin tween, valor final directo.
+        const prefersReduced =
+            typeof window !== 'undefined' &&
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReduced) {
+            setCurrent(target);
+            return;
+        }
+
         startValueRef.current = current;
         startTimeRef.current = null;
 
