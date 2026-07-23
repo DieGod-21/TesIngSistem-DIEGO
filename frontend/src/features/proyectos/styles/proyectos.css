@@ -12,29 +12,7 @@
     width: 100%;
 }
 
-.proy-page__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.proy-page__title {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.proy-page__subtitle {
-    margin: 4px 0 0;
-    font-size: 0.92rem;
-    color: #64748b;
-}
+/* El encabezado de página usa la primitiva <PageHeader> del sistema de diseño. */
 
 /* ── Grid ────────────────────────────────────────────────────────── */
 
@@ -152,7 +130,7 @@
 
 .proy-btn--primary {
     background: var(--color-primary);
-    color: #fff;
+    color: var(--color-primary-contrast);
 }
 
 .proy-btn--primary:hover {
@@ -175,7 +153,7 @@
 .np-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.55);
+    background: oklch(0.20 0.02 275 / 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -185,9 +163,10 @@
 }
 
 .np-modal {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     width: 100%;
     max-width: 480px;
     max-height: 90vh;
@@ -215,7 +194,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 20px 24px 16px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border);
     gap: 12px;
 }
 
@@ -223,7 +202,7 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -235,18 +214,18 @@
     justify-content: center;
     width: 32px;
     height: 32px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     border: 0;
     background: transparent;
     cursor: pointer;
-    color: #64748b;
+    color: var(--text-muted);
     transition: background 0.15s, color 0.15s;
     flex-shrink: 0;
 }
 
 .np-modal__close:hover:not(:disabled) {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: var(--surface-raised);
+    color: var(--text-primary);
 }
 
 .np-modal__close:disabled {
@@ -274,11 +253,11 @@
 .np-label {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--text-secondary);
 }
 
 .np-label span {
-    color: #ef4444;
+    color: var(--color-danger);
     margin-left: 2px;
 }
 
@@ -287,11 +266,11 @@
 .np-select {
     width: 100%;
     padding: 9px 12px;
-    border-radius: 8px;
-    border: 1.5px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border-strong);
     font-size: 0.875rem;
-    color: #1e293b;
-    background: #fff;
+    color: var(--text-primary);
+    background: var(--surface-card);
     outline: none;
     transition: border-color 0.15s;
     font-family: inherit;
@@ -307,12 +286,12 @@
 .np-textarea:focus,
 .np-select:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
 }
 
 .np-input--error,
 .np-input--error:focus {
-    border-color: #ef4444;
+    border-color: var(--color-danger);
 }
 
 .np-input:disabled,
@@ -320,21 +299,21 @@
 .np-select:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: #f8fafc;
+    background: var(--surface-base);
 }
 
 .np-field-error {
     font-size: 0.78rem;
-    color: #dc2626;
+    color: var(--color-danger);
     font-weight: 500;
 }
 
 .np-api-error {
     padding: 10px 14px;
-    border-radius: 8px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
+    border-radius: var(--radius-md);
+    background: var(--color-danger-light);
+    border: 1px solid color-mix(in oklch, var(--color-danger) 35%, transparent);
+    color: var(--color-danger);
     font-size: 0.8125rem;
     font-weight: 500;
 }
@@ -369,7 +348,7 @@
 
 .np-btn--primary {
     background: var(--color-primary);
-    color: #fff;
+    color: var(--color-primary-contrast);
 }
 
 .np-btn--primary:hover:not(:disabled) {
@@ -382,16 +361,16 @@
 }
 
 .np-btn--secondary {
-    background: #f1f5f9;
-    color: #374151;
+    background: var(--surface-raised);
+    color: var(--text-secondary);
 }
 
 .np-btn--secondary:hover:not(:disabled) {
-    background: #e2e8f0;
+    background: var(--border);
 }
 
 .np-btn--secondary:active:not(:disabled) {
-    background: #cbd5e1;
+    background: var(--border-strong);
     transform: scale(0.97);
 }
 
@@ -411,39 +390,5 @@
 }
 
 /* ── Dark mode ───────────────────────────────────────────────────── */
-
-[data-theme="dark"] .proy-page__title { color: #f1f5f9; }
-[data-theme="dark"] .proy-page__subtitle { color: #94a3b8; }
-
-/* .proy-card usa tokens semánticos: el modo oscuro se resuelve por herencia. */
-
-[data-theme="dark"] .np-overlay { background: rgba(0, 0, 0, 0.7); }
-
-[data-theme="dark"] .np-modal { background: #1e293b; }
-
-[data-theme="dark"] .np-modal__header { border-bottom-color: #334155; }
-[data-theme="dark"] .np-modal__title { color: #f1f5f9; }
-
-[data-theme="dark"] .np-modal__close { color: #94a3b8; }
-[data-theme="dark"] .np-modal__close:hover:not(:disabled) { background: #334155; color: #f1f5f9; }
-
-[data-theme="dark"] .np-label { color: #cbd5e1; }
-
-[data-theme="dark"] .np-input,
-[data-theme="dark"] .np-textarea,
-[data-theme="dark"] .np-select {
-    background: #0f172a;
-    border-color: #475569;
-    color: #f1f5f9;
-}
-
-[data-theme="dark"] .np-input:disabled,
-[data-theme="dark"] .np-textarea:disabled,
-[data-theme="dark"] .np-select:disabled {
-    background: #1e293b;
-}
-
-[data-theme="dark"] .np-api-error { background: #450a0a; border-color: #7f1d1d; color: #fca5a5; }
-
-[data-theme="dark"] .np-btn--secondary { background: #334155; color: #cbd5e1; }
-[data-theme="dark"] .np-btn--secondary:hover:not(:disabled) { background: #475569; }
+/* El modal y las tarjetas usan tokens semánticos: el modo oscuro se resuelve
+   por herencia, sin overrides por clase (mismo criterio que NuevoUsuarioModal). */
