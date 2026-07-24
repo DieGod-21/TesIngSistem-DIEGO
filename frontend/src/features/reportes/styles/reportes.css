@@ -65,6 +65,107 @@
   line-height: 1.02;
 }
 
+/* ── Resultado institucional (hero) ───────────────────────────────────────
+   Un solo centro de gravedad: la cifra manda, la barra descompone, la leyenda
+   detalla. Material de tarjeta del sistema; el énfasis lo lleva la tipografía,
+   no la decoración. Todo tokenizado (adapta a claro/oscuro). */
+.reportes-hero {
+  background: var(--surface-card-grad), var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm), var(--hairline);
+  padding: clamp(20px, 3vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.reportes-hero__head {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.reportes-hero__figure {
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.reportes-hero__num {
+  font-size: clamp(2.8rem, 6vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.reportes-hero__unit {
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-left: 2px;
+}
+.reportes-hero__caption { display: flex; flex-direction: column; gap: 2px; }
+.reportes-hero__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.reportes-hero__sub {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Barra de composición: segmentos proporcionales, colores semánticos del DS
+   (mismo mapeo que las badges de resolución). CSS puro, sin SVG ni librerías. */
+.reportes-bar {
+  display: flex;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-raised);
+}
+.reportes-bar__seg { height: 100%; min-width: 4px; }
+.reportes-bar__seg--aprueba-tesis { background: var(--color-success); }
+.reportes-bar__seg--aprueba-curso { background: var(--color-warning); }
+.reportes-bar__seg--reprobado     { background: var(--color-danger); }
+.reportes-bar__seg--pendiente     { background: var(--text-secondary); }
+
+.reportes-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.reportes-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+.reportes-legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.reportes-legend__dot--aprueba-tesis { background: var(--color-success); }
+.reportes-legend__dot--aprueba-curso { background: var(--color-warning); }
+.reportes-legend__dot--reprobado     { background: var(--color-danger); }
+.reportes-legend__dot--pendiente     { background: var(--text-secondary); }
+.reportes-legend__count {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
 .reportes-table-card {
   background: var(--surface-card-grad), var(--surface-card);
   border: 1px solid var(--border);

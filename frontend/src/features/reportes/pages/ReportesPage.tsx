@@ -14,6 +14,7 @@ import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
+import { useCountUp } from '../../../hooks/useCountUp';
 import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
 import '../styles/reportes.css';
@@ -82,15 +83,26 @@ const ReportesPage: React.FC = () => {
         });
     }, [ternas, filter, query]);
 
+    // Resultado institucional (protagonista de la pantalla). Todo derivado de
+    // datos ya presentes: nada se calcula ni se pide de más.
+    const r = data?.resumen;
+    const total = r?.total ?? 0;
+    const counts: Record<string, number> = {
+        'aprueba-tesis': r?.aprueba_tesis ?? 0,
+        'aprueba-curso': r?.aprueba_curso ?? 0,
+        'reprobado':     r?.reprobados ?? 0,
+        'pendiente':     r?.pendientes ?? 0,
+    };
+    const aprobadas = counts['aprueba-tesis'] + counts['aprueba-curso'];
+    const approvalPct = total > 0 ? Math.round((aprobadas / total) * 100) : 0;
+    // Reutiliza el count-up del sistema (respeta prefers-reduced-motion).
+    const animatedPct = useCountUp(approvalPct);
+
     // Defensa en profundidad: aunque la ruta ya está protegida por RoleRoute,
     // la página vuelve a verificar la capacidad antes de mostrar datos.
     if (!capabilities.canViewReports) {
         return <AccessRestricted />;
     }
-
-    const r = data?.resumen;
-    const total = r?.total ?? 0;
-    const pct = (n?: number) => (total > 0 && n != null ? Math.round((n / total) * 100) : 0);
 
     return (
         <div className="reportes-page">
@@ -101,14 +113,8 @@ const ReportesPage: React.FC = () => {
                     subtitle="Resultado ponderado de todas las ternas del sistema, con resolución final por estudiante."
                 />
 
-                {!loading && !error && (
-                    <section className="reportes-summary" aria-label="Resumen global">
-                        <StatCard label="Total ternas"   value={r?.total ?? 0}             variant="total" />
-                        <StatCard label="Aprueba Tesis"  value={r?.aprueba_tesis ?? 0}     variant="aprueba-tesis"  pct={pct(r?.aprueba_tesis)} />
-                        <StatCard label="Aprueba Curso"  value={r?.aprueba_curso ?? 0}     variant="aprueba-curso"  pct={pct(r?.aprueba_curso)} />
-                        <StatCard label="Reprobados"     value={r?.reprobados ?? 0}        variant="reprobado"      pct={pct(r?.reprobados)} />
-                        <StatCard label="Pendientes"     value={r?.pendientes ?? 0}        variant="pendiente"      pct={pct(r?.pendientes)} />
-                    </section>
+                {!loading && !error && total > 0 && (
+                    <ReportesHero total={total} counts={counts} aprobadas={aprobadas} animatedPct={animatedPct} />
                 )}
 
                 <div className="reportes-toolbar" style={loading ? { display: 'none' } : undefined}>
@@ -225,15 +231,11 @@ const ReportesPage: React.FC = () => {
 
 const ReportesSkeleton: React.FC = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* Stat cards skeleton */}
-        <div className="reportes-summary">
-            {[...Array(5)].map((_, i) => (
-                <div key={i} className="rep-stat" style={{ pointerEvents: 'none' }}>
-                    <Skeleton size="short" style={{ marginBottom: 10 }} />
-                    <Skeleton size="large" />
-                    <Skeleton size="medium" style={{ marginTop: 8 }} />
-                </div>
-            ))}
+        {/* Hero skeleton (misma silueta que el resultado institucional) */}
+        <div className="reportes-hero" style={{ pointerEvents: 'none' }}>
+            <Skeleton width={160} height={52} />
+            <Skeleton height={14} radius={999} />
+            <Skeleton size="short" />
         </div>
         {/* Table skeleton */}
         <div className="reportes-table-card" style={{ overflow: 'hidden' }}>
@@ -252,13 +254,68 @@ const ReportesSkeleton: React.FC = () => (
     </div>
 );
 
-const StatCard: React.FC<{ label: string; value: number; variant: string; pct?: number }> = ({ label, value, variant, pct }) => (
-    <article className={`rep-stat rep-stat--${variant}`}>
-        <p className="rep-stat__label">{label}</p>
-        <p className="rep-stat__value">{value}</p>
-        {pct != null && <p className="rep-stat__pct">{pct}% del total</p>}
-    </article>
-);
+const HERO_CATS: { key: ResolucionTerna; label: string; variant: string }[] = [
+    { key: 'aprueba_tesis', label: 'Aprueba Tesis', variant: 'aprueba-tesis' },
+    { key: 'aprueba_curso', label: 'Aprueba Curso', variant: 'aprueba-curso' },
+    { key: 'reprobado',     label: 'Reprobado',     variant: 'reprobado' },
+    { key: 'pendiente',     label: 'Pendiente',     variant: 'pendiente' },
+];
+
+/**
+ * Resultado institucional: un solo centro de gravedad. La cifra de aprobación
+ * domina; la barra descompone; la leyenda detalla. Todo con datos ya presentes.
+ */
+const ReportesHero: React.FC<{
+    total: number;
+    counts: Record<string, number>;
+    aprobadas: number;
+    animatedPct: number;
+}> = ({ total, counts, aprobadas, animatedPct }) => {
+    const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+    return (
+        <section className="reportes-hero" aria-label="Resultado institucional">
+            <div className="reportes-hero__head">
+                <p className="reportes-hero__figure">
+                    <span className="reportes-hero__num">{animatedPct}</span>
+                    <span className="reportes-hero__unit">%</span>
+                </p>
+                <div className="reportes-hero__caption">
+                    <p className="reportes-hero__title">Aprobación global</p>
+                    <p className="reportes-hero__sub">
+                        {aprobadas} de {total} ternas aprobadas · {counts['pendiente']} pendientes
+                    </p>
+                </div>
+            </div>
+
+            <div
+                className="reportes-bar"
+                role="img"
+                aria-label={HERO_CATS.map((c) => `${c.label}: ${counts[c.variant]}`).join(', ')}
+            >
+                {HERO_CATS.map((c) => {
+                    const w = pct(counts[c.variant]);
+                    return w > 0 ? (
+                        <span
+                            key={c.key}
+                            className={`reportes-bar__seg reportes-bar__seg--${c.variant}`}
+                            style={{ width: `${w}%` }}
+                        />
+                    ) : null;
+                })}
+            </div>
+
+            <ul className="reportes-legend">
+                {HERO_CATS.map((c) => (
+                    <li key={c.key} className="reportes-legend__item">
+                        <span className={`reportes-legend__dot reportes-legend__dot--${c.variant}`} aria-hidden="true" />
+                        <span className="reportes-legend__label">{c.label}</span>
+                        <span className="reportes-legend__count">{counts[c.variant]}</span>
+                    </li>
+                ))}
+            </ul>
+        </section>
+    );
+};
 
 export const ResolutionBadge: React.FC<{ value: ResolucionTerna }> = ({ value }) => (
     <span className={`rep-res rep-res--${value}`}>
