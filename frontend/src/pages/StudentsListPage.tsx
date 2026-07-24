@@ -203,48 +203,38 @@ const DefaultStudentsView: React.FC<{
 
     return (
         <>
-            <div className="ui-stat-grid">
-                <div className="ui-stat">
-                    <span className="ui-stat__label">Total registrados</span>
-                    <span className="ui-stat__value">{totalAll}</span>
-                    <span className="ui-stat__sub">En el sistema</span>
-                </div>
-                <div className="ui-stat">
-                    <span className="ui-stat__label">{search.trim() ? 'Coincidencias' : 'Mostrando'}</span>
-                    <span className="ui-stat__value">{pagination.total}</span>
-                    <span className="ui-stat__sub">{search.trim() ? `Para "${search.trim()}"` : 'En el listado'}</span>
-                </div>
-                <div className="ui-stat">
-                    <span className="ui-stat__label">Página</span>
-                    <span className="ui-stat__value">
-                        {pagination.page}<span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}> / {pagination.pages || 1}</span>
-                    </span>
-                    <span className="ui-stat__sub">{pagination.limit} por página</span>
-                </div>
-            </div>
-
-            <div className="sl-filters">
-                <label className="sl-filter-count" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
-                    <span>Por página:</span>
-                    <select
-                        value={pagination.limit}
-                        onChange={(e) => setLimit(Number(e.target.value))}
-                        className="sl-status-tab"
-                        style={{ padding: '6px 10px', cursor: 'pointer' }}
-                        aria-label="Resultados por página"
+            <div className="sl-listbar">
+                <p className="sl-listbar__count">
+                    <strong>{totalAll}</strong>{' '}
+                    {totalAll === 1 ? 'estudiante registrado' : 'estudiantes registrados'}
+                    {search.trim() && (
+                        <span className="sl-listbar__filtered">
+                            {' '}· {pagination.total}{' '}
+                            {pagination.total === 1 ? 'coincidencia' : 'coincidencias'}
+                        </span>
+                    )}
+                </p>
+                <div className="sl-listbar__utils">
+                    <label className="sl-listbar__perpage">
+                        <span>Por página</span>
+                        <select
+                            value={pagination.limit}
+                            onChange={(e) => setLimit(Number(e.target.value))}
+                            aria-label="Resultados por página"
+                        >
+                            {LIMIT_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+                        </select>
+                    </label>
+                    <Button
+                        variant="secondary"
+                        onClick={reload}
+                        disabled={loading}
+                        aria-label="Refrescar listado"
                     >
-                        {LIMIT_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
-                    </select>
-                </label>
-                <Button
-                    variant="secondary"
-                    onClick={reload}
-                    disabled={loading}
-                    aria-label="Refrescar listado"
-                >
-                    <RefreshCw size={16} aria-hidden="true" />
-                    Refrescar
-                </Button>
+                        <RefreshCw size={16} aria-hidden="true" />
+                        Refrescar
+                    </Button>
+                </div>
             </div>
 
             {atLimit && !loading && !error && (
@@ -409,30 +399,28 @@ const TesisFilteredView: React.FC<{
 
     return (
         <>
-            <div className="ui-stat-grid">
-                <div className="ui-stat">
-                    <span className="ui-stat__label">Total {filter === 'aprobados' ? 'aprobados' : 'no aprobados'}</span>
-                    <span className="ui-stat__value">{all.length}</span>
-                    <span className="ui-stat__sub">{filter === 'aprobados' ? 'Cumplen tesis' : 'No cumplen tesis'}</span>
+            <div className="sl-listbar">
+                <p className="sl-listbar__count">
+                    <strong>{all.length}</strong>{' '}
+                    {filter === 'aprobados' ? 'aprueban tesis' : 'no aprueban tesis'}
+                    {initialSearch.trim() && (
+                        <span className="sl-listbar__filtered">
+                            {' '}· {filtered.length}{' '}
+                            {filtered.length === 1 ? 'coincidencia' : 'coincidencias'}
+                        </span>
+                    )}
+                </p>
+                <div className="sl-listbar__utils">
+                    <Button
+                        variant="secondary"
+                        onClick={() => load()}
+                        disabled={loading}
+                        aria-label="Refrescar listado"
+                    >
+                        <RefreshCw size={16} aria-hidden="true" />
+                        Refrescar
+                    </Button>
                 </div>
-                <div className="ui-stat">
-                    <span className="ui-stat__label">Mostrando</span>
-                    <span className="ui-stat__value">{filtered.length}</span>
-                    <span className="ui-stat__sub">Resultados del filtro</span>
-                </div>
-            </div>
-
-            <div className="sl-filters">
-                <Button
-                    variant="secondary"
-                    onClick={() => load()}
-                    disabled={loading}
-                    aria-label="Refrescar listado"
-                    style={{ marginLeft: 'auto' }}
-                >
-                    <RefreshCw size={16} aria-hidden="true" />
-                    Refrescar
-                </Button>
             </div>
 
             <div className="sl-table-wrap">

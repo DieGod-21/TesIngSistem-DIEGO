@@ -35,12 +35,8 @@
 /* El encabezado de página usa la primitiva <PageHeader> del sistema de diseño. */
 
 /* ═══════════════════════════════════════════════════════════════════
-   2. KPI STRIP (mini-KPIs en la parte superior)
+   2. BARRA DE CONTROL (búsqueda + alcance)
 ═══════════════════════════════════════════════════════════════════ */
-
-/* Los KPIs superiores usan la primitiva .ui-stat / .ui-stat-grid del DS.
-   Margen inferior propio de esta página para separar de la barra de filtros. */
-.sl-body .ui-stat-grid { margin-bottom: 24px; }
 
 /* Herramienta única del módulo: búsqueda + alcance (Todos / Aprueban / No aprueban)
    viven juntos en una barra enmarcada. La búsqueda escribe en ?search= (URL
@@ -78,20 +74,70 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   3. BARRA DE FILTROS
+   3. BARRA DE CONTEXTO DE LISTA
 ═══════════════════════════════════════════════════════════════════ */
 
-.sl-filters {
+/* Reemplaza el muro de KPIs y la vieja barra de filtros por una sola línea:
+   a la izquierda un conteo editorial que da significado al número; a la derecha,
+   utilidades discretas. Sin marco propio: la tabla queda como único foco visual
+   del cuarto de gestión de casos. */
+.sl-listbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
     margin-bottom: var(--content-gap);
-    padding: 12px 16px;
-    background: var(--dash-card-bg);
-    border: 1px solid var(--dash-border);
-    border-radius: 10px;
-    box-shadow: var(--dash-shadow-sm);
+    padding: 0 2px;
+}
+
+.sl-listbar__count {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.sl-listbar__count strong {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.sl-listbar__filtered { color: var(--text-muted); }
+
+.sl-listbar__utils {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sl-listbar__perpage {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.sl-listbar__perpage select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-card);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 150ms ease;
+}
+
+.sl-listbar__perpage select:hover { border-color: var(--border-strong); }
+
+.sl-listbar__perpage select:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
 }
 
 /* La búsqueda del módulo vive en la barra unificada (.sl-toolbar), junto al
@@ -137,13 +183,6 @@
 
 .sl-status-tab--active:active {
     transform: scale(0.95);
-}
-
-.sl-filter-count {
-    margin-left: auto;
-    font-size: 0.75rem;
-    color: var(--dash-text-muted);
-    white-space: nowrap;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -282,11 +321,13 @@
         padding: 16px;
     }
 
-    .sl-filters {
+    .sl-listbar {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
     }
+
+    .sl-listbar__utils { justify-content: space-between; }
 
     .sl-status-tabs {
         flex-wrap: wrap;
@@ -308,11 +349,6 @@
     }
     .sl-table__tr--clickable:active td:first-child {
         background: var(--color-primary-soft-2);
-    }
-
-    .sl-filter-count {
-        margin-left: 0;
-        text-align: right;
     }
 
     .sl-student-name {
