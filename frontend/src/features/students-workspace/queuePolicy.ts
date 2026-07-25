@@ -1,18 +1,18 @@
 /**
- * queuePolicy.ts — Política de la cola de trabajo (visibilidad + autorización).
+ * queuePolicy.ts — Política de la cola de trabajo (visibilidad + autorización +
+ * selección).
  *
- * Dos conceptos, hoy INDEPENDIENTES (antes colapsados sobre `selfClearing`):
+ * Conceptos INDEPENDIENTES (invariante), todos exhaustivos en compilación
+ * (Records fuerzan cubrir cada `WorkItemKind`):
  *
- *  1. VISIBILIDAD: qué tipos de trabajo se muestran en la cola. Es una decisión
- *     de despliegue del producto, NO la bandera `selfClearing` del dominio (que
- *     significa "se limpia solo con el dato / no requiere descarte"). Un ítem
- *     puede ser no-self-clearing y aun así visible (con descarte, Wave 3).
+ *  1. VISIBILIDAD: qué tipos se muestran (decisión de despliegue del producto,
+ *     NO la bandera `selfClearing` del dominio).
+ *  2. AUTORIZACIÓN: qué capacidad exige la acción de cada tipo.
+ *  3. SELECCIÓN: dado el conjunto del dominio + capacidades + descarte, qué
+ *     ítems quedan pendientes. Esta regla vive AQUÍ (pura, testable), no dentro
+ *     del componente.
  *
- *  2. AUTORIZACIÓN: qué capacidad exige la acción de cada tipo. Única fuente de
- *     verdad del gating por tipo; el `Record` fuerza exhaustividad en compilación.
- *
- * Ninguno reimplementa reglas de negocio del dominio: solo seleccionan y gatean
- * la salida ya derivada por `deriveWorkQueue`.
+ * Nada de esto reimplementa reglas del dominio: solo selecciona/gatea su salida.
  */
 
 import type { Capabilities } from '../../config/permissions';
@@ -20,18 +20,18 @@ import type { WorkItem, WorkItemKind } from './domain/types';
 
 // ─── 1. Visibilidad en la cola (independiente de selfClearing) ──────────────
 
-/** Tipos de trabajo visibles en la cola. Cambiar el alcance = editar este set. */
-export const QUEUE_VISIBLE_KINDS: ReadonlySet<WorkItemKind> = new Set<WorkItemKind>([
-    'registrar_nota_pg1',
-    'registrar_nota_pg2',
-    'revisar_no_elegible',
-    'crear_caso',
-    'terna_estancada',
-    'cerrar_resolucion',
-]);
+/** Visibilidad por tipo. El `Record` obliga a decidir cada `WorkItemKind`. */
+export const QUEUE_KIND_VISIBLE: Record<WorkItemKind, boolean> = {
+    registrar_nota_pg1: true,
+    registrar_nota_pg2: true,
+    revisar_no_elegible: true,
+    crear_caso: true,
+    terna_estancada: true,
+    cerrar_resolucion: true,
+};
 
 export function isVisibleInQueue(item: WorkItem): boolean {
-    return QUEUE_VISIBLE_KINDS.has(item.kind);
+    return QUEUE_KIND_VISIBLE[item.kind];
 }
 
 // ─── 2. Autorización por tipo (única fuente) ────────────────────────────────
@@ -49,4 +49,19 @@ export const KIND_REQUIRED_CAPABILITY: Record<WorkItemKind, keyof Capabilities |
 export function canActOnKind(kind: WorkItemKind, caps: Capabilities): boolean {
     const req = KIND_REQUIRED_CAPABILITY[kind];
     return req == null || caps[req];
+}
+
+// ─── 3. Selección de la cola (regla de presentación, fuera del componente) ──
+
+/** Ítems visibles y accionables por el usuario (pre-descarte; base del GC). */
+export function visibleActionableItems(items: readonly WorkItem[], caps: Capabilities): WorkItem[] {
+    return items.filter((i) => isVisibleInQueue(i) && canActOnKind(i.kind, caps));
+}
+
+/**
+ * ¿El ítem sigue pendiente? Los self-clearing siempre lo están (bajan con el
+ * dato, no se descartan); el resto, salvo que hayan sido descartados.
+ */
+export function isPendingItem(item: WorkItem, isDismissed: (id: string) => boolean): boolean {
+    return item.selfClearing || !isDismissed(item.id);
 }

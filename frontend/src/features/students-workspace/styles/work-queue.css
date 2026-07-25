@@ -114,8 +114,20 @@
     box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-success) 25%, transparent);
 }
 
+/* ── Responsive (mismo lenguaje que el resto del módulo: 640px, ~44px táctil) ── */
 @media (max-width: 640px) {
+    .wq { padding: 14px; }
+    /* Objetivo táctil cómodo al operar la cola con el dedo. */
+    .wq__main { min-height: 44px; }
+    /* Solo el ícono en el botón de descarte (la fila ya es alta y tocable). */
     .wq__dismiss-label { display: none; }
+    .wq__dismiss { padding: 0 14px; }
+}
+
+/* En pantallas muy estrechas, el CTA se reduce al chevron para dar aire al
+   nombre y motivo (la acción sigue clara: toda la fila navega). */
+@media (max-width: 480px) {
+    .wq__cta-label { display: none; }
 }
 
 .wq__icon {
@@ -165,6 +177,12 @@
 .wq__reason {
     font-size: 0.78rem;
     color: var(--text-secondary);
+}
+
+/* Indicador de envejecimiento (aging): sutil, no compite con el motivo. */
+.wq__age {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
 }
 
 .wq__cta {

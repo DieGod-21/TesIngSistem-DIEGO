@@ -18,8 +18,22 @@ export const USER_KEY          = 'auth_user';
 export const SESSION_MSG_KEY   = 'auth_session_msg';
 
 /**
+ * Versión del ESQUEMA de almacenamiento local del workspace. Se incluye como
+ * sufijo en las claves: al cambiar la forma persistida, se sube la versión y el
+ * dato viejo (bajo la clave anterior) queda huérfano e ignorado sin migración.
+ */
+export const WORKSPACE_STORAGE_VERSION = 'v1';
+
+/**
  * Ítems de la cola de trabajo marcados como "atendidos" por el coordinador.
  * Vive en localStorage (persiste entre pestañas/sesiones); es POR DISPOSITIVO
  * y no colaborativo (limitación documentada del descarte client-side).
  */
-export const WORK_QUEUE_DISMISSED_KEY = 'wq_dismissed';
+export const WORK_QUEUE_DISMISSED_KEY = `wq_dismissed_${WORKSPACE_STORAGE_VERSION}`;
+
+/**
+ * Snapshot de la última visita al workspace ("Desde tu última visita").
+ * localStorage, POR DISPOSITIVO y no colaborativo (misma limitación documentada
+ * que el descarte). Guarda solo el mínimo: user, timestamp, stage map, firma.
+ */
+export const WORK_QUEUE_SNAPSHOT_KEY = `wq_snapshot_${WORKSPACE_STORAGE_VERSION}`;

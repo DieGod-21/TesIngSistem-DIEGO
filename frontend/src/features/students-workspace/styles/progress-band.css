@@ -167,8 +167,18 @@
     color: var(--text-muted);
 }
 
+/* ── Responsive (640px; objetivos táctiles ~40px para la lente) ── */
 @media (max-width: 640px) {
+    .pb { padding: 14px; }
     .pb__chip { min-height: 40px; }
+    /* La leyenda de etapas puede ser larga: se contiene en una sola línea con
+       scroll horizontal suave en lugar de romper el layout. */
+    .pb__legend {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .pb__legend-item { white-space: nowrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {

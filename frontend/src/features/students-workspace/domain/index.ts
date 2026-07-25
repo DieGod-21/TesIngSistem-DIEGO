@@ -4,4 +4,8 @@
  */
 export * from './types';
 export { deriveGradStatus, deriveStage } from './stage';
-export { deriveWorkItem, deriveWorkQueue } from './workQueue';
+export { deriveWorkItem, deriveWorkQueue, computeAgeDays } from './workQueue';
+export {
+    buildSnapshot, diffSnapshots, queueSignatureOf,
+    type WorkspaceSnapshot, type SnapshotDiff, type StageDelta,
+} from './snapshot';

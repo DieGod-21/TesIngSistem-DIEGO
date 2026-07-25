@@ -8,12 +8,32 @@
 
 import { apiGet } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { cached, invalidate } from './cache';
 import { unwrapEntity } from './normalize';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteEstudiante } from '../types/api';
 
 export async function getGlobalTernasReport(opts: { signal?: AbortSignal } = {}): Promise<ReporteTernasGlobal> {
     const raw = await apiGet<unknown>(API_PATHS.reportes.ternas, { signal: opts.signal });
     return normalizeGlobal(raw);
+}
+
+// ─── Reporte global cacheado (dueño de la caché de reportes) ────────────────
+// Mismo patrón que tesis/estudiantes: el servicio POSEE su caché y expone la
+// invalidación. Las mutaciones de evaluación (que cambian la resolución) la
+// invalidan desde ternasService.
+
+export const REPORTES_CACHE_PREFIX = 'reportes';
+export const REPORTES_TERNAS_GLOBAL_KEY = 'reportes:ternas-global';
+const REPORTES_TTL_MS = 60_000;
+
+/** Reporte global de ternas, cacheado + deduplicado (consumidores en lote). */
+export function getGlobalTernasReportCached(): Promise<ReporteTernasGlobal> {
+    return cached(REPORTES_TERNAS_GLOBAL_KEY, () => getGlobalTernasReport(), REPORTES_TTL_MS);
+}
+
+/** Invalida el reporte global tras una escritura que cambie una resolución. */
+export function invalidateReportes(): void {
+    invalidate(REPORTES_CACHE_PREFIX);
 }
 
 function normalizeGlobal(raw: unknown): ReporteTernasGlobal {

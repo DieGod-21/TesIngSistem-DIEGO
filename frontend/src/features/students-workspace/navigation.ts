@@ -15,6 +15,7 @@
  */
 
 import { routes } from '../../config/routes';
+import { assertNever } from '../../utils/assertNever';
 import type { WorkItem } from './domain/types';
 
 export function resolveWorkItemHref(item: WorkItem): string {
@@ -25,9 +26,9 @@ export function resolveWorkItemHref(item: WorkItem): string {
             return routes.proyectos();
         case 'notas_entry':
         case 'student_detail':
-        default:
             return item.studentId != null
                 ? routes.studentDetail(item.studentId)
                 : routes.studentsSearch(item.carnet);
     }
+    return assertNever(item.target.kind);
 }

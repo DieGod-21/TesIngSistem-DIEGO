@@ -3,14 +3,16 @@
  *
  * Descarga los datasets en lote (capa data/) y los pasa por `deriveWorkQueue`
  * (única fuente de verdad). El componente que lo consume NO recalcula nada: solo
- * renderiza `result`. Maneja loading / error / recarga.
+ * renderiza `result`. Maneja loading / error.
  *
  * `enabled` gatea el fetch: el panorama es una herramienta del coordinador
- * (canViewReports). Un rol sin ese permiso no dispara peticiones admin (evita
- * 403 en cada montaje); la lente sigue funcionando sin conteos.
+ * (canViewReports). Un rol sin ese permiso no dispara peticiones admin.
  *
- * `lensCounts` expone tamaños de roster (no reglas de negocio): el número que se
- * muestra en cada chip coincide con lo que verá el usuario al aplicar la lente.
+ * La frescura la garantiza el CONTRATO DE INVALIDACIÓN de los servicios: toda
+ * mutación que cambie el workspace invalida su caché, por lo que basta con
+ * recargar al montar (la página se remonta al volver de una acción).
+ *
+ * `now` (impuro, del borde) se inyecta al motor puro para el "aging".
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -30,7 +32,6 @@ export interface StudentsPipeline {
     lensCounts: LensCounts | null;
     loading: boolean;
     error: string | null;
-    reload: () => void;
 }
 
 export function useStudentsPipeline(enabled: boolean): StudentsPipeline {
@@ -38,23 +39,14 @@ export function useStudentsPipeline(enabled: boolean): StudentsPipeline {
     const [lensCounts, setLensCounts] = useState<LensCounts | null>(null);
     const [loading, setLoading] = useState<boolean>(enabled);
     const [error, setError] = useState<string | null>(null);
-    const [nonce, setNonce] = useState(0);
 
-    const reload = useCallback(() => setNonce((n) => n + 1), []);
-
-    useEffect(() => {
-        if (!enabled) {
-            setLoading(false);
-            return;
-        }
-        let mounted = true;
+    const load = useCallback((mountedRef: { current: boolean }) => {
         setLoading(true);
         setError(null);
-
-        getWorkspaceDatasets({ force: nonce > 0 })
+        getWorkspaceDatasets()
             .then((datasets) => {
-                if (!mounted) return;
-                setResult(deriveWorkQueue(datasets));
+                if (!mountedRef.current) return;
+                setResult(deriveWorkQueue(datasets, { now: Date.now() }));
                 setLensCounts({
                     all: datasets.students.length,
                     approved: datasets.tesisAprobados.length,
@@ -62,14 +54,22 @@ export function useStudentsPipeline(enabled: boolean): StudentsPipeline {
                 });
             })
             .catch((e) => {
-                if (mounted) setError(userMessageFor(e));
+                if (mountedRef.current) setError(userMessageFor(e));
             })
             .finally(() => {
-                if (mounted) setLoading(false);
+                if (mountedRef.current) setLoading(false);
             });
+    }, []);
 
-        return () => { mounted = false; };
-    }, [enabled, nonce]);
+    useEffect(() => {
+        if (!enabled) {
+            setLoading(false);
+            return;
+        }
+        const mountedRef = { current: true };
+        load(mountedRef);
+        return () => { mountedRef.current = false; };
+    }, [enabled, load]);
 
-    return { result, lensCounts, loading, error, reload };
+    return { result, lensCounts, loading, error };
 }

@@ -9,6 +9,7 @@
 import { apiFetch, REQUEST_TIMEOUTS } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 import { invalidateEstudiantes } from './estudiantesService';
+import { invalidateTesis } from './tesisService';
 
 export interface ImportarResult {
     total?:      number;
@@ -56,7 +57,9 @@ export async function importarNotas(cursoCodigo: string, file: File): Promise<Im
             { method: 'POST', body: form, timeout: REQUEST_TIMEOUTS.upload },
         ),
     );
-    // Las notas importadas cambian el estado de tesis del padrón → invalidar.
+    // Las notas importadas cambian la elegibilidad de tesis del padrón → invalidar
+    // padrón y listas oficiales de tesis (de las que deriva la cola de trabajo).
     invalidateEstudiantes();
+    invalidateTesis();
     return result;
 }

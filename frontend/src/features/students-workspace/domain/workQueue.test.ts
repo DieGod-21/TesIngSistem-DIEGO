@@ -144,6 +144,31 @@ describe('deriveWorkQueue — derivación e integración', () => {
         expect(est.timestamp).toBe('2026-07-01');
     });
 
+    it('con `now`, prioriza por antigüedad dentro de la misma prioridad (más viejo primero)', () => {
+        const now = Date.parse('2026-07-25');
+        const d = datasets({
+            students: [student('NEW', 'Nuevo'), student('OLD', 'Viejo')],
+            ternas: [
+                terna('NEW', { id: 1, evaluaciones_enviadas: 0, total_evaluadores: 3, fecha_evaluacion: '2026-07-20' }),
+                terna('OLD', { id: 2, evaluaciones_enviadas: 0, total_evaluadores: 3, fecha_evaluacion: '2026-06-01' }),
+            ],
+        });
+        const res = deriveWorkQueue(d, { now });
+        // Ambos terna_estancada (misma prioridad) → gana el más antiguo pese al carnet.
+        expect(res.items.map((i) => i.carnet)).toEqual(['OLD', 'NEW']);
+        const old = res.items.find((i) => i.carnet === 'OLD')!;
+        expect(old.ageDays).toBe(Math.floor((now - Date.parse('2026-06-01')) / 86_400_000));
+    });
+
+    it('sin `now`, el aging queda deshabilitado (ageDays null) y no altera el orden', () => {
+        const d = datasets({
+            students: [student('T1', 'x')],
+            ternas: [terna('T1', { id: 9, evaluaciones_enviadas: 0, total_evaluadores: 3, fecha_evaluacion: '2026-06-01' })],
+        });
+        const res = deriveWorkQueue(d);
+        expect(res.items[0].ageDays).toBeNull();
+    });
+
     it('resuelve studentId desde el padrón (y lo omite si el carnet no está en él)', () => {
         const d = datasets({
             students: [{ id: 777, carnet: 'K1', nombre: 'Kim', email: '', carrera: '', activo: true }],

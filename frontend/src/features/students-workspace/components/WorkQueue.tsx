@@ -23,7 +23,7 @@ import {
 import { Skeleton } from '../../../components/ui';
 import type { Capabilities } from '../../../config/permissions';
 import type { WorkItem, WorkItemKind } from '../domain/types';
-import { isVisibleInQueue, canActOnKind } from '../queuePolicy';
+import { visibleActionableItems, isPendingItem } from '../queuePolicy';
 import { useDismissals } from '../hooks/useDismissals';
 import '../styles/work-queue.css';
 
@@ -59,10 +59,10 @@ interface WorkQueueProps {
 }
 
 const WorkQueue: React.FC<WorkQueueProps> = ({ items, capabilities, loading, error, onOpen }) => {
-    // Política: visibles + accionables por el usuario. (Selección de presentación
-    // sobre la salida del dominio, no reglas de negocio.)
+    // Política (queuePolicy): visibles + accionables por el usuario. La regla
+    // vive en la política, no en el componente.
     const enabled = useMemo(
-        () => (items ?? []).filter(isVisibleInQueue).filter((i) => canActOnKind(i.kind, capabilities)),
+        () => (items ? visibleActionableItems(items, capabilities) : []),
         [items, capabilities],
     );
 
@@ -70,10 +70,9 @@ const WorkQueue: React.FC<WorkQueueProps> = ({ items, capabilities, loading, err
     const currentIds = useMemo(() => (items ? enabled.map((i) => i.id) : null), [items, enabled]);
     const { isDismissed, dismiss } = useDismissals(currentIds);
 
-    // Los self-clearing nunca se descartan (bajan con el dato); el resto, si no
-    // fue descartado.
+    // Pendientes según la política (self-clearing vs descartado).
     const shown = useMemo(
-        () => enabled.filter((i) => i.selfClearing || !isDismissed(i.id)),
+        () => enabled.filter((i) => isPendingItem(i, isDismissed)),
         [enabled, isDismissed],
     );
 
@@ -132,10 +131,17 @@ const WorkQueue: React.FC<WorkQueueProps> = ({ items, capabilities, loading, err
                                         </span>
                                         <span className="wq__body">
                                             <span className="wq__name">{item.nombre}</span>
-                                            <span className="wq__reason">{item.reason}</span>
+                                            <span className="wq__reason">
+                                                {item.reason}
+                                                {item.ageDays != null && (
+                                                    <span className="wq__age">
+                                                        {item.ageDays === 0 ? ' · hoy' : ` · hace ${item.ageDays} d`}
+                                                    </span>
+                                                )}
+                                            </span>
                                         </span>
                                         <span className="wq__cta">
-                                            {KIND_CTA[item.kind]}
+                                            <span className="wq__cta-label">{KIND_CTA[item.kind]}</span>
                                             <ChevronRight size={16} aria-hidden="true" />
                                         </span>
                                     </button>

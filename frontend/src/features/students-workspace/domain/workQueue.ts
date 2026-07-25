@@ -13,6 +13,7 @@
 import type { ResolucionTerna, TernaResumen, ReporteTernaItem } from '../../../types/api';
 import { deriveGradStatus, deriveStage } from './stage';
 import { STAGE_ORDER } from './pipelineMeta';
+import { assertNever } from '../../../utils/assertNever';
 import type {
     GradStatus,
     PipelineStage,
@@ -29,6 +30,28 @@ import type { TesisEstudiante } from '../../../services/tesisService';
 /** Clave de join canónica; los carnets se comparan sin espacios accidentales. */
 function keyOf(carnet: string | null | undefined): string {
     return (carnet ?? '').trim();
+}
+
+const MS_PER_DAY = 86_400_000;
+
+/**
+ * Antigüedad en días de un timestamp respecto a `now` (inyectado, no `Date.now`
+ * interno → función pura). null si falta el timestamp/now o el timestamp es
+ * inválido. Nunca negativa (un timestamp futuro cuenta como 0).
+ */
+export function computeAgeDays(timestamp: string | null, now?: number): number | null {
+    if (timestamp == null || now == null) return null;
+    const t = Date.parse(timestamp);
+    if (Number.isNaN(t)) return null;
+    return Math.max(0, Math.floor((now - t) / MS_PER_DAY));
+}
+
+/** Desempate por envejecimiento: más antiguo primero; los sin edad, al final. */
+function compareAge(a: WorkItem, b: WorkItem): number {
+    if (a.ageDays == null && b.ageDays == null) return 0;
+    if (a.ageDays == null) return 1;
+    if (b.ageDays == null) return -1;
+    return b.ageDays - a.ageDays;
 }
 
 /** Ranking por tipo (menor = más urgente). Transparente y documentado. */
@@ -196,9 +219,9 @@ function buildTarget(kind: WorkItemKind, carnet: string, terna: TernaSignals | n
         case 'registrar_nota_pg2':
             return { kind: 'notas_entry', carnet };
         case 'revisar_no_elegible':
-        default:
             return { kind: 'student_detail', carnet };
     }
+    return assertNever(kind);
 }
 
 /**
@@ -211,9 +234,11 @@ export function deriveWorkItem(
     signals: StageSignals,
     stage: PipelineStage,
     studentId?: number,
+    now?: number,
 ): WorkItem | null {
     const kind = STAGE_TO_KIND[stage];
     if (!kind) return null;
+    const timestamp = signals.terna?.fechaEvaluacion ?? null;
     return {
         id: `${kind}:${carnet}`,
         kind,
@@ -225,7 +250,8 @@ export function deriveWorkItem(
         reason: KIND_REASON[kind],
         target: buildTarget(kind, carnet, signals.terna),
         selfClearing: KIND_SELF_CLEARING[kind],
-        timestamp: signals.terna?.fechaEvaluacion ?? null,
+        timestamp,
+        ageDays: computeAgeDays(timestamp, now),
     };
 }
 
@@ -234,7 +260,7 @@ export function deriveWorkItem(
  * pulso por etapa. Recorre la UNIÓN de carnets de todas las fuentes (no solo el
  * padrón) para que ningún caso quede fuera de cobertura.
  */
-export function deriveWorkQueue(d: WorkspaceDatasets): WorkQueueResult {
+export function deriveWorkQueue(d: WorkspaceDatasets, opts: { now?: number } = {}): WorkQueueResult {
     const idx = buildIndices(d);
     const stageCounts = emptyStageCounts();
     const items: WorkItem[] = [];
@@ -249,14 +275,16 @@ export function deriveWorkQueue(d: WorkspaceDatasets): WorkQueueResult {
         if (stage === 'sin_datos') withoutStatus += 1;
 
         const nombre = idx.names.get(carnet) ?? carnet;
-        const item = deriveWorkItem(carnet, nombre, signals, stage, idx.idByCarnet.get(carnet));
+        const item = deriveWorkItem(carnet, nombre, signals, stage, idx.idByCarnet.get(carnet), opts.now);
         if (item) items.push(item);
     }
 
+    // Orden determinista: prioridad (severidad del tipo) → antigüedad (más viejo
+    // primero, donde haya) → carnet (desempate estable).
     items.sort((a, b) =>
-        a.priority !== b.priority
-            ? a.priority - b.priority
-            : a.carnet < b.carnet ? -1 : a.carnet > b.carnet ? 1 : 0,
+        (a.priority - b.priority)
+        || compareAge(a, b)
+        || (a.carnet < b.carnet ? -1 : a.carnet > b.carnet ? 1 : 0),
     );
 
     const totalStudents = carnets.length;

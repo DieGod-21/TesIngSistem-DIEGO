@@ -38,7 +38,9 @@ import { useAuth } from '../context/AuthContext';
 import { Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
 import ProgressBand from '../features/students-workspace/components/ProgressBand';
 import WorkQueue from '../features/students-workspace/components/WorkQueue';
+import SinceLastVisit from '../features/students-workspace/components/SinceLastVisit';
 import { useStudentsPipeline } from '../features/students-workspace/hooks/useStudentsPipeline';
+import { useSinceLastVisit } from '../features/students-workspace/hooks/useSinceLastVisit';
 import { resolveWorkItemHref } from '../features/students-workspace/navigation';
 import {
     parseLens, parseSearchTerm, lensToTesisFilter, buildLensUrl, type LensId,
@@ -55,7 +57,7 @@ type TesisFilter = 'aprobados' | 'reprobados';
 const StudentsListPage: React.FC = () => {
     const history  = useHistory();
     const location = useLocation();
-    const { capabilities } = useAuth();
+    const { capabilities, usuarioId } = useAuth();
     const activeLens: LensId = useMemo(() => parseLens(location.search), [location.search]);
     const initialSearch = useMemo(() => parseSearchTerm(location.search), [location.search]);
     const filter = useMemo<TesisFilter | null>(() => lensToTesisFilter(activeLens), [activeLens]);
@@ -65,6 +67,12 @@ const StudentsListPage: React.FC = () => {
     // Gated por canViewReports; se recarga cuando cambia la lente para reflejar
     // escrituras recientes sin pelear con la caché.
     const pipeline = useStudentsPipeline(capabilities.canViewReports);
+
+    // "Desde tu última visita": diff calculado en el dominio, per-usuario.
+    const sinceDiff = useSinceLastVisit(
+        pipeline.result,
+        usuarioId != null ? String(usuarioId) : null,
+    );
 
     const goLens = (lens: LensId) => history.push(buildLensUrl(location.search, lens));
 
@@ -136,6 +144,8 @@ const StudentsListPage: React.FC = () => {
                         />
                     </div>
                 </div>
+
+                {capabilities.canViewReports && <SinceLastVisit diff={sinceDiff} />}
 
                 {capabilities.canViewReports && (
                     <WorkQueue

@@ -6,7 +6,7 @@ function item(over: Partial<WorkItem>): WorkItem {
     return {
         id: 'x', kind: 'registrar_nota_pg1', carnet: 'A1', nombre: 'Ana',
         stage: 'pg1_pendiente', priority: 4, reason: '', selfClearing: true,
-        timestamp: null, target: { kind: 'notas_entry', carnet: 'A1' }, ...over,
+        timestamp: null, ageDays: null, target: { kind: 'notas_entry', carnet: 'A1' }, ...over,
     };
 }
 

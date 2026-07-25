@@ -9,6 +9,8 @@
 
 import { apiGet, apiPost } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { cached, invalidate } from './cache';
+import { invalidateReportes } from './reportesService';
 import { unwrapEntity, unwrapCollection } from './normalize';
 import type { TernaResumen, TernaDetalle, EstadoTerna } from '../types/api';
 
@@ -27,6 +29,24 @@ export async function listTernas(estado?: EstadoTerna, opts: { signal?: AbortSig
     return unwrapCollection<TernaResumen>(data, ['ternas', 'data'], url);
 }
 
+// ─── Listado completo cacheado (dueño de la caché de ternas) ────────────────
+// El servicio POSEE su caché; las mutaciones de evaluación la invalidan (y con
+// ella el reporte global, del que deriva la resolución).
+
+export const TERNAS_CACHE_PREFIX = 'ternas';
+export const TERNAS_LIST_KEY = 'ternas:list';
+const TERNAS_TTL_MS = 60_000;
+
+/** Listado completo de ternas (sin filtro), cacheado + deduplicado. */
+export function listTernasCached(): Promise<TernaResumen[]> {
+    return cached(TERNAS_LIST_KEY, () => listTernas(), TERNAS_TTL_MS);
+}
+
+/** Invalida el listado de ternas tras una escritura de evaluación. */
+export function invalidateTernas(): void {
+    invalidate(TERNAS_CACHE_PREFIX);
+}
+
 /** Detalle de una terna con evaluadores y resultado ponderado. */
 export async function getTernaById(id: number, opts: { signal?: AbortSignal } = {}): Promise<TernaDetalle> {
     const data = await apiGet<{ terna: TernaDetalle } | TernaDetalle>(API_PATHS.ternas.byId(id), { signal: opts.signal });
@@ -38,17 +58,29 @@ export interface EvaluacionPayload {
     comentarios?: string | null;
 }
 
-/** Guarda borrador (puede llamarse múltiples veces). */
+/**
+ * Guarda borrador (puede llamarse múltiples veces). No invalida caché: un
+ * borrador no altera los campos en lote (evaluaciones_enviadas / estado /
+ * resolución) que consume el workspace.
+ */
 export async function saveDraft(ternaId: number, payload: Partial<EvaluacionPayload>) {
     return apiPost<unknown>(API_PATHS.ternas.draft(ternaId), payload);
 }
 
 /** Envía evaluación final (irreversible salvo reapertura por admin). */
 export async function submitEvaluation(ternaId: number, payload: EvaluacionPayload) {
-    return apiPost<unknown>(API_PATHS.ternas.submit(ternaId), payload);
+    const res = await apiPost<unknown>(API_PATHS.ternas.submit(ternaId), payload);
+    // Cambia evaluaciones_enviadas / estado / resolución → invalidar ternas + reporte.
+    invalidateTernas();
+    invalidateReportes();
+    return res;
 }
 
 /** Reabre la evaluación de un evaluador (solo admin). */
 export async function reopenEvaluation(ternaId: number, evaluadorId: number) {
-    return apiPost<unknown>(API_PATHS.ternas.reopen(ternaId), { evaluadorId });
+    const res = await apiPost<unknown>(API_PATHS.ternas.reopen(ternaId), { evaluadorId });
+    // Cambia el estado/avance de la terna → invalidar ternas + reporte.
+    invalidateTernas();
+    invalidateReportes();
+    return res;
 }

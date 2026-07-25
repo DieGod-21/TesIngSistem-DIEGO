@@ -137,11 +137,17 @@ export interface WorkItem {
     target: WorkItemTarget;
     /**
      * true si el ítem desaparece SOLO al cambiar los datos (p. ej. registrar la
-     * nota). false = requiere estado de "atendido/descartado" (infra de Wave 2).
+     * nota). false = requiere estado de "atendido/descartado".
      */
     selfClearing: boolean;
-    /** Timestamp para "aging" (Wave 3) cuando exista; si no, null. */
+    /** Timestamp de origen del "aging" (fecha_evaluacion) cuando exista; si no, null. */
     timestamp: string | null;
+    /**
+     * Antigüedad en días = floor((now - timestamp) / día), cuando hay `timestamp`
+     * y se proporcionó `now` a `deriveWorkQueue`. Si no, null. Alimenta la
+     * priorización por envejecimiento y su indicador en la cola.
+     */
+    ageDays: number | null;
 }
 
 /** Resultado completo del motor: cola priorizada + cobertura + pulso. */
