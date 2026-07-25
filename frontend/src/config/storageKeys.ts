@@ -16,3 +16,10 @@ export const USER_KEY          = 'auth_user';
 
 /** Mensaje de sesión expirada que muestra LoginForm tras un redirect. */
 export const SESSION_MSG_KEY   = 'auth_session_msg';
+
+/**
+ * Ítems de la cola de trabajo marcados como "atendidos" por el coordinador.
+ * Vive en localStorage (persiste entre pestañas/sesiones); es POR DISPOSITIVO
+ * y no colaborativo (limitación documentada del descarte client-side).
+ */
+export const WORK_QUEUE_DISMISSED_KEY = 'wq_dismissed';

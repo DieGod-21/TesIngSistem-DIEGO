@@ -8,6 +8,7 @@
 
 import { apiGet } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { cached, invalidate } from './cache';
 import type { EstadoTesis } from '../types/api';
 
 export interface TesisEstudiante {
@@ -36,6 +37,34 @@ export async function getAprobadosTesis(opts: { signal?: AbortSignal } = {}): Pr
 export async function getReprobadosTesis(opts: { signal?: AbortSignal } = {}): Promise<TesisListResp> {
     const data = await apiGet<TesisListResp>(API_PATHS.tesis.reprobados, { signal: opts.signal });
     return normalize(data);
+}
+
+// ─── Listas oficiales cacheadas (dueño de la caché de tesis) ────────────────
+// Mismo patrón que estudiantesService: el servicio POSEE su caché y expone la
+// invalidación. Las escrituras que cambian la elegibilidad (registro de nota)
+// llaman `invalidateTesis()` para que la próxima lectura vuelva al origen.
+
+/** Prefijo de recurso; `invalidate('tesis')` limpia aprobados + reprobados. */
+export const TESIS_CACHE_PREFIX = 'tesis';
+export const TESIS_APROBADOS_KEY = 'tesis:aprobados';
+export const TESIS_REPROBADOS_KEY = 'tesis:reprobados';
+
+/** TTL corto, alineado con el padrón, para no servir datos rancios. */
+const TESIS_TTL_MS = 60_000;
+
+/** Aprobados de tesis, cacheado + deduplicado (para consumidores en lote). */
+export function getAprobadosTesisCached(): Promise<TesisListResp> {
+    return cached(TESIS_APROBADOS_KEY, () => getAprobadosTesis(), TESIS_TTL_MS);
+}
+
+/** Reprobados de tesis, cacheado + deduplicado (para consumidores en lote). */
+export function getReprobadosTesisCached(): Promise<TesisListResp> {
+    return cached(TESIS_REPROBADOS_KEY, () => getReprobadosTesis(), TESIS_TTL_MS);
+}
+
+/** Invalida las listas de tesis tras una escritura que cambie la elegibilidad. */
+export function invalidateTesis(): void {
+    invalidate(TESIS_CACHE_PREFIX);
 }
 
 /** GET /api/tesis/estado/{carnet} — estado de tesis calculado por el servidor. */

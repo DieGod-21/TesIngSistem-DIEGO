@@ -35,12 +35,12 @@
 /* El encabezado de página usa la primitiva <PageHeader> del sistema de diseño. */
 
 /* ═══════════════════════════════════════════════════════════════════
-   2. BARRA DE CONTROL (búsqueda + alcance)
+   2. BARRA DE CONTROL (búsqueda)
 ═══════════════════════════════════════════════════════════════════ */
 
-/* Herramienta única del módulo: búsqueda + alcance (Todos / Aprueban / No aprueban)
-   viven juntos en una barra enmarcada. La búsqueda escribe en ?search= (URL
-   compartible, sincronizada con el buscador global). Mismo patrón que Usuarios. */
+/* La búsqueda escribe en ?search= (URL compartible, sincronizada con el buscador
+   global). El alcance (lente) vive ahora en la banda de progreso (ProgressBand),
+   que comparte el mismo estado de URL. */
 .sl-toolbar {
     display: flex;
     align-items: center;
@@ -55,22 +55,6 @@
 .sl-toolbar__search {
     flex: 1;
     min-width: 240px;
-}
-
-/* Segmento de alcance: filtro nativo del módulo, dentro de la barra unificada.
-   Reutiliza .sl-status-tabs / .sl-status-tab. */
-.sl-scope {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.sl-scope__label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--dash-text-muted);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -140,50 +124,9 @@
     box-shadow: 0 0 0 3px var(--color-primary-ring);
 }
 
-/* La búsqueda del módulo vive en la barra unificada (.sl-toolbar), junto al
-   alcance; el buscador global del TopHeader sigue disponible y sincronizado. */
-
-/* Selector de estado */
-.sl-status-tabs {
-    display: flex;
-    gap: 4px;
-}
-
-.sl-status-tab {
-    padding: 7px 14px;
-    border: 1px solid var(--dash-border);
-    border-radius: 20px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--dash-text-secondary);
-    background: transparent;
-    cursor: pointer;
-    transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
-    white-space: nowrap;
-}
-
-.sl-status-tab:hover {
-    background: var(--dash-bg);
-}
-
-.sl-status-tab:active {
-    transform: scale(0.95);
-}
-
-.sl-status-tab--active {
-    background: var(--umg-navy);
-    color: var(--color-primary-contrast);
-    border-color: var(--umg-navy);
-}
-
-.sl-status-tab--active:hover {
-    background: var(--umg-blue);
-    border-color: var(--umg-blue);
-}
-
-.sl-status-tab--active:active {
-    transform: scale(0.95);
-}
+/* La búsqueda del módulo vive en la barra unificada (.sl-toolbar); el buscador
+   global del TopHeader sigue disponible y sincronizado. El selector de estado
+   (lente) se movió a la banda de progreso (ProgressBand). */
 
 /* ═══════════════════════════════════════════════════════════════════
    4. TABLA
@@ -329,13 +272,7 @@
 
     .sl-listbar__utils { justify-content: space-between; }
 
-    .sl-status-tabs {
-        flex-wrap: wrap;
-        justify-content: flex-start;
-    }
-
     /* Objetivos táctiles cómodos (~44px) cuando la tabla se opera con el dedo. */
-    .sl-status-tab { min-height: 40px; }
     .sl-pager__btn { width: 40px; height: 40px; }
 
     /* Columna de identidad congelada: el nombre permanece visible al desplazar
@@ -431,10 +368,6 @@
     color: var(--color-warning);
 }
 
-[data-theme="dark"] .sl-status-tab--active {
-    background: var(--umg-blue);
-    border-color: var(--color-primary);
-}
 /* ═══════════════════════════════════════════════════════════════════
    CLICKABLE ROW + STATUS CHIP + PAGER (extensiones)
 ═══════════════════════════════════════════════════════════════════ */

@@ -8,6 +8,7 @@
 import { apiGet, apiPut } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 import { invalidateEstudiantes } from './estudiantesService';
+import { invalidateTesis } from './tesisService';
 import type { Nota, NotasEstudianteResponse } from '../types/api';
 
 export interface UpsertNotaDto {
@@ -33,7 +34,11 @@ export async function getNotasByCarnet(
 
 export async function upsertNota(dto: UpsertNotaDto): Promise<Nota> {
     const nota = await apiPut<Nota>(API_PATHS.notas.upsert, dto);
-    // La nota cambia el estado de tesis del estudiante: invalidar el padrón cacheado.
+    // La nota cambia el estado de tesis del estudiante: invalidar el padrón y las
+    // listas oficiales de tesis (aprobados/reprobados), de las que deriva la cola
+    // de trabajo. Así el ítem self-clearing desaparece en la próxima lectura, sin
+    // esperar al TTL.
     invalidateEstudiantes();
+    invalidateTesis();
     return nota;
 }

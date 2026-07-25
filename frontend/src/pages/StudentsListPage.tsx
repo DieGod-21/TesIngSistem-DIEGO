@@ -3,16 +3,19 @@
  *
  * Listado de estudiantes.
  *
- * Dos modos:
+ * Dos modos (según la LENTE compartida, ver features/students-workspace/lens):
  *   1. Default → GET /api/estudiantes (paginado, búsqueda server-side)
- *   2. Filtro por tesis → GET /api/tesis/aprobados | /api/tesis/reprobados
- *      activado con ?filter=aprobados|reprobados. No paginado (backend
- *      devuelve el total); búsqueda client-side con normalización de
- *      acentos/casing.
+ *   2. Filtro por tesis → GET /api/tesis/aprobados | /api/tesis/reprobados.
+ *      No paginado (backend devuelve el total); búsqueda client-side con
+ *      normalización de acentos/casing.
  *
- * Query params soportados:
- *   - filter=aprobados|reprobados  → modo tesis
- *   - search=<texto>               → búsqueda inicial (ambos modos)
+ * La lente vive en la banda de progreso (ProgressBand), que además muestra el
+ * pulso del pipeline derivado del dominio (deriveWorkQueue).
+ *
+ * Query params soportados (compatibilidad hacia atrás):
+ *   - status=approved|failed        → lente (preferido)
+ *   - filter=aprobados|reprobados   → alias heredado equivalente
+ *   - search=<texto> | q=<texto>    → búsqueda inicial (ambos modos)
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -33,6 +36,14 @@ import { userMessageFor } from '../services/errorMessages';
 import ImportModal from '../components/ImportModal';
 import { useAuth } from '../context/AuthContext';
 import { Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
+import ProgressBand from '../features/students-workspace/components/ProgressBand';
+import WorkQueue from '../features/students-workspace/components/WorkQueue';
+import { useStudentsPipeline } from '../features/students-workspace/hooks/useStudentsPipeline';
+import { resolveWorkItemHref } from '../features/students-workspace/navigation';
+import {
+    parseLens, parseSearchTerm, lensToTesisFilter, buildLensUrl, type LensId,
+} from '../features/students-workspace/lens/lens';
+import { routes } from '../config/routes';
 import '../styles/students-list.css';
 import '../styles/student-new.css';
 import '../styles/transitions.css';
@@ -41,41 +52,21 @@ const LIMIT_OPTIONS = [10, 20, 50, 100] as const;
 
 type TesisFilter = 'aprobados' | 'reprobados';
 
-/** Segmentos de alcance del módulo: filtro nativo de estudiantes por estado de tesis. */
-const SCOPES: { label: string; match: TesisFilter | null; status: 'approved' | 'failed' | null }[] = [
-    { label: 'Todos',          match: null,         status: null },
-    { label: 'Aprueban tesis', match: 'aprobados',  status: 'approved' },
-    { label: 'No aprueban',    match: 'reprobados',  status: 'failed' },
-];
-
-/**
- * Acepta tanto ?status=approved|failed (preferido) como ?filter=aprobados|reprobados
- * (compatibilidad) y normaliza a un único valor interno.
- */
-function parseQuery(search: string) {
-    const qp = new URLSearchParams(search);
-    const rawStatus = qp.get('status');
-    const rawFilter = qp.get('filter');
-
-    let filter: TesisFilter | null = null;
-    if (rawStatus === 'approved' || rawFilter === 'aprobados') filter = 'aprobados';
-    else if (rawStatus === 'failed' || rawFilter === 'reprobados') filter = 'reprobados';
-
-    return {
-        filter,
-        search: qp.get('search') ?? qp.get('q') ?? '',
-    };
-}
-
 const StudentsListPage: React.FC = () => {
     const history  = useHistory();
     const location = useLocation();
     const { capabilities } = useAuth();
-    const { filter, search: initialSearch } = useMemo(
-        () => parseQuery(location.search),
-        [location.search],
-    );
+    const activeLens: LensId = useMemo(() => parseLens(location.search), [location.search]);
+    const initialSearch = useMemo(() => parseSearchTerm(location.search), [location.search]);
+    const filter = useMemo<TesisFilter | null>(() => lensToTesisFilter(activeLens), [activeLens]);
     const [importOpen, setImportOpen] = useState(false);
+
+    // Panorama del pipeline (banda de progreso): única fuente de verdad = dominio.
+    // Gated por canViewReports; se recarga cuando cambia la lente para reflejar
+    // escrituras recientes sin pelear con la caché.
+    const pipeline = useStudentsPipeline(capabilities.canViewReports);
+
+    const goLens = (lens: LensId) => history.push(buildLensUrl(location.search, lens));
 
     // Búsqueda local integrada con el alcance: escribe en ?search= (URL compartible
     // y sincronizada con el buscador global del TopHeader). Ambas vistas hijas ya
@@ -95,18 +86,8 @@ const StudentsListPage: React.FC = () => {
             if (v) qp.set('search', v);
             else { qp.delete('search'); qp.delete('q'); }
             const q = qp.toString();
-            history.replace(q ? `/students?${q}` : '/students');
+            history.replace(q ? `${routes.students()}?${q}` : routes.students());
         }, 250);
-    };
-
-    /** Cambia el alcance conservando la búsqueda activa; normaliza el alias heredado `filter`. */
-    const buildScopeTo = (status: 'approved' | 'failed' | null): string => {
-        const qp = new URLSearchParams(location.search);
-        qp.delete('filter');
-        if (status) qp.set('status', status);
-        else qp.delete('status');
-        const q = qp.toString();
-        return q ? `/students?${q}` : '/students';
     };
 
     return (
@@ -119,7 +100,7 @@ const StudentsListPage: React.FC = () => {
                     <button
                         type="button"
                         className="sn-breadcrumb__item sn-breadcrumb__link"
-                        onClick={() => history.push('/')}
+                        onClick={() => history.push(routes.dashboard())}
                     >
                         Inicio
                     </button>
@@ -154,23 +135,26 @@ const StudentsListPage: React.FC = () => {
                             aria-label="Buscar estudiantes"
                         />
                     </div>
-                    <div className="sl-scope" role="group" aria-label="Filtrar estudiantes por estado de tesis">
-                        <span className="sl-scope__label">Ver</span>
-                        <div className="sl-status-tabs">
-                            {SCOPES.map((s) => (
-                                <button
-                                    key={s.label}
-                                    type="button"
-                                    className={`sl-status-tab${filter === s.match ? ' sl-status-tab--active' : ''}`}
-                                    aria-pressed={filter === s.match}
-                                    onClick={() => history.push(buildScopeTo(s.status))}
-                                >
-                                    {s.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </div>
+
+                {capabilities.canViewReports && (
+                    <WorkQueue
+                        items={pipeline.result ? pipeline.result.items : null}
+                        capabilities={capabilities}
+                        loading={pipeline.loading}
+                        error={pipeline.error}
+                        onOpen={(item) => history.push(resolveWorkItemHref(item))}
+                    />
+                )}
+
+                <ProgressBand
+                    activeLens={activeLens}
+                    onSelectLens={goLens}
+                    result={pipeline.result}
+                    lensCounts={pipeline.lensCounts}
+                    loading={pipeline.loading}
+                    error={pipeline.error}
+                />
 
                 <div key={filter ?? 'default'} className="view-transition">
                     {filter
@@ -199,7 +183,7 @@ const DefaultStudentsView: React.FC<{
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialSearch]);
 
-    const go = (est: Estudiante) => history.push(`/students/${est.id}`);
+    const go = (est: Estudiante) => history.push(routes.studentDetail(est.id));
 
     return (
         <>
