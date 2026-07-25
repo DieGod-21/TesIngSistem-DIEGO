@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { ChevronLeft, Mail, GraduationCap, ClipboardList, Pencil, Plus, Inbox, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, Mail, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, IdCard, Clock, CircleDot, ArrowRight } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
 import { getEstudianteById } from '../services/estudiantesService';
@@ -27,6 +27,11 @@ import '../styles/student-detail.css';
 const CURSO_NAMES: Record<string, string> = {
     '043': 'Proyecto de Graduación I',
     '049': 'Proyecto de Graduación II',
+};
+
+const CURSO_SHORT: Record<string, string> = {
+    '043': 'PG1',
+    '049': 'PG2',
 };
 
 const RESOLUCION_LABEL: Record<string, string> = {
@@ -181,6 +186,36 @@ const StudentDetailPage: React.FC = () => {
         return null;
     })();
 
+    // Fecha de última actualización de una nota concreta (si /notas la trae).
+    const notaUpdatedByCurso = (curso: string): string | null => {
+        if (!Array.isArray(state.notas)) return null;
+        const n = state.notas.find((x) => x?.curso_codigo === curso && x?.updated_at);
+        return n?.updated_at ? formatShortDate(n.updated_at) : null;
+    };
+
+    // Estado vacío de terna consciente del prerrequisito (deriva del estado de tesis real).
+    const ternaHint = ((): { title: string; msg: string; step: string } => {
+        if (tesisResult.estado === 'APROBADO') {
+            return {
+                title: 'Elegible · sin terna',
+                msg:   'Cumple el requisito de tesis (PG1 + PG2).',
+                step:  'Siguiente paso: conformar el comité evaluador (3 evaluadores).',
+            };
+        }
+        if (tesisResult.estado === 'REPROBADO') {
+            return {
+                title: 'Terna no disponible',
+                msg:   'No se alcanza la nota mínima en PG1 y/o PG2.',
+                step:  'Se asigna al recuperar la elegibilidad de tesis.',
+            };
+        }
+        return {
+            title: 'Terna pendiente',
+            msg:   'Faltan notas de PG1 y/o PG2 para evaluar la elegibilidad.',
+            step:  'Registra las notas para habilitar la asignación de terna.',
+        };
+    })();
+
     const openEdit = (curso: '043' | '049', notaActual: number | null) =>
         setEditModal({ open: true, curso, notaActual });
 
@@ -213,19 +248,27 @@ const StudentDetailPage: React.FC = () => {
 
             {!state.loading && !state.error && state.student && (
                 <div className="view-transition sd-record" key={state.student.id}>
-                    {/* ── Resumen ejecutivo: identidad + veredicto ──────────── */}
+                    {/* ── Resumen ejecutivo: identidad + veredicto + promedio ─ */}
                     <header className="sd-hero">
                         <div className="sd-hero__identity">
                             <span className="sd-avatar" aria-hidden="true">{monogram}</span>
                             <div className="sd-hero__headings">
                                 <p className="sd-hero__kicker">Expediente académico</p>
                                 <h1 className="sd-hero__name">{state.student.nombre}</h1>
-                                {state.student.email && (
-                                    <a className="sd-hero__email" href={`mailto:${state.student.email}`}>
-                                        <Mail size={14} aria-hidden="true" />
-                                        {state.student.email}
-                                    </a>
-                                )}
+                                <div className="sd-hero__sub">
+                                    {state.student.carrera && (
+                                        <span className="sd-hero__career">{state.student.carrera}</span>
+                                    )}
+                                    {state.student.carrera && state.student.email && (
+                                        <span className="sd-hero__dot" aria-hidden="true">·</span>
+                                    )}
+                                    {state.student.email && (
+                                        <a className="sd-hero__email" href={`mailto:${state.student.email}`}>
+                                            <Mail size={13} aria-hidden="true" />
+                                            {state.student.email}
+                                        </a>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -233,50 +276,51 @@ const StudentDetailPage: React.FC = () => {
                             <div className="sd-hero__verdict">
                                 <span className="sd-hero__verdict-label">Estado de tesis</span>
                                 <ThesisStatusBadge estado={tesisInput} variant="badge" />
+                                {promedioGeneral != null && (
+                                    <span className="sd-hero__avg">
+                                        Promedio
+                                        <strong>{Number(promedioGeneral).toFixed(2)}</strong>
+                                    </span>
+                                )}
                             </div>
                         )}
                     </header>
 
-                    {/* ── Tira de metadatos: densidad sobre datos reales ────── */}
-                    <dl className="sd-meta">
-                        <div className="sd-meta__cell">
-                            <dt className="sd-meta__label">Carné</dt>
-                            <dd className="sd-meta__value sd-meta__value--mono">{state.student.carnet}</dd>
-                        </div>
-                        <div className="sd-meta__cell">
-                            <dt className="sd-meta__label">Carrera</dt>
-                            <dd className="sd-meta__value" title={state.student.carrera}>
-                                {state.student.carrera || '—'}
-                            </dd>
-                        </div>
-                        <div className="sd-meta__cell">
-                            <dt className="sd-meta__label">Estado</dt>
-                            <dd className="sd-meta__value">
-                                <span className={`sd-status ${state.student.activo ? 'sd-status--on' : 'sd-status--off'}`}>
-                                    <span className="sd-status__dot" aria-hidden="true" />
-                                    {state.student.activo ? 'Activo' : 'Inactivo'}
-                                </span>
-                            </dd>
-                        </div>
-                        <div className="sd-meta__cell">
-                            <dt className="sd-meta__label">Promedio general</dt>
-                            <dd className="sd-meta__value sd-meta__value--num">
-                                {promedioGeneral != null ? Number(promedioGeneral).toFixed(2) : '—'}
-                            </dd>
-                        </div>
-                        <div className="sd-meta__cell">
-                            <dt className="sd-meta__label">Terna</dt>
-                            <dd className="sd-meta__value">
-                                {terna ? `#${String(terna.numero).padStart(2, '0')}` : 'Sin asignar'}
-                            </dd>
-                        </div>
-                        {lastActivity && (
-                            <div className="sd-meta__cell">
-                                <dt className="sd-meta__label">{lastActivity.label}</dt>
-                                <dd className="sd-meta__value">{lastActivity.value}</dd>
+                    {/* ── KPIs del expediente: datos reales, con jerarquía ──── */}
+                    <div className="sd-kpis">
+                        <div className="sd-kpi">
+                            <span className="sd-kpi__icon"><IdCard size={18} aria-hidden="true" /></span>
+                            <div className="sd-kpi__body">
+                                <span className="sd-kpi__label">Carné</span>
+                                <span className="sd-kpi__value sd-kpi__value--mono">{state.student.carnet}</span>
                             </div>
-                        )}
-                    </dl>
+                        </div>
+                        <div className={`sd-kpi ${state.student.activo ? 'sd-kpi--ok' : 'sd-kpi--muted'}`}>
+                            <span className="sd-kpi__icon"><CircleDot size={18} aria-hidden="true" /></span>
+                            <div className="sd-kpi__body">
+                                <span className="sd-kpi__label">Estado</span>
+                                <span className="sd-kpi__value">{state.student.activo ? 'Activo' : 'Inactivo'}</span>
+                            </div>
+                        </div>
+                        <div className="sd-kpi">
+                            <span className="sd-kpi__icon"><Users size={18} aria-hidden="true" /></span>
+                            <div className="sd-kpi__body">
+                                <span className="sd-kpi__label">Terna</span>
+                                <span className={`sd-kpi__value ${terna ? '' : 'sd-kpi__value--soft'}`}>
+                                    {terna ? `#${String(terna.numero).padStart(2, '0')}` : 'Sin asignar'}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="sd-kpi">
+                            <span className="sd-kpi__icon"><Clock size={18} aria-hidden="true" /></span>
+                            <div className="sd-kpi__body">
+                                <span className="sd-kpi__label">{lastActivity?.label ?? 'Actividad'}</span>
+                                <span className={`sd-kpi__value ${lastActivity ? '' : 'sd-kpi__value--soft'}`}>
+                                    {lastActivity?.value ?? 'Sin registro'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* ── Cuerpo del expediente: progreso + notas · terna ──── */}
                     <div className="sd-layout">
@@ -291,7 +335,7 @@ const StudentDetailPage: React.FC = () => {
                                     Notas registradas
                                 </h2>
 
-                                <div className="tdetail-evaluators sd-grade-rows">
+                                <div className="sd-notes">
                                     {grads.length === 0 && missingCursos.length === ALL_CURSOS.length && (
                                         <div className="sd-empty-grades">
                                             <Inbox size={32} className="sd-empty-grades__icon" aria-hidden="true" />
@@ -299,22 +343,25 @@ const StudentDetailPage: React.FC = () => {
                                         </div>
                                     )}
                                     {grads.map((g) => {
-                                        const rowMod = g.estado === 'APROBADO' ? 'sd-row--pass'
-                                                     : g.estado === 'NSP'      ? 'sd-row--nsp'
-                                                     : 'sd-row--fail';
-                                        const chipMod = g.estado === 'APROBADO' ? 'eval-enviada'
-                                                      : g.estado === 'NSP'      ? 'eval-empty'
-                                                      : 'eval-borrador';
+                                        const tone = g.estado === 'APROBADO' ? 'pass'
+                                                   : g.estado === 'NSP'      ? 'nsp'
+                                                   : 'fail';
+                                        const updated = notaUpdatedByCurso(g.curso);
                                         return (
-                                        <div key={g.curso} className={`tdetail-evaluator ${rowMod}`}>
-                                            <span className="tdetail-evaluator__name">
-                                                {g.curso} · {CURSO_NAMES[g.curso] ?? g.curso}
-                                                <span className="sd-ciclo">{g.ciclo}</span>
-                                            </span>
-                                            <span className="tdetail-evaluator__score">{g.nota_final}</span>
-                                            <span className={`tdetail-evaluator__estado ${chipMod}`}>
-                                                {g.estado}
-                                            </span>
+                                        <div key={g.curso} className={`sd-note sd-note--${tone}`}>
+                                            <span className="sd-note__code">{CURSO_SHORT[g.curso] ?? g.curso}</span>
+                                            <div className="sd-note__info">
+                                                <span className="sd-note__course">{CURSO_NAMES[g.curso] ?? g.curso}</span>
+                                                <span className="sd-note__meta">
+                                                    {g.curso} · Ciclo {g.ciclo}{updated ? ` · Act. ${updated}` : ''}
+                                                </span>
+                                            </div>
+                                            <div className="sd-note__grade">
+                                                <span className="sd-note__score">{g.nota_final}</span>
+                                                <span className={`sd-note__status sd-note__status--${tone}`}>
+                                                    {g.estado}
+                                                </span>
+                                            </div>
                                             {capabilities.canEditGrades && (
                                                 <button
                                                     type="button"
@@ -352,7 +399,7 @@ const StudentDetailPage: React.FC = () => {
                             {terna ? (
                                 <article className="tdetail-card sd-card sd-terna">
                                     <h2 className="tdetail-card__title">
-                                        <ClipboardList size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                                        <Users size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
                                         Terna asignada
                                     </h2>
 
@@ -396,18 +443,24 @@ const StudentDetailPage: React.FC = () => {
                                     </div>
                                 </article>
                             ) : (
-                                <article className="tdetail-card sd-card">
+                                <article className="tdetail-card sd-card sd-terna sd-terna--empty">
                                     <h2 className="tdetail-card__title">
-                                        <ClipboardList size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                                        <Users size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
                                         Terna asignada
                                     </h2>
                                     <div className="sd-terna__empty">
-                                        <ClipboardList size={26} aria-hidden="true" />
-                                        <p className="sd-terna__empty-title">Sin terna asignada</p>
-                                        <p className="sd-terna__empty-msg">
-                                            Aún no hay comité evaluador para este expediente.
-                                        </p>
+                                        <span className="sd-terna__empty-icon">
+                                            <Users size={20} aria-hidden="true" />
+                                        </span>
+                                        <div className="sd-terna__empty-text">
+                                            <p className="sd-terna__empty-title">{ternaHint.title}</p>
+                                            <p className="sd-terna__empty-msg">{ternaHint.msg}</p>
+                                        </div>
                                     </div>
+                                    <p className="sd-terna__empty-step">
+                                        <ArrowRight size={13} aria-hidden="true" />
+                                        {ternaHint.step}
+                                    </p>
                                 </article>
                             )}
                         </aside>
@@ -443,18 +496,21 @@ const StudentDetailSkeleton: React.FC = () => (
             <Skeleton height={26} width={112} />
         </div>
 
-        <div className="sd-meta">
-            {[...Array(6)].map((_, i) => (
-                <div key={i} className="sd-meta__cell">
-                    <Skeleton height={9} width="62%" />
-                    <Skeleton height={15} width="82%" />
+        <div className="sd-kpis">
+            {[...Array(4)].map((_, i) => (
+                <div key={i} className="sd-kpi">
+                    <Skeleton variant="box" width={38} height={38} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                        <Skeleton height={9} width="55%" />
+                        <Skeleton height={15} width="78%" />
+                    </div>
                 </div>
             ))}
         </div>
 
         <div className="sd-layout">
             <div className="sd-main">
-                <div className="tdetail-card sd-card" style={{ gap: 16 }}>
+                <div className="tdetail-card sd-card" style={{ gap: 12 }}>
                     <Skeleton height={11} width="45%" />
                     {[...Array(2)].map((_, i) => (
                         <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -463,24 +519,24 @@ const StudentDetailSkeleton: React.FC = () => (
                         </div>
                     ))}
                 </div>
-                <div className="tdetail-card sd-card">
+                <div className="tdetail-card sd-card" style={{ gap: 10 }}>
                     <Skeleton height={11} width="30%" />
                     {[...Array(2)].map((_, i) => (
-                        <div key={i} className="dash-skeleton-row">
-                            <div className="dash-skeleton-row__lines" style={{ flex: 1 }}>
+                        <div key={i} className="sd-note">
+                            <Skeleton variant="box" width={42} height={38} />
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
                                 <Skeleton size="medium" />
                                 <Skeleton size="short" />
                             </div>
-                            <Skeleton width={36} />
-                            <Skeleton width={60} />
+                            <Skeleton width={40} height={26} />
                         </div>
                     ))}
                 </div>
             </div>
             <div className="sd-rail">
-                <div className="tdetail-card sd-card" style={{ gap: 14 }}>
+                <div className="tdetail-card sd-card" style={{ gap: 12 }}>
                     <Skeleton height={11} width="50%" />
-                    <Skeleton height={30} width="40%" />
+                    <Skeleton height={28} width="40%" />
                     <Skeleton height={12} width="100%" />
                     <Skeleton height={8} width="100%" />
                 </div>
