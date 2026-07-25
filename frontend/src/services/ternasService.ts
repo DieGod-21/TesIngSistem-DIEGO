@@ -35,11 +35,10 @@ export async function listTernas(estado?: EstadoTerna, opts: { signal?: AbortSig
 
 export const TERNAS_CACHE_PREFIX = 'ternas';
 export const TERNAS_LIST_KEY = 'ternas:list';
-const TERNAS_TTL_MS = 60_000;
 
-/** Listado completo de ternas (sin filtro), cacheado + deduplicado. */
+/** Listado completo de ternas (sin filtro), cacheado + deduplicado (TTL por defecto). */
 export function listTernasCached(): Promise<TernaResumen[]> {
-    return cached(TERNAS_LIST_KEY, () => listTernas(), TERNAS_TTL_MS);
+    return cached(TERNAS_LIST_KEY, () => listTernas());
 }
 
 /** Invalida el listado de ternas tras una escritura de evaluación. */

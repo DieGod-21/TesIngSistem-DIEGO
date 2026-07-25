@@ -11,27 +11,45 @@
 
 import { getEstudiantesRegistry } from '../../../services/estudiantesService';
 import { getAprobadosTesisCached, getReprobadosTesisCached } from '../../../services/tesisService';
+import type { TesisEstudiante } from '../../../services/tesisService';
 import { listTernasCached } from '../../../services/ternasService';
 import { getGlobalTernasReportCached } from '../../../services/reportesService';
+import { reportError } from '../../../services/telemetry';
+import type { TernaResumen, ReporteTernaItem } from '../../../types/api';
 import type { WorkspaceDatasets } from '../domain/types';
+
+/**
+ * Devuelve un manejador de rechazo que degrada una fuente OPCIONAL a un valor
+ * vacío y reporta el fallo a telemetría (diagnóstico, sin datos). Así el fallo
+ * de una fuente (p. ej. el reporte, admin-only) nunca desactiva el workspace: el
+ * dominio ya tolera esos datasets vacíos.
+ */
+function degradeTo<T>(source: string, fallback: T): (e: unknown) => T {
+    return (e) => {
+        reportError(e, { source: `workspace:source-degraded:${source}` });
+        return fallback;
+    };
+}
 
 /**
  * Descarga (o reutiliza de caché) los datasets en lote del workspace.
  *
  * La frescura la garantiza el contrato de invalidación de los servicios: cada
  * escritura invalida su caché (tesis / ternas / reporte / padrón), por lo que
- * basta con recargar. No hay un "force" propio: quedaría muerto tras el cleanup.
+ * basta con recargar.
  *
- * Fail-fast (Promise.all): si una fuente falla, la promesa se rechaza con el
- * error real. La degradación por-fuente es responsabilidad del hook consumidor.
+ * Resiliencia por-fuente: el PADRÓN es la base (sin estudiantes no hay
+ * workspace); su fallo se propaga y el hook lo muestra como error. Las demás
+ * fuentes son enriquecimiento y degradan INDEPENDIENTEMENTE a vacío, de modo que
+ * un fallo aislado (reporte, ternas o una lista de tesis) no apaga la cola.
  */
 export async function getWorkspaceDatasets(): Promise<WorkspaceDatasets> {
     const [registry, aprobados, reprobados, ternas, reporte] = await Promise.all([
         getEstudiantesRegistry(),
-        getAprobadosTesisCached(),
-        getReprobadosTesisCached(),
-        listTernasCached(),
-        getGlobalTernasReportCached(),
+        getAprobadosTesisCached().catch(degradeTo('tesis-aprobados', { estudiantes: [] as TesisEstudiante[] })),
+        getReprobadosTesisCached().catch(degradeTo('tesis-reprobados', { estudiantes: [] as TesisEstudiante[] })),
+        listTernasCached().catch(degradeTo('ternas', [] as TernaResumen[])),
+        getGlobalTernasReportCached().catch(degradeTo('reportes', { ternas: [] as ReporteTernaItem[] })),
     ]);
     return {
         students: registry.estudiantes,

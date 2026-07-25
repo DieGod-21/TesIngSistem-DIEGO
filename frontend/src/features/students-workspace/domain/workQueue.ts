@@ -39,7 +39,7 @@ const MS_PER_DAY = 86_400_000;
  * interno → función pura). null si falta el timestamp/now o el timestamp es
  * inválido. Nunca negativa (un timestamp futuro cuenta como 0).
  */
-export function computeAgeDays(timestamp: string | null, now?: number): number | null {
+function computeAgeDays(timestamp: string | null, now?: number): number | null {
     if (timestamp == null || now == null) return null;
     const t = Date.parse(timestamp);
     if (Number.isNaN(t)) return null;

@@ -24,11 +24,10 @@ export async function getGlobalTernasReport(opts: { signal?: AbortSignal } = {})
 
 export const REPORTES_CACHE_PREFIX = 'reportes';
 export const REPORTES_TERNAS_GLOBAL_KEY = 'reportes:ternas-global';
-const REPORTES_TTL_MS = 60_000;
 
-/** Reporte global de ternas, cacheado + deduplicado (consumidores en lote). */
+/** Reporte global de ternas, cacheado + deduplicado (TTL por defecto de la caché). */
 export function getGlobalTernasReportCached(): Promise<ReporteTernasGlobal> {
-    return cached(REPORTES_TERNAS_GLOBAL_KEY, () => getGlobalTernasReport(), REPORTES_TTL_MS);
+    return cached(REPORTES_TERNAS_GLOBAL_KEY, () => getGlobalTernasReport());
 }
 
 /** Invalida el reporte global tras una escritura que cambie una resolución. */

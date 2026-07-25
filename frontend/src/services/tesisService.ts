@@ -49,17 +49,14 @@ export const TESIS_CACHE_PREFIX = 'tesis';
 export const TESIS_APROBADOS_KEY = 'tesis:aprobados';
 export const TESIS_REPROBADOS_KEY = 'tesis:reprobados';
 
-/** TTL corto, alineado con el padrón, para no servir datos rancios. */
-const TESIS_TTL_MS = 60_000;
-
-/** Aprobados de tesis, cacheado + deduplicado (para consumidores en lote). */
+/** Aprobados de tesis, cacheado + deduplicado (TTL por defecto de la caché). */
 export function getAprobadosTesisCached(): Promise<TesisListResp> {
-    return cached(TESIS_APROBADOS_KEY, () => getAprobadosTesis(), TESIS_TTL_MS);
+    return cached(TESIS_APROBADOS_KEY, () => getAprobadosTesis());
 }
 
-/** Reprobados de tesis, cacheado + deduplicado (para consumidores en lote). */
+/** Reprobados de tesis, cacheado + deduplicado (TTL por defecto de la caché). */
 export function getReprobadosTesisCached(): Promise<TesisListResp> {
-    return cached(TESIS_REPROBADOS_KEY, () => getReprobadosTesis(), TESIS_TTL_MS);
+    return cached(TESIS_REPROBADOS_KEY, () => getReprobadosTesis());
 }
 
 /** Invalida las listas de tesis tras una escritura que cambie la elegibilidad. */

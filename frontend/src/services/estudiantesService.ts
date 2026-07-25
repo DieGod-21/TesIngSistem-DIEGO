@@ -46,9 +46,6 @@ export async function listEstudiantes(
 /** Clave de recurso; `invalidate('estudiantes')` limpia todo el padrón. */
 export const ESTUDIANTES_CACHE_KEY = 'estudiantes:registry';
 
-/** TTL del padrón: corto, para no servir datos rancios tras escrituras. */
-const REGISTRY_TTL_MS = 60_000;
-
 export interface EstudiantesRegistry {
     estudiantes: Estudiante[];
     /** Total declarado por el backend (o el conteo local si no hay metadata). */
@@ -80,7 +77,6 @@ export async function getEstudiantesRegistry(
             if (isTruncated) reportTruncation(API_PATHS.estudiantes.list, estudiantes.length, res.pagination?.total);
             return { estudiantes, total, isTruncated };
         },
-        REGISTRY_TTL_MS,
     );
 }
 
