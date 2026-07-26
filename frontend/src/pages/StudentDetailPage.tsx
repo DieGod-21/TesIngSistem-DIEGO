@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { ChevronLeft, Mail, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, IdCard, Clock, CircleDot, ArrowRight } from 'lucide-react';
+import { ChevronLeft, Mail, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, ArrowRight } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
 import { getEstudianteById } from '../services/estudiantesService';
@@ -134,8 +134,6 @@ const StudentDetailPage: React.FC = () => {
     }, [id, refreshKey]);
 
     const grads: CursoNotaResumen[] = buildCursosResumen(state.reporte, state.notas);
-    const existingCursos = new Set(grads.map((g) => g.curso));
-    const missingCursos = ALL_CURSOS.filter((c) => !existingCursos.has(c));
 
     const pgGrades = mergeGrades(
         extractGradesFromReporte(state.reporte),
@@ -248,151 +246,166 @@ const StudentDetailPage: React.FC = () => {
 
             {!state.loading && !state.error && state.student && (
                 <div className="view-transition sd-record" key={state.student.id}>
-                    {/* ── Resumen ejecutivo: identidad + veredicto + promedio ─ */}
+                    {/* ── Encabezado de perfil: quién es · veredicto · stats ─ */}
                     <header className="sd-hero">
-                        <div className="sd-hero__identity">
-                            <span className="sd-avatar" aria-hidden="true">{monogram}</span>
-                            <div className="sd-hero__headings">
-                                <p className="sd-hero__kicker">Expediente académico</p>
-                                <h1 className="sd-hero__name">{state.student.nombre}</h1>
-                                <div className="sd-hero__sub">
-                                    {state.student.carrera && (
-                                        <span className="sd-hero__career">{state.student.carrera}</span>
-                                    )}
-                                    {state.student.carrera && state.student.email && (
-                                        <span className="sd-hero__dot" aria-hidden="true">·</span>
-                                    )}
-                                    {state.student.email && (
-                                        <a className="sd-hero__email" href={`mailto:${state.student.email}`}>
-                                            <Mail size={13} aria-hidden="true" />
-                                            {state.student.email}
-                                        </a>
-                                    )}
+                        <div className="sd-hero__top">
+                            <div className="sd-hero__identity">
+                                <span className="sd-avatar" aria-hidden="true">{monogram}</span>
+                                <div className="sd-hero__headings">
+                                    <p className="sd-hero__kicker">Expediente académico</p>
+                                    <h1 className="sd-hero__name">{state.student.nombre}</h1>
+                                    <div className="sd-hero__sub">
+                                        {state.student.carrera && (
+                                            <span className="sd-hero__career">{state.student.carrera}</span>
+                                        )}
+                                        {state.student.carrera && state.student.email && (
+                                            <span className="sd-hero__dot" aria-hidden="true">·</span>
+                                        )}
+                                        {state.student.email && (
+                                            <a className="sd-hero__email" href={`mailto:${state.student.email}`}>
+                                                <Mail size={13} aria-hidden="true" />
+                                                {state.student.email}
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+
+                            {tesisInput && (
+                                <div className="sd-hero__verdict">
+                                    <span className="sd-hero__verdict-label">Estado de tesis</span>
+                                    <ThesisStatusBadge estado={tesisInput} variant="badge" />
+                                </div>
+                            )}
                         </div>
 
-                        {tesisInput && (
-                            <div className="sd-hero__verdict">
-                                <span className="sd-hero__verdict-label">Estado de tesis</span>
-                                <ThesisStatusBadge estado={tesisInput} variant="badge" />
-                                {promedioGeneral != null && (
-                                    <span className="sd-hero__avg">
-                                        Promedio
-                                        <strong>{Number(promedioGeneral).toFixed(2)}</strong>
+                        {/* Stats integradas al encabezado (sin cajas, una sola superficie) */}
+                        <dl className="sd-hero__stats">
+                            <div className="sd-stat">
+                                <dt className="sd-stat__label">Carné</dt>
+                                <dd className="sd-stat__value sd-stat__value--mono">{state.student.carnet}</dd>
+                            </div>
+                            <div className="sd-stat">
+                                <dt className="sd-stat__label">Estado</dt>
+                                <dd className="sd-stat__value">
+                                    <span className={`sd-state ${state.student.activo ? 'sd-state--on' : 'sd-state--off'}`}>
+                                        <span className="sd-state__dot" aria-hidden="true" />
+                                        {state.student.activo ? 'Activo' : 'Inactivo'}
                                     </span>
-                                )}
+                                </dd>
                             </div>
-                        )}
-                    </header>
-
-                    {/* ── KPIs del expediente: datos reales, con jerarquía ──── */}
-                    <div className="sd-kpis">
-                        <div className="sd-kpi">
-                            <span className="sd-kpi__icon"><IdCard size={18} aria-hidden="true" /></span>
-                            <div className="sd-kpi__body">
-                                <span className="sd-kpi__label">Carné</span>
-                                <span className="sd-kpi__value sd-kpi__value--mono">{state.student.carnet}</span>
+                            <div className="sd-stat">
+                                <dt className="sd-stat__label">Promedio</dt>
+                                <dd className="sd-stat__value sd-stat__value--num">
+                                    {promedioGeneral != null ? Number(promedioGeneral).toFixed(2) : '—'}
+                                </dd>
                             </div>
-                        </div>
-                        <div className={`sd-kpi ${state.student.activo ? 'sd-kpi--ok' : 'sd-kpi--muted'}`}>
-                            <span className="sd-kpi__icon"><CircleDot size={18} aria-hidden="true" /></span>
-                            <div className="sd-kpi__body">
-                                <span className="sd-kpi__label">Estado</span>
-                                <span className="sd-kpi__value">{state.student.activo ? 'Activo' : 'Inactivo'}</span>
-                            </div>
-                        </div>
-                        <div className="sd-kpi">
-                            <span className="sd-kpi__icon"><Users size={18} aria-hidden="true" /></span>
-                            <div className="sd-kpi__body">
-                                <span className="sd-kpi__label">Terna</span>
-                                <span className={`sd-kpi__value ${terna ? '' : 'sd-kpi__value--soft'}`}>
+                            <div className="sd-stat">
+                                <dt className="sd-stat__label">Terna</dt>
+                                <dd className={`sd-stat__value ${terna ? '' : 'sd-stat__value--soft'}`}>
                                     {terna ? `#${String(terna.numero).padStart(2, '0')}` : 'Sin asignar'}
-                                </span>
+                                </dd>
                             </div>
-                        </div>
-                        <div className="sd-kpi">
-                            <span className="sd-kpi__icon"><Clock size={18} aria-hidden="true" /></span>
-                            <div className="sd-kpi__body">
-                                <span className="sd-kpi__label">{lastActivity?.label ?? 'Actividad'}</span>
-                                <span className={`sd-kpi__value ${lastActivity ? '' : 'sd-kpi__value--soft'}`}>
+                            <div className="sd-stat">
+                                <dt className="sd-stat__label">{lastActivity?.label ?? 'Actividad'}</dt>
+                                <dd className={`sd-stat__value ${lastActivity ? '' : 'sd-stat__value--soft'}`}>
                                     {lastActivity?.value ?? 'Sin registro'}
-                                </span>
+                                </dd>
                             </div>
-                        </div>
-                    </div>
+                        </dl>
+                    </header>
 
                     {/* ── Cuerpo del expediente: progreso + notas · terna ──── */}
                     <div className="sd-layout">
                         <div className="sd-main">
-                            {tesisInput && (
-                                <ThesisStatusBadge estado={tesisInput} title="Progreso académico · PG1 + PG2" />
-                            )}
+                            <section className="sd-surface">
+                                <header className="sd-surface__head">
+                                    <h2 className="sd-surface__title">
+                                        <GraduationCap size={15} aria-hidden="true" />
+                                        Notas de graduación
+                                    </h2>
+                                    <span className="sd-surface__hint">Mínimo para tesis · {THESIS_MIN_GRADE}</span>
+                                </header>
 
-                            <article className="tdetail-card sd-card">
-                                <h2 className="tdetail-card__title">
-                                    <GraduationCap size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                                    Notas registradas
-                                </h2>
+                                {grads.length === 0 && !capabilities.canEditGrades && (
+                                    <div className="sd-empty-grades">
+                                        <Inbox size={30} className="sd-empty-grades__icon" aria-hidden="true" />
+                                        <p className="sd-empty-grades__msg">Sin notas registradas</p>
+                                    </div>
+                                )}
 
-                                <div className="sd-notes">
-                                    {grads.length === 0 && missingCursos.length === ALL_CURSOS.length && (
-                                        <div className="sd-empty-grades">
-                                            <Inbox size={32} className="sd-empty-grades__icon" aria-hidden="true" />
-                                            <p className="sd-empty-grades__msg">Sin notas registradas</p>
-                                        </div>
-                                    )}
-                                    {grads.map((g) => {
-                                        const tone = g.estado === 'APROBADO' ? 'pass'
-                                                   : g.estado === 'NSP'      ? 'nsp'
-                                                   : 'fail';
-                                        const updated = notaUpdatedByCurso(g.curso);
-                                        return (
-                                        <div key={g.curso} className={`sd-note sd-note--${tone}`}>
-                                            <span className="sd-note__code">{CURSO_SHORT[g.curso] ?? g.curso}</span>
-                                            <div className="sd-note__info">
-                                                <span className="sd-note__course">{CURSO_NAMES[g.curso] ?? g.curso}</span>
-                                                <span className="sd-note__meta">
-                                                    {g.curso} · Ciclo {g.ciclo}{updated ? ` · Act. ${updated}` : ''}
-                                                </span>
-                                            </div>
-                                            <div className="sd-note__grade">
-                                                <span className="sd-note__score">{g.nota_final}</span>
-                                                <span className={`sd-note__status sd-note__status--${tone}`}>
-                                                    {g.estado}
-                                                </span>
-                                            </div>
-                                            {capabilities.canEditGrades && (
-                                                <button
-                                                    type="button"
-                                                    className="nota-edit-btn"
-                                                    onClick={() => openEdit(g.curso as '043' | '049', Number(g.nota_final))}
-                                                    aria-label={`Editar nota de ${CURSO_NAMES[g.curso] ?? g.curso}`}
-                                                >
-                                                    <Pencil size={14} aria-hidden="true" />
-                                                </button>
-                                            )}
-                                        </div>
-                                        );
+                                <ol className="sd-timeline">
+                                    {ALL_CURSOS.map((curso) => {
+                                        const g = grads.find((x) => x.curso === curso);
+                                        if (g) {
+                                            const tone = g.estado === 'APROBADO' ? 'pass'
+                                                       : g.estado === 'NSP'      ? 'nsp'
+                                                       : 'fail';
+                                            const updated = notaUpdatedByCurso(curso);
+                                            const pct = Math.max(0, Math.min(100, Number(g.nota_final) || 0));
+                                            return (
+                                                <li key={curso} className={`sd-rec sd-rec--${tone}`}>
+                                                    <span className="sd-rec__node" aria-hidden="true" />
+                                                    <div className="sd-rec__main">
+                                                        <div className="sd-rec__line">
+                                                            <span className="sd-rec__code">{CURSO_SHORT[curso] ?? curso}</span>
+                                                            <span className="sd-rec__title">{CURSO_NAMES[curso] ?? curso}</span>
+                                                            <span className="sd-rec__period">
+                                                                Ciclo {g.ciclo}{updated ? ` · ${updated}` : ''}
+                                                            </span>
+                                                        </div>
+                                                        <div
+                                                            className="sd-meter"
+                                                            role="img"
+                                                            aria-label={`Nota ${g.nota_final} de 100 · mínimo ${THESIS_MIN_GRADE}`}
+                                                        >
+                                                            <span className="sd-meter__fill" style={{ width: `${pct}%` }} />
+                                                            <span className="sd-meter__tick" style={{ left: `${THESIS_MIN_GRADE}%` }} />
+                                                        </div>
+                                                    </div>
+                                                    <div className="sd-rec__grade">
+                                                        <span className="sd-rec__score">{g.nota_final}</span>
+                                                        <span className="sd-rec__status">{g.estado}</span>
+                                                    </div>
+                                                    {capabilities.canEditGrades && (
+                                                        <button
+                                                            type="button"
+                                                            className="nota-edit-btn"
+                                                            onClick={() => openEdit(curso, Number(g.nota_final))}
+                                                            aria-label={`Editar nota de ${CURSO_NAMES[curso] ?? curso}`}
+                                                        >
+                                                            <Pencil size={14} aria-hidden="true" />
+                                                        </button>
+                                                    )}
+                                                </li>
+                                            );
+                                        }
+                                        if (capabilities.canEditGrades) {
+                                            return (
+                                                <li key={curso} className="sd-rec sd-rec--empty">
+                                                    <span className="sd-rec__node" aria-hidden="true" />
+                                                    <div className="sd-rec__main">
+                                                        <div className="sd-rec__line">
+                                                            <span className="sd-rec__code sd-rec__code--muted">{CURSO_SHORT[curso] ?? curso}</span>
+                                                            <span className="sd-rec__title">{CURSO_NAMES[curso] ?? curso}</span>
+                                                            <span className="sd-rec__period">Sin registrar</span>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="nota-add-btn"
+                                                        onClick={() => openEdit(curso, null)}
+                                                    >
+                                                        <Plus size={12} aria-hidden="true" />
+                                                        Registrar
+                                                    </button>
+                                                </li>
+                                            );
+                                        }
+                                        return null;
                                     })}
-
-                                    {capabilities.canEditGrades && missingCursos.map((curso) => (
-                                        <div key={curso} className="nota-add-row">
-                                            <span className="nota-add-row__label">
-                                                {curso} · {CURSO_NAMES[curso]}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                className="nota-add-btn"
-                                                onClick={() => openEdit(curso, null)}
-                                            >
-                                                <Plus size={12} aria-hidden="true" />
-                                                Registrar
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </article>
+                                </ol>
+                            </section>
                         </div>
 
                         <aside className="sd-rail">
@@ -485,50 +498,39 @@ const StudentDetailPage: React.FC = () => {
 const StudentDetailSkeleton: React.FC = () => (
     <div className="sd-record" aria-busy="true" aria-label="Cargando información del estudiante">
         <div className="sd-hero">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
-                <Skeleton variant="box" width={56} height={56} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-                    <Skeleton height={11} width="28%" />
-                    <Skeleton height={22} width="55%" />
-                    <Skeleton height={12} width="42%" />
-                </div>
-            </div>
-            <Skeleton height={26} width={112} />
-        </div>
-
-        <div className="sd-kpis">
-            {[...Array(4)].map((_, i) => (
-                <div key={i} className="sd-kpi">
-                    <Skeleton variant="box" width={38} height={38} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-                        <Skeleton height={9} width="55%" />
-                        <Skeleton height={15} width="78%" />
+            <div className="sd-hero__top">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 15, flex: 1, minWidth: 0 }}>
+                    <Skeleton variant="box" width={56} height={56} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flex: 1 }}>
+                        <Skeleton height={10} width="26%" />
+                        <Skeleton height={21} width="52%" />
+                        <Skeleton height={12} width="40%" />
                     </div>
                 </div>
-            ))}
+                <Skeleton height={24} width={104} />
+            </div>
+            <div className="sd-hero__stats">
+                {[...Array(5)].map((_, i) => (
+                    <div key={i} className="sd-stat">
+                        <Skeleton height={9} width={44} />
+                        <Skeleton height={15} width={62} />
+                    </div>
+                ))}
+            </div>
         </div>
 
         <div className="sd-layout">
             <div className="sd-main">
-                <div className="tdetail-card sd-card" style={{ gap: 12 }}>
-                    <Skeleton height={11} width="45%" />
+                <div className="sd-surface" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <Skeleton height={13} width="42%" />
                     {[...Array(2)].map((_, i) => (
-                        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <Skeleton size="medium" />
-                            <Skeleton height={8} width="100%" />
-                        </div>
-                    ))}
-                </div>
-                <div className="tdetail-card sd-card" style={{ gap: 10 }}>
-                    <Skeleton height={11} width="30%" />
-                    {[...Array(2)].map((_, i) => (
-                        <div key={i} className="sd-note">
-                            <Skeleton variant="box" width={42} height={38} />
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <Skeleton variant="box" width={10} height={10} />
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
                                 <Skeleton size="medium" />
-                                <Skeleton size="short" />
+                                <Skeleton height={6} width="100%" />
                             </div>
-                            <Skeleton width={40} height={26} />
+                            <Skeleton width={44} height={30} />
                         </div>
                     ))}
                 </div>
