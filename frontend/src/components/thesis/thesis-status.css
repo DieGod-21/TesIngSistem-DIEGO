@@ -1,15 +1,13 @@
-/* ── ThesisStatusBadge ────────────────────────────────────────────────── */
+/* ── ThesisStatusBadge ──────────────────────────────────────────────────
+   Totalmente tokenizado: los estados apuntan a los semánticos del sistema
+   (una sola fuente de verdad de color) y el modo oscuro se resuelve por
+   herencia, sin overrides locales. */
 
 :root {
-  --tsb-eligible:     #10b981;
-  --tsb-eligible-bg:  rgba(16, 185, 129, 0.10);
-  --tsb-partial:      #f59e0b;
-  --tsb-partial-bg:   rgba(245, 158, 11, 0.10);
-  --tsb-not:          #ef4444;
-  --tsb-not-bg:       rgba(239, 68, 68, 0.10);
-  --tsb-pending:      #64748b;
-  --tsb-pending-bg:   rgba(100, 116, 139, 0.08);
-  --tsb-border:       rgba(15, 23, 42, 0.08);
+  --tsb-eligible: var(--color-success);
+  --tsb-not:      var(--color-danger);
+  --tsb-pending:  var(--text-secondary);
+  --tsb-border:   var(--border);
 }
 
 /* Pill compacto */
@@ -25,10 +23,21 @@
   border: 1px solid transparent;
   white-space: nowrap;
 }
-.tsb-pill.tsb--eligible     { color: var(--tsb-eligible); background: var(--tsb-eligible-bg); border-color: rgba(16,185,129,.25); }
-.tsb-pill.tsb--partial      { color: var(--tsb-partial);  background: var(--tsb-partial-bg);  border-color: rgba(245,158,11,.30); }
-.tsb-pill.tsb--not-eligible { color: var(--tsb-not);      background: var(--tsb-not-bg);      border-color: rgba(239,68,68,.30); }
-.tsb-pill.tsb--pending      { color: var(--tsb-pending);  background: var(--tsb-pending-bg);  border-color: rgba(100,116,139,.25); }
+.tsb-pill.tsb--eligible {
+  color: var(--tsb-eligible);
+  background: color-mix(in oklch, var(--tsb-eligible) 12%, transparent);
+  border-color: color-mix(in oklch, var(--tsb-eligible) 30%, transparent);
+}
+.tsb-pill.tsb--not-eligible {
+  color: var(--tsb-not);
+  background: color-mix(in oklch, var(--tsb-not) 12%, transparent);
+  border-color: color-mix(in oklch, var(--tsb-not) 30%, transparent);
+}
+.tsb-pill.tsb--pending {
+  color: var(--tsb-pending);
+  background: color-mix(in oklch, var(--tsb-pending) 12%, transparent);
+  border-color: color-mix(in oklch, var(--tsb-pending) 28%, transparent);
+}
 
 /* Tarjeta principal */
 .tsb-card {
@@ -56,7 +65,6 @@
   pointer-events: none;
 }
 .tsb-card.tsb--eligible     { --accent: var(--tsb-eligible); }
-.tsb-card.tsb--partial      { --accent: var(--tsb-partial); }
 .tsb-card.tsb--not-eligible { --accent: var(--tsb-not); }
 .tsb-card.tsb--pending      { --accent: var(--tsb-pending); }
 
@@ -66,7 +74,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .tsb-card__header {
@@ -74,22 +82,22 @@
   gap: 12px;
   align-items: center;
 }
+/* Chip de icono tintado (mismo tratamiento que el resto de iconos del DS). */
 .tsb-card__icon-wrap {
   width: 44px;
   height: 44px;
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: var(--accent);
-  color: #fff;
+  background: color-mix(in oklch, var(--accent) 16%, transparent);
+  color: var(--accent);
   flex-shrink: 0;
 }
-.tsb--pending .tsb-card__icon-wrap { color: #fff; }
 .tsb-card__headline {
   margin: 0 0 2px;
   font-size: 1.05rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 .tsb-card__status-label {
@@ -103,7 +111,7 @@
 .tsb-card__min {
   margin: 4px 0 0;
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .tsb-card__grades {
@@ -123,26 +131,26 @@
   gap: 10px;
   align-items: baseline;
   font-size: 0.85rem;
-  color: #334155;
+  color: var(--text-primary);
 }
 .tsb-grade__label {
   font-weight: 700;
   font-size: 0.75rem;
   letter-spacing: 0.06em;
-  background: #f1f5f9;
+  background: var(--surface-raised);
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   text-align: center;
-  color: #1e293b;
+  color: var(--text-primary);
 }
-.tsb-grade__name { color: #475569; }
+.tsb-grade__name { color: var(--text-secondary); }
 .tsb-grade__score {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   font-size: 1rem;
-  color: #0f172a;
+  color: var(--text-primary);
 }
-.tsb-grade--pending .tsb-grade__score { color: #94a3b8; }
+.tsb-grade--pending .tsb-grade__score { color: var(--text-muted); }
 .tsb-grade--fail    .tsb-grade__score { color: var(--tsb-not); }
 .tsb-grade--pass    .tsb-grade__score { color: var(--tsb-eligible); }
 
@@ -150,7 +158,7 @@
   position: relative;
   height: 8px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: color-mix(in oklch, var(--text-muted) 16%, transparent);
   overflow: visible;
   margin-top: 20px; /* reserva espacio para la etiqueta del umbral */
 }
@@ -159,7 +167,7 @@
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: color-mix(in oklch, var(--text-muted) 16%, transparent);
   overflow: hidden;
 }
 /* Animate bar from 0 → --bar-fill on mount (keyframe reads CSS var at run time) */
@@ -172,7 +180,7 @@
   height: 100%;
   border-radius: 999px;
   z-index: 1;
-  background: #cbd5e1;
+  background: var(--text-muted);
   /* 260ms delay lets the card fade-in complete before the bar sweeps */
   animation: tsb-bar-fill 550ms cubic-bezier(0.4, 0, 0.2, 1) 260ms both;
 }
@@ -189,8 +197,8 @@
   top: -4px;
   width: 2px;
   height: 16px;
-  background: #0f172a;
-  opacity: 0.8;
+  background: var(--text-primary);
+  opacity: 0.55;
   border-radius: 1px;
 }
 .tsb-grade__threshold::after {
@@ -201,7 +209,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #0f172a;
+  background: var(--text-primary);
 }
 .tsb-grade__threshold-label {
   position: absolute;
@@ -210,11 +218,11 @@
   transform: translateX(-50%);
   font-size: 0.65rem;
   font-weight: 700;
-  color: #0f172a;
-  background: #fff;
+  color: var(--text-primary);
+  background: var(--surface-card);
   padding: 1px 5px;
-  border-radius: 4px;
-  border: 1px solid #0f172a;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -230,75 +238,11 @@
 }
 .tsb-card__avg {
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--text-secondary);
 }
 .tsb-card__reason {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.4;
-  color: #334155;
-}
-
-/* ══ Dark mode ══════════════════════════════════════════════════════════
-   Strategy: tokenize neutral surfaces + text. Keep semantic accent
-   colors (tsb-eligible / tsb-partial / tsb-not / tsb-pending) intact —
-   status indicators must stay recognizable regardless of theme.
-════════════════════════════════════════════════════════════════════════ */
-
-[data-theme="dark"] {
-  /* Border token: rgba(15,23,42,0.08) is dark-on-dark → invisible */
-  --tsb-border: var(--dash-border);
-}
-
-/* ── Card surface (mantiene profundidad en capas) ── */
-[data-theme="dark"] .tsb-card {
-  background: var(--surface-card-grad), var(--surface-card);
-}
-
-/* ── Text: headings and labels ── */
-[data-theme="dark"] .tsb-card__heading    { color: var(--dash-text-secondary); }
-[data-theme="dark"] .tsb-card__headline   { color: var(--dash-text-primary); }
-[data-theme="dark"] .tsb-card__min        { color: var(--dash-text-secondary); }
-[data-theme="dark"] .tsb-card__avg        { color: var(--dash-text-secondary); }
-[data-theme="dark"] .tsb-card__reason     { color: var(--dash-text-primary); }
-
-/* ── Grade row ── */
-[data-theme="dark"] .tsb-grade__head      { color: var(--dash-text-primary); }
-[data-theme="dark"] .tsb-grade__name      { color: var(--dash-text-secondary); }
-[data-theme="dark"] .tsb-grade__score     { color: var(--dash-text-primary); }
-
-/* Semantic score colors preserve their meaning in dark mode */
-[data-theme="dark"] .tsb-grade--pending .tsb-grade__score { color: var(--dash-text-muted); }
-[data-theme="dark"] .tsb-grade--fail    .tsb-grade__score { color: var(--tsb-not); }
-[data-theme="dark"] .tsb-grade--pass    .tsb-grade__score { color: var(--tsb-eligible); }
-
-/* Course code chip */
-[data-theme="dark"] .tsb-grade__label {
-  background: rgba(148, 163, 184, 0.18);
-  color: var(--dash-text-primary);
-}
-
-/* ── Progress bar ── */
-[data-theme="dark"] .tsb-grade__bar,
-[data-theme="dark"] .tsb-grade__bar::before {
-  background: rgba(148, 163, 184, 0.12);
-}
-
-/* Neutral fill (pending state): soften the light gray */
-[data-theme="dark"] .tsb-grade__fill {
-  background: rgba(148, 163, 184, 0.35);
-}
-
-/* Threshold marker: dark line would vanish on dark surface */
-[data-theme="dark"] .tsb-grade__threshold {
-  background: var(--dash-text-muted);
-  opacity: 1;
-}
-[data-theme="dark"] .tsb-grade__threshold::after {
-  background: var(--dash-text-muted);
-}
-[data-theme="dark"] .tsb-grade__threshold-label {
-  background: var(--surface-raised);
-  color: var(--dash-text-primary);
-  border-color: var(--dash-border);
+  color: var(--text-primary);
 }

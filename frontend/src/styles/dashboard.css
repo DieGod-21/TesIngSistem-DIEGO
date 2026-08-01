@@ -463,67 +463,6 @@
     margin-left: auto;
 }
 
-/* ── Campana — wrapper con tooltip ─────────────────────────────── */
-/*
- * La campana se muestra como placeholder elegante hasta que
- * exista un backend de notificaciones.
- *
- * .dash-header__bell-wrapper → contiene el tooltip via [title]
- * .dash-header__bell          → estilo base (reutilizable para campana real)
- * .dash-header__bell--placeholder → opacidad reducida, sin cursor activo
- *
- * Para activar la campana real:
- *   1. Quitar la clase --placeholder
- *   2. Restaurar cursor:pointer
- *   3. Añadir el badge con count real
- */
-.dash-header__bell-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    cursor: help;
-    /* indica que hay información en el tooltip */
-}
-
-.dash-header__bell {
-    position: relative;
-    background: none;
-    border: none;
-    color: var(--dash-text-secondary);
-    padding: 4px;
-    border-radius: 6px;
-    transition: color var(--dash-transition), opacity var(--dash-transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Estado placeholder: sin hover activo, opacidad que comunica "no disponible" */
-.dash-header__bell--placeholder {
-    opacity: 0.45;
-    cursor: not-allowed;
-    pointer-events: none;
-    /* tabIndex=-1 en el componente también lo bloquea */
-}
-
-/* Campana activa (futura) */
-.dash-header__bell:not(.dash-header__bell--placeholder):hover {
-    color: var(--dash-text-primary);
-}
-
-/* Badge de notificaciones (solo para campana activa en el futuro) */
-.dash-header__bell-badge {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 10px;
-    height: 10px;
-    background: var(--umg-red);
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    display: block;
-}
-
 
 /* Perfil */
 .dash-header__profile {
@@ -644,72 +583,12 @@
     gap: 16px;
 }
 
-.dash-page-title {
-    font-size: 1.875rem;
-    font-weight: 800;
-    color: var(--umg-navy);
-    margin: 0 0 4px;
-}
-
-.dash-page-subtitle {
-    font-size: 0.9rem;
-    color: var(--dash-text-secondary);
-    margin: 0;
-}
-
-/* Botón primario — índigo de marca para la acción principal */
-.dash-btn-primary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--color-primary);
-    color: var(--color-primary-contrast);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: var(--dash-shadow-sm);
-    white-space: nowrap;
-    transition: background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-fast);
-}
-
-.dash-btn-primary:hover {
-    background: var(--color-primary-hover);
-    box-shadow: 0 6px 18px var(--color-primary-ring);
-    transform: translateY(-1px);
-}
-
-.dash-btn-primary:active {
-    transform: translateY(0) scale(0.98);
-}
-
-.dash-btn-primary:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-}
-
 /* KPI Grid */
 .dash-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 24px;
     margin-bottom: 32px;
-}
-
-/* Contenido principal (tabla 2/3 + aside 1/3) */
-.dash-content-grid {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 32px;
-    align-items: start;
-}
-
-.dash-sidebar-right {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
 }
 
 /* ── Composición insignia: contenido principal + rail lateral ──────── */
@@ -1119,149 +998,6 @@ button.kpi-card {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   6. PANEL LATERAL DERECHO
-═══════════════════════════════════════════════════════════════════ */
-
-/* ─── Próximas Entregas ─── */
-.dash-deadlines {
-    background: var(--dash-card-bg);
-    border: 1px solid var(--dash-border);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: var(--dash-shadow-sm);
-}
-
-.dash-deadlines__title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--dash-text-primary);
-    margin: 0 0 20px;
-}
-
-.dash-deadlines__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.dash-deadlines__item {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-}
-
-.dash-deadlines__date-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #f8fafc;
-    border: 1px solid var(--dash-border);
-    border-radius: 8px;
-    width: 56px;
-    height: 56px;
-    flex-shrink: 0;
-}
-
-.dash-deadlines__month {
-    font-size: 0.6rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--dash-text-muted);
-}
-
-.dash-deadlines__day {
-    font-size: 1.25rem;
-    font-weight: 900;
-    color: var(--dash-text-primary);
-    line-height: 1;
-}
-
-.dash-deadlines__info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding-top: 4px;
-}
-
-.dash-deadlines__event-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--dash-text-primary);
-    margin: 0;
-}
-
-.dash-deadlines__event-sub {
-    font-size: 0.7rem;
-    color: var(--dash-text-muted);
-    margin: 0;
-}
-
-.dash-deadlines__btn {
-    width: 100%;
-    margin-top: 20px;
-    padding: 8px;
-    border: 1px solid var(--dash-border);
-    border-radius: 8px;
-    background: none;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--umg-navy);
-    cursor: pointer;
-    transition: background var(--dash-transition);
-}
-
-.dash-deadlines__btn:hover {
-    background: #f8fafc;
-}
-
-/* ─── Recursos de Facultad ─── */
-.dash-resources {
-    background: #f1f5f9;
-    border-radius: 12px;
-    padding: 24px;
-}
-
-.dash-resources__title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--dash-text-primary);
-    margin: 0 0 16px;
-}
-
-.dash-resources__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.dash-resources__link {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
-    color: #475569;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: color var(--dash-transition);
-}
-
-.dash-resources__link:hover {
-    color: var(--dash-text-primary);
-}
-
-.dash-resources__icon {
-    color: var(--dash-text-muted);
-    flex-shrink: 0;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
    7. BADGES Y AVATARES
 ═══════════════════════════════════════════════════════════════════ */
 
@@ -1302,17 +1038,6 @@ button.kpi-card {
 @media (max-width: 1280px) {
     .dash-kpi-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 1024px) {
-    .dash-content-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dash-sidebar-right {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
     }
 }
 
@@ -1377,10 +1102,6 @@ button.kpi-card {
     .dash-header__search-wrapper {
         max-width: none;
     }
-
-    .dash-sidebar-right {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media (max-width: 480px) {
@@ -1394,19 +1115,6 @@ button.kpi-card {
 
     .dash-body {
         padding: 12px;
-    }
-
-    .dash-content-grid {
-        gap: 16px;
-    }
-
-    .dash-quick-row {
-        gap: 16px;
-    }
-
-    .dash-btn-primary {
-        width: 100%;
-        justify-content: center;
     }
 }
 
@@ -1447,20 +1155,6 @@ button.kpi-card {
     flex: 1;
 }
 
-/* Los estados de error y vacío del dashboard usan la primitiva <EmptyState>
-   del sistema de diseño (components/ui). Sin estilos locales aquí. */
-
-/* ═══════════════════════════════════════════════════════════════════
-   QUICK ROW — KPIs estudiantes + Acciones rápidas
-═══════════════════════════════════════════════════════════════════ */
-
-.dash-quick-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 24px;
-}
-
 
 /* ── Student KPI mini-strip ── */
 .dash-student-kpis {
@@ -1469,66 +1163,6 @@ button.kpi-card {
     border-radius: 14px;
     padding: 20px 22px;
     box-shadow: var(--dash-shadow-sm);
-}
-
-.dash-student-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-}
-
-.dash-skpi {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    background: #f8fafc;
-    border: 1px solid var(--dash-border);
-    transition: box-shadow 180ms ease;
-}
-
-.dash-skpi:hover {
-    box-shadow: var(--dash-shadow-sm);
-}
-
-.dash-skpi__icon {
-    flex-shrink: 0;
-    color: var(--dash-text-muted);
-}
-
-.dash-skpi--total .dash-skpi__icon {
-    color: var(--umg-navy);
-}
-
-.dash-skpi--approved .dash-skpi__icon {
-    color: #16a34a;
-}
-
-.dash-skpi--pending .dash-skpi__icon {
-    color: #d97706;
-}
-
-.dash-skpi__value {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: var(--umg-navy);
-    line-height: 1;
-    margin: 0;
-}
-
-.dash-skpi--approved .dash-skpi__value {
-    color: #16a34a;
-}
-
-.dash-skpi--pending .dash-skpi__value {
-    color: #d97706;
-}
-
-.dash-skpi__label {
-    font-size: 0.68rem;
-    color: var(--dash-text-muted);
-    margin: 2px 0 0;
 }
 
 /* ── Acciones rápidas ── */
@@ -1588,172 +1222,11 @@ button.kpi-card {
     transform: translateX(3px);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   RECIENTES — panel lateral
-═══════════════════════════════════════════════════════════════════ */
-
-.dash-recent-card {
-    background: var(--dash-card-bg);
-    border: 1px solid var(--dash-border);
-    border-radius: 14px;
-    padding: 18px 20px;
-    box-shadow: var(--dash-shadow-sm);
-    margin-bottom: 16px;
-}
-
-.dash-recent-card__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-.dash-recent-card__link {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--umg-blue);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    font-family: inherit;
-    transition: color 150ms ease;
-}
-
-.dash-recent-card__link:hover {
-    color: var(--umg-navy);
-    text-decoration: underline;
-}
-
-/* Filtro rápido inline */
-.dash-recent-filter {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 10px;
-}
-
-.dash-recent-filter__input {
-    flex: 1;
-    padding: 6px 10px;
-    border: 1px solid var(--dash-border);
-    border-radius: 6px;
-    font-size: 0.78rem;
-    color: var(--dash-text-primary);
-    background: var(--dash-bg);
-    outline: none;
-    transition: border-color 150ms ease;
-    font-family: inherit;
-}
-
-.dash-recent-filter__input:focus {
-    border-color: var(--umg-blue);
-}
-
-.dash-recent-filter__tabs {
-    display: flex;
-    gap: 3px;
-}
-
-.dash-recent-filter__tab {
-    padding: 5px 8px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    border: 1px solid var(--dash-border);
-    border-radius: 20px;
-    background: transparent;
-    cursor: pointer;
-    color: var(--dash-text-muted);
-    font-family: inherit;
-    transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
-}
-
-.dash-recent-filter__tab:hover {
-    background: #f1f5f9;
-}
-
-.dash-recent-filter__tab--active {
-    background: var(--umg-navy);
-    color: #ffffff;
-    border-color: var(--umg-navy);
-}
-
-/* Lista de recientes */
-.dash-recent-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.dash-recent-list__empty {
-    font-size: 0.78rem;
-    color: var(--dash-text-muted);
-    text-align: center;
-    padding: 16px 0;
-}
-
-.dash-recent-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 6px;
-    border-radius: 8px;
-    transition: background 150ms ease;
-}
-
-.dash-recent-item:hover {
-    background: #f8fafc;
-}
-
-.dash-recent-item__info {
-    flex: 1;
-    min-width: 0;
-}
-
-.dash-recent-item__name {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--dash-text-primary);
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.dash-recent-item__carnet {
-    font-size: 0.7rem;
-    color: var(--dash-text-muted);
-    margin: 0;
-}
-
 /* Avatar pequeño (heredado de sl-avatar) */
 .sl-avatar--sm {
     width: 28px;
     height: 28px;
     font-size: 0.62rem;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   RESPONSIVE — nuevas secciones
-═══════════════════════════════════════════════════════════════════ */
-
-@media (max-width: 900px) {
-    .dash-quick-row {
-        grid-template-columns: 1fr;
-    }
-
-    .dash-student-kpi-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 640px) {
-    .dash-student-kpi-grid {
-        grid-template-columns: 1fr 1fr;
-    }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1832,22 +1305,6 @@ button.kpi-card {
     background: rgba(37, 99, 235, 0.10);
 }
 
-[data-theme="dark"] .dash-deadlines__date-box {
-    background: var(--surface-raised);
-}
-
-[data-theme="dark"] .dash-deadlines__btn:hover {
-    background: var(--surface-raised);
-}
-
-[data-theme="dark"] .dash-resources {
-    background: var(--surface-raised);
-}
-
-[data-theme="dark"] .dash-resources__link {
-    color: var(--dash-text-secondary);
-}
-
 [data-theme="dark"] .kpi-card__icon-box--blue {
     background: rgba(30, 64, 175, 0.25);
     color: #93c5fd;
@@ -1861,10 +1318,6 @@ button.kpi-card {
 [data-theme="dark"] .dash-table__project,
 [data-theme="dark"] .dash-table__deadline {
     color: var(--dash-text-secondary);
-}
-
-[data-theme="dark"] .dash-header__bell-badge {
-    border-color: var(--dash-card-bg);
 }
 
 [data-theme="dark"] .dash-avatar--blue {
@@ -1882,20 +1335,8 @@ button.kpi-card {
     color: #94a3b8;
 }
 
-[data-theme="dark"] .dash-skpi {
-    background: var(--surface-raised);
-}
-
 [data-theme="dark"] .dash-qa-card {
     background: var(--surface-raised);
-}
-
-[data-theme="dark"] .dash-recent-item:hover {
-    background: var(--surface-raised);
-}
-
-[data-theme="dark"] .dash-recent-filter__tab:hover {
-    background: #1e293b;
 }
 
 
@@ -1910,32 +1351,14 @@ button.kpi-card {
     border-right-color: oklch(1 0 0 / 0.05);
 }
 
-/* ── Títulos de página ── */
-[data-theme="dark"] .dash-page-title { color: var(--dash-text-primary); }
-
-/* ── KPI skpi values y sub-strip ── */
-[data-theme="dark"] .dash-skpi__value                    { color: #93c5fd; }
-[data-theme="dark"] .dash-skpi--approved .dash-skpi__value { color: #86efac; }
-[data-theme="dark"] .dash-skpi--pending  .dash-skpi__value { color: #fcd34d; }
-
 /* ── Barra de progreso ── */
 [data-theme="dark"] .kpi-card__progress-bar { background: #3b82f6; }
 
 /* ── Links azules sobre fondo oscuro ── */
 [data-theme="dark"] .dash-table-card__link  { color: #93c5fd; }
-[data-theme="dark"] .dash-recent-card__link { color: #93c5fd; }
-
-/* ── Botón de deadlines (texto navy en light) ── */
-[data-theme="dark"] .dash-deadlines__btn { color: var(--dash-text-secondary); }
 
 /* ── Icono de acciones rápidas ── */
 [data-theme="dark"] .dash-qa-card__icon { color: #93c5fd; }
-
-/* ── Tabs de filtro reciente ── */
-[data-theme="dark"] .dash-recent-filter__tab--active {
-    background: var(--color-primary-hover);
-    border-color: var(--color-primary);
-}
 
 /* ── Filas clickeables en dark: focus y active visibles ── */
 [data-theme="dark"] .dash-table__row--clickable:focus-visible {

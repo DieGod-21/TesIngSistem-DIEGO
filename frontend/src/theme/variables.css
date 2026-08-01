@@ -54,15 +54,25 @@
     --gray-800:  oklch(0.300 0.015 275);
     --gray-900:  oklch(0.225 0.014 275);
 
-    /* ── Semánticos (OKLCH) ── */
-    --color-success:       oklch(0.648 0.155 152);
+    /* ── Semánticos (OKLCH) ──
+       Los tonos base se usan sobre todo como TEXTO e iconos sobre superficies
+       claras y sobre su propio tinte `-light`; por eso su luminosidad está
+       calibrada para contraste legible (antes eran demasiado claros: el verde
+       daba ~2.2:1 sobre su propio chip). Los rellenos decorativos (puntos,
+       segmentos, barras) simplemente quedan más profundos.
+       Para fondos sólidos con texto claro encima existe `-solid`. */
+    --color-success:       oklch(0.520 0.145 152);
     --color-success-light: oklch(0.945 0.045 152);
-    --color-warning:       oklch(0.685 0.155 65);
+    --color-warning:       oklch(0.560 0.140 62);
     --color-warning-light: oklch(0.945 0.055 80);
-    --color-danger:        oklch(0.585 0.205 25);
+    --color-danger:        oklch(0.520 0.200 25);
     --color-danger-light:  oklch(0.940 0.030 25);
-    --color-info:          oklch(0.618 0.140 235);
+    --color-info:          oklch(0.530 0.150 245);
     --color-info-light:    oklch(0.950 0.035 235);
+
+    /* Relleno sólido que lleva texto claro encima (botón destructivo):
+       se mantiene en un tono medio estable en ambos temas. */
+    --color-danger-solid:  oklch(0.545 0.205 25);
 
     /* ── Texto (semántico) ── */
     --text-primary:    var(--gray-800);
@@ -218,6 +228,21 @@ body {
     --umg-navy:       var(--indigo-500);
     --umg-navy-light: var(--indigo-400);
     --umg-blue:       var(--indigo-400);
+
+    /* ── Semánticos en oscuro ──
+       El texto/icono semántico se aclara para leerse sobre superficies oscuras,
+       y los tintes `-light` (fondos de chips, badges y banners) dejan de ser
+       parches casi blancos: pasan a ser tintes oscuros del mismo hue.
+       `-solid` no se aclara: sigue llevando texto claro encima. */
+    --color-success:       oklch(0.800 0.145 152);
+    --color-success-light: oklch(0.300 0.055 152);
+    --color-warning:       oklch(0.830 0.130 82);
+    --color-warning-light: oklch(0.310 0.055 80);
+    --color-danger:        oklch(0.770 0.140 22);
+    --color-danger-light:  oklch(0.305 0.070 25);
+    --color-info:          oklch(0.800 0.110 235);
+    --color-info-light:    oklch(0.300 0.055 235);
+    --color-danger-solid:  oklch(0.545 0.205 25);
 
     /* ── Legado → semántico ── */
     --dash-bg:            var(--surface-base);

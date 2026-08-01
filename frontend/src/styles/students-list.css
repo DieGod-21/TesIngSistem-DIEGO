@@ -294,34 +294,6 @@
     background: color-mix(in oklch, var(--color-warning) 6%, transparent);
 }
 
-/* ─── Botón Deshacer con barra de cuenta regresiva ─── */
-.sl-undo-btn {
-    position: relative;
-    overflow: hidden;
-    padding: 4px 10px;
-    border: 1.5px solid var(--color-warning);
-    background: var(--color-warning-light);
-    color: var(--color-warning);
-    font-size: 0.72rem;
-    font-weight: 700;
-    border-radius: 6px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 150ms, border-color 150ms;
-}
-
-.sl-undo-btn::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    width: 100%;
-    background: var(--color-warning);
-    transform-origin: left;
-    animation: sl-countdown 4s linear forwards;
-}
-
 @keyframes sl-countdown {
     from { transform: scaleX(1); }
     to   { transform: scaleX(0); }
@@ -330,11 +302,6 @@
 @keyframes sl-row-in {
     from { opacity: 0; transform: translateX(-8px); }
     to   { opacity: 1; transform: translateX(0); }
-}
-
-.sl-undo-btn:hover {
-    background: color-mix(in oklch, var(--color-warning) 24%, transparent);
-    border-color: var(--color-warning);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -353,11 +320,6 @@
 
 [data-theme="dark"] .sl-table__tr:hover {
     background: color-mix(in oklch, var(--color-primary) 12%, transparent);
-}
-
-[data-theme="dark"] .sl-undo-btn {
-    background: color-mix(in oklch, var(--color-warning) 15%, transparent);
-    color: var(--color-warning);
 }
 
 /* ═══════════════════════════════════════════════════════════════════

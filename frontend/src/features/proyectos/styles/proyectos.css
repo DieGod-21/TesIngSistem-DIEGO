@@ -327,64 +327,6 @@
     margin-top: 4px;
 }
 
-.np-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 20px;
-    border-radius: 8px;
-    border: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s, opacity 0.15s;
-}
-
-.np-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
-.np-btn--primary {
-    background: var(--color-primary);
-    color: var(--color-primary-contrast);
-}
-
-.np-btn--primary:hover:not(:disabled) {
-    background: var(--color-primary-hover);
-}
-
-.np-btn--primary:active:not(:disabled) {
-    background: var(--color-primary-active);
-    transform: scale(0.97);
-}
-
-.np-btn--secondary {
-    background: var(--surface-raised);
-    color: var(--text-secondary);
-}
-
-.np-btn--secondary:hover:not(:disabled) {
-    background: var(--border);
-}
-
-.np-btn--secondary:active:not(:disabled) {
-    background: var(--border-strong);
-    transform: scale(0.97);
-}
-
-.np-btn:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-}
-
-/* ── Spinner ─────────────────────────────────────────────────────── */
-
-.np-spin {
-    animation: np-spin 0.8s linear infinite;
-}
-
 @keyframes np-spin {
     to { transform: rotate(360deg); }
 }

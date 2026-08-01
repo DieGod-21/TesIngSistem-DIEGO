@@ -99,7 +99,8 @@
 }
 
 .ui-btn--danger {
-    background: var(--color-danger);
+    /* Relleno sólido con texto claro → token estable en ambos temas. */
+    background: var(--color-danger-solid);
     color: var(--color-primary-contrast);
     box-shadow: var(--shadow-sm);
 }
@@ -190,11 +191,8 @@
 .ui-badge--danger  { background: var(--color-danger-light);  color: var(--color-danger);  border-color: color-mix(in oklch, var(--color-danger) 30%, transparent); }
 .ui-badge--info    { background: var(--color-info-light);    color: var(--color-info);    border-color: color-mix(in oklch, var(--color-info) 30%, transparent); }
 
-/* Modo oscuro: los fondos suaves (light) pierden contraste; se translucen. */
-[data-theme="dark"] .ui-badge--success { background: color-mix(in oklch, var(--color-success) 20%, transparent); }
-[data-theme="dark"] .ui-badge--warning { background: color-mix(in oklch, var(--color-warning) 20%, transparent); }
-[data-theme="dark"] .ui-badge--danger  { background: color-mix(in oklch, var(--color-danger) 20%, transparent); }
-[data-theme="dark"] .ui-badge--info    { background: color-mix(in oklch, var(--color-info) 20%, transparent); }
+/* El modo oscuro lo resuelven ya los tokens `-light` (tintes oscuros del mismo
+   hue en theme/variables.css); no hacen falta overrides por clase. */
 
 /* ═══════════════════════════════════════════════════════════════════
    CARD
@@ -304,34 +302,6 @@
     .ui-page-header { align-items: flex-start; }
     .ui-page-header__actions { width: 100%; }
     .ui-page-header__actions .ui-btn { flex: 1; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   INPUT
-═══════════════════════════════════════════════════════════════════ */
-
-.ui-input {
-    width: 100%;
-    padding: 0.55rem 0.85rem;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-md);
-    font-family: inherit;
-    font-size: 0.9rem;
-    color: var(--text-primary);
-    background: var(--surface-card);
-    outline: none;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
-}
-.ui-input::placeholder { color: var(--text-muted); }
-.ui-input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-ring);
-}
-.ui-input--error {
-    border-color: var(--color-danger);
-}
-.ui-input--error:focus {
-    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-danger) 30%, transparent);
 }
 
 /* Buscador inline (icono + input): patrón único para filtros de lista. */
@@ -604,17 +574,6 @@
 }
 .ui-avatar--sm { width: 2rem; height: 2rem; font-size: 0.7rem; }
 .ui-avatar--lg { width: 3.25rem; height: 3.25rem; font-size: 1rem; }
-
-/* ═══════════════════════════════════════════════════════════════════
-   DIVIDER
-═══════════════════════════════════════════════════════════════════ */
-
-.ui-divider {
-    height: 1px;
-    border: 0;
-    background: var(--border);
-    margin: 1.25rem 0;
-}
 
 /* Utilidad: número tabular (para tablas/estadísticas) */
 .ui-tnum { font-variant-numeric: tabular-nums; }

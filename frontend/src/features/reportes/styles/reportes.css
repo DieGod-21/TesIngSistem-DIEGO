@@ -10,61 +10,6 @@
   width: 100%;
 }
 
-.reportes-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
-}
-
-.rep-stat {
-  /* Acabado sobrio: la profundidad viene de la sombra, el borde y el material
-     (gradiente de superficie), no de un halo decorativo. El acento vive en el
-     número. Todo tokenizado, adapta a dark. */
-  background: var(--surface-card-grad), var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: 18px 20px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm), var(--hairline);
-}
-.rep-stat__label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  position: relative;
-}
-/* Derivados: valor secundario; el % del total refuerza que dependen del Total. */
-.rep-stat__value {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--rs-accent);
-  margin: 4px 0 2px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  position: relative;
-}
-.rep-stat__pct {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  position: relative;
-}
-
-.rep-stat--aprueba-tesis { --rs-accent: var(--color-success); }
-.rep-stat--aprueba-curso { --rs-accent: var(--color-warning); }
-.rep-stat--reprobado     { --rs-accent: var(--color-danger); }
-.rep-stat--pendiente     { --rs-accent: var(--text-secondary); }
-.rep-stat--total         { --rs-accent: var(--color-primary); }
-
-/* TOTAL = dato dominante: número mayor, el resto se lee como derivado. */
-.rep-stat--total .rep-stat__value {
-  font-size: 2.6rem;
-  line-height: 1.02;
-}
-
 /* ── Resultado institucional (hero) ───────────────────────────────────────
    Un solo centro de gravedad: la cifra manda, la barra descompone, la leyenda
    detalla. Material de tarjeta del sistema; el énfasis lo lleva la tipografía,
@@ -366,11 +311,6 @@
     border-color: var(--dash-border);
     color: var(--dash-text-primary);
 }
-/* KPI cards: mismo acabado sobrio en oscuro; el material y la sombra dan la profundidad. */
-[data-theme="dark"] .rep-stat {
-    border-color: var(--dash-border);
-    color: var(--dash-text-primary);
-}
 [data-theme="dark"] .rep-stat__label,
 [data-theme="dark"] .rep-stat__pct,
 [data-theme="dark"] .report-card__title {
@@ -432,18 +372,6 @@
 [data-theme="dark"] .report-evaluator__comment {
     border-top-color: var(--dash-border);
     color: var(--dash-text-secondary);
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   CARD HOVER ELEVATION (light + dark)
-═══════════════════════════════════════════════════════════════════ */
-/* Stat cards (pequeñas, tipo KPI): elevación sutil intencional. */
-.rep-stat {
-    transition: transform 200ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
-}
-.rep-stat:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
 }
 /* Tarjetas de detalle informativas: estables (sin desplazamiento en hover). */
 .report-card {
