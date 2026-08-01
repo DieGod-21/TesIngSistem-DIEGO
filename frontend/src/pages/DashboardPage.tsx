@@ -8,10 +8,7 @@
 
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import {
-    Plus, Users, Upload,
-    AlertCircle, RefreshCw, ArrowRight, CheckCircle2,
-} from 'lucide-react';
+import { Plus, AlertCircle, RefreshCw, CheckCircle2 } from 'lucide-react';
 
 import AppFooter from '../components/AppFooter';
 import KpiCard from '../components/KpiCard';
@@ -148,7 +145,7 @@ const DashboardPage: React.FC = () => {
                             <div className="ui-section-head__text">
                                 <h2 className="ui-section-head__title">Estado de la cohorte</h2>
                                 <p className="ui-section-head__subtitle">
-                                    Una lectura rápida de cómo avanza PG1–PG2 este ciclo. Toca un indicador para ver el detalle.
+                                    Avance de PG1–PG2 este ciclo. Toca un indicador para ver el detalle.
                                 </p>
                             </div>
                         </div>
@@ -162,52 +159,12 @@ const DashboardPage: React.FC = () => {
 
                 <div className="dash-flagship-grid">
                     <div className="dash-flagship-main">
-                        <section className="dash-quick-actions" aria-label="Gestión académica">
-                            <div className="ui-section-head">
-                                <div className="ui-section-head__text">
-                                    <h2 className="ui-section-head__title">Gestión Académica</h2>
-                                    <p className="ui-section-head__subtitle">
-                                        Accesos directos a las tareas más frecuentes de la coordinación.
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="dash-qa-grid">
-                                <button
-                                    className="dash-qa-card"
-                                    onClick={() => history.push('/students/new')}
-                                    aria-label="Registrar nuevo estudiante"
-                                >
-                                    <Plus size={22} className="dash-qa-card__icon" aria-hidden="true" />
-                                    <span className="dash-qa-card__label">Registrar Estudiante</span>
-                                    <ArrowRight size={14} className="dash-qa-card__arrow" aria-hidden="true" />
-                                </button>
-                                <button
-                                    className="dash-qa-card"
-                                    onClick={() => history.push('/students')}
-                                    aria-label="Listado de estudiantes"
-                                >
-                                    <Users size={22} className="dash-qa-card__icon" aria-hidden="true" />
-                                    <span className="dash-qa-card__label">Listado de Estudiantes</span>
-                                    <ArrowRight size={14} className="dash-qa-card__arrow" aria-hidden="true" />
-                                </button>
-                                <button
-                                    className="dash-qa-card"
-                                    onClick={() => history.push('/ternas')}
-                                    aria-label="Ver ternas de evaluación"
-                                >
-                                    <Upload size={22} className="dash-qa-card__icon" aria-hidden="true" />
-                                    <span className="dash-qa-card__label">Ternas de Evaluación</span>
-                                    <ArrowRight size={14} className="dash-qa-card__arrow" aria-hidden="true" />
-                                </button>
-                            </div>
-                        </section>
-
                         <section aria-label="Expedientes que requieren atención">
                             <div className="ui-section-head">
                                 <div className="ui-section-head__text">
                                     <h2 className="ui-section-head__title">Requieren atención</h2>
                                     <p className="ui-section-head__subtitle">
-                                        Estudiantes que aún no cumplen el requisito de tesis: alguna nota por debajo de {THESIS_MIN_GRADE} o pendiente de registrar.
+                                        Aún no cumplen el requisito de tesis: nota por debajo de {THESIS_MIN_GRADE} o pendiente de registrar.
                                     </p>
                                 </div>
                             </div>

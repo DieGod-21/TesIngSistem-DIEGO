@@ -238,22 +238,6 @@
     .dash-sidebar--open .dash-sidebar__nav-item { animation: none; }
 }
 
-.dash-sidebar__nav-item--disabled {
-    opacity: 0.38;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.dash-sidebar__nav-item--disabled .dash-sidebar__coming-soon {
-    margin-left: auto;
-    font-size: 0.65rem;
-    background: rgba(255,255,255,0.12);
-    color: #94a3b8;
-    padding: 1px 6px;
-    border-radius: 4px;
-    letter-spacing: 0.03em;
-}
-
 /* Footer del sidebar */
 .dash-sidebar__footer {
     padding: 12px;
@@ -516,6 +500,10 @@
     max-width: var(--content-max-wide);
     margin-inline: auto;
     box-sizing: border-box;
+    /* Ritmo vertical único: el flujo lo marca el gap, no márgenes por sección. */
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
 }
 
 /* ── Hero de bienvenida (superficie insignia) ────────────────────── */
@@ -525,7 +513,6 @@
     justify-content: space-between;
     gap: 24px;
     flex-wrap: wrap;
-    margin-bottom: 32px;
 }
 .dash-hero__kicker {
     display: inline-flex;
@@ -587,8 +574,7 @@
 .dash-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    margin-bottom: 32px;
+    gap: 20px;
 }
 
 /* ── Composición insignia: contenido principal + rail lateral ──────── */
@@ -1155,73 +1141,6 @@ button.kpi-card {
     flex: 1;
 }
 
-
-/* ── Student KPI mini-strip ── */
-.dash-student-kpis {
-    background: var(--dash-card-bg);
-    border: 1px solid var(--dash-border);
-    border-radius: 14px;
-    padding: 20px 22px;
-    box-shadow: var(--dash-shadow-sm);
-}
-
-/* ── Acciones rápidas ── */
-.dash-quick-actions {
-    background: var(--dash-card-bg);
-    border: 1px solid var(--dash-border);
-    border-radius: 14px;
-    padding: 20px 22px;
-    box-shadow: var(--dash-shadow-sm);
-}
-
-.dash-qa-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.dash-qa-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border: 1px solid var(--dash-border);
-    border-radius: 10px;
-    background: #f8fafc;
-    cursor: pointer;
-    text-align: left;
-    color: var(--dash-text-primary);
-    font-family: inherit;
-    font-size: 0.875rem;
-    font-weight: 600;
-    transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
-}
-
-.dash-qa-card__icon {
-    flex-shrink: 0;
-    color: var(--umg-blue);
-    transition: color 180ms ease;
-}
-
-.dash-qa-card:hover .dash-qa-card__icon {
-    color: rgba(255, 255, 255, 0.85);
-}
-
-.dash-qa-card__label {
-    flex: 1;
-}
-
-.dash-qa-card__arrow {
-    flex-shrink: 0;
-    color: var(--dash-text-muted);
-    transition: color 180ms ease, transform 180ms ease;
-}
-
-.dash-qa-card:hover .dash-qa-card__arrow {
-    color: rgba(255, 255, 255, 0.7);
-    transform: translateX(3px);
-}
-
 /* Avatar pequeño (heredado de sl-avatar) */
 .sl-avatar--sm {
     width: 28px;
@@ -1240,25 +1159,6 @@ button.kpi-card {
     box-shadow: var(--shadow-md), var(--hairline);
     border-color: color-mix(in oklch, var(--color-primary) 30%, var(--dash-border));
     transform: translateY(-2px);
-}
-
-/* ── Acciones rápidas: hover azul marino ─────────────────────────── */
-.dash-qa-card__icon {
-    color: var(--umg-navy);
-}
-
-.dash-qa-card:hover {
-    background: var(--umg-navy);
-    color: #ffffff;
-    border-color: var(--umg-navy);
-    box-shadow: 0 4px 16px rgba(26,35,64,0.20);
-    transform: translateY(-2px);
-}
-
-.dash-qa-card:active {
-    transform: translateY(0) scale(0.98);
-    box-shadow: 0 2px 8px rgba(26, 35, 64, 0.15);
-    transition: transform 80ms ease, box-shadow 80ms ease;
 }
 
 /* Los títulos de sección usan la primitiva .ui-section-head (título + subtítulo). */
@@ -1335,10 +1235,6 @@ button.kpi-card {
     color: #94a3b8;
 }
 
-[data-theme="dark"] .dash-qa-card {
-    background: var(--surface-raised);
-}
-
 
 [data-theme="dark"] .dash-header__search:focus {
     background: var(--dash-card-bg);
@@ -1357,9 +1253,6 @@ button.kpi-card {
 /* ── Links azules sobre fondo oscuro ── */
 [data-theme="dark"] .dash-table-card__link  { color: #93c5fd; }
 
-/* ── Icono de acciones rápidas ── */
-[data-theme="dark"] .dash-qa-card__icon { color: #93c5fd; }
-
 /* ── Filas clickeables en dark: focus y active visibles ── */
 [data-theme="dark"] .dash-table__row--clickable:focus-visible {
     outline-color: #60a5fa;
@@ -1373,12 +1266,4 @@ button.kpi-card {
 /* ── KPI clickeable: focus ring visible en dark ── */
 [data-theme="dark"] .kpi-card--clickable:focus-visible {
     outline-color: #60a5fa;
-}
-
-/* Las filas clickeables usan fondo suave (var(--color-primary-soft*)) en ambos
-   temas; el hover/active dark se cubre arriba con fondos, sin franja lateral. */
-
-/* ── Acciones rápidas: pressed state en dark ── */
-[data-theme="dark"] .dash-qa-card:hover {
-    box-shadow: 0 4px 16px rgba(29, 78, 216, 0.30);
 }
