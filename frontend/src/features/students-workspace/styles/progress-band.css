@@ -145,6 +145,52 @@
     color: var(--text-secondary);
 }
 
+/* Etapa accionable: el conteo es un punto de entrada, y se ve que lo es. */
+.pb__legend-item--action {
+    padding: 3px 8px;
+    margin: -3px 0;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    font: inherit;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast),
+        color var(--transition-fast);
+}
+
+.pb__legend-item--action:hover {
+    background: var(--surface-raised);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+.pb__legend-item--action:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.pb__legend-item--active,
+.pb__legend-item--active:hover {
+    background: var(--color-primary-soft);
+    border-color: color-mix(in oklch, var(--color-primary) 30%, transparent);
+    color: var(--color-primary-hover);
+}
+.pb__legend-item--active .pb__legend-count { color: var(--color-primary-hover); }
+
+/* Etapa informativa (sin trabajo accionable): no simula ser interactiva. */
+.pb__legend-item--static { cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+    .pb__legend-item--action { transition: none; }
+}
+
+/* Objetivo táctil cómodo cuando el panorama se opera con el dedo. */
+@media (max-width: 640px) {
+    .pb__legend-item--action { min-height: 44px; }
+}
+
 .pb__legend-count {
     font-weight: 700;
     color: var(--text-primary);

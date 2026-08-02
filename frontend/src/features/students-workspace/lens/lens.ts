@@ -22,6 +22,9 @@
  */
 
 import { routes } from '../../../config/routes';
+import { VOCAB } from '../../../config/vocabulary';
+import { STAGE_ORDER } from '../domain/pipelineMeta';
+import type { PipelineStage } from '../domain/types';
 
 export type LensId = 'all' | 'approved' | 'failed';
 
@@ -40,8 +43,8 @@ export interface LensDef {
 /** Definición ordenada de las lentes disponibles (orden de render). */
 export const LENSES: readonly LensDef[] = [
     { id: 'all', label: 'Todos', status: null, tesisFilter: null },
-    { id: 'approved', label: 'Elegibles a tesis', status: 'approved', tesisFilter: 'aprobados' },
-    { id: 'failed', label: 'Pendientes de tesis', status: 'failed', tesisFilter: 'reprobados' },
+    { id: 'approved', label: VOCAB.eligible, status: 'approved', tesisFilter: 'aprobados' },
+    { id: 'failed', label: VOCAB.notEligible, status: 'failed', tesisFilter: 'reprobados' },
 ] as const;
 
 /** Lee la lente activa desde la query string (tolerante al alias heredado). */
@@ -70,6 +73,34 @@ export function lensToTesisFilter(lens: LensId): TesisFilter | null {
 /** Opciones de tamaño de página. Fuente única: la UI y el parseo la comparten. */
 export const PER_PAGE_OPTIONS = [10, 20, 50, 100] as const;
 export const DEFAULT_PER_PAGE = 20;
+
+/* ── Etapa del pipeline en la URL ─────────────────────────────────── */
+
+/**
+ * Etapa del pipeline seleccionada (?stage=), o null.
+ *
+ * El dominio ya calcula el conteo de cada etapa y la banda de progreso ya los
+ * muestra; sin este parámetro esos números eran inertes: el coordinador leía
+ * "PG2 pendiente: 47" y no tenía forma de ver quiénes son esos 47.
+ *
+ * Aquí NO se decide qué es cada etapa (eso es exclusivo del dominio): solo se
+ * valida contra el orden canónico y se serializa en la URL.
+ */
+export function parseStage(search: string): PipelineStage | null {
+    const raw = new URLSearchParams(search).get('stage');
+    return raw && (STAGE_ORDER as readonly string[]).includes(raw)
+        ? (raw as PipelineStage)
+        : null;
+}
+
+/** URL del listado acotado a una etapa (null = sin acotar). */
+export function buildStageUrl(currentSearch: string, stage: PipelineStage | null): string {
+    const qp = new URLSearchParams(currentSearch);
+    if (stage) qp.set('stage', stage);
+    else qp.delete('stage');
+    const q = qp.toString();
+    return q ? `${routes.students()}?${q}` : routes.students();
+}
 
 /**
  * Id del estudiante en inspección rápida (?preview=), o null si el panel está

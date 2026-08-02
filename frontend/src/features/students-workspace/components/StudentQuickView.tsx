@@ -22,6 +22,7 @@ import {
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import { useStudentDossier } from '../../../hooks/useStudentDossier';
 import { THESIS_MIN_GRADE } from '../../../config/apiConfig';
+import { VOCAB } from '../../../config/vocabulary';
 import { Alert, Avatar, Badge, Button, Skeleton } from '../../../components/ui';
 import type { BadgeTone } from '../../../components/ui';
 import '../styles/quick-view.css';
@@ -29,11 +30,18 @@ import '../styles/quick-view.css';
 const CURSO_SHORT: Record<string, string> = { '043': 'PG1', '049': 'PG2' };
 const ALL_CURSOS: Array<'043' | '049'> = ['043', '049'];
 
-/** Veredicto de tesis → tono del sistema de diseño + etiqueta legible. */
+/**
+ * Veredicto de tesis → tono del sistema de diseño + etiqueta canónica.
+ *
+ * Se usan los términos de estudiante (no los de conjunto): en un expediente,
+ * "por qué" importa tanto como "qué". Además evita colisionar con la etapa
+ * `no_elegible` del pipeline, que significa algo distinto (reprobado con ambos
+ * cursos en regla).
+ */
 const VERDICT: Record<string, { tone: BadgeTone; label: string }> = {
-    APROBADO:  { tone: 'success', label: 'Elegible a tesis' },
-    REPROBADO: { tone: 'danger',  label: 'No elegible' },
-    PENDIENTE: { tone: 'warning', label: 'Pendiente de notas' },
+    APROBADO:  { tone: 'success', label: VOCAB.verdictEligible },
+    REPROBADO: { tone: 'danger',  label: VOCAB.verdictBelowMin },
+    PENDIENTE: { tone: 'warning', label: VOCAB.verdictMissing },
 };
 
 export interface StudentQuickViewProps {
@@ -219,15 +227,17 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 </ul>
                             </section>
 
-                            {/* ── 4. Comité: solo si aporta. Si no, una línea ── */}
-                            <section className="qv-section" aria-label="Comité evaluador">
+                            {/* ── 4. Terna: solo si aporta. Si no, una línea ── */}
+                            <section className="qv-section" aria-label={VOCAB.committee}>
                                 <div className="qv-section__head">
-                                    <h3 className="qv-section__title">Comité evaluador</h3>
+                                    <h3 className="qv-section__title">{VOCAB.committee}</h3>
                                 </div>
                                 {terna ? (
                                     <div className="qv-terna">
                                         <Users size={15} className="qv-terna__icon" aria-hidden="true" />
-                                        <span className="qv-terna__num">Terna {terna.numero}</span>
+                                        <span className="qv-terna__num">
+                                            {VOCAB.committee} {terna.numero}
+                                        </span>
                                         <Badge tone={terna.estado === 'completada' ? 'success' : 'neutral'}>
                                             {terna.estado === 'completada' ? 'Completada'
                                                 : terna.estado === 'en_progreso' ? 'En progreso' : 'Pendiente'}

@@ -19,12 +19,34 @@ import { AcademicProgressCard } from '../components/dashboard/DashboardAside';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../context/AuthContext';
 import { THESIS_MIN_GRADE } from '../config/apiConfig';
+import { VOCAB } from '../config/vocabulary';
 import type { KpiData } from '../services/dashboardService';
 
 import '../styles/dashboard.css';
 import '../styles/students-list.css';
 
 const currentYear = new Date().getFullYear();
+
+/**
+ * Vocabulario canónico de los KPIs.
+ *
+ * Las etiquetas nacen en `dashboardService` (deuda: son texto de interfaz
+ * viviendo en la capa de datos). Como los servicios están congelados, se
+ * reetiquetan aquí, en presentación, para que el nombre de la tarjeta que se
+ * pulsa coincida con el nombre del filtro al que se llega.
+ */
+const KPI_LABEL: Record<string, string> = {
+    'kpi-approved': VOCAB.eligible,
+    'kpi-pending':  VOCAB.notEligible,
+};
+
+/**
+ * "Completación" no es un indicador accionable: es `aprobados / total`, una
+ * reformulación de las otras dos tarjetas. Era además la única sin destino, en
+ * una sección cuyo subtítulo promete "toca un indicador para ver el detalle".
+ * Se saca de la rejilla y pasa a ser el progreso de la propia sección.
+ */
+const PROGRESS_KPI_ID = 'kpi-completion';
 
 /** Deriva las cifras del widget de progreso desde los KPIs reales del resumen. */
 function extractProgress(kpis: KpiData[]) {
@@ -139,30 +161,66 @@ const DashboardPage: React.FC = () => {
                         }
                     />
                 )}
-                {summary.status === 'success' && (
-                    <section aria-label="Indicadores de gestión académica">
-                        <div className="ui-section-head">
-                            <div className="ui-section-head__text">
-                                <h2 className="ui-section-head__title">Estado de la cohorte</h2>
-                                <p className="ui-section-head__subtitle">
-                                    Avance de PG1–PG2 este ciclo. Toca un indicador para ver el detalle.
-                                </p>
+                {summary.status === 'success' && (() => {
+                    const completion = summary.data.kpis.find((k) => k.id === PROGRESS_KPI_ID);
+                    const cards = summary.data.kpis
+                        .filter((k) => k.id !== PROGRESS_KPI_ID)
+                        .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k));
+
+                    return (
+                        <section aria-labelledby="dash-cohort-title">
+                            <div className="ui-section-head">
+                                <div className="ui-section-head__text">
+                                    <h2 id="dash-cohort-title" className="ui-section-head__title">
+                                        Estado de la cohorte
+                                    </h2>
+                                    <p className="ui-section-head__subtitle">
+                                        Avance de PG1–PG2 este ciclo. Toca un indicador para ver el detalle.
+                                    </p>
+                                </div>
+                                {completion?.progressValue != null && (
+                                    <div className="dash-completion">
+                                        <span className="dash-completion__value ui-tnum">
+                                            {completion.value}
+                                        </span>
+                                        <span className="dash-completion__label">
+                                            {completion.description}
+                                        </span>
+                                        <div
+                                            className="dash-completion__track"
+                                            role="progressbar"
+                                            aria-valuenow={completion.progressValue}
+                                            aria-valuemin={0}
+                                            aria-valuemax={100}
+                                            aria-label={`Completación de la cohorte: ${completion.value}`}
+                                        >
+                                            <div
+                                                className="dash-completion__fill"
+                                                style={{ width: `${completion.progressValue}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                        <div className="dash-kpi-grid">
-                            {summary.data.kpis.map((kpi) => (
-                                <KpiCard key={kpi.id} data={kpi} />
-                            ))}
-                        </div>
-                    </section>
-                )}
+                            <div className="dash-kpi-grid">
+                                {cards.map((kpi) => (
+                                    <KpiCard key={kpi.id} data={kpi} />
+                                ))}
+                            </div>
+                        </section>
+                    );
+                })()}
 
                 <div className="dash-flagship-grid">
                     <div className="dash-flagship-main">
-                        <section aria-label="Expedientes que requieren atención">
+                        {/* El nombre accesible se toma del propio título: no puede
+                            divergir de lo que se ve en pantalla. */}
+                        <section aria-labelledby="dash-pending-title">
                             <div className="ui-section-head">
                                 <div className="ui-section-head__text">
-                                    <h2 className="ui-section-head__title">Requieren atención</h2>
+                                    <h2 id="dash-pending-title" className="ui-section-head__title">
+                                        {VOCAB.notEligible}
+                                    </h2>
                                     <p className="ui-section-head__subtitle">
                                         Aún no cumplen el requisito de tesis: nota por debajo de {THESIS_MIN_GRADE} o pendiente de registrar.
                                     </p>

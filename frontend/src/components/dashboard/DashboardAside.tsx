@@ -15,6 +15,7 @@
 import React from 'react';
 import { CalendarClock, Activity, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { Card, Badge } from '../ui';
+import { VOCAB } from '../../config/vocabulary';
 import ProgressRing from './ProgressRing';
 import './dashboard-widgets.css';
 
@@ -54,12 +55,12 @@ export const AcademicProgressCard: React.FC<AcademicProgressProps> = ({
                 <ul className="progress-legend">
                     <li className="progress-legend__row">
                         <span className="progress-legend__dot progress-legend__dot--ok" aria-hidden="true" />
-                        <span className="progress-legend__label">Aprueban tesis</span>
+                        <span className="progress-legend__label">{VOCAB.eligible}</span>
                         <span className="progress-legend__value ui-tnum">{approved}</span>
                     </li>
                     <li className="progress-legend__row">
                         <span className="progress-legend__dot progress-legend__dot--pending" aria-hidden="true" />
-                        <span className="progress-legend__label">Sin aprobar</span>
+                        <span className="progress-legend__label">{VOCAB.notEligible}</span>
                         <span className="progress-legend__value ui-tnum">{notApproved}</span>
                     </li>
                     <li className="progress-legend__row progress-legend__row--total">

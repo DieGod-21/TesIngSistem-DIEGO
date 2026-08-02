@@ -18,17 +18,25 @@
 import React, { useMemo } from 'react';
 import {
     GraduationCap, AlertTriangle, FolderPlus, Clock, CheckCircle2,
-    ChevronRight, Check, Inbox, type LucideIcon,
+    ChevronRight, Check, Inbox, X, type LucideIcon,
 } from 'lucide-react';
 import { Skeleton } from '../../../components/ui';
 import type { Capabilities } from '../../../config/permissions';
-import type { WorkItem, WorkItemKind } from '../domain/types';
+import type { PipelineStage, WorkItem, WorkItemKind } from '../domain/types';
 import { visibleActionableItems, isPendingItem } from '../queuePolicy';
 import { useDismissals } from '../hooks/useDismissals';
 import '../styles/work-queue.css';
 
-/** Máximo de ítems mostrados: la cola sugiere "lo siguiente", no todo el backlog. */
+/**
+ * Máximo de ítems mostrados.
+ *
+ * Sin acotar, la cola SUGIERE "lo siguiente": 8 basta y evita convertirla en un
+ * backlog. Acotada a una etapa, el usuario ya pidió explícitamente ese lote de
+ * trabajo ("todos los que deben PG2") y truncarlo a 8 lo dejaría sin respuesta:
+ * ahí la cola pasa a ser una lista de trabajo.
+ */
 const CAP = 8;
+const CAP_FILTERED = 50;
 
 /** Texto de la acción por tipo. */
 const KIND_CTA: Record<WorkItemKind, string> = {
@@ -56,9 +64,18 @@ interface WorkQueueProps {
     loading: boolean;
     error: string | null;
     onOpen: (item: WorkItem) => void;
+    /** Acota la cola a una etapa del pipeline (null = cola completa). */
+    stage?: PipelineStage | null;
+    /** Etiqueta legible de la etapa, para el encabezado. */
+    stageLabel?: string;
+    /** Quita el acotamiento. */
+    onClearStage?: () => void;
 }
 
-const WorkQueue: React.FC<WorkQueueProps> = ({ items, capabilities, loading, error, onOpen }) => {
+const WorkQueue: React.FC<WorkQueueProps> = ({
+    items, capabilities, loading, error, onOpen,
+    stage = null, stageLabel, onClearStage,
+}) => {
     // Política (queuePolicy): visibles + accionables por el usuario. La regla
     // vive en la política, no en el componente.
     const enabled = useMemo(
@@ -71,12 +88,19 @@ const WorkQueue: React.FC<WorkQueueProps> = ({ items, capabilities, loading, err
     const { isDismissed, dismiss } = useDismissals(currentIds);
 
     // Pendientes según la política (self-clearing vs descartado).
-    const shown = useMemo(
+    const pending = useMemo(
         () => enabled.filter((i) => isPendingItem(i, isDismissed)),
         [enabled, isDismissed],
     );
 
-    const visible = shown.slice(0, CAP);
+    // El acotamiento por etapa usa `item.stage`, que el dominio ya emite: aquí
+    // no se re-deriva ninguna etapa.
+    const shown = useMemo(
+        () => (stage ? pending.filter((i) => i.stage === stage) : pending),
+        [pending, stage],
+    );
+
+    const visible = shown.slice(0, stage ? CAP_FILTERED : CAP);
     const overflow = shown.length - visible.length;
     const loaded = items !== null;
 
@@ -84,7 +108,26 @@ const WorkQueue: React.FC<WorkQueueProps> = ({ items, capabilities, loading, err
         <section className="wq" aria-label="Cola de trabajo">
             <header className="wq__head">
                 <h2 className="wq__title">Tu trabajo</h2>
-                <p className="wq__subtitle">Lo siguiente por resolver</p>
+                {/* Región viva: al acotar desde el panorama, el lector de pantalla
+                    anuncia el nuevo alcance y su tamaño sin mover el foco. */}
+                <p className="wq__subtitle" aria-live="polite">
+                    {stage
+                        ? `${stageLabel ?? stage}: ${shown.length} pendiente(s)`
+                        : 'Lo siguiente por resolver'}
+                </p>
+
+                {stage && (
+                    <button
+                        type="button"
+                        className="wq__scope"
+                        onClick={onClearStage}
+                        aria-label={`Quitar el filtro ${stageLabel ?? stage} y ver toda la cola`}
+                    >
+                        <span>{stageLabel ?? stage}</span>
+                        <span className="wq__scope-count">{shown.length}</span>
+                        <X size={13} aria-hidden="true" />
+                    </button>
+                )}
             </header>
 
             {loading && (
@@ -108,8 +151,16 @@ const WorkQueue: React.FC<WorkQueueProps> = ({ items, capabilities, loading, err
             {!loading && !error && loaded && shown.length === 0 && (
                 <div className="wq__reward" role="status">
                     <Inbox size={26} aria-hidden="true" />
-                    <p className="wq__reward-title">Sin trabajo pendiente</p>
-                    <p className="wq__reward-sub">Todo al día.</p>
+                    {/* Acotado, la cola vacía NO significa "todo al día": significa
+                        que esa etapa no tiene trabajo accionable ahora. */}
+                    <p className="wq__reward-title">
+                        {stage ? 'Sin trabajo en esta etapa' : 'Sin trabajo pendiente'}
+                    </p>
+                    <p className="wq__reward-sub">
+                        {stage
+                            ? `${pending.length} pendiente(s) en el resto de la cola.`
+                            : 'Todo al día.'}
+                    </p>
                 </div>
             )}
 

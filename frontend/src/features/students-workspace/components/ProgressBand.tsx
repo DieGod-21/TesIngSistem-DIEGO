@@ -18,8 +18,12 @@ import type { PipelineStage, WorkQueueResult } from '../domain/types';
 import type { LensCounts } from '../hooks/useStudentsPipeline';
 import '../styles/progress-band.css';
 
-/** Etiqueta de cada etapa (el orden canónico se reusa del dominio). */
-const STAGE_LABEL: Record<PipelineStage, string> = {
+/**
+ * Etiqueta de cada etapa (el orden canónico se reusa del dominio).
+ * Se exporta para que la cola de trabajo nombre el lote acotado con el MISMO
+ * texto que el panorama: una sola fuente de verdad para las etiquetas.
+ */
+export const STAGE_LABEL: Record<PipelineStage, string> = {
     sin_datos: 'Sin estado',
     pg1_pendiente: 'PG1 pendiente',
     pg2_pendiente: 'PG2 pendiente',
@@ -37,14 +41,27 @@ interface ProgressBandProps {
     lensCounts: LensCounts | null;
     loading: boolean;
     error: string | null;
+    /** Etapa por la que está acotada la cola de trabajo (null = sin acotar). */
+    activeStage?: PipelineStage | null;
+    /** Acota la cola a una etapa; misma etapa = alternar y limpiar. */
+    onSelectStage?: (stage: PipelineStage | null) => void;
 }
 
 const ProgressBand: React.FC<ProgressBandProps> = ({
     activeLens, onSelectLens, result, lensCounts, loading, error,
+    activeStage = null, onSelectStage,
 }) => {
     const stages = result
         ? STAGE_ORDER.filter((s) => result.stageCounts[s] > 0)
         : [];
+
+    // Solo se ofrece filtrar por etapas que realmente generan trabajo. Etapas
+    // sanas (en terna, resuelto) tienen conteo pero nada que hacer: convertirlas
+    // en filtro prometería una lista vacía.
+    const actionableStages = React.useMemo(
+        () => new Set(result ? result.items.map((i) => i.stage) : []),
+        [result],
+    );
     const hasPulse = !!result && result.coverage.totalStudents > 0 && stages.length > 0;
 
     const pulseSummary = hasPulse
@@ -100,14 +117,44 @@ const ProgressBand: React.FC<ProgressBandProps> = ({
                         ))}
                     </div>
 
+                    {/* Cada conteo es un punto de entrada al trabajo: acota la
+                        cola a esa etapa. Sin esto, el número respondía "cuántos"
+                        pero nunca "quiénes". */}
                     <ul className="pb__legend">
-                        {stages.map((s) => (
-                            <li key={s} className="pb__legend-item">
-                                <span className={`pb__dot pb__seg--${s}`} aria-hidden="true" />
-                                <span className="pb__legend-label">{STAGE_LABEL[s]}</span>
-                                <span className="pb__legend-count">{result!.stageCounts[s]}</span>
-                            </li>
-                        ))}
+                        {stages.map((s) => {
+                            const active = activeStage === s;
+                            const dot = <span className={`pb__dot pb__seg--${s}`} aria-hidden="true" />;
+                            const label = <span className="pb__legend-label">{STAGE_LABEL[s]}</span>;
+                            const count = <span className="pb__legend-count">{result!.stageCounts[s]}</span>;
+
+                            // Etapa sin trabajo accionable: informa, pero no finge
+                            // ser un filtro.
+                            if (!onSelectStage || !actionableStages.has(s)) {
+                                return (
+                                    <li key={s} className="pb__legend-item pb__legend-item--static">
+                                        {dot}{label}{count}
+                                    </li>
+                                );
+                            }
+
+                            return (
+                                <li key={s}>
+                                    <button
+                                        type="button"
+                                        className={`pb__legend-item pb__legend-item--action${active ? ' pb__legend-item--active' : ''}`}
+                                        aria-pressed={active}
+                                        onClick={() => onSelectStage(active ? null : s)}
+                                        title={
+                                            active
+                                                ? 'Quitar el filtro de la cola de trabajo'
+                                                : `Ver en la cola de trabajo: ${STAGE_LABEL[s]}`
+                                        }
+                                    >
+                                        {dot}{label}{count}
+                                    </button>
+                                </li>
+                            );
+                        })}
                     </ul>
 
                     <p className="pb__coverage">

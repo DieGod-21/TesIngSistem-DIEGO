@@ -1213,3 +1213,54 @@ button.kpi-card {
 [data-theme="dark"] .kpi-card--clickable:focus-visible {
     outline-color: #60a5fa;
 }
+/* ── Completación de la cohorte ───────────────────────────────────────
+   Era una tarjeta KPI sin destino, en una sección que promete que cada
+   indicador lleva a algún sitio, y su valor (aprobados/total) solo repetía
+   otras dos tarjetas. Como progreso de la sección informa igual y deja de
+   competir por el espacio de los indicadores accionables. */
+
+.dash-completion {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: baseline;
+    gap: 2px 10px;
+    min-width: 190px;
+    flex-shrink: 0;
+}
+
+.dash-completion__value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text-primary);
+}
+
+.dash-completion__label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.dash-completion__track {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--surface-raised);
+    overflow: hidden;
+}
+
+.dash-completion__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--gradient-brand);
+    transition: width var(--transition-slow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dash-completion__fill { transition: none; }
+}
+
+@media (max-width: 640px) {
+    .dash-completion { width: 100%; }
+}

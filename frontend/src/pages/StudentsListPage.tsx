@@ -36,17 +36,18 @@ import { userMessageFor } from '../services/errorMessages';
 import ImportModal from '../components/ImportModal';
 import { useAuth } from '../context/AuthContext';
 import { Alert, Avatar, Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
-import ProgressBand from '../features/students-workspace/components/ProgressBand';
+import ProgressBand, { STAGE_LABEL } from '../features/students-workspace/components/ProgressBand';
 import StudentQuickView from '../features/students-workspace/components/StudentQuickView';
 import WorkQueue from '../features/students-workspace/components/WorkQueue';
 import SinceLastVisit from '../features/students-workspace/components/SinceLastVisit';
 import { useStudentsPipeline } from '../features/students-workspace/hooks/useStudentsPipeline';
 import { useSinceLastVisit } from '../features/students-workspace/hooks/useSinceLastVisit';
 import { resolveWorkItemHref } from '../features/students-workspace/navigation';
+import type { PipelineStage } from '../features/students-workspace/domain/types';
 import {
     parseLens, parseSearchTerm, lensToTesisFilter, buildLensUrl,
     parsePage, parsePerPage, buildListUrl, PER_PAGE_OPTIONS,
-    parsePreview, buildPreviewUrl,
+    parsePreview, buildPreviewUrl, parseStage, buildStageUrl,
     type LensId,
 } from '../features/students-workspace/lens/lens';
 import { routes } from '../config/routes';
@@ -76,6 +77,13 @@ const StudentsListPage: React.FC = () => {
     );
 
     const goLens = (lens: LensId) => history.push(buildLensUrl(location.search, lens));
+
+    // Acotamiento de la cola por etapa del pipeline. En la URL, como el resto
+    // del estado del espacio de trabajo: se comparte, se recarga y el Atrás lo
+    // deshace. `replace` porque afinar el alcance no es un destino.
+    const activeStage = useMemo(() => parseStage(location.search), [location.search]);
+    const goStage = (stage: PipelineStage | null) =>
+        history.replace(buildStageUrl(location.search, stage));
 
     // Búsqueda local integrada con el alcance: escribe en ?search= (URL compartible
     // y sincronizada con el buscador global del TopHeader). Ambas vistas hijas ya
@@ -152,6 +160,9 @@ const StudentsListPage: React.FC = () => {
                         loading={pipeline.loading}
                         error={pipeline.error}
                         onOpen={(item) => history.push(resolveWorkItemHref(item))}
+                        stage={activeStage}
+                        stageLabel={activeStage ? STAGE_LABEL[activeStage] : undefined}
+                        onClearStage={() => goStage(null)}
                     />
                 )}
 
@@ -162,6 +173,8 @@ const StudentsListPage: React.FC = () => {
                     lensCounts={pipeline.lensCounts}
                     loading={pipeline.loading}
                     error={pipeline.error}
+                    activeStage={activeStage}
+                    onSelectStage={capabilities.canViewReports ? goStage : undefined}
                 />
 
                 <div key={filter ?? 'default'} className="view-transition">

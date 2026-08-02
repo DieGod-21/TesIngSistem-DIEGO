@@ -233,3 +233,44 @@
 @media (prefers-reduced-motion: reduce) {
     .wq__main, .wq__dismiss { transition: none; }
 }
+
+/* ── Acotamiento por etapa ────────────────────────────────────────────
+   Chip del encabezado que declara el lote activo y permite deshacerlo.
+   Sin él, una cola filtrada sería indistinguible de una cola vacía. */
+
+.wq__scope {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: auto;
+    padding: 4px 10px;
+    border: 1px solid color-mix(in oklch, var(--color-primary) 30%, transparent);
+    border-radius: 999px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.wq__scope:hover { background: var(--color-primary-soft-2); }
+
+.wq__scope:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.wq__scope-count {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wq__scope { transition: none; }
+}
+
+@media (max-width: 640px) {
+    .wq__scope { min-height: 44px; }
+}

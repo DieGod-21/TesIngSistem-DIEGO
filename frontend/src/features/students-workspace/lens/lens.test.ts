@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
     parseLens, parseSearchTerm, lensToTesisFilter, buildLensUrl,
     parsePage, parsePerPage, buildListUrl, DEFAULT_PER_PAGE,
-    parsePreview, buildPreviewUrl,
+    parsePreview, buildPreviewUrl, parseStage, buildStageUrl,
 } from './lens';
 
 describe('lens — parseo con compatibilidad hacia atrás', () => {
@@ -118,5 +118,34 @@ describe('lens — inspección rápida (?preview=)', () => {
 
     it('cambiar de lente cierra el panel: el expediente puede salir del alcance', () => {
         expect(buildLensUrl('?preview=42&page=2', 'approved')).toBe('/students?status=approved');
+    });
+});
+
+describe('lens — acotamiento de la cola por etapa (?stage=)', () => {
+    it('parseStage: solo acepta etapas del orden canónico del dominio', () => {
+        expect(parseStage('')).toBeNull();
+        expect(parseStage('?stage=pg2_pendiente')).toBe('pg2_pendiente');
+        expect(parseStage('?stage=terna_estancada')).toBe('terna_estancada');
+        expect(parseStage('?stage=inventada')).toBeNull();
+        expect(parseStage('?stage=')).toBeNull();
+    });
+
+    it('acotar la cola no altera el contexto del listado', () => {
+        expect(buildStageUrl('?status=failed&search=ana&page=3', 'pg2_pendiente'))
+            .toBe('/students?status=failed&search=ana&page=3&stage=pg2_pendiente');
+    });
+
+    it('quitar el acotamiento devuelve exactamente el estado previo', () => {
+        expect(buildStageUrl('?page=3&stage=pg2_pendiente', null)).toBe('/students?page=3');
+    });
+
+    it('cambiar de etapa sustituye, no acumula', () => {
+        expect(buildStageUrl('?stage=pg1_pendiente', 'pg2_pendiente'))
+            .toBe('/students?stage=pg2_pendiente');
+    });
+
+    it('el acotamiento convive con la inspección rápida', () => {
+        expect(buildPreviewUrl('?stage=pg2_pendiente', '42'))
+            .toBe('/students?stage=pg2_pendiente&preview=42');
     });
 });
