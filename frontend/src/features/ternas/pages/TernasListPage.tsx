@@ -66,12 +66,12 @@ const TernasListPage: React.FC = () => {
                     }
                 />
 
-                <div className="ternas-toolbar" role="group" aria-label="Filtrar ternas">
+                <div className="ui-toolbar ui-toolbar--bare" role="group" aria-label="Filtrar ternas">
                     {FILTERS.map((f) => (
                         <button
                             key={f.value}
                             type="button"
-                            className={`ternas-chip${filter === f.value ? ' ternas-chip--active' : ''}`}
+                            className={`ui-chip${filter === f.value ? ' ui-chip--active' : ''}`}
                             onClick={() => setFilter(f.value)}
                             aria-pressed={filter === f.value}
                         >

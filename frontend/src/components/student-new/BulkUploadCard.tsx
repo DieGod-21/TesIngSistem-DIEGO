@@ -11,7 +11,7 @@ import React, { useRef, useState } from 'react';
 import { IonToast } from '@ionic/react';
 import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { importarEstudiantes, type ImportarEstudiantesResult } from '../../services/importarService';
-import { Button, Card } from '../ui';
+import { Alert, Button, Card } from '../ui';
 
 const ACCEPTED_EXT = ['.xlsx', '.xls', '.pdf'];
 const ACCEPTED_MIME = [
@@ -160,27 +160,27 @@ const BulkUploadCard: React.FC = () => {
                     )}
 
                     {error && (
-                        <div className="sn-upload-msg sn-upload-msg--error" role="alert">
-                            <AlertCircle size={16} aria-hidden="true" />
-                            <span>{error}</span>
-                        </div>
+                        <Alert tone="danger" icon={<AlertCircle size={16} />} className="sn-alert">
+                            {error}
+                        </Alert>
                     )}
 
                     {result && (
-                        <div className="sn-upload-msg sn-upload-msg--success" role="status">
-                            <CheckCircle2 size={16} aria-hidden="true" />
-                            <div>
-                                <strong>Importación completada.</strong>
-                                <ul className="sn-upload-msg__list">
-                                    {typeof result.total      === 'number' && <li>Total procesados: {result.total}</li>}
-                                    {typeof result.creados    === 'number' && <li>Creados: {result.creados}</li>}
-                                    {typeof result.duplicados === 'number' && <li>Duplicados: {result.duplicados}</li>}
-                                    {Array.isArray(result.errores) && result.errores.length > 0 && (
-                                        <li>Con errores: {result.errores.length}</li>
-                                    )}
-                                </ul>
-                            </div>
-                        </div>
+                        <Alert
+                            tone="success"
+                            icon={<CheckCircle2 size={16} />}
+                            title="Importación completada."
+                            className="sn-alert"
+                        >
+                            <ul className="ui-alert__list">
+                                {typeof result.total      === 'number' && <li>Total procesados: {result.total}</li>}
+                                {typeof result.creados    === 'number' && <li>Creados: {result.creados}</li>}
+                                {typeof result.duplicados === 'number' && <li>Duplicados: {result.duplicados}</li>}
+                                {Array.isArray(result.errores) && result.errores.length > 0 && (
+                                    <li>Con errores: {result.errores.length}</li>
+                                )}
+                            </ul>
+                        </Alert>
                     )}
 
                     <div className="sn-form__actions">

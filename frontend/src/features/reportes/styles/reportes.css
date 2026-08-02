@@ -231,13 +231,6 @@
   background: currentColor;
 }
 
-.reportes-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-
 /* Detalle */
 .report-detail-grid {
   display: grid;
@@ -311,8 +304,6 @@
     border-color: var(--dash-border);
     color: var(--dash-text-primary);
 }
-[data-theme="dark"] .rep-stat__label,
-[data-theme="dark"] .rep-stat__pct,
 [data-theme="dark"] .report-card__title {
     color: var(--dash-text-secondary);
 }

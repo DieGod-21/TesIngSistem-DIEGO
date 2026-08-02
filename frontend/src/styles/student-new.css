@@ -288,6 +288,9 @@
     color: var(--text-primary);
 }
 
+/* El mensaje de resultado respira respecto al bloque anterior. */
+.sn-alert { margin-top: 12px; }
+
 .sn-file-chip__icon {
     color: var(--color-success);
     flex-shrink: 0;
@@ -342,38 +345,6 @@
 .sn-file-chip__clear:disabled {
     opacity: 0.45;
     cursor: not-allowed;
-}
-
-/* ── Resultado de la importación ──
-   Reutiliza los tokens de toast: ya son conscientes del tema. */
-
-.sn-upload-msg {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-top: 12px;
-    padding: 10px 12px;
-    border-radius: var(--radius-md);
-    font-size: 0.82rem;
-    line-height: 1.45;
-}
-
-.sn-upload-msg--success {
-    background: var(--toast-success-bg);
-    color: var(--toast-success-text);
-    border: 1px solid var(--toast-success-border);
-}
-
-.sn-upload-msg--error {
-    background: var(--toast-error-bg);
-    color: var(--toast-error-text);
-    border: 1px solid var(--toast-error-border);
-}
-
-.sn-upload-msg__list {
-    margin: 4px 0 0;
-    padding-left: 16px;
-    font-size: 0.78rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════════

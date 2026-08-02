@@ -25,7 +25,7 @@ import {
     RefreshCw, Users, AlertTriangle, Upload,
 } from 'lucide-react';
 import { useEstudiantesList } from '../hooks/useEstudiantesList';
-import { initials } from '../utils/strings';
+
 import { matchesText } from '../utils/text';
 import type { Estudiante } from '../types/api';
 import {
@@ -35,21 +35,23 @@ import { isCancel } from '../services/apiClient';
 import { userMessageFor } from '../services/errorMessages';
 import ImportModal from '../components/ImportModal';
 import { useAuth } from '../context/AuthContext';
-import { Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
+import { Alert, Avatar, Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
 import ProgressBand from '../features/students-workspace/components/ProgressBand';
+import StudentQuickView from '../features/students-workspace/components/StudentQuickView';
 import WorkQueue from '../features/students-workspace/components/WorkQueue';
 import SinceLastVisit from '../features/students-workspace/components/SinceLastVisit';
 import { useStudentsPipeline } from '../features/students-workspace/hooks/useStudentsPipeline';
 import { useSinceLastVisit } from '../features/students-workspace/hooks/useSinceLastVisit';
 import { resolveWorkItemHref } from '../features/students-workspace/navigation';
 import {
-    parseLens, parseSearchTerm, lensToTesisFilter, buildLensUrl, type LensId,
+    parseLens, parseSearchTerm, lensToTesisFilter, buildLensUrl,
+    parsePage, parsePerPage, buildListUrl, PER_PAGE_OPTIONS,
+    parsePreview, buildPreviewUrl,
+    type LensId,
 } from '../features/students-workspace/lens/lens';
 import { routes } from '../config/routes';
 import '../styles/students-list.css';
 import '../styles/transitions.css';
-
-const LIMIT_OPTIONS = [10, 20, 50, 100] as const;
 
 type TesisFilter = 'aprobados' | 'reprobados';
 
@@ -88,12 +90,9 @@ const StudentsListPage: React.FC = () => {
         setSearchInput(value);
         if (searchDebounce.current) clearTimeout(searchDebounce.current);
         searchDebounce.current = setTimeout(() => {
-            const qp = new URLSearchParams(location.search);
-            const v = value.trim();
-            if (v) qp.set('search', v);
-            else { qp.delete('search'); qp.delete('q'); }
-            const q = qp.toString();
-            history.replace(q ? `${routes.students()}?${q}` : routes.students());
+            // Una búsqueda nueva define un conjunto nuevo: la página vuelve a 1
+            // para que la URL nunca describa una página que ya no existe.
+            history.replace(buildListUrl(location.search, { search: value, page: null }));
         }, 250);
     };
 
@@ -130,8 +129,8 @@ const StudentsListPage: React.FC = () => {
                     }
                 />
 
-                <div className="sl-toolbar">
-                    <div className="ui-search sl-toolbar__search">
+                <div className="ui-toolbar">
+                    <div className="ui-search ui-toolbar__search">
                         <Search size={15} className="ui-search__icon" aria-hidden="true" />
                         <input
                             type="text"
@@ -168,7 +167,11 @@ const StudentsListPage: React.FC = () => {
                 <div key={filter ?? 'default'} className="view-transition">
                     {filter
                         ? <TesisFilteredView filter={filter} initialSearch={initialSearch} />
-                        : <DefaultStudentsView initialSearch={initialSearch} history={history} />}
+                        : <DefaultStudentsView
+                            initialSearch={initialSearch}
+                            history={history}
+                            locationSearch={location.search}
+                        />}
                 </div>
         </div>
     );
@@ -179,11 +182,15 @@ const StudentsListPage: React.FC = () => {
 const DefaultStudentsView: React.FC<{
     initialSearch: string;
     history: ReturnType<typeof useHistory>;
-}> = ({ initialSearch, history }) => {
+    locationSearch: string;
+}> = ({ initialSearch, history, locationSearch }) => {
+    const urlPage = parsePage(locationSearch);
+    const urlPerPage = parsePerPage(locationSearch);
+
     const {
         estudiantes, pagination, totalAll, atLimit, search, loading, error,
         setSearch, setPage, setLimit, reload,
-    } = useEstudiantesList({ limit: 20, search: initialSearch });
+    } = useEstudiantesList({ limit: urlPerPage, search: initialSearch });
 
     // Sincroniza la búsqueda con el query param cuando cambia desde fuera
     // (p.ej. el buscador global en TopHeader).
@@ -191,6 +198,39 @@ const DefaultStudentsView: React.FC<{
         if (initialSearch !== search) setSearch(initialSearch);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialSearch]);
+
+    // La URL es la fuente de verdad de la paginación: así el estado sobrevive
+    // a la ida y vuelta al expediente, al recargar y al compartir el enlace.
+    // Flujo único URL → hook; las interacciones solo escriben en la URL.
+    useEffect(() => {
+        if (urlPage !== pagination.page) setPage(urlPage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [urlPage]);
+
+    useEffect(() => {
+        if (urlPerPage !== pagination.limit) setLimit(urlPerPage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [urlPerPage]);
+
+    const goToPage = (p: number) => history.push(buildListUrl(locationSearch, { page: p }));
+    const changePerPage = (n: number) =>
+        history.replace(buildListUrl(locationSearch, { per: n, page: null }));
+
+    // ── Inspección rápida ──
+    // Abrir usa push → el botón Atrás cierra el panel. Recorrer con ↑/↓ usa
+    // replace → veinte expedientes revisados siguen siendo un solo Atrás.
+    const previewId = parsePreview(locationSearch);
+    const previewIndex = previewId
+        ? estudiantes.findIndex((e) => String(e.id) === previewId)
+        : -1;
+
+    const openPreview = (est: Estudiante) =>
+        history.push(buildPreviewUrl(locationSearch, String(est.id)));
+    const closePreview = () => history.replace(buildPreviewUrl(locationSearch, null));
+    const stepPreview = (delta: number) => {
+        const next = estudiantes[previewIndex + delta];
+        if (next) history.replace(buildPreviewUrl(locationSearch, String(next.id)));
+    };
 
     const go = (est: Estudiante) => history.push(routes.studentDetail(est.id));
 
@@ -212,10 +252,10 @@ const DefaultStudentsView: React.FC<{
                         <span>Por página</span>
                         <select
                             value={pagination.limit}
-                            onChange={(e) => setLimit(Number(e.target.value))}
+                            onChange={(e) => changePerPage(Number(e.target.value))}
                             aria-label="Resultados por página"
                         >
-                            {LIMIT_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+                            {PER_PAGE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
                         </select>
                     </label>
                     <Button
@@ -231,23 +271,10 @@ const DefaultStudentsView: React.FC<{
             </div>
 
             {atLimit && !loading && !error && (
-                <div
-                    role="status"
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '10px 14px', marginBottom: 16, borderRadius: 10,
-                        fontSize: '0.82rem',
-                        color: 'var(--color-warning)',
-                        background: 'color-mix(in oklch, var(--color-warning) 12%, transparent)',
-                        border: '1px solid color-mix(in oklch, var(--color-warning) 30%, transparent)',
-                    }}
-                >
-                    <AlertTriangle size={15} aria-hidden="true" />
-                    <span>
-                        Se cargaron los primeros {totalAll} estudiantes. Si falta alguien, refina la búsqueda;
-                        el listado completo requerirá búsqueda en servidor.
-                    </span>
-                </div>
+                <Alert tone="warning" icon={<AlertTriangle size={15} />}>
+                    Se cargaron los primeros {totalAll} estudiantes. Si falta alguien, refina la búsqueda;
+                    el listado completo requerirá búsqueda en servidor.
+                </Alert>
             )}
 
             <div className="sl-table-wrap">
@@ -299,16 +326,21 @@ const DefaultStudentsView: React.FC<{
                         {!loading && !error && estudiantes.map((s) => (
                             <tr
                                 key={s.id}
-                                className="sl-table__tr sl-table__tr--clickable"
-                                onClick={() => go(s)}
-                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(s); } }}
+                                className={`sl-table__tr sl-table__tr--clickable${previewId === String(s.id) ? ' sl-table__tr--previewing' : ''}`}
+                                // La fila inspecciona; Enter/clic abren el panel.
+                                // El expediente completo es la acción secundaria,
+                                // disponible desde el propio panel.
+                                onClick={() => openPreview(s)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPreview(s); } }}
                                 tabIndex={0}
-                                role="link"
-                                aria-label={`Ver detalle de ${s.nombre}`}
+                                role="button"
+                                aria-haspopup="dialog"
+                                aria-expanded={previewId === String(s.id)}
+                                aria-label={`Vista rápida de ${s.nombre}`}
                             >
                                 <td className="sl-table__td">
                                     <div className="sl-student-cell">
-                                        <div className="sl-avatar" aria-hidden="true">{initials(s.nombre)}</div>
+                                        <Avatar name={s.nombre} />
                                         <div>
                                             <p className="sl-student-name">{s.nombre}</p>
                                             <p className="sl-student-carnet">{s.carnet}</p>
@@ -341,9 +373,26 @@ const DefaultStudentsView: React.FC<{
                     pages={pagination.pages}
                     total={pagination.total}
                     limit={pagination.limit}
-                    onChange={setPage}
+                    onChange={goToPage}
                 />
             )}
+
+            <StudentQuickView
+                studentId={previewId}
+                onClose={closePreview}
+                onOpenFull={(sid) => history.push(routes.studentDetail(sid))}
+                onPrev={previewIndex > 0 ? () => stepPreview(-1) : undefined}
+                onNext={
+                    previewIndex >= 0 && previewIndex < estudiantes.length - 1
+                        ? () => stepPreview(1)
+                        : undefined
+                }
+                position={
+                    previewIndex >= 0
+                        ? { index: previewIndex + 1, total: estudiantes.length }
+                        : undefined
+                }
+            />
         </>
     );
 };
@@ -467,7 +516,7 @@ const TesisFilteredView: React.FC<{
                             <tr key={s.carnet} className="sl-table__tr">
                                 <td className="sl-table__td">
                                     <div className="sl-student-cell">
-                                        <div className="sl-avatar" aria-hidden="true">{initials(s.nombre)}</div>
+                                        <Avatar name={s.nombre} />
                                         <div>
                                             <p className="sl-student-name">{s.nombre}</p>
                                             <p className="sl-student-carnet">{s.carnet}</p>

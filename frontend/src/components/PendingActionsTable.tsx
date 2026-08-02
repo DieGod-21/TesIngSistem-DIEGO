@@ -10,7 +10,7 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { getEstudianteByCarnet } from '../services/estudiantesService';
-import { Badge, type BadgeTone } from './ui';
+import { Avatar, Badge, type BadgeTone } from './ui';
 import type { PendingAction } from '../services/dashboardService';
 
 /** Traduce el énfasis de la acción a un tono del sistema de diseño. */
@@ -84,12 +84,9 @@ const PendingActionsTable: React.FC<PendingActionsTableProps> = ({ actions }) =>
                                 {/* Estudiante */}
                                 <td className="dash-table__td">
                                     <div className="dash-table__student">
-                                        <div
-                                            className={`dash-avatar dash-avatar--${row.avatarVariant}`}
-                                            aria-hidden="true"
-                                        >
-                                            {row.avatarInitials}
-                                        </div>
+                                        {/* Identidad, no categoría: un solo tratamiento
+                                            para el mismo estudiante en todo el producto. */}
+                                        <Avatar>{row.avatarInitials}</Avatar>
                                         <div>
                                             <p className="dash-table__student-name">{row.studentName}</p>
                                             <p className="dash-table__student-id">{row.studentId}</p>

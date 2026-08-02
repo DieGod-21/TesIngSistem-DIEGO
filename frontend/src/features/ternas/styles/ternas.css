@@ -18,34 +18,6 @@
   gap: 6px;
 }
 
-.ternas-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-.ternas-chip {
-  border: 1px solid var(--border);
-  background: var(--surface-card);
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 150ms;
-}
-.ternas-chip:hover { background: var(--surface-raised); }
-/* Objetivo táctil cómodo cuando el filtro se opera con el dedo. */
-@media (max-width: 640px) {
-  .ternas-chip { min-height: 40px; display: inline-flex; align-items: center; }
-}
-.ternas-chip--active {
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border-color: var(--color-primary);
-}
-
 .ternas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -342,27 +314,6 @@
   color: var(--text-secondary);
 }
 
-.tdetail-banner {
-  border-radius: 12px;
-  padding: 12px 14px;
-  font-size: 0.88rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.tdetail-banner--ok    { background: var(--color-success-light); color: var(--color-success); }
-.tdetail-banner--warn  { background: var(--color-warning-light); color: var(--color-warning); }
-.tdetail-banner--err   { background: var(--color-danger-light); color: var(--color-danger); }
-
-/* ═══════════════════════════════════════════════════════════════════
-   DARK THEME — overrides
-═══════════════════════════════════════════════════════════════════ */
-[data-theme="dark"] .ternas-chip--active {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: var(--color-primary-contrast);
-}
-
 [data-theme="dark"] .terna-card,
 [data-theme="dark"] .tdetail-card {
     background: var(--dash-card-bg);
@@ -421,10 +372,6 @@
     background: color-mix(in oklch, var(--color-danger) 25%, transparent);
 }
 
-[data-theme="dark"] .tdetail-banner--ok   { background: color-mix(in oklch, var(--color-success) 16%, transparent); color: var(--color-success); }
-[data-theme="dark"] .tdetail-banner--warn { background: color-mix(in oklch, var(--color-warning) 16%, transparent); color: var(--color-warning); }
-[data-theme="dark"] .tdetail-banner--err  { background: color-mix(in oklch, var(--color-danger) 16%, transparent); color: var(--color-danger); }
-
 /* ═══════════════════════════════════════════════════════════════════
    CARD HOVER ELEVATION (terna-card, tdetail-card)
 ═══════════════════════════════════════════════════════════════════ */
@@ -435,11 +382,4 @@
    Solo una elevación de sombra sutil, con curva suave. */
 .tdetail-card {
     transition: box-shadow 200ms var(--ease-out-expo), border-color 200ms var(--ease-out-expo);
-}
-
-/* Micro-interacción — chip activo */
-.ternas-chip:active { transform: translateY(1px); }
-.ternas-chip:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
 }

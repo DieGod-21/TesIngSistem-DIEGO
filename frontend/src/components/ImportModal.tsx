@@ -10,7 +10,7 @@ import type { ImportarResult } from '../services/importarService';
 import { ApiError } from '../services/apiClient';
 import { userMessageFor } from '../services/errorMessages';
 import { COURSE_CODES } from '../config/apiConfig';
-import { Button } from './ui';
+import { Alert, Button } from './ui';
 import '../styles/import-modal.css';
 
 interface SectionState {
@@ -255,12 +255,12 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
 };
 
 const Feedback: React.FC<{ status: 'success' | 'error'; message: string }> = ({ status, message }) => (
-    <div className={`im-feedback im-feedback--${status}`} role="status" aria-live="polite">
-        {status === 'success'
-            ? <CheckCircle2 size={15} aria-hidden="true" />
-            : <AlertTriangle size={15} aria-hidden="true" />}
-        <span>{message}</span>
-    </div>
+    <Alert
+        tone={status === 'success' ? 'success' : 'danger'}
+        icon={status === 'success' ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
+    >
+        {message}
+    </Alert>
 );
 
 export default ImportModal;

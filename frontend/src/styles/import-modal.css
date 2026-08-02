@@ -237,29 +237,3 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
-
-/* ── Feedback ─────────────────────────────────────────────────── */
-/* Reutiliza los tokens de toast: ya son conscientes del tema. */
-
-.im-feedback {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 10px 14px;
-    border-radius: var(--radius-md);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    line-height: 1.4;
-}
-
-.im-feedback--success {
-    background: var(--toast-success-bg);
-    color: var(--toast-success-text);
-    border: 1px solid var(--toast-success-border);
-}
-
-.im-feedback--error {
-    background: var(--toast-error-bg);
-    color: var(--toast-error-text);
-    border: 1px solid var(--toast-error-border);
-}

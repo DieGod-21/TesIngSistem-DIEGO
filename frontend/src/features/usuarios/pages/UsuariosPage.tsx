@@ -5,9 +5,9 @@ import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import type { Usuario } from '../../../types/api';
 import NuevoUsuarioModal from '../components/NuevoUsuarioModal';
-import { Button, Badge, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import { Avatar, Button, Badge, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
-import { initials } from '../../../utils/strings';
+
 import { matchesText } from '../../../utils/text';
 import '../styles/usuarios.css';
 
@@ -148,8 +148,8 @@ const UsuariosPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="usr-toolbar">
-                        <div className="ui-search usr-toolbar__search">
+                    <div className="ui-toolbar">
+                        <div className="ui-search ui-toolbar__search">
                             <Search size={15} className="ui-search__icon" aria-hidden="true" />
                             <input
                                 type="text"
@@ -160,12 +160,12 @@ const UsuariosPage: React.FC = () => {
                                 aria-label="Buscar usuarios"
                             />
                         </div>
-                        <div className="usr-toolbar__filters" role="group" aria-label="Filtrar por rol">
+                        <div className="ui-toolbar__group" role="group" aria-label="Filtrar por rol">
                             {ROLE_FILTERS.map((f) => (
                                 <button
                                     key={f.value}
                                     type="button"
-                                    className={`ternas-chip${roleFilter === f.value ? ' ternas-chip--active' : ''}`}
+                                    className={`ui-chip${roleFilter === f.value ? ' ui-chip--active' : ''}`}
                                     onClick={() => setRoleFilter(f.value)}
                                     aria-pressed={roleFilter === f.value}
                                 >
@@ -190,12 +190,11 @@ const UsuariosPage: React.FC = () => {
                         <div className="usr-list">
                             {filtered.map((u) => (
                                 <div key={u.id} className="usr-list-item">
-                                    <span
-                                        className={`usr-avatar usr-avatar--${u.rol === 'admin' ? 'admin' : 'evaluador'}`}
-                                        aria-hidden="true"
-                                    >
-                                        {initials(u.nombre)}
-                                    </span>
+                                    <Avatar
+                                        name={u.nombre}
+                                        size="lg"
+                                        tone={u.rol === 'admin' ? 'brand' : 'success'}
+                                    />
                                     <div className="usr-info">
                                         <p className="usr-info__name">{u.nombre}</p>
                                         <p className="usr-info__email">{u.email}</p>

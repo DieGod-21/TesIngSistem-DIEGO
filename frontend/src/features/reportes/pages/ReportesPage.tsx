@@ -117,7 +117,7 @@ const ReportesPage: React.FC = () => {
                     <ReportesHero total={total} counts={counts} aprobadas={aprobadas} animatedPct={animatedPct} />
                 )}
 
-                <div className="reportes-toolbar" style={loading ? { display: 'none' } : undefined}>
+                <div className="ui-toolbar ui-toolbar--bare" style={loading ? { display: 'none' } : undefined}>
                     <div className="ui-search" style={{ flex: 1, minWidth: 220 }}>
                         <Search size={15} className="ui-search__icon" aria-hidden="true" />
                         <input
@@ -134,7 +134,7 @@ const ReportesPage: React.FC = () => {
                             <button
                                 key={f.value}
                                 type="button"
-                                className={`ternas-chip${filter === f.value ? ' ternas-chip--active' : ''}`}
+                                className={`ui-chip${filter === f.value ? ' ui-chip--active' : ''}`}
                                 onClick={() => setFilter(f.value)}
                                 aria-pressed={filter === f.value}
                             >

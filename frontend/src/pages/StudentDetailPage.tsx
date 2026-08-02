@@ -1,25 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useHistory, useLocation } from 'react-router-dom';
 import { ChevronLeft, Mail, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, ArrowRight } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
-import { getEstudianteById } from '../services/estudiantesService';
-import { getReporteEstudiante } from '../services/reportesService';
-import { getNotasByEstudianteId } from '../services/notasService';
-import { isCancel } from '../services/apiClient';
-import { userMessageFor } from '../services/errorMessages';
-import {
-    buildCursosResumen,
-    computeEstadoTesis,
-    extractGradesFromNotas,
-    extractGradesFromReporte,
-    mergeGrades,
-} from '../utils/thesisStatus';
 import { THESIS_MIN_GRADE } from '../config/apiConfig';
+import { useStudentDossier } from '../hooks/useStudentDossier';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import type { CursoNotaResumen, EstadoTerna, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
-import { Button, EmptyState, Skeleton } from '../components/ui';
+import { Avatar, Button, EmptyState, Skeleton } from '../components/ui';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 import '../styles/student-detail.css';
@@ -82,86 +71,38 @@ interface EditModalState {
 const StudentDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
+    const location = useLocation();
+
+    // `location.key` solo existe si se llegó por una navegación interna. Sin él
+    // (enlace directo, recarga, vuelta desde otra app) `goBack()` sacaría al
+    // usuario del producto: se ofrece el listado como destino explícito.
+    const cameFromApp = Boolean(location.key);
+    const goBack = () => {
+        if (cameFromApp) history.goBack();
+        else history.push('/students');
+    };
     const { toast } = useToast();
     const { capabilities } = useAuth();
-    const [state, setState] = useState<State>({
-        student: null, reporte: null, notas: null, loading: true, error: null,
-    });
-    const [refreshKey, setRefreshKey] = useState(0);
     const [editModal, setEditModal] = useState<EditModalState>({ open: false, curso: '043', notaActual: null });
 
-    useEffect(() => {
-        const controller = new AbortController();
-        const { signal } = controller;
-        const numId = Number(id);
-        if (!Number.isFinite(numId)) {
-            setState({ student: null, reporte: null, notas: null, loading: false, error: 'ID inválido.' });
-            return;
-        }
+    // Misma carga y mismos derivados que el panel de inspección rápida del
+    // listado: una sola fuente de verdad sobre el estado de tesis.
+    const dossier = useStudentDossier(id);
+    const state: State = {
+        student: dossier.student,
+        reporte: dossier.reporte,
+        notas:   dossier.notas,
+        loading: dossier.loading,
+        error:   dossier.error,
+    };
 
-        setState((s) => ({ ...s, loading: true, error: null }));
-
-        (async () => {
-            try {
-                // Cadena por dependencia: el reporte necesita el carné del
-                // estudiante y las notas son una carga condicional. La señal se
-                // propaga a la red para cancelar de verdad al navegar.
-                const student = await getEstudianteById(numId, { signal });
-                if (signal.aborted) return;
-                const reporte = await getReporteEstudiante(student.carnet, { signal }).catch(() => null);
-                if (signal.aborted) return;
-
-                const fromReporte = extractGradesFromReporte(reporte);
-                let notas: Nota[] | null = null;
-                if (fromReporte.pg1 == null || fromReporte.pg2 == null) {
-                    const notasResp = await getNotasByEstudianteId(numId, { signal }).catch(() => null);
-                    if (signal.aborted) return;
-                    notas = notasResp?.notas ?? null;
-                }
-
-                setState({ student, reporte, notas, loading: false, error: null });
-            } catch (e) {
-                // Cancelación: nunca es un error de UI.
-                if (signal.aborted || isCancel(e)) return;
-                setState({
-                    student: null, reporte: null, notas: null, loading: false,
-                    error: userMessageFor(e),
-                });
-            }
-        })();
-
-        return () => controller.abort();
-    }, [id, refreshKey]);
-
-    const grads: CursoNotaResumen[] = buildCursosResumen(state.reporte, state.notas);
-
-    const pgGrades = mergeGrades(
-        extractGradesFromReporte(state.reporte),
-        extractGradesFromNotas(state.notas),
-    );
-    const tesisResult = computeEstadoTesis(pgGrades);
-
-    const tesisInput: EstadoTesis | null = state.student
-        ? {
-            carnet:        state.student.carnet,
-            nombre:        state.student.nombre,
-            email:         state.student.email,
-            aprueba_tesis: tesisResult.aprobado,
-            razon:         tesisResult.estado === 'APROBADO'
-                ? `Cumple con la nota mínima (${THESIS_MIN_GRADE}) en PG1 y PG2.`
-                : tesisResult.estado === 'PENDIENTE'
-                    ? 'Faltan notas de PG1 y/o PG2.'
-                    : `No alcanza la nota mínima (${THESIS_MIN_GRADE}) en PG1 y/o PG2.`,
-            nota_minima:   THESIS_MIN_GRADE,
-            promedio:      state.reporte?.promedio ?? null,
-            graduacion_1:  grads.find((g) => g.curso === '043') ?? null,
-            graduacion_2:  grads.find((g) => g.curso === '049') ?? null,
-        }
-        : null;
+    const grads: CursoNotaResumen[] = dossier.grades;
+    const tesisResult = dossier.tesis;
+    const tesisInput: EstadoTesis | null = dossier.tesisInput;
 
     // ── Valores derivados de presentación (sin lógica de negocio nueva) ──
-    const terna = state.reporte?.terna ?? null;
-    const promedioGeneral = state.reporte?.promedio ?? null;
+    const terna = dossier.terna;
+    const promedioGeneral = dossier.promedio;
     const monogram = state.student ? buildMonogram(state.student.nombre) : '';
     const ternaPct = terna && terna.total_evaluadores > 0
         ? Math.round((terna.evaluaciones_enviadas / terna.total_evaluadores) * 100)
@@ -219,7 +160,7 @@ const StudentDetailPage: React.FC = () => {
 
     const handleSaved = () => {
         setEditModal((m) => ({ ...m, open: false }));
-        setRefreshKey((k) => k + 1);
+        dossier.reload();
         toast.success('Nota guardada correctamente.');
     };
 
@@ -227,11 +168,11 @@ const StudentDetailPage: React.FC = () => {
         <div className="ternas-page">
             <Button
                 variant="secondary"
-                onClick={() => history.goBack()}
+                onClick={goBack}
                 style={{ alignSelf: 'flex-start' }}
             >
                 <ChevronLeft size={16} aria-hidden="true" />
-                Volver
+                {cameFromApp ? 'Volver' : 'Ir al listado'}
             </Button>
 
             {state.loading && <StudentDetailSkeleton />}
@@ -250,7 +191,7 @@ const StudentDetailPage: React.FC = () => {
                     <header className="sd-hero">
                         <div className="sd-hero__top">
                             <div className="sd-hero__identity">
-                                <span className="sd-avatar" aria-hidden="true">{monogram}</span>
+                                <Avatar size="xl" shape="square">{monogram}</Avatar>
                                 <div className="sd-hero__headings">
                                     <p className="sd-hero__kicker">Expediente académico</p>
                                     <h1 className="sd-hero__name">{state.student.nombre}</h1>

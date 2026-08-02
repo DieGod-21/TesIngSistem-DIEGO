@@ -1,0 +1,336 @@
+/**
+ * quick-view.css — Panel de inspección rápida del padrón.
+ *
+ * Solo tokens del sistema de diseño: el modo oscuro se resuelve por herencia,
+ * sin overrides [data-theme]. Los primitivos (Avatar, Badge, Button, Alert,
+ * Skeleton) aportan su propio chrome; aquí solo vive la composición del panel.
+ */
+
+.qv-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+    background: oklch(0.2 0.03 275 / 0.38);
+    animation: qv-scrim-in 140ms ease both;
+}
+
+.qv-panel {
+    display: flex;
+    flex-direction: column;
+    width: min(420px, 100%);
+    height: 100%;
+    background: var(--surface-card);
+    border-left: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    animation: qv-slide-in 200ms var(--ease-out-expo) both;
+}
+
+/* ── Barra de control ─────────────────────────────────────────────── */
+
+.qv-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.qv-bar__pos {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.qv-bar__nav {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+}
+
+.qv-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.qv-icon-btn:hover:not(:disabled) {
+    background: var(--surface-raised);
+    color: var(--text-primary);
+}
+
+.qv-icon-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.qv-icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Cuerpo ───────────────────────────────────────────────────────── */
+
+.qv-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* 1. Identidad */
+
+.qv-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.qv-identity__text { min-width: 0; }
+
+.qv-identity__name {
+    margin: 0 0 3px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: var(--text-primary);
+}
+
+/* El carné es un dato que se copia constantemente para cruzar sistemas. */
+.qv-carnet {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 6px;
+    margin-left: -6px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.qv-carnet:hover { background: var(--surface-raised); color: var(--text-primary); }
+.qv-carnet:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+
+/* 2. Veredicto — la respuesta que se busca al abrir el panel */
+
+.qv-verdict {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.qv-verdict__avg {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.qv-verdict__avg strong { color: var(--text-primary); font-weight: 700; }
+
+/* ── Secciones ────────────────────────────────────────────────────── */
+
+.qv-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.qv-section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.qv-section__title {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+.qv-section__note {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 3. Notas — lectura de un vistazo: curso · nota · veredicto */
+
+.qv-grades {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.qv-grade {
+    display: grid;
+    grid-template-columns: 2.5rem auto 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    /* Franja de estado: color solo donde comunica el veredicto. */
+    border-left: 3px solid var(--qv-accent, var(--border-strong));
+}
+
+.qv-grade--pass  { --qv-accent: var(--color-success); }
+.qv-grade--fail  { --qv-accent: var(--color-danger); }
+.qv-grade--empty { --qv-accent: var(--border-strong); }
+
+.qv-grade__course {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+}
+
+.qv-grade__value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--qv-accent, var(--text-primary));
+}
+.qv-grade--empty .qv-grade__value { color: var(--text-muted); }
+
+.qv-grade__state {
+    justify-self: end;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* 4. Comité */
+
+.qv-terna {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.qv-terna__icon { color: var(--text-muted); flex-shrink: 0; }
+
+.qv-terna__num {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-right: auto;
+}
+
+/* Estado vacío de una línea: nunca un bloque grande sin contenido. */
+.qv-empty-line {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+/* 5. Contacto */
+
+.qv-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: var(--radius-sm);
+}
+
+.qv-contact:hover { color: var(--color-primary); text-decoration: underline; }
+.qv-contact:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+/* ── Pie ──────────────────────────────────────────────────────────── */
+
+.qv-foot {
+    flex-shrink: 0;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-raised);
+}
+
+.qv-foot__hint {
+    margin: 10px 0 0;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.qv-foot__hint kbd {
+    display: inline-block;
+    min-width: 1.15rem;
+    padding: 1px 4px;
+    margin: 0 1px;
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: var(--surface-card);
+    font-family: inherit;
+    font-size: 0.68rem;
+    line-height: 1.35;
+    color: var(--text-secondary);
+}
+
+/* ── Movimiento ───────────────────────────────────────────────────── */
+
+@keyframes qv-scrim-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes qv-slide-in {
+    from { transform: translateX(24px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .qv-scrim,
+    .qv-panel { animation: none; }
+    .qv-icon-btn,
+    .qv-carnet { transition: none; }
+}
+
+/* ── Móvil: hoja inferior, mismo patrón que el resto de diálogos ──── */
+
+@media (max-width: 640px) {
+    .qv-scrim { align-items: flex-end; justify-content: stretch; }
+    .qv-panel {
+        width: 100%;
+        height: auto;
+        max-height: 88vh;
+        border-left: 0;
+        border-top: 1px solid var(--border);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        animation: sheet-up 260ms var(--ease-out-expo) both;
+    }
+    /* El recorrido por teclado no aplica en táctil: se ocultan las pistas. */
+    .qv-foot__hint { display: none; }
+    @media (prefers-reduced-motion: reduce) {
+        .qv-panel { animation: none; }
+    }
+}

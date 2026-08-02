@@ -334,6 +334,143 @@
 .ui-search__input::placeholder { color: var(--text-muted); }
 
 /* ═══════════════════════════════════════════════════════════════════
+   TOOLBAR — barra de búsqueda y filtros sobre una lista
+   Fuente única: sl-toolbar y usr-toolbar eran idénticas salvo el gap;
+   ternas-toolbar y reportes-toolbar repetían la variante sin superficie.
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface-card-grad), var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sm), var(--hairline);
+}
+
+/* Sin superficie: grupos de filtros que flotan sobre el fondo de la página. */
+.ui-toolbar--bare {
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.ui-toolbar__search {
+    flex: 1;
+    min-width: 240px;
+}
+
+/* Grupo de controles relacionados (chips de filtro, conmutadores). */
+.ui-toolbar__group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* ── Chip de filtro (conmutador de un grupo) ──
+   Vive en el DS porque lo usan Ternas, Reportes y Usuarios; definido en la
+   hoja de una feature, solo se estilaba si esa feature ya se había cargado. */
+.ui-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.375rem 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface-card);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--transition-base), color var(--transition-base),
+        border-color var(--transition-base);
+}
+
+.ui-chip:hover:not(:disabled) {
+    background: var(--surface-raised);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+}
+
+.ui-chip:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.ui-chip:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Seleccionado: `aria-pressed` es la fuente de verdad, no una clase paralela. */
+.ui-chip[aria-pressed='true'],
+.ui-chip--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-primary-contrast);
+}
+
+/* Objetivo táctil cómodo cuando el filtro se opera con el dedo. */
+@media (max-width: 640px) {
+    .ui-chip { min-height: 44px; padding-inline: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-chip { transition: none; }
+}
+
+@media (max-width: 640px) {
+    .ui-toolbar__search { min-width: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ALERT — mensaje contextual en línea (no flotante)
+   Sobre tokens --toast-*, que ya tienen pareja clara/oscura verificada.
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.ui-alert__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    /* Alinea el icono con la primera línea de texto, no con su caja. */
+    margin-top: 0.08rem;
+}
+
+.ui-alert__body { min-width: 0; }
+
+.ui-alert__title {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+}
+
+.ui-alert__list {
+    margin: 0.25rem 0 0;
+    padding-left: 1rem;
+    font-size: 0.78rem;
+}
+
+.ui-alert--success { background: var(--toast-success-bg); color: var(--toast-success-text); border-color: var(--toast-success-border); }
+.ui-alert--danger  { background: var(--toast-error-bg);   color: var(--toast-error-text);   border-color: var(--toast-error-border); }
+.ui-alert--warning { background: var(--toast-warning-bg); color: var(--toast-warning-text); border-color: var(--toast-warning-border); }
+.ui-alert--info    { background: var(--toast-info-bg);    color: var(--toast-info-text);    border-color: var(--toast-info-border); }
+
+/* ═══════════════════════════════════════════════════════════════════
    BREADCRUMB — rastro de ubicación sobre el encabezado de página
    Vive en el DS (no en una hoja de página) porque lo comparten varias
    vistas: definirlo en una feature obligaba a importar su CSS completo.
@@ -716,9 +853,27 @@
     flex-shrink: 0;
     box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.25), var(--shadow-xs);
     user-select: none;
+    /* Permite que la fila contenedora eleve el monograma al pasar el cursor. */
+    transition: box-shadow var(--transition-base);
 }
-.ui-avatar--sm { width: 2rem; height: 2rem; font-size: 0.7rem; }
-.ui-avatar--lg { width: 3.25rem; height: 3.25rem; font-size: 1rem; }
+@media (prefers-reduced-motion: reduce) {
+    .ui-avatar { transition: none; }
+}
+.ui-avatar--sm { width: 2rem;    height: 2rem;    font-size: 0.7rem; }
+.ui-avatar--lg { width: 2.75rem; height: 2.75rem; font-size: 0.9rem; }
+.ui-avatar--xl { width: 3.75rem; height: 3.75rem; font-size: 1.35rem; letter-spacing: -0.02em; }
+
+/* Cabeceras de perfil: el cuadrado redondeado da más peso a la identidad.
+   El radio escala con el tamaño para mantener la misma curvatura percibida. */
+.ui-avatar--square               { border-radius: var(--radius-lg); }
+.ui-avatar--sm.ui-avatar--square { border-radius: var(--radius-md); }
+.ui-avatar--xl.ui-avatar--square { border-radius: var(--radius-xl); }
+
+/* Tono alternativo: el color categoriza (rol, estado), el texto sigue claro
+   → contraste garantizado en ambos temas sin overrides. */
+.ui-avatar--success {
+    background: linear-gradient(135deg, var(--color-success) 0%, color-mix(in oklch, var(--color-success) 78%, white) 100%);
+}
 
 /* Utilidad: número tabular (para tablas/estadísticas) */
 .ui-tnum { font-variant-numeric: tabular-nums; }
