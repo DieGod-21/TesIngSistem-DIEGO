@@ -38,14 +38,6 @@ const TERNA_ESTADO_LABEL: Record<EstadoTerna, string> = {
     completada:  'Completada',
 };
 
-/** Iniciales del estudiante para el monograma del encabezado (solo presentación). */
-function buildMonogram(nombre: string): string {
-    const parts = nombre.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return '?';
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 /** Fecha corta localizada; null si la entrada no es una fecha válida. */
 function formatShortDate(iso?: string | null): string | null {
     if (!iso) return null;
@@ -103,7 +95,6 @@ const StudentDetailPage: React.FC = () => {
     // ── Valores derivados de presentación (sin lógica de negocio nueva) ──
     const terna = dossier.terna;
     const promedioGeneral = dossier.promedio;
-    const monogram = state.student ? buildMonogram(state.student.nombre) : '';
     const ternaPct = terna && terna.total_evaluadores > 0
         ? Math.round((terna.evaluaciones_enviadas / terna.total_evaluadores) * 100)
         : 0;
@@ -191,7 +182,7 @@ const StudentDetailPage: React.FC = () => {
                     <header className="sd-hero">
                         <div className="sd-hero__top">
                             <div className="sd-hero__identity">
-                                <Avatar size="xl" shape="square">{monogram}</Avatar>
+                                <Avatar name={state.student.nombre} size="xl" shape="square" />
                                 <div className="sd-hero__headings">
                                     <p className="sd-hero__kicker">Expediente académico</p>
                                     <h1 className="sd-hero__name">{state.student.nombre}</h1>

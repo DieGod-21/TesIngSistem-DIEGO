@@ -30,24 +30,27 @@ type PendingAction =
     | { kind: 'reopen'; evaluadorId: number; nombre: string }
     | null;
 
-/** Encuentra la fila del evaluador autenticado dentro de la terna. */
-function findMyEvaluation(terna: TernaDetalle, usuarioId: number | null, userName: string | undefined): EvaluadorTerna | null {
-    if (!terna?.evaluadores?.length) return null;
-    if (usuarioId != null) {
-        const byId = terna.evaluadores.find((e) => (e.id ?? e.usuario_id) === usuarioId);
-        if (byId) return byId;
-    }
-    if (userName) {
-        const byName = terna.evaluadores.find((e) => e.nombre?.trim() === userName.trim());
-        if (byName) return byName;
-    }
-    return null;
+/**
+ * Encuentra la fila del evaluador autenticado dentro de la terna.
+ *
+ * La identidad se resuelve ÚNICAMENTE por `usuarioId`. No hay respaldo por
+ * nombre: dos evaluadores homónimos —nada improbable en una facultad— harían
+ * que el formulario cargara la calificación y los comentarios de otra persona
+ * como propios. Ante la duda, la respuesta correcta es "no eres participante"
+ * (solo lectura), no una conjetura sobre quién eres.
+ *
+ * Si la API omitiera el id de forma sistemática, es un defecto del contrato:
+ * se documenta, no se compensa con una heurística en el cliente.
+ */
+function findMyEvaluation(terna: TernaDetalle, usuarioId: number | null): EvaluadorTerna | null {
+    if (usuarioId == null || !terna?.evaluadores?.length) return null;
+    return terna.evaluadores.find((e) => (e.id ?? e.usuario_id) === usuarioId) ?? null;
 }
 
 const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
-    const { user, isAdmin, usuarioId, capabilities } = useAuth();
+    const { isAdmin, usuarioId, capabilities } = useAuth();
     const { toast } = useToast();
-    const mine = findMyEvaluation(terna, usuarioId, user?.nombre);
+    const mine = findMyEvaluation(terna, usuarioId);
     const isLocked = mine?.eval_estado === 'enviada';
     const isParticipant = mine !== null;
 

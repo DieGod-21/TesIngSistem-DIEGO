@@ -10,12 +10,11 @@
  * — Fluye naturalmente si el contenido es largo
  * — Efecto glass con backdrop-filter
  * — Responsive: stack en móvil
- * — Sin textos de prototipo
  *
- * Estructura para futura integración:
- * TODO: Integrar API de eventos académicos
- * TODO: Agregar enlace a Reglamento de Tesis institucional
- * TODO: Agregar enlace al portal del estudiante UMG
+ * El pie no enlaza a recursos institucionales: mientras esas URLs no existan
+ * publicadas, un enlace inerte promete algo que el producto no cumple. Cuando
+ * la coordinación publique la Guía Normativa o el canal de soporte, se añaden
+ * aquí con su destino real.
  */
 
 import React from 'react';
@@ -37,28 +36,9 @@ const AppFooter: React.FC = () => (
                 </p>
             </div>
 
-            {/* Links institucionales y versión */}
-            <nav className="app-footer__links" aria-label="Recursos institucionales">
-                <a
-                    className="app-footer__link"
-                    href="#"
-                    aria-label={`Guía Normativa de Proyecto de Graduación ${currentYear}`}
-                >
-                    Guía Normativa {currentYear}
-                </a>
-                <span className="app-footer__sep" aria-hidden="true">·</span>
-                <a
-                    className="app-footer__link"
-                    href="#"
-                    aria-label="Soporte técnico del sistema"
-                >
-                    Soporte Técnico
-                </a>
-                <span className="app-footer__sep" aria-hidden="true">·</span>
-                <span className="app-footer__copy">
-                    &copy; {currentYear} UMG &mdash; Todos los derechos reservados
-                </span>
-            </nav>
+            <p className="app-footer__copy">
+                &copy; {currentYear} UMG &mdash; Todos los derechos reservados
+            </p>
 
         </div>
     </footer>

@@ -140,21 +140,12 @@ const LoginForm: React.FC = () => {
                 </IonButton>
             </form>
 
+            {/* El acceso es por invitación (ver Usuarios): la vía real es el
+                coordinador, no un formulario. Se enuncia como información, no
+                como enlace: no existe destino y un enlace que no lleva a
+                ninguna parte es peor que su ausencia. */}
             <div className="auth-secondary">
-                <p>
-                    ¿No tienes acceso?{' '}
-                    <a href="#" className="auth-secondary__link">
-                        Contacte a su Coordinador
-                    </a>
-                </p>
-            </div>
-
-            <div className="auth-help-links">
-                <a href="#">Términos</a>
-                <span className="auth-help-links__sep">•</span>
-                <a href="#">Privacidad</a>
-                <span className="auth-help-links__sep">•</span>
-                <a href="#">Soporte Técnico</a>
+                <p>El acceso se otorga por invitación. Solicítalo a tu coordinador.</p>
             </div>
         </>
     );

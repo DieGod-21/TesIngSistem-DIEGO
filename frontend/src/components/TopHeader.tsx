@@ -6,7 +6,7 @@ import { getRoleLabel } from '../config/permissions';
 import { useTheme } from '../context/ThemeContext';
 import { useStudentSearch } from '../hooks/useStudentSearch';
 import { useGlobalHotkey } from '../hooks/useGlobalHotkey';
-import { initials } from '../utils/strings';
+import { Avatar } from './ui';
 
 interface TopHeaderProps {
     onMenuToggle?: () => void;
@@ -144,7 +144,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                             onMouseEnter={() => setActiveIndex(i)}
                             onClick={() => goToStudent(s.id)}
                         >
-                            <span className="ui-avatar ui-avatar--sm" aria-hidden="true">{initials(s.nombre)}</span>
+                            <Avatar name={s.nombre} size="sm" />
                             <span className="dash-search-sug__text">
                                 <span className="dash-search-sug__name">{s.nombre}</span>
                                 <span className="dash-search-sug__meta">{s.carnet}{s.carrera ? ` · ${s.carrera}` : ''}</span>
@@ -235,14 +235,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                             {getRoleLabel(user?.role)}
                         </p>
                     </div>
-                    <div className="dash-header__avatar" aria-hidden="true">
-                        {(user?.nombre ?? 'CO')
-                            .split(' ')
-                            .map((w: string) => w[0])
-                            .slice(0, 2)
-                            .join('')
-                            .toUpperCase()}
-                    </div>
+                    <Avatar name={user?.nombre ?? 'Coordinador'} />
                 </div>
             </div>
         </header>

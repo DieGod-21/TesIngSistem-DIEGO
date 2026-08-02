@@ -424,30 +424,6 @@
   color: var(--text-secondary);
   margin: 0;
 }
-.auth-secondary__link {
-  font-weight: 600;
-  color: var(--umg-red);
-  text-decoration: none;
-}
-.auth-secondary__link:hover { text-decoration: underline; }
-
-/* Links de ayuda (footer del formulario) */
-.auth-help-links {
-  margin-top: 2rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-.auth-help-links a {
-  color: inherit;
-  text-decoration: none;
-}
-.auth-help-links a:hover { color: var(--color-primary); }
-.auth-help-links__sep { color: var(--border-strong); }
-
 /* Footer copyright — fixed para bypassear el shadow DOM de IonContent */
 .auth-copyright-footer {
   position: fixed;

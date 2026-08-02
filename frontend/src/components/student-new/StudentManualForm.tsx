@@ -14,7 +14,7 @@ import type { StudentPayload } from '../../services/studentsService';
 import type { Student } from '../../types/student';
 import { useForm } from '../../hooks/useForm';
 import { runValidators, validators } from '../../utils/validators';
-import { Button, Card, Field } from '../ui';
+import { Avatar, Button, Card, Field } from '../ui';
 
 type FormFields = {
     nombreCompleto:      string;
@@ -27,13 +27,6 @@ const EMPTY_FORM: FormFields = {
     carnetId:            '',
     correoInstitucional: '',
 };
-
-/** Iniciales para el monograma del registro de sesión. */
-function initialsOf(name: string): string {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return '··';
-    return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
-}
 
 function validate(values: FormFields) {
     const errors: Partial<FormFields> = {};
@@ -193,9 +186,7 @@ const StudentManualForm: React.FC = () => {
                                             onClick={() => history.push(`/students/${s.id}`)}
                                             aria-label={`Abrir expediente de ${s.nombreCompleto} (${s.carnetId})`}
                                         >
-                                            <span className="ui-avatar ui-avatar--sm" aria-hidden="true">
-                                                {initialsOf(s.nombreCompleto)}
-                                            </span>
+                                            <Avatar name={s.nombreCompleto} size="sm" />
                                             <span className="sn-log__meta">
                                                 <span className="sn-log__name">{s.nombreCompleto}</span>
                                                 <span className="sn-log__carnet">{s.carnetId}</span>

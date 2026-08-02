@@ -2,9 +2,11 @@
  * dashboardService.ts
  *
  * Fuente de datos para el Panel de Control. Sólo endpoints REALES:
- *   - GET /api/tesis/resumen       → KPIs globales
- *   - GET /api/estudiantes         → estudiantes recientes (paginado)
- *   - GET /api/tesis/reprobados    → acciones pendientes (no cumplen tesis)
+ *   - GET /api/tesis/resumen → KPIs globales
+ *
+ * El "trabajo pendiente" NO se pide aquí: el Dashboard consume la misma cola
+ * priorizada del workspace (`deriveWorkQueue`), que es la única con
+ * priorización, envejecimiento y política de permisos.
  */
 
 import { apiGet } from './apiClient';
@@ -41,36 +43,9 @@ export interface KpiData {
     navigateTo?: string;
 }
 
-export interface PendingAction {
-    id: string;
-    studentName: string;
-    studentId: string;
-    avatarInitials: string;
-    avatarVariant: 'blue' | 'green' | 'slate';
-    projectTitle: string;
-    phase: string;
-    actionLabel: string;
-    actionVariant: 'danger' | 'warning' | 'urgent';
-    deadline: string;
-    deadlineUrgent?: boolean;
-}
-
 export interface DashboardSummary {
     kpis: KpiData[];
 }
-
-// ─── Helpers ────────────────────────────────────────────────────────
-
-function initials(name: string): string {
-    return name
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((w) => w[0]?.toUpperCase() ?? '')
-        .join('');
-}
-
-const AVATAR_VARIANTS: Array<'blue' | 'green' | 'slate'> = ['blue', 'green', 'slate'];
 
 // ─── API publica ────────────────────────────────────────────────────
 
@@ -134,46 +109,4 @@ export async function getDashboardSummary(opts: { signal?: AbortSignal } = {}): 
     ];
 
     return { kpis };
-}
-
-/**
- * Acciones pendientes = estudiantes que NO aprueban tesis (GET /api/tesis/reprobados).
- * Es lo más cercano a "sin aprobar" que expone el backend real.
- */
-export async function getPendingActions(query?: string, opts: { signal?: AbortSignal } = {}): Promise<PendingAction[]> {
-    interface ReprobadosResp {
-        total: number;
-        nota_minima: number;
-        estudiantes: Array<{
-            carnet: string;
-            nombre: string;
-            nota_grad1: number | null;
-            estado_grad1: string;
-            nota_grad2: number | null;
-            estado_grad2: string;
-        }>;
-    }
-
-    const { estudiantes } = await apiGet<ReprobadosResp>(API_PATHS.tesis.reprobados, { signal: opts.signal });
-
-    const q = query?.trim().toLowerCase() ?? '';
-    const filtered = q
-        ? estudiantes.filter((s) =>
-              s.nombre.toLowerCase().includes(q) || s.carnet.toLowerCase().includes(q),
-          )
-        : estudiantes;
-
-    return filtered.map((s, i): PendingAction => ({
-        id:             s.carnet,
-        studentName:    s.nombre,
-        studentId:      s.carnet,
-        avatarInitials: initials(s.nombre),
-        avatarVariant:  AVATAR_VARIANTS[i % AVATAR_VARIANTS.length],
-        projectTitle:   `PG1: ${s.nota_grad1 ?? '—'} · PG2: ${s.nota_grad2 ?? '—'}`,
-        phase:          [s.estado_grad1, s.estado_grad2].filter(Boolean).join(' · ') || '—',
-        actionLabel:    'No cumple requisito de tesis',
-        actionVariant:  'warning',
-        deadline:       'Sin fecha límite',
-        deadlineUrgent: false,
-    }));
 }
