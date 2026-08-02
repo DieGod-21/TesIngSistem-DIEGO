@@ -940,3 +940,43 @@
 @media (prefers-reduced-motion: reduce) {
     .skeleton { animation: none; opacity: 0.75; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   KBD — representación de una tecla
+   Una sola forma de dibujar una tecla en todo el producto (pista del
+   buscador, ayuda del panel de inspección, futuros atajos).
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-kbd {
+    display: inline-block;
+    min-width: 1.15rem;
+    padding: 1px 5px;
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: var(--surface-card);
+    font-family: inherit;
+    font-size: 0.7rem;
+    line-height: 1.35;
+    text-align: center;
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+/* Fila de carga para listados. Vive en el DS porque la usan varias features;
+   definida en la hoja de una de ellas, solo se estilaba si esa feature ya se
+   había cargado (mismo fallo latente que tuvieron breadcrumb y chip). */
+.ui-skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+}
+
+.ui-skeleton-row__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}

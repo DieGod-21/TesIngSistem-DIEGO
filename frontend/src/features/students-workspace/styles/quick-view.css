@@ -285,20 +285,6 @@
     color: var(--text-muted);
 }
 
-.qv-foot__hint kbd {
-    display: inline-block;
-    min-width: 1.15rem;
-    padding: 1px 4px;
-    margin: 0 1px;
-    border: 1px solid var(--border-strong);
-    border-bottom-width: 2px;
-    border-radius: 4px;
-    background: var(--surface-card);
-    font-family: inherit;
-    font-size: 0.68rem;
-    line-height: 1.35;
-    color: var(--text-secondary);
-}
 
 /* ── Movimiento ───────────────────────────────────────────────────── */
 

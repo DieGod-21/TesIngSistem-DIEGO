@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getRoleLabel } from '../config/permissions';
 import { useTheme } from '../context/ThemeContext';
 import { useStudentSearch } from '../hooks/useStudentSearch';
+import { useGlobalHotkey } from '../hooks/useGlobalHotkey';
 import { initials } from '../utils/strings';
 
 interface TopHeaderProps {
@@ -52,6 +53,18 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
 
     const query = inputValue.trim();
     const panelOpen = focused && query.length >= minChars;
+
+    /*
+     * Buscar un estudiante es la operación atómica de la jornada. Sin atajo,
+     * cada una obligaba a soltar el teclado y alcanzar el ratón.
+     *   "/"      → convención de GitHub y Stripe (una sola tecla).
+     *   ⌘K/Ctrl+K → convención de Linear, Notion y Vercel.
+     * Se aceptan las dos: son gratis y cada usuario llega con una en los dedos.
+     */
+    useGlobalHotkey([{ key: '/' }, { key: 'k', mod: true }], () => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+    });
 
     const onInputChange = (value: string) => {
         setInputValue(value);
@@ -177,6 +190,12 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                     onBlur={() => setFocused(false)}
                     onKeyDown={handleKeyDown}
                 />
+
+                {/* Un atajo que nadie descubre no existe. La pista se muestra
+                    solo con el campo vacío y sin foco: enseña y desaparece. */}
+                {!focused && inputValue === '' && (
+                    <kbd className="ui-kbd dash-header__search-kbd" aria-hidden="true">/</kbd>
+                )}
 
                 <span className="ui-sr-only" role="status" aria-live="polite">
                     {searchStatus}

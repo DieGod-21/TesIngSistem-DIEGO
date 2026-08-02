@@ -269,7 +269,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 <ArrowRight size={16} aria-hidden="true" />
                             </Button>
                             <p className="qv-foot__hint">
-                                <kbd>↑</kbd><kbd>↓</kbd> recorrer · <kbd>Esc</kbd> cerrar
+                                <kbd className="ui-kbd">↑</kbd><kbd className="ui-kbd">↓</kbd> recorrer · <kbd className="ui-kbd">Esc</kbd> cerrar
                             </p>
                         </footer>
                     </>

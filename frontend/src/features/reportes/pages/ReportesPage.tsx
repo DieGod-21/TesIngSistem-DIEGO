@@ -240,9 +240,9 @@ const ReportesSkeleton: React.FC = () => (
         {/* Table skeleton */}
         <div className="reportes-table-card" style={{ overflow: 'hidden' }}>
             {[...Array(6)].map((_, i) => (
-                <div key={i} className="dash-skeleton-row">
+                <div key={i} className="ui-skeleton-row">
                     <Skeleton width={28} height={28} radius={6} style={{ flexShrink: 0 }} />
-                    <div className="dash-skeleton-row__lines">
+                    <div className="ui-skeleton-row__lines">
                         <Skeleton size="medium" />
                         <Skeleton size="short" />
                     </div>
