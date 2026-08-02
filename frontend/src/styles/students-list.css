@@ -27,10 +27,8 @@
 }
 
 /* El breadcrumb entra en el flujo flex del cuerpo: el gap gobierna su
-   separación con la cabecera (evita doble margen sobre .sn-breadcrumb). */
-.sl-body > .sn-breadcrumb { margin-bottom: 0; }
-
-/* Breadcrumb reutiliza clases sn- de student-new.css */
+   separación con la cabecera (evita doble margen). */
+.sl-body > .ui-breadcrumb { margin-bottom: 0; }
 
 /* El encabezado de página usa la primitiva <PageHeader> del sistema de diseño. */
 

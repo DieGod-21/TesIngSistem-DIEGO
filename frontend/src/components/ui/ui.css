@@ -334,6 +334,151 @@
 .ui-search__input::placeholder { color: var(--text-muted); }
 
 /* ═══════════════════════════════════════════════════════════════════
+   BREADCRUMB — rastro de ubicación sobre el encabezado de página
+   Vive en el DS (no en una hoja de página) porque lo comparten varias
+   vistas: definirlo en una feature obligaba a importar su CSS completo.
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+}
+
+.ui-breadcrumb__item {
+    color: var(--text-muted);
+}
+
+.ui-breadcrumb__item--active {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.ui-breadcrumb__link {
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast);
+}
+.ui-breadcrumb__link:hover { color: var(--color-primary); }
+.ui-breadcrumb__link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.ui-breadcrumb__sep {
+    color: var(--text-muted);
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-breadcrumb__link { transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FIELD — campo de formulario (etiqueta + control + validación)
+   Fuente única para formularios. Sustituye a auth-form__*, en-field y
+   sn-field, que resolvían lo mismo con tres lenguajes distintos.
+═══════════════════════════════════════════════════════════════════ */
+
+/* Fila de campos: colapsa a una columna en móvil. */
+.ui-field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem 1.25rem;
+}
+
+.ui-field { min-width: 0; }
+
+.ui-field__label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.375rem;
+}
+
+.ui-field__req {
+    color: var(--color-danger);
+    margin-left: 0.15rem;
+    font-weight: 700;
+}
+
+.ui-field__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ui-field__icon {
+    position: absolute;
+    left: 0.75rem;
+    display: inline-flex;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: color var(--transition-base);
+}
+
+.ui-field__input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--surface-card);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+/* Sangría solo cuando hay icono, para no dejar aire muerto sin él. */
+.ui-field__icon ~ .ui-field__input { padding-left: 2.35rem; }
+
+.ui-field__input::placeholder { color: var(--text-muted); }
+
+.ui-field__input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.ui-field__control:focus-within .ui-field__icon { color: var(--color-primary); }
+
+.ui-field__input:disabled {
+    background: var(--surface-raised);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.ui-field--error .ui-field__input { border-color: var(--color-danger); }
+.ui-field--error .ui-field__input:focus {
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-danger) 22%, transparent);
+}
+.ui-field--error .ui-field__icon { color: var(--color-danger); }
+
+/* Espacio reservado: la validación no desplaza la fila. */
+.ui-field__msg {
+    min-height: 1.05rem;
+    margin: 0.3rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+}
+.ui-field--error .ui-field__msg { color: var(--color-danger); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-field__input,
+    .ui-field__icon { transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    MODAL (overlay + panel) — usado por ConfirmModal y futuros diálogos
 ═══════════════════════════════════════════════════════════════════ */
 

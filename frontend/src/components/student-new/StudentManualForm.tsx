@@ -6,13 +6,15 @@
  */
 
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { IonToast } from '@ionic/react';
-import { User, CreditCard, Mail, GraduationCap, Save, Trash2 } from 'lucide-react';
+import { User, CreditCard, Mail, UserPlus, Save, Eraser, ChevronRight } from 'lucide-react';
 import { createStudent } from '../../services/studentsService';
 import type { StudentPayload } from '../../services/studentsService';
+import type { Student } from '../../types/student';
 import { useForm } from '../../hooks/useForm';
 import { runValidators, validators } from '../../utils/validators';
-import { Button } from '../ui';
+import { Button, Card, Field } from '../ui';
 
 type FormFields = {
     nombreCompleto:      string;
@@ -25,6 +27,13 @@ const EMPTY_FORM: FormFields = {
     carnetId:            '',
     correoInstitucional: '',
 };
+
+/** Iniciales para el monograma del registro de sesión. */
+function initialsOf(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '··';
+    return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
+}
 
 function validate(values: FormFields) {
     const errors: Partial<FormFields> = {};
@@ -49,6 +58,9 @@ function validate(values: FormFields) {
 }
 
 const StudentManualForm: React.FC = () => {
+    const history = useHistory();
+    // Rastro de lo creado en esta sesión: el formulario se vacía al guardar.
+    const [created, setCreated] = useState<Student[]>([]);
     const [toast, setToast] = useState<{ open: boolean; message: string; color: string }>({
         open: false, message: '', color: 'success',
     });
@@ -64,7 +76,8 @@ const StudentManualForm: React.FC = () => {
                         carnetId:            vals.carnetId,
                         correoInstitucional: vals.correoInstitucional,
                     };
-                    await createStudent(payload);
+                    const student = await createStudent(payload);
+                    setCreated((prev) => [student, ...prev]);
                     setToast({ open: true, message: 'Estudiante registrado exitosamente.', color: 'success' });
                 } catch (err: unknown) {
                     const msg = err instanceof Error ? err.message : 'Error al registrar. Intenta de nuevo.';
@@ -76,99 +89,126 @@ const StudentManualForm: React.FC = () => {
 
     return (
         <>
-            <div className="sn-card">
-                <div className="sn-card__header">
-                    <GraduationCap size={20} className="sn-card__header-icon" />
-                    <h3 className="sn-card__title">Registro Manual</h3>
+            <Card className="sn-panel">
+                <div className="sn-panel__head">
+                    <UserPlus size={18} className="sn-panel__icon" aria-hidden="true" />
+                    <h2 className="sn-panel__title">Registro individual</h2>
+                    <span className="sn-panel__note">3 campos obligatorios</span>
                 </div>
 
-                <form className="sn-form" onSubmit={handleSubmit} noValidate>
-                    <div className="sn-form__group sn-form__group--full">
-                        <label className="sn-form__label" htmlFor="sn-nombre">
-                            Nombre Completo <span className="sn-form__required">*</span>
-                        </label>
-                        <div className={`sn-field${showError('nombreCompleto') ? ' sn-field--error' : ''}`}>
-                            <User size={16} className="sn-field__icon" aria-hidden="true" />
+                <div className="sn-panel__body">
+                    <form className="sn-form" onSubmit={handleSubmit} noValidate>
+                        <Field
+                            label="Nombre completo"
+                            htmlFor="sn-nombre"
+                            required
+                            error={showError('nombreCompleto')}
+                            icon={<User size={16} />}
+                        >
                             <input
                                 id="sn-nombre"
                                 type="text"
-                                className="sn-field__input"
+                                className="ui-field__input"
                                 placeholder="Ej. Juan Pérez López"
                                 maxLength={150}
+                                autoComplete="off"
                                 value={values.nombreCompleto}
                                 onChange={(e) => handleChange('nombreCompleto', e.target.value)}
                                 onBlur={() => handleBlur('nombreCompleto')}
                                 aria-describedby="sn-nombre-error"
                                 aria-invalid={!!showError('nombreCompleto')}
                             />
-                        </div>
-                        <p id="sn-nombre-error" className="sn-field__error" role="alert">
-                            {showError('nombreCompleto') ?? ''}
-                        </p>
-                    </div>
+                        </Field>
 
-                    <div className="sn-form__row">
-                        <div className="sn-form__group">
-                            <label className="sn-form__label" htmlFor="sn-carnet">
-                                Carnet ID <span className="sn-form__required">*</span>
-                            </label>
-                            <div className={`sn-field${showError('carnetId') ? ' sn-field--error' : ''}`}>
-                                <CreditCard size={16} className="sn-field__icon" aria-hidden="true" />
+                        <div className="ui-field-row">
+                            <Field
+                                label="Carnet ID"
+                                htmlFor="sn-carnet"
+                                required
+                                error={showError('carnetId')}
+                                icon={<CreditCard size={16} />}
+                            >
                                 <input
                                     id="sn-carnet"
                                     type="text"
-                                    className="sn-field__input"
+                                    className="ui-field__input"
                                     placeholder="1234-20-XXXX"
                                     maxLength={50}
+                                    autoComplete="off"
                                     value={values.carnetId}
                                     onChange={(e) => handleChange('carnetId', e.target.value)}
                                     onBlur={() => handleBlur('carnetId')}
                                     aria-describedby="sn-carnet-error"
                                     aria-invalid={!!showError('carnetId')}
                                 />
-                            </div>
-                            <p id="sn-carnet-error" className="sn-field__error" role="alert">
-                                {showError('carnetId') ?? ''}
-                            </p>
-                        </div>
+                            </Field>
 
-                        <div className="sn-form__group">
-                            <label className="sn-form__label" htmlFor="sn-correo">
-                                Correo Institucional <span className="sn-form__required">*</span>
-                            </label>
-                            <div className={`sn-field${showError('correoInstitucional') ? ' sn-field--error' : ''}`}>
-                                <Mail size={16} className="sn-field__icon" aria-hidden="true" />
+                            <Field
+                                label="Correo institucional"
+                                htmlFor="sn-correo"
+                                required
+                                error={showError('correoInstitucional')}
+                                icon={<Mail size={16} />}
+                            >
                                 <input
                                     id="sn-correo"
                                     type="email"
-                                    className="sn-field__input"
+                                    className="ui-field__input"
                                     placeholder="usuario@miumg.edu.gt"
                                     maxLength={100}
+                                    autoComplete="off"
                                     value={values.correoInstitucional}
                                     onChange={(e) => handleChange('correoInstitucional', e.target.value)}
                                     onBlur={() => handleBlur('correoInstitucional')}
                                     aria-describedby="sn-correo-error"
                                     aria-invalid={!!showError('correoInstitucional')}
                                 />
-                            </div>
-                            <p id="sn-correo-error" className="sn-field__error" role="alert">
-                                {showError('correoInstitucional') ?? ''}
-                            </p>
+                            </Field>
                         </div>
-                    </div>
 
-                    <div className="sn-form__actions">
-                        <Button type="submit" loading={submitting} disabled={submitting}>
-                            {!submitting && <Save size={16} />}
-                            {submitting ? 'Registrando…' : 'Registrar Estudiante'}
-                        </Button>
-                        <Button variant="secondary" onClick={reset} disabled={submitting}>
-                            <Trash2 size={16} />
-                            Limpiar Formulario
-                        </Button>
-                    </div>
-                </form>
-            </div>
+                        <div className="sn-form__actions">
+                            <Button type="submit" loading={submitting} disabled={submitting}>
+                                {!submitting && <Save size={16} aria-hidden="true" />}
+                                {submitting ? 'Registrando…' : 'Registrar estudiante'}
+                            </Button>
+                            <Button variant="ghost" onClick={reset} disabled={submitting}>
+                                <Eraser size={16} aria-hidden="true" />
+                                Limpiar
+                            </Button>
+                        </div>
+                    </form>
+
+                    {created.length > 0 && (
+                        <div className="sn-log">
+                            <div className="sn-log__head">
+                                <h3 className="sn-log__title">Registrados en esta sesión</h3>
+                                <span className="sn-log__count">{created.length}</span>
+                            </div>
+                            <ul className="sn-log__list">
+                                {created.map((s) => (
+                                    <li key={s.id}>
+                                        <button
+                                            type="button"
+                                            className="sn-log__item"
+                                            onClick={() => history.push(`/students/${s.id}`)}
+                                            aria-label={`Abrir expediente de ${s.nombreCompleto} (${s.carnetId})`}
+                                        >
+                                            <span className="ui-avatar ui-avatar--sm" aria-hidden="true">
+                                                {initialsOf(s.nombreCompleto)}
+                                            </span>
+                                            <span className="sn-log__meta">
+                                                <span className="sn-log__name">{s.nombreCompleto}</span>
+                                                <span className="sn-log__carnet">{s.carnetId}</span>
+                                            </span>
+                                            <ChevronRight size={16} className="sn-log__go" aria-hidden="true" />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            </Card>
 
             <IonToast
                 isOpen={toast.open}

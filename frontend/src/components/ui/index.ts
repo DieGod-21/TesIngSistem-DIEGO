@@ -16,5 +16,7 @@ export { default as PageHeader } from './PageHeader';
 export type { PageHeaderProps } from './PageHeader';
 export { default as EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
+export { default as Field } from './Field';
+export type { FieldProps } from './Field';
 export { default as Skeleton } from './Skeleton';
 export type { SkeletonProps } from './Skeleton';

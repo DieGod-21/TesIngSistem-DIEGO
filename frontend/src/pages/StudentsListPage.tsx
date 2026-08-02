@@ -47,7 +47,6 @@ import {
 } from '../features/students-workspace/lens/lens';
 import { routes } from '../config/routes';
 import '../styles/students-list.css';
-import '../styles/student-new.css';
 import '../styles/transitions.css';
 
 const LIMIT_OPTIONS = [10, 20, 50, 100] as const;
@@ -104,16 +103,16 @@ const StudentsListPage: React.FC = () => {
                     <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
                 )}
 
-                <nav className="sn-breadcrumb" aria-label="Navegación secundaria">
+                <nav className="ui-breadcrumb" aria-label="Navegación secundaria">
                     <button
                         type="button"
-                        className="sn-breadcrumb__item sn-breadcrumb__link"
+                        className="ui-breadcrumb__item ui-breadcrumb__link"
                         onClick={() => history.push(routes.dashboard())}
                     >
                         Inicio
                     </button>
-                    <ChevronRight size={14} className="sn-breadcrumb__sep" />
-                    <span className="sn-breadcrumb__item sn-breadcrumb__item--active">Estudiantes</span>
+                    <ChevronRight size={14} className="ui-breadcrumb__sep" aria-hidden="true" />
+                    <span className="ui-breadcrumb__item ui-breadcrumb__item--active">Estudiantes</span>
                 </nav>
 
                 <PageHeader

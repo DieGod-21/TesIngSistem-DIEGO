@@ -11,7 +11,7 @@ import React, { useRef, useState } from 'react';
 import { IonToast } from '@ionic/react';
 import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { importarEstudiantes, type ImportarEstudiantesResult } from '../../services/importarService';
-import { Button } from '../ui';
+import { Button, Card } from '../ui';
 
 const ACCEPTED_EXT = ['.xlsx', '.xls', '.pdf'];
 const ACCEPTED_MIME = [
@@ -98,107 +98,110 @@ const BulkUploadCard: React.FC = () => {
 
     return (
         <>
-            <div className="sn-card">
-                <div className="sn-card__header">
-                    <UploadCloud size={20} className="sn-card__header-icon" />
-                    <h3 className="sn-card__title">Carga Masiva</h3>
+            <Card className="sn-panel sn-panel--quiet">
+                <div className="sn-panel__head">
+                    <UploadCloud size={18} className="sn-panel__icon" aria-hidden="true" />
+                    <h2 className="sn-panel__title">Carga masiva</h2>
+                    <span className="sn-panel__note">Una cohorte completa</span>
                 </div>
 
-                <div
-                    className={`sn-dropzone${dragging ? ' sn-dropzone--dragging' : ''}`}
-                    onDrop={onDrop}
-                    onDragOver={onDragOver}
-                    onDragLeave={() => setDragging(false)}
-                    onClick={() => inputRef.current?.click()}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            inputRef.current?.click();
-                        }
-                    }}
-                    aria-label="Zona de carga: arrastra un archivo o haz clic para seleccionarlo"
-                >
-                    <UploadCloud size={32} className="sn-dropzone__icon" aria-hidden="true" />
-                    <p className="sn-dropzone__title">Arrastra tu archivo aquí</p>
-                    <p className="sn-dropzone__hint">
-                        o <span className="sn-dropzone__link">haz clic para seleccionarlo</span>
-                    </p>
-                    <p className="sn-dropzone__formats">Formatos: .xlsx · .xls · .pdf</p>
+                <div className="sn-panel__body">
+                    <div
+                        className={`sn-dropzone${dragging ? ' sn-dropzone--dragging' : ''}`}
+                        onDrop={onDrop}
+                        onDragOver={onDragOver}
+                        onDragLeave={() => setDragging(false)}
+                        onClick={() => inputRef.current?.click()}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                inputRef.current?.click();
+                            }
+                        }}
+                        aria-label="Zona de carga: arrastra un archivo o haz clic para seleccionarlo"
+                    >
+                        <UploadCloud size={26} className="sn-dropzone__icon" aria-hidden="true" />
+                        <p className="sn-dropzone__title">Arrastra tu archivo aquí</p>
+                        <p className="sn-dropzone__hint">
+                            o <span className="sn-dropzone__link">haz clic para seleccionarlo</span>
+                        </p>
+                        <p className="sn-dropzone__formats">.xlsx · .xls · .pdf</p>
 
-                    <input
-                        ref={inputRef}
-                        type="file"
-                        accept={ACCEPTED_EXT.join(',')}
-                        onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
-                        className="sn-dropzone__input"
-                        aria-hidden="true"
-                        tabIndex={-1}
-                    />
-                </div>
+                        <input
+                            ref={inputRef}
+                            type="file"
+                            accept={ACCEPTED_EXT.join(',')}
+                            onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+                            className="sn-dropzone__input"
+                            aria-hidden="true"
+                            tabIndex={-1}
+                        />
+                    </div>
 
-                {file && (
-                    <div className="sn-file-chip" role="status">
-                        <FileSpreadsheet size={18} aria-hidden="true" />
-                        <div className="sn-file-chip__meta">
-                            <p className="sn-file-chip__name">{file.name}</p>
-                            <p className="sn-file-chip__size">{formatBytes(file.size)}</p>
+                    {file && (
+                        <div className="sn-file-chip" role="status">
+                            <FileSpreadsheet size={18} className="sn-file-chip__icon" aria-hidden="true" />
+                            <div className="sn-file-chip__meta">
+                                <p className="sn-file-chip__name">{file.name}</p>
+                                <p className="sn-file-chip__size">{formatBytes(file.size)}</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="sn-file-chip__clear"
+                                onClick={(e) => { e.stopPropagation(); clear(); }}
+                                aria-label="Quitar archivo"
+                                disabled={uploading}
+                            >
+                                <X size={16} aria-hidden="true" />
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            className="sn-file-chip__clear"
-                            onClick={(e) => { e.stopPropagation(); clear(); }}
-                            aria-label="Quitar archivo"
-                            disabled={uploading}
+                    )}
+
+                    {error && (
+                        <div className="sn-upload-msg sn-upload-msg--error" role="alert">
+                            <AlertCircle size={16} aria-hidden="true" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    {result && (
+                        <div className="sn-upload-msg sn-upload-msg--success" role="status">
+                            <CheckCircle2 size={16} aria-hidden="true" />
+                            <div>
+                                <strong>Importación completada.</strong>
+                                <ul className="sn-upload-msg__list">
+                                    {typeof result.total      === 'number' && <li>Total procesados: {result.total}</li>}
+                                    {typeof result.creados    === 'number' && <li>Creados: {result.creados}</li>}
+                                    {typeof result.duplicados === 'number' && <li>Duplicados: {result.duplicados}</li>}
+                                    {Array.isArray(result.errores) && result.errores.length > 0 && (
+                                        <li>Con errores: {result.errores.length}</li>
+                                    )}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="sn-form__actions">
+                        <Button
+                            onClick={upload}
+                            loading={uploading}
+                            disabled={!file || uploading}
                         >
-                            <X size={16} aria-hidden="true" />
-                        </button>
+                            {!uploading && <UploadCloud size={16} aria-hidden="true" />}
+                            {uploading ? 'Importando…' : 'Importar archivo'}
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={clear}
+                            disabled={uploading || (!file && !result && !error)}
+                        >
+                            Limpiar
+                        </Button>
                     </div>
-                )}
-
-                {error && (
-                    <div className="sn-upload-msg sn-upload-msg--error" role="alert">
-                        <AlertCircle size={16} aria-hidden="true" />
-                        <span>{error}</span>
-                    </div>
-                )}
-
-                {result && (
-                    <div className="sn-upload-msg sn-upload-msg--success" role="status">
-                        <CheckCircle2 size={16} aria-hidden="true" />
-                        <div>
-                            <strong>Importación completada.</strong>
-                            <ul className="sn-upload-msg__list">
-                                {typeof result.total      === 'number' && <li>Total procesados: {result.total}</li>}
-                                {typeof result.creados    === 'number' && <li>Creados: {result.creados}</li>}
-                                {typeof result.duplicados === 'number' && <li>Duplicados: {result.duplicados}</li>}
-                                {Array.isArray(result.errores) && result.errores.length > 0 && (
-                                    <li>Con errores: {result.errores.length}</li>
-                                )}
-                            </ul>
-                        </div>
-                    </div>
-                )}
-
-                <div className="sn-form__actions">
-                    <Button
-                        onClick={upload}
-                        loading={uploading}
-                        disabled={!file || uploading}
-                    >
-                        {!uploading && <UploadCloud size={16} />}
-                        {uploading ? 'Importando…' : 'Importar archivo'}
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={clear}
-                        disabled={uploading || (!file && !result && !error)}
-                    >
-                        Limpiar
-                    </Button>
                 </div>
-            </div>
+            </Card>
 
             <IonToast
                 isOpen={toast.open}

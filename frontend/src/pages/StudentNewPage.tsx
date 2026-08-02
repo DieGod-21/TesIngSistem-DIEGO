@@ -7,7 +7,8 @@
  */
 
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
+import { PageHeader } from '../components/ui';
 import StudentManualForm from '../components/student-new/StudentManualForm';
 import BulkUploadCard from '../components/student-new/BulkUploadCard';
 
@@ -15,25 +16,17 @@ import '../styles/student-new.css';
 
 const StudentNewPage: React.FC = () => (
     <div className="sn-body">
-            <nav className="sn-breadcrumb" aria-label="Navegación secundaria">
-                <span className="sn-breadcrumb__item">Inicio</span>
-                <ChevronRight size={14} className="sn-breadcrumb__sep" aria-hidden="true" />
-                <span className="sn-breadcrumb__item sn-breadcrumb__item--active">
-                    Nuevo Registro
-                </span>
-            </nav>
+        <PageHeader
+            kicker="Padrón académico"
+            icon={<UserPlus size={22} />}
+            title="Registrar estudiantes"
+            subtitle="Da de alta un expediente de Proyecto de Graduación uno a uno, o importa una cohorte completa desde Excel o PDF."
+        />
 
-            <div className="sn-page-header">
-                <h1 className="sn-page-title">Registro de Estudiantes</h1>
-                <p className="sn-page-subtitle">
-                    Inscriba nuevos estudiantes de Proyecto de Graduación de forma individual o masiva.
-                </p>
-            </div>
-
-            <div className="sn-grid">
-                <StudentManualForm />
-                <BulkUploadCard />
-            </div>
+        <div className="sn-grid">
+            <StudentManualForm />
+            <BulkUploadCard />
+        </div>
     </div>
 );
 
