@@ -34,7 +34,7 @@
     border-radius: 10px;
     border: 1px solid transparent;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
-    font-size: 0.85rem;
+    font-size: var(--text-base);
     font-family: var(--font-main);
     line-height: 1.4;
     pointer-events: all;
@@ -77,22 +77,22 @@
 /* ─── Partes del toast ─────────────────────────────────────────────── */
 
 .toast__icon {
-    font-size: 1rem;
-    font-weight: 900;
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
     line-height: 1.4;
     flex-shrink: 0;
 }
 
 .toast__message {
     flex: 1;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
 }
 
 .toast__close {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
     line-height: 1;
     color: currentColor;
     opacity: 0.55;

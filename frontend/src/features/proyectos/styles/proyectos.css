@@ -75,15 +75,15 @@
 
 .proy-card__title {
     margin: 0;
-    font-size: 0.9375rem;
-    font-weight: 700;
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
     color: var(--text-primary);
     line-height: 1.35;
 }
 
 .proy-card__desc {
     margin: 0;
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
     line-height: 1.5;
     display: -webkit-box;
@@ -94,16 +94,16 @@
 
 .proy-card__fase {
     margin: 4px 0 0;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--text-muted);
-    font-weight: 500;
+    font-weight: var(--weight-medium);
 }
 
 .proy-card__student {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     border-top: 1px solid var(--border);
     padding-top: 8px;
     margin-top: 4px;
@@ -120,8 +120,8 @@
     padding: 9px 18px;
     border-radius: 8px;
     border: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s, opacity 0.15s;
@@ -200,8 +200,8 @@
 
 .np-modal__title {
     margin: 0;
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
     color: var(--text-primary);
     display: flex;
     align-items: center;
@@ -251,8 +251,8 @@
 }
 
 .np-label {
-    font-size: 0.8125rem;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
     color: var(--text-secondary);
 }
 
@@ -268,7 +268,7 @@
     padding: 9px 12px;
     border-radius: var(--radius-md);
     border: 1.5px solid var(--border-strong);
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     color: var(--text-primary);
     background: var(--surface-card);
     outline: none;
@@ -303,9 +303,9 @@
 }
 
 .np-field-error {
-    font-size: 0.78rem;
+    font-size: var(--text-xs);
     color: var(--color-danger);
-    font-weight: 500;
+    font-weight: var(--weight-medium);
 }
 
 .np-api-error {
@@ -314,8 +314,8 @@
     background: var(--color-danger-light);
     border: 1px solid color-mix(in oklch, var(--color-danger) 35%, transparent);
     color: var(--color-danger);
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
 }
 
 /* ── Modal footer ────────────────────────────────────────────────── */

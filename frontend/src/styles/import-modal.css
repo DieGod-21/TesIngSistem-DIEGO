@@ -48,8 +48,8 @@
 }
 
 .im-modal__title {
-    font-size: 1.125rem;
-    font-weight: 700;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
     color: var(--text-primary);
     margin: 0;
 }
@@ -106,8 +106,8 @@
 }
 
 .im-section__heading h3 {
-    font-size: 0.9375rem;
-    font-weight: 700;
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
     color: var(--text-primary);
     margin: 0;
 }
@@ -115,12 +115,12 @@
 /* Badge de formato: color-mix sobre el semántico → válido en claro y oscuro. */
 .im-section__badge {
     margin-left: auto;
-    font-size: 0.6875rem;
-    font-weight: 700;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 2px 8px;
-    border-radius: 99px;
+    border-radius: var(--radius-pill);
     background: color-mix(in oklch, var(--color-success) 16%, transparent);
     color: var(--color-success);
 }
@@ -131,7 +131,7 @@
 }
 
 .im-section__hint {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
     margin: 0;
 }
@@ -177,7 +177,7 @@
     padding: 8px 12px;
     border-radius: var(--radius-md);
     border: 1.5px dashed var(--border-strong);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
     cursor: pointer;
     background: var(--surface-raised);
@@ -207,8 +207,8 @@
 }
 
 .im-label {
-    font-size: 0.8125rem;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
     color: var(--text-secondary);
     white-space: nowrap;
 }
@@ -218,7 +218,7 @@
     padding: 8px 12px;
     border-radius: var(--radius-md);
     border: 1.5px solid var(--border-strong);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     color: var(--text-primary);
     background: var(--surface-card);
     cursor: pointer;

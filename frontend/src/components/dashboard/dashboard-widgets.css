@@ -15,7 +15,7 @@
     margin: 0;
     padding-top: 0.75rem;
     border-top: 1px solid var(--border);
-    font-size: 0.82rem;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
 }
 .dash-widget__insight svg { color: var(--color-primary); flex-shrink: 0; }
@@ -41,8 +41,8 @@
     background: linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-primary-soft-2) 100%);
     box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.5);
 }
-.dash-widget__empty-title { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
-.dash-widget__empty-sub { margin: 0; font-size: 0.8rem; color: var(--text-muted); max-width: 30ch; }
+.dash-widget__empty-title { margin: 0; font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--text-primary); }
+.dash-widget__empty-sub { margin: 0; font-size: var(--text-sm); color: var(--text-muted); max-width: 30ch; }
 
 /* ═══ 1. Progreso académico ═══ */
 .progress-widget {
@@ -68,17 +68,17 @@
     justify-content: center;
 }
 .ring__value {
-    font-size: 1.75rem;
-    font-weight: 800;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
     letter-spacing: -0.03em;
     color: var(--text-primary);
     line-height: 1;
     font-variant-numeric: tabular-nums;
 }
-.ring__pct { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); margin-left: 1px; }
+.ring__pct { font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--text-secondary); margin-left: 1px; }
 .ring__caption {
-    font-size: 0.62rem;
-    font-weight: 700;
+    font-size: var(--text-3xs);
+    font-weight: var(--weight-bold);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-muted);
@@ -87,18 +87,18 @@
 
 /* Leyenda */
 .progress-legend { list-style: none; margin: 0; padding: 0; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
-.progress-legend__row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
+.progress-legend__row { display: flex; align-items: center; gap: 0.5rem; font-size: var(--text-sm); }
 .progress-legend__dot { width: 0.6rem; height: 0.6rem; border-radius: 3px; flex-shrink: 0; }
 .progress-legend__dot--ok { background: var(--color-success); }
 .progress-legend__dot--pending { background: var(--color-warning); }
 .progress-legend__label { color: var(--text-secondary); }
-.progress-legend__value { margin-left: auto; font-weight: 700; color: var(--text-primary); }
+.progress-legend__value { margin-left: auto; font-weight: var(--weight-bold); color: var(--text-primary); }
 .progress-legend__row--total {
     padding-top: 0.55rem;
     margin-top: 0.15rem;
     border-top: 1px dashed var(--border);
 }
-.progress-legend__row--total .progress-legend__label { font-weight: 600; color: var(--text-primary); }
+.progress-legend__row--total .progress-legend__label { font-weight: var(--weight-semibold); color: var(--text-primary); }
 
 /* ═══ 2. Próximas entregas ═══ */
 .deadline-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.85rem; }
@@ -119,11 +119,11 @@
     background: var(--color-warning-light);
     border-color: color-mix(in oklch, var(--color-warning) 35%, transparent);
 }
-.deadline-item__month { font-size: 0.58rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
-.deadline-item__day { font-size: 1.15rem; font-weight: 800; line-height: 1; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.deadline-item__month { font-size: var(--text-3xs); font-weight: var(--weight-bold); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.deadline-item__day { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: 1; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .deadline-item__body { flex: 1; min-width: 0; }
-.deadline-item__title { margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
-.deadline-item__sub { margin: 2px 0 0; font-size: 0.75rem; color: var(--text-muted); }
+.deadline-item__title { margin: 0; font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.deadline-item__sub { margin: 2px 0 0; font-size: var(--text-xs); color: var(--text-muted); }
 
 /* ═══ 3. Timeline de actividad ═══ */
 .timeline { list-style: none; margin: 0; padding: 0; position: relative; }
@@ -153,8 +153,8 @@
 .timeline__dot--warning { background: var(--color-warning); }
 .timeline__dot--danger  { background: var(--color-danger); }
 .timeline__body { flex: 1; min-width: 0; }
-.timeline__text { margin: 0; font-size: 0.83rem; color: var(--text-primary); line-height: 1.4; }
-.timeline__time { font-size: 0.72rem; color: var(--text-muted); }
+.timeline__text { margin: 0; font-size: var(--text-sm); color: var(--text-primary); line-height: 1.4; }
+.timeline__time { font-size: var(--text-xs); color: var(--text-muted); }
 
 /* ── Rail lateral: layout + entrada escalonada ── */
 .dash-aside { display: flex; flex-direction: column; gap: 1.5rem; }

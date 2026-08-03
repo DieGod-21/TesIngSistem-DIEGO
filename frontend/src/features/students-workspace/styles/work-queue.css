@@ -28,14 +28,14 @@
 
 .wq__title {
     margin: 0;
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
     color: var(--text-primary);
 }
 
 .wq__subtitle {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-muted);
 }
 
@@ -98,8 +98,8 @@
     border-radius: var(--radius-lg);
     background: var(--surface-card);
     color: var(--text-muted);
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
     cursor: pointer;
     transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
 }
@@ -166,8 +166,8 @@
 }
 
 .wq__name {
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-base);
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
@@ -175,7 +175,7 @@
 }
 
 .wq__reason {
-    font-size: 0.78rem;
+    font-size: var(--text-xs);
     color: var(--text-secondary);
 }
 
@@ -190,22 +190,22 @@
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
     color: var(--color-primary);
     white-space: nowrap;
 }
 
 .wq__overflow {
     margin: 2px 0 0;
-    font-size: 0.78rem;
+    font-size: var(--text-xs);
     color: var(--text-muted);
 }
 .wq__overflow strong { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
 .wq__note {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-muted);
 }
 
@@ -220,13 +220,13 @@
 }
 .wq__reward-title {
     margin: 4px 0 0;
-    font-weight: 700;
-    font-size: 0.9rem;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-base);
     color: var(--text-primary);
 }
 .wq__reward-sub {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--text-muted);
 }
 
@@ -245,12 +245,12 @@
     margin-left: auto;
     padding: 4px 10px;
     border: 1px solid color-mix(in oklch, var(--color-primary) 30%, transparent);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--color-primary-soft);
     color: var(--color-primary-hover);
     font: inherit;
-    font-size: 0.76rem;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
     cursor: pointer;
     transition: background var(--transition-fast);
 }

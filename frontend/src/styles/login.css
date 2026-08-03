@@ -152,16 +152,16 @@
   display: block;
 }
 .auth-branding__faculty {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.025em;
   margin: 0;
 }
 .auth-branding__quote {
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   margin-top: 1rem;
   color: oklch(0.88 0.05 255);
-  font-weight: 300;
+  font-weight: var(--weight-normal);
   font-style: italic;
 }
 
@@ -173,12 +173,12 @@
   max-width: 28rem;
 }
 .auth-branding__title {
-  font-size: 2.8rem;
-  font-weight: 800;
+  font-size: var(--text-5xl);
+  font-weight: var(--weight-bold);
   margin: 0 0 1rem 0;
 }
 .auth-branding__subtitle {
-  font-size: 1rem;
+  font-size: var(--text-md);
   color: oklch(0.88 0.05 255);
   line-height: 1.6;
   margin: 0;
@@ -199,8 +199,8 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
   color: oklch(0.93 0.02 275);
 }
 .auth-feature__icon {
@@ -223,7 +223,7 @@
 .auth-branding__footer {
   position: relative;
   z-index: 1;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: oklch(0.82 0.06 255);
   margin-top: auto;
 }
@@ -277,8 +277,8 @@
   margin-bottom: 0.75rem;
 }
 .auth-mobile-logo__title {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
   color: var(--umg-blue);
 }
 
@@ -290,15 +290,15 @@
 @media (min-width: 768px) { .auth-form-header { text-align: left; } }
 
 .auth-form-header__title {
-  font-size: 1.875rem;
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 .auth-form-header__subtitle {
   color: var(--text-secondary);
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 /* ─── Formulario ──────────────────────────────────────────────────── */
@@ -313,8 +313,8 @@
   gap: 0.5rem;
 }
 .auth-form__label {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
   color: var(--text-secondary);
 }
 
@@ -343,7 +343,7 @@
   --padding-bottom: 0.85rem;
   --color: var(--text-primary);
   --placeholder-color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
 }
 .auth-input-wrapper--error {
   border-color: var(--color-danger);
@@ -357,9 +357,9 @@
 .auth-field-error {
   min-height: 18px;
   margin-top: 6px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--color-danger);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   line-height: 1.4;
 }
 
@@ -371,8 +371,8 @@
   --color: var(--color-primary-contrast);
   --border-radius: var(--radius-md);
   --box-shadow: var(--shadow-sm);
-  font-weight: 700;
-  font-size: 1rem;
+  font-weight: var(--weight-bold);
+  font-size: var(--text-md);
   height: 3.25rem;
   letter-spacing: 0.01em;
 }
@@ -420,7 +420,7 @@
   text-align: center;
 }
 .auth-secondary p {
-  font-size: 0.875rem;
+  font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
 }
@@ -430,7 +430,7 @@
   right: 16px;
   bottom: 16px;
   z-index: 9999;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   opacity: 0.85;
   pointer-events: none;
@@ -487,8 +487,8 @@ ion-content::part(scroll) {
   }
   .auth-mobile-logo__title {
     color: oklch(1 0 0 / 0.98);
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
   }
   .auth-form-container {
     background: var(--surface-card);

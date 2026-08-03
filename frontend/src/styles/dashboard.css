@@ -128,14 +128,14 @@
 }
 
 .dash-sidebar__brand-name {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
     margin: 0;
     line-height: 1.2;
 }
 
 .dash-sidebar__brand-sub {
-    font-size: 0.625rem;
+    font-size: var(--text-3xs);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     opacity: 0.75;
@@ -161,8 +161,8 @@
     padding: 10px 12px;
     border-radius: 8px;
     color: #cbd5e1;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
     text-decoration: none;
     background: none;
     border: none;
@@ -183,7 +183,7 @@
    que viaja (una sola pieza en movimiento) — sensación de que la app navega. */
 .dash-sidebar__nav-item--active {
     color: #ffffff;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
 }
 /* Icono activo con la firma cian de la aurora (igual que el nombre del hero). */
 .dash-sidebar__nav-item--active svg {
@@ -338,7 +338,7 @@
     padding: 8px 16px 8px 38px;
     border: 1px solid var(--dash-border);
     border-radius: 8px;
-    font-size: 0.85rem;
+    font-size: var(--text-base);
     background: var(--dash-bg);
     color: var(--dash-text-primary);
     outline: none;
@@ -406,15 +406,15 @@
     min-width: 0;
 }
 .dash-search-sug__name {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .dash-search-sug__meta {
-    font-size: 0.78rem;
+    font-size: var(--text-xs);
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -423,7 +423,7 @@
 
 .dash-search-panel__state {
     padding: 18px 16px;
-    font-size: 0.85rem;
+    font-size: var(--text-base);
     color: var(--text-muted);
     text-align: center;
 }
@@ -434,7 +434,7 @@
     gap: 6px;
     padding: 8px 12px;
     border-top: 1px solid var(--border);
-    font-size: 0.72rem;
+    font-size: var(--text-xs);
     color: var(--text-muted);
     background: var(--surface-raised);
 }
@@ -461,14 +461,14 @@
 }
 
 .dash-header__profile-name {
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
     color: var(--dash-text-primary);
     margin: 0;
 }
 
 .dash-header__profile-role {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--dash-text-secondary);
     margin: 0;
 }
@@ -503,8 +503,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: oklch(0.86 0.06 275);
@@ -519,19 +519,19 @@
 }
 .dash-hero__title {
     font-size: clamp(1.6rem, 3.2vw, 2.15rem);
-    font-weight: 800;
+    font-weight: var(--weight-bold);
     letter-spacing: -0.03em;
     line-height: 1.05;
     margin: 0 0 0.5rem;
     color: #fff;
 }
 .dash-hero__title strong {
-    font-weight: 800;
+    font-weight: var(--weight-bold);
     /* nombre resaltado con la firma cian de la aurora */
     color: oklch(0.86 0.11 225);
 }
 .dash-hero__subtitle {
-    font-size: 0.92rem;
+    font-size: var(--text-base);
     color: oklch(0.88 0.03 275);
     margin: 0;
     max-width: 60ch;
@@ -671,8 +671,8 @@ button.kpi-card {
     position: absolute;
     right: 18px;
     bottom: 18px;
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
     line-height: 1;
     color: var(--umg-navy);
     opacity: 0;
@@ -719,8 +719,8 @@ button.kpi-card {
 }
 
 .kpi-card__label {
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--dash-text-muted);
@@ -728,16 +728,16 @@ button.kpi-card {
 }
 
 .kpi-card__value {
-    font-size: 2.25rem;
-    font-weight: 900;
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-bold);
     color: var(--dash-text-primary);
     margin: 0;
     line-height: 1;
 }
 
 .kpi-card__trend {
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
 }
 
 .kpi-card__trend--up {
@@ -749,7 +749,7 @@ button.kpi-card {
 }
 
 .kpi-card__description {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--dash-text-muted);
     margin: 0;
 }
@@ -783,7 +783,7 @@ button.kpi-card {
     width: 100%;
     height: 8px;
     background: var(--border);
-    border-radius: 99px;
+    border-radius: var(--radius-pill);
     overflow: hidden;
     margin-top: 8px;
 }
@@ -791,7 +791,7 @@ button.kpi-card {
 .kpi-card__progress-bar {
     height: 100%;
     background: var(--umg-navy);
-    border-radius: 99px;
+    border-radius: var(--radius-pill);
     width: var(--kpi-progress, 0%);
     transition: width 0.4s ease;
 }
@@ -993,15 +993,15 @@ button.kpi-card {
 }
 
 .dash-completion__value {
-    font-size: 1.35rem;
-    font-weight: 800;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
     letter-spacing: -0.02em;
     line-height: 1;
     color: var(--text-primary);
 }
 
 .dash-completion__label {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--text-muted);
 }
 
@@ -1009,7 +1009,7 @@ button.kpi-card {
     grid-column: 1 / -1;
     margin-top: 8px;
     height: 5px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--surface-raised);
     overflow: hidden;
 }
