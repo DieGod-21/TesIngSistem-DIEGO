@@ -34,6 +34,11 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-8);
+    /* La altura se DECLARA. Antes emergía de padding + line-height + el tamaño
+       del icono que pasara quien llamaba, y el mismo `size` producía 34.8px o
+       36px según el icono. `min-height` fija el suelo sin impedir que un botón
+       con dos líneas crezca. */
+    min-height: var(--control-h-md);
     padding: var(--space-8) var(--space-16);
     border: 1px solid transparent;
     border-radius: var(--radius-md);
@@ -124,14 +129,48 @@
 
 /* ── Tamaños ── */
 .ui-btn--sm {
+    min-height: var(--control-h-sm);
     padding: var(--space-6) var(--space-12);
     font-size: var(--text-sm);
     border-radius: var(--radius-sm);
 }
 .ui-btn--lg {
+    min-height: var(--control-h-lg);
     padding: var(--space-12) var(--space-24);
     font-size: var(--text-md);
     border-radius: var(--radius-lg);
+}
+
+/* ── Botón de icono (cuadrado, sin texto) ────────────────────────────
+   Cerrar un modal es la MISMA acción en los tres diálogos del producto y
+   estaba implementada tres veces: `.im-modal__close` y `.np-modal__close`
+   a 32px, `.nu-modal__close` a 26px. Un solo control, un solo tamaño. */
+.ui-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background var(--transition-base), color var(--transition-base);
+}
+.ui-icon-btn:hover:not(:disabled) {
+    background: var(--surface-raised);
+    color: var(--text-primary);
+}
+.ui-icon-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+.ui-icon-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .ui-btn--block {
@@ -303,10 +342,13 @@
 }
 
 /* Buscador inline (icono + input): patrón único para filtros de lista. */
+/* Aquí el CONTROL es el envoltorio (dibuja borde, radio y foco); el <input>
+   interior va desnudo. Por eso la altura se declara en el envoltorio. */
 .ui-search {
     display: flex;
     align-items: center;
     gap: var(--space-8);
+    min-height: var(--control-h-lg);
     padding: 0 var(--space-12);
     background: var(--surface-card);
     border: 1px solid var(--border-strong);
@@ -559,10 +601,49 @@
     transition: color var(--transition-base);
 }
 
+/* ── Superficie de control (la CAJA de cualquier campo) ──────────────
+   Medición sobre render (iteración 9): 10 clases de campo con 6 alturas
+   (33/35/36/37/41px). `.ui-field__input`, el campo del sistema, se usaba en
+   UNA sola pantalla; los cinco modales fabricaban el suyo. Dentro de un mismo
+   formulario, el input medía 35px y el select 37px — 2px de diferencia entre
+   dos controles apilados.
+
+   La causa es la misma que la de los botones en la iteración 8: la altura
+   emergía de `padding + font-size` y cada modal eligió su padding.
+
+   `.ui-control` posee la caja —altura, padding, borde, radio, foco— y NADA
+   más. Las clases de cada pantalla conservan su ancho y su posición y la
+   componen, en vez de reimplementarla. Mismo patrón que `.ui-icon-btn`. */
+.ui-control {
+    min-height: var(--control-h-lg);
+    padding: var(--space-8) var(--space-14);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--surface-card);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--text-base);
+    outline: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.ui-control::placeholder { color: var(--text-muted); }
+.ui-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
+}
+.ui-control:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--surface-raised);
+}
+/* Un textarea crece con el contenido: la escala fija su SUELO, no su altura. */
+textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertical; }
+
 .ui-field__input {
     width: 100%;
     min-width: 0;
-    padding: var(--space-10) var(--space-14);
+    min-height: var(--control-h-lg);
+    padding: var(--space-8) var(--space-14);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-md);
     background: var(--surface-card);

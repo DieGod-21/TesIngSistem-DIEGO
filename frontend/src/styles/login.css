@@ -319,9 +319,13 @@
 }
 
 /* Input (envuelve al ion-input para un focus ring propio) */
+/* Patrón de ENVOLTORIO (como `.ui-search`): el borde, el radio y el foco los
+   dibuja el contenedor y el <input> va desnudo dentro, así que la altura de la
+   escala se declara aquí. Es la primera pantalla que ve cualquier usuario. */
 .auth-input-wrapper {
   display: flex;
   align-items: center;
+  min-height: var(--control-h-lg);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--surface-card);

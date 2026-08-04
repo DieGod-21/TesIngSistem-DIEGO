@@ -146,6 +146,27 @@
     --radius-xl:  1rem;
     --radius-pill: 999px;      /* píldoras: badges, chips, barras de progreso */
 
+    /* ── Altura de controles ─────────────────────────────────────────────
+       Medido sobre el render, no inventado. `.ui-btn` NO declaraba altura:
+       era el resultado de `padding + font-size × line-height + borde`, así que
+       cualquier sitio de llamada la cambiaba sin saberlo con solo elegir otro
+       tamaño de icono. Medición a 375px:
+
+           .ui-btn (md, icono 16)  34.80px   ← fraccionaria: borde con antialias
+           .ui-btn (md, icono 18)  36.00px   ← MISMO tamaño declarado, +1.2px
+           .ui-btn--sm             29.59px
+           .im/np-modal__close     32px      .nu-modal__close  26px
+
+       Seis tamaños de icono distintos circulan por los botones (12…18), así que
+       la altura era de facto aleatoria. Aquí se declara y deja de emerger.
+
+       Los valores no son nuevos: 44px ya es la altura de la navegación lateral
+       y de `.ui-chip`; 36 y 32 son los que ya producían md y los cierres. Se
+       formaliza lo que el producto ya hacía bien en algunos sitios. */
+    --control-h-sm: 2rem;      /* 32px — mínimo cómodo; > 24px de WCAG 2.5.8 */
+    --control-h-md: 2.25rem;   /* 36px — control por defecto */
+    --control-h-lg: 2.75rem;   /* 44px — objetivo táctil (Apple HIG, Material) */
+
     /* ── Tipografía ── */
     /* El paquete self-hosted registra la familia como "Inter Variable". */
     --font-main: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;

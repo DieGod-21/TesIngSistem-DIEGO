@@ -153,23 +153,8 @@
     margin: 0;
 }
 
-.nu-modal__close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-4);
-    border: none;
-    background: transparent;
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: background var(--transition-fast), color var(--transition-fast);
-}
-.nu-modal__close:hover:not(:disabled) {
-    background: var(--surface-raised);
-    color: var(--text-primary);
-}
-.nu-modal__close:disabled { opacity: 0.5; cursor: not-allowed; }
+/* `.nu-modal__close` ELIMINADO → `.ui-icon-btn`. Era el más divergente: sin
+   width/height (26px reales), sin `:focus-visible` propio y con otra opacidad. */
 
 .nu-modal__body {
     display: flex;
@@ -198,23 +183,10 @@
     color: var(--text-secondary);
 }
 
-.nu-input,
-.nu-select {
-    padding: var(--space-8) var(--space-12);
-    border: 1.5px solid var(--border-strong);
-    border-radius: var(--radius-md);
-    font-size: var(--text-base);
-    color: var(--text-primary);
-    background: var(--surface-card);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-    outline: none;
-    font-family: inherit;
-}
-.nu-input:focus,
-.nu-select:focus {
-    border-color: var(--color-primary);
-    box-shadow: var(--ring);
-}
+/* La CAJA la da `.ui-control` (altura, padding, borde, radio, foco). Aquí solo
+   queda lo que es propio de este formulario. El borde era de 1.5px frente al
+   1px del sistema, y el conjunto producía 35px de input contra 37px de select
+   apilados en el mismo formulario. */
 .nu-input--error { border-color: var(--color-danger); }
 
 .nu-field-error {

@@ -102,7 +102,7 @@ const EditNotaModal: React.FC<Props> = ({
                     <h2 id="en-title" className="en-modal__title">Editar Nota</h2>
                     <button
                         type="button"
-                        className="en-modal__close"
+                        className="ui-icon-btn"
                         onClick={handleClose}
                         aria-label="Cerrar"
                         disabled={loading}
@@ -117,7 +117,7 @@ const EditNotaModal: React.FC<Props> = ({
                         <select
                             id="en-curso"
                             data-autofocus
-                            className="en-select"
+                            className="ui-control en-select"
                             value={form.curso}
                             onChange={(e) => setForm((s) => ({ ...s, curso: e.target.value as '043' | '049' }))}
                             disabled={loading}
@@ -140,7 +140,7 @@ const EditNotaModal: React.FC<Props> = ({
                             min={0}
                             max={100}
                             step={0.01}
-                            className={`en-input${notaError ? ' en-input--error' : ''}`}
+                            className={`ui-control en-input${notaError ? ' en-input--error' : ''}`}
                             value={form.nota}
                             onChange={(e) => {
                                 setForm((s) => ({ ...s, nota: e.target.value }));
@@ -158,7 +158,7 @@ const EditNotaModal: React.FC<Props> = ({
                         <label htmlFor="en-obs" className="en-label">Observación (opcional)</label>
                         <textarea
                             id="en-obs"
-                            className="en-textarea"
+                            className="ui-control en-textarea"
                             value={form.observacion}
                             onChange={(e) => setForm((s) => ({ ...s, observacion: e.target.value }))}
                             placeholder="Notas adicionales…"

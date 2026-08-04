@@ -1,9 +1,15 @@
 /* ── Edit nota button (inline in grade row) ──────────────────────────── */
+/* Medido a 375px: 22px de alto. WCAG 2.5.8 (AA) exige 24px mínimo para un
+   objetivo que NO está embebido en una línea de texto, y este es un botón de
+   icono autónomo. Se ancla a la escala de controles en lugar de depender del
+   padding y del tamaño del icono. */
 .nota-edit-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: var(--space-4);
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
+    padding: 0;
     border: none;
     background: transparent;
     border-radius: var(--radius-sm);
@@ -89,26 +95,7 @@
     margin: 0;
 }
 
-.en-modal__close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-4);
-    border: none;
-    background: transparent;
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: background var(--transition-fast), color var(--transition-fast);
-}
-.en-modal__close:hover:not(:disabled) {
-    background: var(--surface-raised);
-    color: var(--text-primary);
-}
-.en-modal__close:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+/* `.en-modal__close` ELIMINADO → `.ui-icon-btn`. */
 
 .en-modal__body {
     display: flex;
@@ -136,18 +123,12 @@
     color: var(--text-secondary);
 }
 
+/* La CAJA la da `.ui-control`. */
 .en-input,
 .en-select,
 .en-textarea {
-    padding: var(--space-8) var(--space-12);
-    border: 1.5px solid var(--border-strong);
-    border-radius: var(--radius-md);
-    font-size: var(--text-base);
-    color: var(--text-primary);
-    background: var(--surface-card);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-    outline: none;
-    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
 }
 .en-input:focus,
 .en-select:focus,

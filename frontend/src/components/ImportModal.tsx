@@ -146,7 +146,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                     <h2 className="im-modal__title">Importación masiva</h2>
                     <button
                         type="button"
-                        className="im-modal__close"
+                        className="ui-icon-btn"
                         onClick={handleClose}
                         aria-label="Cerrar modal"
                         disabled={busy}
@@ -210,7 +210,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                             <label htmlFor="im-curso" className="im-label">Curso:</label>
                             <select
                                 id="im-curso"
-                                className="im-select"
+                                className="ui-control im-select"
                                 value={curso}
                                 onChange={(e) => setCurso(e.target.value)}
                                 disabled={not.loading}

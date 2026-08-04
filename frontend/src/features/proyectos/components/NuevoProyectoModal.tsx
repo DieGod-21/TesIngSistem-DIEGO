@@ -99,7 +99,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                     </h2>
                     <button
                         type="button"
-                        className="np-modal__close"
+                        className="ui-icon-btn"
                         onClick={handleClose}
                         aria-label="Cerrar"
                         disabled={loading}
@@ -117,7 +117,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                             id="np-titulo"
                             data-autofocus
                             type="text"
-                            className={`np-input${errors.titulo ? ' np-input--error' : ''}`}
+                            className={`ui-control np-input${errors.titulo ? ' np-input--error' : ''}`}
                             value={form.titulo}
                             onChange={set('titulo')}
                             placeholder="Ej. Sistema de gestión de inventarios"
@@ -135,7 +135,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         </label>
                         <textarea
                             id="np-desc"
-                            className={`np-textarea${errors.descripcion ? ' np-input--error' : ''}`}
+                            className={`ui-control np-textarea${errors.descripcion ? ' np-input--error' : ''}`}
                             value={form.descripcion}
                             onChange={set('descripcion')}
                             placeholder="Describe brevemente el proyecto…"
@@ -151,7 +151,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         <label htmlFor="np-fase" className="np-label">Fase</label>
                         <select
                             id="np-fase"
-                            className="np-select"
+                            className="ui-control np-select"
                             value={form.fase}
                             onChange={set('fase')}
                             disabled={loading}

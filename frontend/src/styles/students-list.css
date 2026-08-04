@@ -77,14 +77,10 @@
     white-space: nowrap;
 }
 
+/* La CAJA la da `.ui-control`; aquí solo el tono y el cursor. */
 .sl-listbar__perpage select {
-    padding: var(--space-6) var(--space-10);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface-card);
     color: var(--text-secondary);
     font-size: var(--text-sm);
-    font-family: inherit;
     cursor: pointer;
     transition: border-color var(--transition-fast);
 }

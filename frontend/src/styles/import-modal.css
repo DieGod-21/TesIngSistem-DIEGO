@@ -54,34 +54,9 @@
     margin: 0;
 }
 
-.im-modal__close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-md);
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.im-modal__close:hover:not(:disabled) {
-    background: var(--surface-raised);
-    color: var(--text-primary);
-}
-
-.im-modal__close:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.im-modal__close:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-}
+/* `.im-modal__close` ELIMINADO → `.ui-icon-btn`. Los cuatro modales del
+   producto implementaban su propio botón de cerrar (32/32/26px, dos radios,
+   dos opacidades y solo uno con `:focus-visible`). */
 
 .im-modal__body {
     padding: var(--space-24);
@@ -201,27 +176,11 @@
     white-space: nowrap;
 }
 
+/* La CAJA la da `.ui-control`; aquí solo el reparto de espacio en su fila.
+   El comentario anterior decía «anillo de foco idéntico al resto de campos del
+   DS» y lo replicaba a mano: por eso podía divergir, y divergía (1.5px de borde,
+   `--text-sm` en lugar de `--text-base`, 36px de alto frente a 35 y 37). */
 .im-select {
     flex: 1;
-    padding: var(--space-8) var(--space-12);
-    border-radius: var(--radius-md);
-    border: 1.5px solid var(--border-strong);
-    font-size: var(--text-sm);
-    color: var(--text-primary);
-    background: var(--surface-card);
     cursor: pointer;
-    outline: none;
-    font-family: inherit;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-/* Anillo de foco idéntico al resto de campos del DS (.en-*, .nu-*). */
-.im-select:focus {
-    border-color: var(--color-primary);
-    box-shadow: var(--ring);
-}
-
-.im-select:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }

@@ -262,6 +262,7 @@ const DefaultStudentsView: React.FC<{
                     <label className="sl-listbar__perpage">
                         <span>Por página</span>
                         <select
+                            className="ui-control"
                             value={pagination.limit}
                             onChange={(e) => changePerPage(Number(e.target.value))}
                             aria-label="Resultados por página"

@@ -331,8 +331,12 @@
     color: var(--color-primary);
 }
 
+/* El buscador global es el control MÁS FRECUENTE del producto: aparece en las
+   8 superficies medidas. Estaba a 37px, fuera de la escala. Conserva su tinta
+   propia (vive sobre la cabecera) pero no su altura. */
 .dash-header__search {
     width: 100%;
+    min-height: var(--control-h-lg);
     padding: var(--space-8) var(--space-16) var(--space-8) var(--space-40);
     border: 1px solid var(--dash-border);
     border-radius: var(--radius-md);

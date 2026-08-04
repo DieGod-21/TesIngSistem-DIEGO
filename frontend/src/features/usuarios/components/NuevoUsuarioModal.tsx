@@ -103,7 +103,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                     </h2>
                     <button
                         type="button"
-                        className="nu-modal__close"
+                        className="ui-icon-btn"
                         onClick={handleClose}
                         aria-label="Cerrar"
                         disabled={loading}
@@ -121,7 +121,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                             id="nu-nombre"
                             data-autofocus
                             type="text"
-                            className={`nu-input${errors.nombre ? ' nu-input--error' : ''}`}
+                            className={`ui-control nu-input${errors.nombre ? ' nu-input--error' : ''}`}
                             value={form.nombre}
                             onChange={set('nombre')}
                             placeholder="Nombre completo"
@@ -140,7 +140,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         <input
                             id="nu-email"
                             type="email"
-                            className={`nu-input${errors.email ? ' nu-input--error' : ''}`}
+                            className={`ui-control nu-input${errors.email ? ' nu-input--error' : ''}`}
                             value={form.email}
                             onChange={set('email')}
                             placeholder="correo@ejemplo.com"
@@ -156,7 +156,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         <label htmlFor="nu-rol" className="nu-label">Rol</label>
                         <select
                             id="nu-rol"
-                            className="nu-select"
+                            className="ui-control nu-select"
                             value={form.rol}
                             onChange={set('rol')}
                             disabled={loading}

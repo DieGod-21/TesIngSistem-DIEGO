@@ -174,7 +174,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                             step={0.01}
                             value={score}
                             onChange={(e) => { setScore(e.target.value); if (scoreError) setScoreError(null); }}
-                            className="eval-form__input"
+                            className="ui-control eval-form__input"
                             placeholder="Ej. 85"
                             disabled={busy !== null}
                             aria-invalid={scoreError != null}
@@ -199,7 +199,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                             id="ev-comments"
                             value={comments}
                             onChange={(e) => setComments(e.target.value)}
-                            className="eval-form__textarea"
+                            className="ui-control eval-form__textarea"
                             placeholder="Comentarios para el estudiante…"
                             disabled={busy !== null}
                         />

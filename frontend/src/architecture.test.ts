@@ -270,6 +270,108 @@ describe('Una sola forma de codificar estado', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
+describe('Escala de altura de controles', () => {
+    /**
+     * Medición a 375px (iteración 8): `.ui-btn` —LA primitiva— renderizaba a
+     * 30, 34.8 y 36px. No porque tuviera tres tamaños, sino porque NO declaraba
+     * altura: emergía de `padding + font-size × line-height`, y el icono que
+     * pasara quien llamaba movía la caja. Circulan seis tamaños de icono
+     * distintos (12…18) por los botones del producto.
+     *
+     * La altura de un control es un contrato del sistema de diseño, no un
+     * residuo del contenido.
+     */
+    it('cada tamaño de botón declara su altura', () => {
+        const ui = read(cssFiles.find((f) => rel(f).endsWith('components/ui/ui.css'))!);
+        for (const sel of ['.ui-btn', '.ui-btn--sm', '.ui-btn--lg']) {
+            const block = new RegExp(`\\${sel}\\s*\\{([^}]*)\\}`).exec(ui)?.[1] ?? '';
+            expect(block, `${sel} debe fijar min-height con un token de control`).toMatch(/min-height:\s*var\(--control-h-/);
+        }
+    });
+
+    /**
+     * Cerrar un diálogo es la misma acción en los cuatro modales. Estaba
+     * implementada cuatro veces, con tres tamaños y solo UNA con `:focus-visible`
+     * propio: el afordance de teclado dependía del modal en el que estuvieras.
+     */
+    it('ningún modal define la GEOMETRÍA de su botón de cerrar', () => {
+        // Redefinir el COLOR es composición legítima: `.toast__close` se pinta
+        // sobre una superficie tonal y hereda su tinta. Redefinir el TAMAÑO es
+        // reimplementar el control y desanclarlo de la escala.
+        const GEOMETRY = /(?<![-\w])(width|height|padding)\s*:/;
+        const offenders: string[] = [];
+        for (const f of cssFiles) {
+            const css = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            for (const m of css.matchAll(/([^{}]*__close)\s*\{([^}]*)\}/g)) {
+                if (GEOMETRY.test(m[2])) offenders.push(`${rel(f)} → ${m[1].trim()}`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+
+    /**
+     * Iteración 9: 10 clases de campo con 6 alturas (33/35/36/37/41px). El
+     * campo del sistema se usaba en UNA pantalla; los cinco modales fabricaban
+     * el suyo, con borde de 1.5px frente al 1px del sistema. Dentro del mismo
+     * formulario el input medía 35px y el select 37px.
+     *
+     * La CAJA de un campo (padding, borde, radio, foco) la posee `.ui-control`.
+     * Una hoja de feature que la redefina está reimplementando la primitiva.
+     */
+    it('ninguna hoja de feature redefine la caja de un campo', () => {
+        const offenders: string[] = [];
+        for (const f of cssFiles) {
+            if (themeFile(f) || rel(f).endsWith('components/ui/ui.css')) continue;
+            const css = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+                const [, sel, body] = m;
+                // Solo selectores de campo: input / select / textarea.
+                if (!/(input|select|textarea)/i.test(sel)) continue;
+                if (/--error|:disabled|::placeholder|:focus/.test(sel)) continue;
+                // Patrón de ENVOLTORIO (`.ui-search`, `.auth-input-wrapper`):
+                // el contenedor ES el control y el campo va desnudo dentro. Es
+                // composición válida, no una caja duplicada.
+                if (/wrapper|__wrap\b/.test(sel)) continue;
+                const box = /(?<![-\w])(padding|border)\s*:/.test(body);
+                if (box) offenders.push(`${rel(f)} → ${sel.trim().slice(0, 46)}`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+
+    /**
+     * Una altura fijada a mano en el rango táctil vuelve a desanclar la escala.
+     *
+     * LÍNEA BASE: la regla destapó 11 alturas literales más en archivos que esta
+     * iteración no midió sobre el render. No se corrigen a ciegas —cambiar el
+     * tamaño de algo que no se ha observado es exactamente el error que este
+     * programa persigue— ni se silencia la regla. Se congela el recuento: la
+     * deuda solo puede encoger. Cada una debe verificarse VIÉNDOLA antes de
+     * tocarla; algunas serán geometría legítima (avatares, barras) y no
+     * controles, y entonces la entrada se retira con su justificación.
+     */
+    it('no crecen las alturas literales en el rango táctil', () => {
+        const actual: Record<string, number> = {};
+        for (const f of cssFiles) {
+            if (themeFile(f)) continue;
+            const n = [...read(f).replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(?<![-\w])height:\s*(\d+)px/g)]
+                .filter((m) => Number(m[1]) >= 24 && Number(m[1]) <= 48).length;
+            if (n > 0) actual[rel(f)] = n;
+        }
+        expectNoRegression(actual, {
+            'components/thesis/thesis-status.css': 1,
+            'components/ui/ui.css': 2,
+            'features/students-workspace/styles/quick-view.css': 1,
+            'features/students-workspace/styles/work-queue.css': 1,
+            'styles/dashboard.css': 2,
+            'styles/student-detail.css': 1,
+            'styles/student-new.css': 1,
+            'styles/students-list.css': 2,
+        }, 'Usa la escala --control-h-* de theme/variables.css.');
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
 describe('Ninguna fecha cruda en pantalla', () => {
     /**
      * La ficha de terna renderizaba `{terna.fecha_evaluacion}` — el ISO 8601

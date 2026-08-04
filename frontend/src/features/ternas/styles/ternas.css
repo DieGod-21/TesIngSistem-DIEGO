@@ -233,18 +233,13 @@
   font-size: var(--text-xs);
   color: var(--text-muted);
 }
+/* La CAJA la da `.ui-control`. Este es el formulario que usa el EVALUADOR para
+   calificar: el más importante del producto para ese rol, y estaba fuera de la
+   escala porque vive tras un <details> colapsado y ninguna sonda lo alcanzaba. */
 .eval-form__input,
 .eval-form__textarea {
   width: 100%;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  padding: var(--space-10) var(--space-12);
-  font-size: var(--text-md);
-  font-family: inherit;
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  background: var(--surface-card);
+  box-sizing: border-box;
 }
 .eval-form__input:focus,
 .eval-form__textarea:focus {

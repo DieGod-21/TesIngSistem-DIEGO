@@ -118,7 +118,7 @@ const ToastItem: React.FC<{ item: ToastItem; onDismiss: (id: string) => void }> 
         <span className="toast__icon" aria-hidden="true">{ICONS[item.type]}</span>
         <span className="toast__message">{item.message}</span>
         <button
-            className="toast__close"
+            className="ui-icon-btn toast__close"
             aria-label="Cerrar notificación"
             onClick={() => onDismiss(item.id)}
         >×</button>

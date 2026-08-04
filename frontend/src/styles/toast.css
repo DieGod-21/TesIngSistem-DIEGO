@@ -88,22 +88,23 @@
     font-weight: var(--weight-medium);
 }
 
+/* Compone la GEOMETRÍA de `.ui-icon-btn` (tamaño de la escala de controles y
+   anillo de foco, que aquí no existía) y solo redefine el COLOR: el toast se
+   pinta sobre una superficie tonal y debe heredar su tinta, no la del sistema.
+   Antes medía ~18px de alto: por debajo del mínimo de 24px de WCAG 2.5.8. */
 .toast__close {
-    background: none;
-    border: none;
-    cursor: pointer;
     font-size: var(--text-lg);
     line-height: var(--leading-none);
     color: currentColor;
     opacity: 0.55;
-    padding: 0 var(--space-2);
     border-radius: var(--radius-sm);
     transition: opacity var(--transition-fast);
-    flex-shrink: 0;
     align-self: flex-start;
 }
 
-.toast__close:hover {
+.toast__close:hover:not(:disabled) {
+    background: transparent;   /* el hover del sistema no aplica sobre color */
+    color: currentColor;
     opacity: 0.9;
 }
 
