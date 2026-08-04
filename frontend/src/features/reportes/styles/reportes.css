@@ -131,11 +131,11 @@
   padding: var(--space-14) var(--space-16);
   font-size: var(--text-base);
   text-align: left;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--surface-raised);
 }
 .reportes-table th {
   background: var(--surface-raised);
-  color: #475569;
+  color: var(--text-secondary);
   font-weight: var(--weight-bold);
   font-size: var(--text-2xs);
   letter-spacing: 0.08em;
@@ -188,8 +188,8 @@
   min-width: 28px;
   padding: var(--space-2) var(--space-6);
   border-radius: var(--radius-sm);
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--surface-raised);
+  color: var(--text-primary);
   font-weight: var(--weight-bold);
   font-size: var(--text-sm);
   text-align: center;
@@ -199,37 +199,15 @@
 .rep-carnet {
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: var(--text-sm);
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .rep-promedio {
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
-  color: #0f172a;
+  color: var(--text-primary);
 }
-.rep-promedio--none { color: #94a3b8; font-weight: var(--weight-medium); }
-
-.rep-res {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-6);
-  padding: var(--space-2) var(--space-10);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border: 1px solid transparent;
-  white-space: nowrap;
-}
-.rep-res--aprueba_tesis { color: #065f46; background: #d1fae5; border-color: rgba(16,185,129,.25); }
-.rep-res--aprueba_curso { color: #92400e; background: #fef3c7; border-color: rgba(245,158,11,.30); }
-.rep-res--reprobado     { color: #991b1b; background: #fee2e2; border-color: rgba(239,68,68,.30); }
-.rep-res--pendiente     { color: #475569; background: #f1f5f9; border-color: #cbd5e1; }
-.rep-res__dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: currentColor;
-}
+.rep-promedio--none { color: var(--text-muted); font-weight: var(--weight-medium); }
 
 /* Detalle */
 .report-detail-grid {
@@ -304,21 +282,9 @@
     border-color: var(--dash-border);
     color: var(--dash-text-primary);
 }
-[data-theme="dark"] .report-card__title {
-    color: var(--dash-text-secondary);
-}
-[data-theme="dark"] .rep-promedio,
-[data-theme="dark"] .report-evaluator__name,
-[data-theme="dark"] .report-evaluator__score {
-    color: var(--dash-text-primary);
-}
 [data-theme="dark"] .reportes-table th,
 [data-theme="dark"] .reportes-table td {
     border-bottom-color: var(--dash-border);
-}
-[data-theme="dark"] .reportes-table th {
-    background: var(--surface-raised);
-    color: var(--dash-text-secondary);
 }
 [data-theme="dark"] .reportes-table tbody tr:hover {
     background: color-mix(in oklch, var(--color-primary) 12%, transparent);
@@ -328,41 +294,9 @@
     outline-color: var(--color-primary);
     background: color-mix(in oklch, var(--color-primary) 12%, transparent);
 }
-[data-theme="dark"] .rep-numero {
-    background: rgba(148, 163, 184, 0.12);
-    color: var(--dash-text-primary);
-}
-[data-theme="dark"] .rep-carnet { color: var(--dash-text-secondary); }
-[data-theme="dark"] .rep-promedio--none { color: var(--dash-text-muted); }
-
-[data-theme="dark"] .rep-res--aprueba_tesis {
-    background: rgba(16, 185, 129, 0.15);
-    color: #6ee7b7;
-    border-color: rgba(16, 185, 129, 0.35);
-}
-[data-theme="dark"] .rep-res--aprueba_curso {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fcd34d;
-    border-color: rgba(245, 158, 11, 0.35);
-}
-[data-theme="dark"] .rep-res--reprobado {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-    border-color: rgba(239, 68, 68, 0.35);
-}
-[data-theme="dark"] .rep-res--pendiente {
-    background: rgba(148, 163, 184, 0.12);
-    color: var(--dash-text-secondary);
-    border-color: var(--dash-border);
-}
-
 [data-theme="dark"] .report-evaluator {
     border-color: var(--dash-border);
-    background: rgba(15, 23, 42, 0.4);
-}
-[data-theme="dark"] .report-evaluator__comment {
-    border-top-color: var(--dash-border);
-    color: var(--dash-text-secondary);
+    background: var(--surface-raised);
 }
 /* Tarjetas de detalle informativas: estables (sin desplazamiento en hover). */
 .report-card {

@@ -63,7 +63,7 @@
        Para fondos sólidos con texto claro encima existe `-solid`. */
     --color-success:       oklch(0.520 0.145 152);
     --color-success-light: oklch(0.945 0.045 152);
-    --color-warning:       oklch(0.560 0.140 62);
+    --color-warning:       oklch(0.545 0.140 62);
     --color-warning-light: oklch(0.945 0.055 80);
     --color-danger:        oklch(0.520 0.200 25);
     --color-danger-light:  oklch(0.940 0.030 25);
@@ -74,10 +74,28 @@
        se mantiene en un tono medio estable en ambos temas. */
     --color-danger-solid:  oklch(0.545 0.205 25);
 
-    /* ── Texto (semántico) ── */
-    --text-primary:    var(--gray-800);
-    --text-secondary:  var(--gray-500);
-    --text-muted:      var(--gray-400);
+    /* ── Texto (semántico) ─────────────────────────────────────────────────
+       Calibrado contra WCAG AA con render REAL (Chromium + canvas), no a ojo.
+       Medición previa sobre `--surface-base`, la superficie más exigente:
+
+           --text-secondary  3.78:1   ✗ (mínimo 4.5)
+           --text-muted      2.29:1   ✗✗ (fallaba incluso el umbral 3:1
+                                          de texto grande)
+
+       `--text-muted` es el token de los METADATOS —carné, fechas, contadores,
+       descripciones de estado vacío— y estaba a menos de la mitad del contraste
+       exigido en todas las pantallas a la vez.
+
+       Estos dos ya NO son alias de la rampa de grises: la rampa es una paleta,
+       estos son un contrato de accesibilidad y se fijan explícitamente.
+
+       Compromiso asumido: con AA en los tres niveles, la jerarquía cromática
+       se comprime (ΔL 0.045 entre secundario y apagado, antes 0.128). Se
+       compensa con peso y tamaño, que ya son tokens. Legibilidad por encima
+       de dramatismo: es lo que hacen Stripe y GitHub. */
+    --text-primary:    var(--gray-800);              /* ~11:1 */
+    --text-secondary:  oklch(0.500 0.020 275);       /* ~5.4:1 */
+    --text-muted:      oklch(0.535 0.018 275);       /* ~4.7:1 en las tres superficies */
 
     /* ── Superficies (semántico) ── */
     --surface-base:   var(--gray-100);
@@ -303,7 +321,10 @@ body {
     /* ── Texto — contraste WCAG AA sobre superficies oscuras ── */
     --text-primary:   oklch(0.962 0.006 275);   /* ~15:1 */
     --text-secondary: oklch(0.725 0.020 275);   /* ~6:1  */
-    --text-muted:     oklch(0.622 0.024 275);   /* ~4.2:1 */
+    /* Medido: 4.32:1 sobre --surface-card, por debajo de AA. El comentario
+       anterior («~4.2:1») ya lo reconocía y aun así se envió. Mínimo resuelto
+       por bisección: L 0.634; se toma 0.645 para dejar margen. */
+    --text-muted:     oklch(0.672 0.024 275);   /* ~4.6:1 incluso sobre --surface-raised */
 
     /* ── Primario — se aclara en dark para mantener contraste y vibración ── */
     --color-primary:         var(--indigo-500);

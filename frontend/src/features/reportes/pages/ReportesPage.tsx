@@ -15,7 +15,8 @@ import { userMessageFor } from '../../../services/errorMessages';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
 import { useCountUp } from '../../../hooks/useCountUp';
-import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import { Badge, Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import type { BadgeTone } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
 import '../styles/reportes.css';
 import '../../../styles/transitions.css';
@@ -317,11 +318,27 @@ const ReportesHero: React.FC<{
     );
 };
 
+/**
+ * Resolución de una terna, con el MISMO chip de estado que el resto del
+ * producto.
+ *
+ * Antes era una píldora propia (`.rep-res`) con la paleta esmeralda/ámbar de
+ * Tailwind: el mismo objeto semántico —un estado— se veía distinto aquí que en
+ * Estudiantes, Ternas o la vista rápida. El usuario no lee "otro estilo", lee
+ * "otra aplicación". Ahora se deriva el tono del sistema de diseño y el chrome
+ * lo aporta `Badge`.
+ */
+const RES_TONE: Record<ResolucionTerna, BadgeTone> = {
+    aprueba_tesis: 'success',
+    aprueba_curso: 'warning',
+    reprobado:     'danger',
+    pendiente:     'neutral',
+};
+
 export const ResolutionBadge: React.FC<{ value: ResolucionTerna }> = ({ value }) => (
-    <span className={`rep-res rep-res--${value}`}>
-        <span className="rep-res__dot" aria-hidden="true" />
+    <Badge tone={RES_TONE[value] ?? 'neutral'} dot>
         {RES_LABEL[value] ?? value}
-    </span>
+    </Badge>
 );
 
 export default ReportesPage;

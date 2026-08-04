@@ -184,8 +184,8 @@ describe('Deuda visual congelada (solo puede encoger)', () => {
      */
     it('no crecen los colores hexadecimales fuera de variables.css', () => {
         const actual = countBy(cssFiles, /#(?!fff\b|000\b|ffffff\b|000000\b)[0-9a-f]{3,8}\b/gi, themeFile);
+        // reportes.css: 19 -> 0. Se elimina la entrada: ya no puede reaparecer.
         expectNoRegression(actual, {
-            'features/reportes/styles/reportes.css': 19,
             'styles/dashboard.css': 8,
             'styles/student-detail.css': 5,
         }, 'Usa un token semántico de theme/variables.css.');
@@ -200,7 +200,7 @@ describe('Deuda visual congelada (solo puede encoger)', () => {
         const actual = countBy(cssFiles, /\[data-theme="dark"\]\s*\./g, themeFile);
         expectNoRegression(actual, {
             'features/ternas/styles/ternas.css': 24,
-            'features/reportes/styles/reportes.css': 20,
+            'features/reportes/styles/reportes.css': 7,   // 20 -> 7
             'styles/dashboard.css': 11,
             'styles/student-detail.css': 3,
             'styles/students-list.css': 2,
