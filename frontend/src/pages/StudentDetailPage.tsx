@@ -7,8 +7,10 @@ import { THESIS_MIN_GRADE } from '../config/apiConfig';
 import { useStudentDossier } from '../hooks/useStudentDossier';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
-import type { CursoNotaResumen, EstadoTerna, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
-import { Avatar, Button, EmptyState, Skeleton } from '../components/ui';
+import type { CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
+import { Avatar, Badge, Button, EmptyState, Skeleton } from '../components/ui';
+import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE } from '../utils/ternaStatus';
+import { formatShortDate } from '../utils/dates';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 import '../styles/student-detail.css';
@@ -31,20 +33,6 @@ const RESOLUCION_LABEL: Record<string, string> = {
 };
 
 const ALL_CURSOS: Array<'043' | '049'> = ['043', '049'];
-
-const TERNA_ESTADO_LABEL: Record<EstadoTerna, string> = {
-    pendiente:   'Pendiente',
-    en_progreso: 'En progreso',
-    completada:  'Completada',
-};
-
-/** Fecha corta localizada; null si la entrada no es una fecha válida. */
-function formatShortDate(iso?: string | null): string | null {
-    if (!iso) return null;
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return null;
-    return d.toLocaleDateString('es-GT', { day: '2-digit', month: 'short', year: 'numeric' });
-}
 
 interface State {
     student: Estudiante | null;
@@ -350,9 +338,9 @@ const StudentDetailPage: React.FC = () => {
 
                                     <div className="sd-terna__head">
                                         <span className="sd-terna__num">#{String(terna.numero).padStart(2, '0')}</span>
-                                        <span className={`sd-terna-state sd-terna-state--${terna.estado}`}>
+                                        <Badge tone={TERNA_ESTADO_TONE[terna.estado]}>
                                             {TERNA_ESTADO_LABEL[terna.estado]}
-                                        </span>
+                                        </Badge>
                                     </div>
 
                                     <dl className="sd-kv">

@@ -1,17 +1,13 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { TernaResumen } from '../../../types/api';
+import { Badge } from '../../../components/ui';
+import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE } from '../../../utils/ternaStatus';
 
 interface Props {
     terna: TernaResumen;
     onSelect: (id: number) => void;
 }
-
-const ESTADO_LABEL: Record<TernaResumen['estado'], string> = {
-    pendiente:   'Pendiente',
-    en_progreso: 'En progreso',
-    completada:  'Completada',
-};
 
 const TernaCard: React.FC<Props> = ({ terna, onSelect }) => {
     const total = terna.total_evaluadores ?? 0;
@@ -27,9 +23,9 @@ const TernaCard: React.FC<Props> = ({ terna, onSelect }) => {
         >
             <div className="terna-card__head">
                 <span className="terna-card__numero">Terna #{String(terna.numero).padStart(2, '0')}</span>
-                <span className={`terna-card__estado estado-${terna.estado}`}>
-                    {ESTADO_LABEL[terna.estado]}
-                </span>
+                <Badge tone={TERNA_ESTADO_TONE[terna.estado]}>
+                    {TERNA_ESTADO_LABEL[terna.estado]}
+                </Badge>
             </div>
 
             <h3 className="terna-card__title">{terna.titulo || 'Sin título'}</h3>

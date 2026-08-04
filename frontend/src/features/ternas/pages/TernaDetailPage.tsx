@@ -14,14 +14,10 @@ import ThesisStatusBadge from '../../../components/thesis/ThesisStatusBadge';
 import EvaluationForm from '../components/EvaluationForm';
 import { useTernaDetalle } from '../hooks/useTernaDetalle';
 import type { EvaluadorTerna } from '../../../types/api';
-import { Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
+import { Badge, Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
+import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE, evaluacionEstado } from '../../../utils/ternaStatus';
+import { formatDateTime } from '../../../utils/dates';
 import '../styles/ternas.css';
-
-const ESTADO_LABEL = {
-    pendiente:   'Pendiente',
-    en_progreso: 'En progreso',
-    completada:  'Completada',
-} as const;
 
 const RESOLUCION_LABEL = {
     aprueba_tesis: 'Aprueba tesis',
@@ -95,9 +91,9 @@ const TernaDetailPage: React.FC = () => {
                             title={
                                 <span className="ui-title-inline">
                                     Terna #{String(terna.numero).padStart(2, '0')}
-                                    <span className={`terna-card__estado estado-${terna.estado}`}>
-                                        {ESTADO_LABEL[terna.estado]}
-                                    </span>
+                                    <Badge tone={TERNA_ESTADO_TONE[terna.estado]}>
+                                        {TERNA_ESTADO_LABEL[terna.estado]}
+                                    </Badge>
                                 </span>
                             }
                             subtitle={terna.titulo || 'Sin título de proyecto'}
@@ -122,10 +118,14 @@ const TernaDetailPage: React.FC = () => {
                                                 <dd>{terna.fase}</dd>
                                             </>
                                         )}
-                                        {terna.fecha_evaluacion && (
+                                        {/* El valor llega crudo del API (ISO 8601). Se formatea
+                                            con el formateador del producto; si no es una fecha
+                                            válida, `formatDateTime` devuelve null y la fila
+                                            entera se omite en lugar de imprimir el ISO. */}
+                                        {formatDateTime(terna.fecha_evaluacion) && (
                                             <>
                                                 <dt>Fecha</dt>
-                                                <dd>{terna.fecha_evaluacion}</dd>
+                                                <dd>{formatDateTime(terna.fecha_evaluacion)}</dd>
                                             </>
                                         )}
                                     </dl>
@@ -185,14 +185,7 @@ const TernaDetailPage: React.FC = () => {
 };
 
 const EvaluatorRow: React.FC<{ evaluator: EvaluadorTerna }> = ({ evaluator }) => {
-    const estadoClass =
-        evaluator.eval_estado === 'enviada'  ? 'eval-enviada'
-        : evaluator.eval_estado === 'borrador' ? 'eval-borrador'
-        : 'eval-empty';
-    const estadoLabel =
-        evaluator.eval_estado === 'enviada'  ? 'Enviada'
-        : evaluator.eval_estado === 'borrador' ? 'Borrador'
-        : 'Pendiente';
+    const estado = evaluacionEstado(evaluator.eval_estado);
 
     return (
         <div className="tdetail-evaluator">
@@ -200,7 +193,7 @@ const EvaluatorRow: React.FC<{ evaluator: EvaluadorTerna }> = ({ evaluator }) =>
             <span className="tdetail-evaluator__score">
                 {evaluator.calificacion != null ? evaluator.calificacion : '—'}
             </span>
-            <span className={`tdetail-evaluator__estado ${estadoClass}`}>{estadoLabel}</span>
+            <Badge tone={estado.tone}>{estado.label}</Badge>
         </div>
     );
 };

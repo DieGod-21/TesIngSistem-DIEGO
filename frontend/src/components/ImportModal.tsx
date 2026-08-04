@@ -10,7 +10,7 @@ import type { ImportarResult } from '../services/importarService';
 import { ApiError } from '../services/apiClient';
 import { userMessageFor } from '../services/errorMessages';
 import { COURSE_CODES } from '../config/apiConfig';
-import { Alert, Button } from './ui';
+import { Alert, Badge, Button } from './ui';
 import '../styles/import-modal.css';
 
 interface SectionState {
@@ -161,7 +161,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                         <div className="im-section__heading">
                             <Users size={16} aria-hidden="true" />
                             <h3 id="im-est-heading">Importar Estudiantes</h3>
-                            <span className="im-section__badge">Excel</span>
+                            <Badge tone="success" className="im-section__badge">Excel</Badge>
                         </div>
                         <p className="im-section__hint">
                             Archivo <code>.xlsx</code> o <code>.csv</code> con los datos de los estudiantes.
@@ -201,7 +201,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                         <div className="im-section__heading">
                             <FileText size={16} aria-hidden="true" />
                             <h3 id="im-not-heading">Importar Notas</h3>
-                            <span className="im-section__badge im-section__badge--pdf">PDF</span>
+                            <Badge tone="danger" className="im-section__badge">PDF</Badge>
                         </div>
                         <p className="im-section__hint">
                             Archivo <code>.pdf</code> con las notas del curso seleccionado.

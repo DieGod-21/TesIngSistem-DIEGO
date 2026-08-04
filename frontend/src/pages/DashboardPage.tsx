@@ -13,6 +13,7 @@ import { Plus, AlertCircle, RefreshCw, Users } from 'lucide-react';
 import AppFooter from '../components/AppFooter';
 import KpiCard from '../components/KpiCard';
 import { Button, Card, Skeleton, EmptyState } from '../components/ui';
+import { formatLongDate } from '../utils/dates';
 import { AcademicProgressCard } from '../components/dashboard/DashboardAside';
 import WorkQueue from '../features/students-workspace/components/WorkQueue';
 import { useStudentsPipeline } from '../features/students-workspace/hooks/useStudentsPipeline';
@@ -73,15 +74,6 @@ function getGreeting(): string {
 }
 
 /** Fecha larga capitalizada (es-ES). */
-function formatToday(): string {
-    const s = new Date().toLocaleDateString('es-ES', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-    });
-    return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 /* Tres esqueletos, tres tarjetas: el placeholder debe medir lo mismo que el
    contenido real para que la carga no provoque un salto de layout. */
 const KpiSkeleton: React.FC = () => (
@@ -119,7 +111,7 @@ const DashboardPage: React.FC = () => {
                             {getGreeting()}, <strong>{firstName}</strong>
                         </h1>
                         <p className="dash-hero__subtitle">
-                            {formatToday()} · Facultad de Ingeniería · Ciclo {currentYear}
+                            {formatLongDate(new Date())} · Facultad de Ingeniería · Ciclo {currentYear}
                         </p>
                     </div>
                     <div className="dash-hero__actions">

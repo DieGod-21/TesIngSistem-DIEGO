@@ -199,13 +199,90 @@ describe('Deuda visual congelada (solo puede encoger)', () => {
     it('no crecen los overrides [data-theme="dark"] por clase', () => {
         const actual = countBy(cssFiles, /\[data-theme="dark"\]\s*\./g, themeFile);
         expectNoRegression(actual, {
-            'features/ternas/styles/ternas.css': 24,
+            'features/ternas/styles/ternas.css': 19,       // 24 -> 19: los 5 de
+            // los chips de estado desaparecieron al migrarlos a <Badge>, que
+            // resuelve el modo oscuro por herencia y no por override.
             'features/reportes/styles/reportes.css': 7,   // 20 -> 7
             'styles/dashboard.css': 11,
             'styles/student-detail.css': 3,
             'styles/students-list.css': 2,
             'features/students-workspace/styles/since-last-visit.css': 1,
         }, 'Reapunta a tokens semánticos; el modo oscuro se hereda.');
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+describe('Una sola forma de codificar estado', () => {
+    /**
+     * Auditoría sobre el render (iteración 7): se midieron CINCO lenguajes
+     * visuales distintos para "el estado de una cosa", tres de ellos para el
+     * mismo `EstadoTerna`, entre 16 px y 33 px de alto. La misma palabra,
+     * "Completada", se veía de dos formas en dos pantallas contiguas.
+     *
+     * La causa no fue el color —una iteración previa ya había alineado los
+     * tonos y lo declaró resuelto— sino que cada pantalla reimplementaba la
+     * CAJA: tamaño, mayúsculas, tracking, padding y borde.
+     *
+     * Un chip de estado se reconoce por su forma: fondo propio + píldora +
+     * negrita. Si una hoja de feature define uno, es un <Badge> a mano.
+     */
+    it('ninguna hoja de feature define su propio chip de estado', () => {
+        const violations: string[] = [];
+        for (const f of cssFiles) {
+            if (themeFile(f) || rel(f).endsWith('components/ui/ui.css')) continue;
+            // Los comentarios se eliminan ANTES de partir en bloques: si no, el
+            // comentario que precede a una regla se captura como parte del
+            // selector y la regla acusa a un texto en prosa.
+            const css = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            // Bloques `selector { … }` que combinan píldora + negrita: la firma
+            // de un badge. `--radius-pill` es el token; 999px su valor crudo.
+            for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+                const [, selector, body] = m;
+                const pill = /border-radius:\s*(var\(--radius-pill\)|999px|9999px)/.test(body);
+                const bold = /font-weight:\s*var\(--weight-bold\)/.test(body);
+                const bg = /background(-color)?:/.test(body);
+                if (pill && bold && bg) violations.push(`${rel(f)} → ${selector.trim().slice(0, 60)}`);
+            }
+        }
+        /*
+         * EXCEPCIÓN, no deuda. `.pb__chip-count` comparte la FORMA de un badge
+         * pero no su SIGNIFICADO: es el contador que va DENTRO de un chip de
+         * filtro ("Pendientes · 27") y hereda el color del chip cuando está
+         * activo. Fundirlo en <Badge> sería unificar por código y no por
+         * significado, que es justo el error contrario al que corrige esta regla.
+         * Cualquier OTRA aparición sí es un <Badge> hecho a mano.
+         */
+        expect(violations).toEqual([
+            'features/students-workspace/styles/progress-band.css → .pb__chip-count',
+        ]);
+    });
+
+    /**
+     * El mapa `estado → etiqueta` estaba declarado en TRES archivos con
+     * contenido idéntico. Vive en utils/ternaStatus.ts y solo allí.
+     */
+    it('el mapa de etiquetas de EstadoTerna existe una sola vez', () => {
+        const owners = codeFiles
+            .filter((f) => /pendiente:\s*'Pendiente'[\s\S]{0,80}completada:\s*'Completada'/.test(read(f)))
+            .map(rel);
+        expect(owners).toEqual(['utils/ternaStatus.ts']);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+describe('Ninguna fecha cruda en pantalla', () => {
+    /**
+     * La ficha de terna renderizaba `{terna.fecha_evaluacion}` — el ISO 8601
+     * crudo del API — en una pantalla donde todo lo demás iba formateado.
+     * Cualquier campo de fecha debe pasar por utils/dates.ts.
+     */
+    it('ningún componente interpola un campo de fecha sin formatear', () => {
+        const raw = /\{\s*[\w.?]*\.?(fecha\w*|created_at|updated_at|createdAt|updatedAt)\s*\}/g;
+        const violations: string[] = [];
+        for (const f of codeFiles.filter((f) => f.endsWith('.tsx'))) {
+            for (const m of read(f).matchAll(raw)) violations.push(`${rel(f)} → ${m[0]}`);
+        }
+        expect(violations).toEqual([]);
     });
 });
 

@@ -112,22 +112,10 @@
     margin: 0;
 }
 
-/* Badge de formato: color-mix sobre el semántico → válido en claro y oscuro. */
+/* La etiqueta de formato es un <Badge tone="success|danger">. Aquí solo queda
+   su POSICIÓN en la cabecera de sección; la apariencia la da el sistema. */
 .im-section__badge {
     margin-left: auto;
-    font-size: var(--text-2xs);
-    font-weight: var(--weight-bold);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: var(--space-2) var(--space-8);
-    border-radius: var(--radius-pill);
-    background: color-mix(in oklch, var(--color-success) 16%, transparent);
-    color: var(--color-success);
-}
-
-.im-section__badge--pdf {
-    background: color-mix(in oklch, var(--color-danger) 16%, transparent);
-    color: var(--color-danger);
 }
 
 .im-section__hint {

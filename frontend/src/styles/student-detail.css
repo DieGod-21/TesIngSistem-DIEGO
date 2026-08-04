@@ -409,18 +409,8 @@
     font-variant-numeric: tabular-nums;
     line-height: var(--leading-none);
 }
-.sd-terna-state {
-    font-size: var(--text-2xs);
-    font-weight: var(--weight-bold);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: var(--space-4) var(--space-10);
-    border-radius: var(--radius-pill);
-    white-space: nowrap;
-}
-.sd-terna-state--pendiente   { background: var(--color-warning-light); color: var(--color-warning); }
-.sd-terna-state--en_progreso { background: var(--color-info-light);    color: var(--color-info); }
-.sd-terna-state--completada  { background: var(--color-success-light); color: var(--color-success); }
+/* `.sd-terna-state*` ELIMINADO: el estado de terna lo pinta <Badge>. Era la
+   tercera copia del mismo mapeo de tonos, con una cuarta métrica distinta. */
 
 .sd-kv { display: flex; flex-direction: column; margin: 0; }
 .sd-kv > div {
