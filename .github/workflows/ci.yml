@@ -1,0 +1,80 @@
+name: CI
+
+# Todo lo que pueda fallar automáticamente, debe fallar automáticamente.
+#
+# Motivo concreto: durante la migración de espaciado se generaron 10
+# declaraciones `-var(--space-N)` —CSS inválido que el navegador descarta en
+# silencio— y atravesaron tsc, el build de producción y 170 tests sin una sola
+# señal. Se detectaron a mano. Este workflow existe para que eso no dependa de
+# que alguien mire.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Un push nuevo cancela la ejecución anterior de la misma rama: la señal que
+# importa es la del último commit.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  verify:
+    name: Verificación
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Cada paso se ejecuta aunque falle el anterior: una sola ejecución debe
+      # reportar TODOS los problemas, no obligar a descubrirlos de uno en uno.
+      - name: Lint
+        id: lint
+        if: '!cancelled()'
+        run: npm run lint
+
+      - name: TypeScript
+        id: types
+        if: '!cancelled()'
+        run: npx tsc --noEmit
+
+      # Incluye src/architecture.test.ts: CSS inválido, fronteras de módulo,
+      # escalas del sistema de diseño y deuda visual congelada.
+      - name: Tests
+        id: tests
+        if: '!cancelled()'
+        run: npx vitest run
+
+      # VITE_API_URL es obligatoria en producción (fail-fast en vite.config.ts).
+      # No es un secreto: todo lo que empieza por VITE_ acaba en el bundle.
+      - name: Build de producción
+        id: build
+        if: '!cancelled()'
+        env:
+          VITE_API_URL: https://notas.digicom.com.gt
+        run: npm run build
+
+      - name: Tamaño del bundle
+        if: '!cancelled() && steps.build.outcome == ''success'''
+        run: |
+          echo '### Bundle' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          du -sh dist >> "$GITHUB_STEP_SUMMARY"
+          find dist/assets -name '*.js' -o -name '*.css' \
+            | xargs du -h | sort -rh | head -12 >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

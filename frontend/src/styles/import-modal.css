@@ -10,7 +10,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    padding: 16px;
+    padding: var(--space-16);
     backdrop-filter: blur(2px);
 }
 
@@ -43,7 +43,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px 16px;
+    padding: var(--space-20) var(--space-24) var(--space-16);
     border-bottom: 1px solid var(--border);
 }
 
@@ -84,7 +84,7 @@
 }
 
 .im-modal__body {
-    padding: 24px;
+    padding: var(--space-24);
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -95,13 +95,13 @@
 .im-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-12);
 }
 
 .im-section__heading {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     color: var(--color-primary);
 }
 
@@ -119,7 +119,7 @@
     font-weight: var(--weight-bold);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    padding: 2px 8px;
+    padding: var(--space-2) var(--space-8);
     border-radius: var(--radius-pill);
     background: color-mix(in oklch, var(--color-success) 16%, transparent);
     color: var(--color-success);
@@ -138,7 +138,7 @@
 
 .im-section__hint code {
     background: var(--surface-raised);
-    padding: 1px 5px;
+    padding: var(--space-1) var(--space-4);
     border-radius: var(--radius-sm);
     font-family: ui-monospace, SFMono-Regular, monospace;
     font-size: 0.8em;
@@ -148,7 +148,7 @@
 .im-divider {
     height: 1px;
     background: var(--border);
-    margin: 20px 0;
+    margin: var(--space-20) 0;
 }
 
 /* ── File input ───────────────────────────────────────────────── */
@@ -156,7 +156,7 @@
 .im-file-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-10);
 }
 
 .im-file-input {
@@ -174,7 +174,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 8px 12px;
+    padding: var(--space-8) var(--space-12);
     border-radius: var(--radius-md);
     border: 1.5px dashed var(--border-strong);
     font-size: var(--text-sm);
@@ -203,7 +203,7 @@
 .im-field-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-10);
 }
 
 .im-label {
@@ -215,7 +215,7 @@
 
 .im-select {
     flex: 1;
-    padding: 8px 12px;
+    padding: var(--space-8) var(--space-12);
     border-radius: var(--radius-md);
     border: 1.5px solid var(--border-strong);
     font-size: var(--text-sm);

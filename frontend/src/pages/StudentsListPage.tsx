@@ -245,8 +245,6 @@ const DefaultStudentsView: React.FC<{
         if (next) history.replace(buildPreviewUrl(locationSearch, String(next.id)));
     };
 
-    const go = (est: Estudiante) => history.push(routes.studentDetail(est.id));
-
     return (
         <>
             <div className="sl-listbar">

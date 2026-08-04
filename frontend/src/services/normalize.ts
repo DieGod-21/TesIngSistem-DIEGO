@@ -105,7 +105,7 @@ export function reportTruncation(endpoint: string, count: number, total?: number
         { source: 'envelope:truncated' },
     );
     if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
+
         console.warn(
             `[normalize] Dataset truncado en ${endpoint} (${detail}). ` +
             'La búsqueda/paginación local puede estar incompleta.',

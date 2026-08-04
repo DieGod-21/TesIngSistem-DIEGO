@@ -11,8 +11,8 @@
 .wq {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px 18px;
+    gap: var(--space-12);
+    padding: var(--space-16) var(--space-16);
     background: var(--surface-card-grad), var(--surface-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
@@ -22,7 +22,7 @@
 .wq__head {
     display: flex;
     align-items: baseline;
-    gap: 10px;
+    gap: var(--space-10);
     flex-wrap: wrap;
 }
 
@@ -42,7 +42,7 @@
 .wq__list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-6);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -51,29 +51,29 @@
 .wq__item {
     display: flex;
     align-items: stretch;
-    gap: 6px;
+    gap: var(--space-6);
 }
 
 .wq__item--skeleton {
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: var(--space-12);
+    padding: var(--space-12) var(--space-14);
 }
 
 /* Acción principal: ocupa la fila (objetivo amplio) y navega. */
 .wq__main {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-12);
     flex: 1;
     min-width: 0;
-    padding: 12px 14px;
+    padding: var(--space-12) var(--space-14);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     background: var(--surface-card);
     cursor: pointer;
     text-align: left;
-    transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+    transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .wq__main:hover {
@@ -84,16 +84,16 @@
 .wq__main:focus-visible {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-ring);
+    box-shadow: var(--ring);
 }
 
 /* Descarte ("Hecho"): acción secundaria para ítems no auto-limpiables. */
 .wq__dismiss {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-4);
     flex-shrink: 0;
-    padding: 0 12px;
+    padding: 0 var(--space-12);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     background: var(--surface-card);
@@ -101,7 +101,7 @@
     font-size: var(--text-xs);
     font-weight: var(--weight-semibold);
     cursor: pointer;
-    transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 .wq__dismiss:hover {
     background: color-mix(in oklch, var(--color-success) 12%, transparent);
@@ -111,17 +111,17 @@
 .wq__dismiss:focus-visible {
     outline: none;
     border-color: var(--color-success);
-    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-success) 25%, transparent);
+    box-shadow: var(--ring-success);
 }
 
 /* ── Responsive (mismo lenguaje que el resto del módulo: 640px, ~44px táctil) ── */
 @media (max-width: 640px) {
-    .wq { padding: 14px; }
+    .wq { padding: var(--space-14); }
     /* Objetivo táctil cómodo al operar la cola con el dedo. */
     .wq__main { min-height: 44px; }
     /* Solo el ícono en el botón de descarte (la fila ya es alta y tocable). */
     .wq__dismiss-label { display: none; }
-    .wq__dismiss { padding: 0 14px; }
+    .wq__dismiss { padding: 0 var(--space-14); }
 }
 
 /* En pantallas muy estrechas, el CTA se reduce al chevron para dar aire al
@@ -160,7 +160,7 @@
 .wq__body {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-2);
     min-width: 0;
     flex: 1;
 }
@@ -188,7 +188,7 @@
 .wq__cta {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-4);
     flex-shrink: 0;
     font-size: var(--text-sm);
     font-weight: var(--weight-semibold);
@@ -197,7 +197,7 @@
 }
 
 .wq__overflow {
-    margin: 2px 0 0;
+    margin: var(--space-2) 0 0;
     font-size: var(--text-xs);
     color: var(--text-muted);
 }
@@ -214,12 +214,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 22px 16px;
+    gap: var(--space-4);
+    padding: var(--space-20) var(--space-16);
     color: var(--color-success);
 }
 .wq__reward-title {
-    margin: 4px 0 0;
+    margin: var(--space-4) 0 0;
     font-weight: var(--weight-bold);
     font-size: var(--text-base);
     color: var(--text-primary);
@@ -241,9 +241,9 @@
 .wq__scope {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: var(--space-6);
     margin-left: auto;
-    padding: 4px 10px;
+    padding: var(--space-4) var(--space-10);
     border: 1px solid color-mix(in oklch, var(--color-primary) 30%, transparent);
     border-radius: var(--radius-pill);
     background: var(--color-primary-soft);

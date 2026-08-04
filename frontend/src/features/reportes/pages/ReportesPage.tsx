@@ -66,7 +66,7 @@ const ReportesPage: React.FC = () => {
         const controller = new AbortController();
         load(controller.signal);
         return () => controller.abort();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, []);
 
     const ternas: ReporteTernaItem[] = data?.ternas ?? [];

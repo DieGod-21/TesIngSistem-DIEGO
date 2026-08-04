@@ -32,8 +32,8 @@
 .usr-list-item {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px 24px;
+    gap: var(--space-16);
+    padding: var(--space-20) var(--space-24);
     border-bottom: 1px solid var(--border);
     transition: background var(--transition-fast);
 }
@@ -73,7 +73,7 @@
     text-overflow: ellipsis;
 }
 .usr-info__email {
-    margin: 3px 0 0;
+    margin: var(--space-2) 0 0;
     font-size: var(--text-sm);
     color: var(--text-muted);
     white-space: nowrap;
@@ -93,8 +93,8 @@
 .usr-skeleton-row {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 18px 24px;
+    gap: var(--space-16);
+    padding: var(--space-16) var(--space-24);
     border-bottom: 1px solid var(--border);
 }
 .usr-skeleton-row:last-child { border-bottom: none; }
@@ -108,7 +108,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: var(--space-16);
     backdrop-filter: blur(2px);
 }
 
@@ -139,14 +139,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 20px 16px;
+    padding: var(--space-16) var(--space-20) var(--space-16);
     border-bottom: 1px solid var(--border);
 }
 
 .nu-modal__title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     font-size: var(--text-md);
     font-weight: var(--weight-bold);
     color: var(--text-primary);
@@ -157,7 +157,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
+    padding: var(--space-4);
     border: none;
     background: transparent;
     border-radius: var(--radius-sm);
@@ -174,22 +174,22 @@
 .nu-modal__body {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 20px;
+    gap: var(--space-16);
+    padding: var(--space-20);
 }
 
 .nu-modal__footer {
     display: flex;
-    gap: 10px;
+    gap: var(--space-10);
     justify-content: flex-end;
-    padding-top: 4px;
+    padding-top: var(--space-4);
 }
 
 /* ── Modal: campos ──────────────────────────────────────────────────── */
 .nu-field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-6);
 }
 
 .nu-label {
@@ -200,7 +200,7 @@
 
 .nu-input,
 .nu-select {
-    padding: 9px 12px;
+    padding: var(--space-8) var(--space-12);
     border: 1.5px solid var(--border-strong);
     border-radius: var(--radius-md);
     font-size: var(--text-base);
@@ -213,7 +213,7 @@
 .nu-input:focus,
 .nu-select:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-ring);
+    box-shadow: var(--ring);
 }
 .nu-input--error { border-color: var(--color-danger); }
 
@@ -226,7 +226,7 @@
     background: var(--color-danger-light);
     border: 1px solid color-mix(in oklch, var(--color-danger) 35%, transparent);
     border-radius: var(--radius-md);
-    padding: 10px 12px;
+    padding: var(--space-10) var(--space-12);
     font-size: var(--text-base);
     color: var(--color-danger);
 }

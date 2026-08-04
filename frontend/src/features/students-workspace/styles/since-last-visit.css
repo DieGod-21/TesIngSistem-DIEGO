@@ -11,8 +11,8 @@
 .slv {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: var(--space-8);
+    padding: var(--space-12) var(--space-16);
     background: var(--color-info-light);
     border: 1px solid color-mix(in oklch, var(--color-info) 22%, transparent);
     border-radius: var(--radius-card);
@@ -21,7 +21,7 @@
 .slv__head {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: var(--space-6);
     margin: 0;
     font-size: var(--text-sm);
     font-weight: var(--weight-bold);
@@ -36,7 +36,7 @@
 .slv__list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 16px;
+    gap: var(--space-6) var(--space-16);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -47,7 +47,7 @@
 .slv__item {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-4);
     font-size: var(--text-sm);
     color: var(--text-secondary);
 }
@@ -61,7 +61,7 @@
 
 /* ── Responsive (640px; paridad con el resto del workspace) ── */
 @media (max-width: 640px) {
-    .slv { padding: 12px 14px; }
+    .slv { padding: var(--space-12) var(--space-14); }
     /* Cada cambio en su propia línea: legible en columna estrecha. */
-    .slv__list { flex-direction: column; gap: 4px; }
+    .slv__list { flex-direction: column; gap: var(--space-4); }
 }

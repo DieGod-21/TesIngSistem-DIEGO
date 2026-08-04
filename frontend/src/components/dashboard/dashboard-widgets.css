@@ -3,7 +3,7 @@
  * Todo sobre tokens semánticos (dark mode por herencia).
  */
 
-.dash-widget { display: flex; flex-direction: column; gap: 1.25rem; }
+.dash-widget { display: flex; flex-direction: column; gap: var(--space-20); }
 .dash-widget__head { display: flex; align-items: center; justify-content: space-between; }
 .dash-widget__head .ui-kicker { margin: 0; }
 
@@ -11,9 +11,9 @@
 .dash-widget__insight {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-8);
     margin: 0;
-    padding-top: 0.75rem;
+    padding-top: var(--space-12);
     border-top: 1px solid var(--border);
     font-size: var(--text-sm);
     color: var(--text-secondary);
@@ -26,8 +26,8 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.35rem;
-    padding: 1.25rem 0.5rem;
+    gap: var(--space-6);
+    padding: var(--space-20) var(--space-8);
 }
 .dash-widget__empty-icon {
     display: flex;
@@ -35,8 +35,8 @@
     justify-content: center;
     width: 2.75rem;
     height: 2.75rem;
-    border-radius: 14px;
-    margin-bottom: 0.35rem;
+    border-radius: var(--radius-card);
+    margin-bottom: var(--space-6);
     color: var(--color-primary);
     background: linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-primary-soft-2) 100%);
     box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.5);
@@ -48,7 +48,7 @@
 .progress-widget {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: var(--space-24);
 }
 
 /* Anillo (ProgressRing) */
@@ -72,37 +72,37 @@
     font-weight: var(--weight-bold);
     letter-spacing: -0.03em;
     color: var(--text-primary);
-    line-height: 1;
+    line-height: var(--leading-none);
     font-variant-numeric: tabular-nums;
 }
-.ring__pct { font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--text-secondary); margin-left: 1px; }
+.ring__pct { font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--text-secondary); margin-left: var(--space-1); }
 .ring__caption {
     font-size: var(--text-3xs);
     font-weight: var(--weight-bold);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-muted);
-    margin-top: 3px;
+    margin-top: var(--space-2);
 }
 
 /* Leyenda */
-.progress-legend { list-style: none; margin: 0; padding: 0; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
-.progress-legend__row { display: flex; align-items: center; gap: 0.5rem; font-size: var(--text-sm); }
-.progress-legend__dot { width: 0.6rem; height: 0.6rem; border-radius: 3px; flex-shrink: 0; }
+.progress-legend { list-style: none; margin: 0; padding: 0; flex: 1; display: flex; flex-direction: column; gap: var(--space-12); }
+.progress-legend__row { display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-sm); }
+.progress-legend__dot { width: 0.6rem; height: 0.6rem; border-radius: var(--radius-xs); flex-shrink: 0; }
 .progress-legend__dot--ok { background: var(--color-success); }
 .progress-legend__dot--pending { background: var(--color-warning); }
 .progress-legend__label { color: var(--text-secondary); }
 .progress-legend__value { margin-left: auto; font-weight: var(--weight-bold); color: var(--text-primary); }
 .progress-legend__row--total {
-    padding-top: 0.55rem;
-    margin-top: 0.15rem;
+    padding-top: var(--space-8);
+    margin-top: var(--space-2);
     border-top: 1px dashed var(--border);
 }
 .progress-legend__row--total .progress-legend__label { font-weight: var(--weight-semibold); color: var(--text-primary); }
 
 /* ═══ 2. Próximas entregas ═══ */
-.deadline-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.85rem; }
-.deadline-item { display: flex; align-items: center; gap: 0.85rem; }
+.deadline-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-14); }
+.deadline-item { display: flex; align-items: center; gap: var(--space-14); }
 .deadline-item__date {
     display: flex;
     flex-direction: column;
@@ -110,7 +110,7 @@
     justify-content: center;
     width: 3rem;
     height: 3rem;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     background: var(--surface-raised);
     border: 1px solid var(--border);
     flex-shrink: 0;
@@ -120,22 +120,22 @@
     border-color: color-mix(in oklch, var(--color-warning) 35%, transparent);
 }
 .deadline-item__month { font-size: var(--text-3xs); font-weight: var(--weight-bold); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
-.deadline-item__day { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: 1; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.deadline-item__day { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--leading-none); color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .deadline-item__body { flex: 1; min-width: 0; }
 .deadline-item__title { margin: 0; font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); }
-.deadline-item__sub { margin: 2px 0 0; font-size: var(--text-xs); color: var(--text-muted); }
+.deadline-item__sub { margin: var(--space-2) 0 0; font-size: var(--text-xs); color: var(--text-muted); }
 
 /* ═══ 3. Timeline de actividad ═══ */
 .timeline { list-style: none; margin: 0; padding: 0; position: relative; }
-.timeline__item { position: relative; display: flex; gap: 0.75rem; padding: 0 0 1rem 0.25rem; }
+.timeline__item { position: relative; display: flex; gap: var(--space-12); padding: 0 0 var(--space-16) var(--space-4); }
 .timeline__item:last-child { padding-bottom: 0; }
 /* Línea vertical que conecta los puntos */
 .timeline__item:not(:last-child)::before {
     content: '';
     position: absolute;
     left: calc(0.25rem + 0.3rem - 0.5px);
-    top: 1rem;
-    bottom: -0.25rem;
+    top: var(--space-16);
+    bottom: calc(-1 * var(--space-4));
     width: 1px;
     background: var(--border);
 }
@@ -143,9 +143,9 @@
     width: 0.65rem;
     height: 0.65rem;
     border-radius: 50%;
-    margin-top: 0.25rem;
+    margin-top: var(--space-4);
     flex-shrink: 0;
-    box-shadow: 0 0 0 3px var(--surface-card);
+    box-shadow: var(--ring-cutout);
     z-index: 1;
 }
 .timeline__dot--primary { background: var(--color-primary); }
@@ -153,11 +153,11 @@
 .timeline__dot--warning { background: var(--color-warning); }
 .timeline__dot--danger  { background: var(--color-danger); }
 .timeline__body { flex: 1; min-width: 0; }
-.timeline__text { margin: 0; font-size: var(--text-sm); color: var(--text-primary); line-height: 1.4; }
+.timeline__text { margin: 0; font-size: var(--text-sm); color: var(--text-primary); line-height: var(--leading-snug); }
 .timeline__time { font-size: var(--text-xs); color: var(--text-muted); }
 
 /* ── Rail lateral: layout + entrada escalonada ── */
-.dash-aside { display: flex; flex-direction: column; gap: 1.5rem; }
+.dash-aside { display: flex; flex-direction: column; gap: var(--space-24); }
 
 @keyframes widget-in {
     from { opacity: 0; transform: translateY(12px); }

@@ -10,7 +10,7 @@
  * en la lista; el orden solo sugiere por dónde empezar.
  */
 
-import type { ResolucionTerna, TernaResumen, ReporteTernaItem } from '../../../types/api';
+import type { ResolucionTerna, TernaResumen } from '../../../types/api';
 import { deriveGradStatus, deriveStage } from './stage';
 import { STAGE_ORDER } from './pipelineMeta';
 import { assertNever } from '../../../utils/assertNever';

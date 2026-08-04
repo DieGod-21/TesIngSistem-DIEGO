@@ -57,7 +57,7 @@ const APP_VERSION: string | undefined =
 /** Proveedor de desarrollo: log legible, solo diagnóstico. */
 const devProvider: TelemetryProvider = {
     report(report) {
-        // eslint-disable-next-line no-console
+
         console.error(`[telemetry:${report.boundary}] ${report.message}`, report);
     },
 };

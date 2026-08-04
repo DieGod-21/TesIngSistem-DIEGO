@@ -19,7 +19,7 @@
 .proy-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 14px;
+    gap: var(--space-14);
 }
 
 /* ── Card ────────────────────────────────────────────────────────── */
@@ -30,12 +30,12 @@
     border-top: 3px solid var(--color-primary);
     border-radius: var(--radius-card);
     /* El acento superior distingue la fase con tokens de marca (PG1 vs PG2). */
-    padding: 18px 20px;
+    padding: var(--space-16) var(--space-20);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-8);
     box-shadow: var(--shadow-sm), var(--hairline);
-    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
 }
 
 .proy-card:hover {
@@ -78,14 +78,14 @@
     font-size: var(--text-base);
     font-weight: var(--weight-bold);
     color: var(--text-primary);
-    line-height: 1.35;
+    line-height: var(--leading-snug);
 }
 
 .proy-card__desc {
     margin: 0;
     font-size: var(--text-sm);
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: var(--leading-normal);
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -93,7 +93,7 @@
 }
 
 .proy-card__fase {
-    margin: 4px 0 0;
+    margin: var(--space-4) 0 0;
     font-size: var(--text-xs);
     color: var(--text-muted);
     font-weight: var(--weight-medium);
@@ -105,8 +105,8 @@
     color: var(--text-secondary);
     font-weight: var(--weight-semibold);
     border-top: 1px solid var(--border);
-    padding-top: 8px;
-    margin-top: 4px;
+    padding-top: var(--space-8);
+    margin-top: var(--space-4);
 }
 
 /* La fase del proyecto usa la primitiva <Badge> del sistema de diseño. */
@@ -116,15 +116,15 @@
 .proy-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 9px 18px;
-    border-radius: 8px;
+    gap: var(--space-6);
+    padding: var(--space-8) var(--space-16);
+    border-radius: var(--radius-md);
     border: 0;
     font-size: var(--text-base);
     font-weight: var(--weight-semibold);
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s, opacity 0.15s;
+    transition: background var(--transition-fast), opacity var(--transition-fast);
     flex-shrink: 0;
 }
 
@@ -158,7 +158,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    padding: 16px;
+    padding: var(--space-16);
     backdrop-filter: blur(2px);
 }
 
@@ -193,9 +193,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px 16px;
+    padding: var(--space-20) var(--space-24) var(--space-16);
     border-bottom: 1px solid var(--border);
-    gap: 12px;
+    gap: var(--space-12);
 }
 
 .np-modal__title {
@@ -205,7 +205,7 @@
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
 }
 
 .np-modal__close {
@@ -219,7 +219,7 @@
     background: transparent;
     cursor: pointer;
     color: var(--text-muted);
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--transition-fast), color var(--transition-fast);
     flex-shrink: 0;
 }
 
@@ -236,10 +236,10 @@
 /* ── Modal body (form) ───────────────────────────────────────────── */
 
 .np-modal__body {
-    padding: 24px;
+    padding: var(--space-24);
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: var(--space-16);
 }
 
 /* ── Form fields ─────────────────────────────────────────────────── */
@@ -247,7 +247,7 @@
 .np-field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-6);
 }
 
 .np-label {
@@ -258,21 +258,21 @@
 
 .np-label span {
     color: var(--color-danger);
-    margin-left: 2px;
+    margin-left: var(--space-2);
 }
 
 .np-input,
 .np-textarea,
 .np-select {
     width: 100%;
-    padding: 9px 12px;
+    padding: var(--space-8) var(--space-12);
     border-radius: var(--radius-md);
     border: 1.5px solid var(--border-strong);
     font-size: var(--text-base);
     color: var(--text-primary);
     background: var(--surface-card);
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color var(--transition-fast);
     font-family: inherit;
     box-sizing: border-box;
 }
@@ -286,7 +286,7 @@
 .np-textarea:focus,
 .np-select:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-ring);
+    box-shadow: var(--ring);
 }
 
 .np-input--error,
@@ -309,7 +309,7 @@
 }
 
 .np-api-error {
-    padding: 10px 14px;
+    padding: var(--space-10) var(--space-14);
     border-radius: var(--radius-md);
     background: var(--color-danger-light);
     border: 1px solid color-mix(in oklch, var(--color-danger) 35%, transparent);
@@ -323,8 +323,8 @@
 .np-modal__footer {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 4px;
+    gap: var(--space-10);
+    margin-top: var(--space-4);
 }
 
 @keyframes np-spin {

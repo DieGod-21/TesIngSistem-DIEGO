@@ -15,13 +15,13 @@
 .ternas-page__header {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-6);
 }
 
 .ternas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  gap: var(--space-16);
 }
 
 .terna-card {
@@ -29,10 +29,10 @@
   border: 1px solid var(--border);
   border-top: 3px solid transparent;
   border-radius: var(--radius-card);
-  padding: 18px 20px;
+  padding: var(--space-16) var(--space-20);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-10);
   text-align: left;
   cursor: pointer;
   box-shadow: var(--shadow-sm), var(--hairline);
@@ -50,7 +50,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-8);
 }
 .terna-card__numero {
   font-size: var(--text-xs);
@@ -62,12 +62,12 @@
 .terna-card__estado {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-4);
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 3px 9px;
+  padding: var(--space-2) var(--space-8);
   border-radius: var(--radius-pill);
 }
 /* Chips de estado alineados a los tonos de <Badge> del DS (consistencia total). */
@@ -80,7 +80,7 @@
   font-size: var(--text-md);
   font-weight: var(--weight-bold);
   color: var(--text-primary);
-  line-height: 1.3;
+  line-height: var(--leading-snug);
 }
 .terna-card__student {
   margin: 0;
@@ -96,7 +96,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 6px;
+  margin-top: var(--space-6);
   font-size: var(--text-xs);
   color: var(--text-secondary);
 }
@@ -105,13 +105,13 @@
   height: 6px;
   border-radius: var(--radius-pill);
   background: var(--surface-raised);
-  margin: 0 10px;
+  margin: 0 var(--space-10);
   overflow: hidden;
 }
 .terna-card__progress-fill {
   height: 100%;
   background: var(--gradient-brand);
-  transition: width 280ms ease;
+  transition: width var(--transition-slow);
   /* Se rellena desde la izquierda al aparecer la tarjeta (sensación de progreso). */
   transform-origin: left center;
   animation: terna-fill 0.62s var(--ease-out-expo) both;
@@ -128,7 +128,7 @@
 .terna-detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: 24px;
+  gap: var(--space-24);
   align-items: start;
 }
 
@@ -154,10 +154,10 @@
   background: var(--surface-card-grad), var(--surface-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 22px 24px;
+  padding: var(--space-20) var(--space-24);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-12);
   /* Tarjetas "flotantes": misma presencia y profundidad que Student Detail. */
   box-shadow: var(--shadow-md), var(--hairline);
 }
@@ -183,7 +183,7 @@
 .tdetail-meta {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 8px 14px;
+  gap: var(--space-8) var(--space-14);
   font-size: var(--text-base);
   color: var(--text-secondary);
 }
@@ -196,18 +196,18 @@
 .tdetail-evaluators {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-6);
 }
 .tdetail-evaluator {
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 10px 16px;
-  padding: 12px 14px;
+  gap: var(--space-10) var(--space-16);
+  padding: var(--space-12) var(--space-14);
   background: var(--surface-raised);
   border: none;
-  border-radius: 10px;
-  transition: background 150ms;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
 }
 .tdetail-evaluator__name {
   font-weight: var(--weight-semibold);
@@ -227,7 +227,7 @@
   font-weight: var(--weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  padding: 3px 9px;
+  padding: var(--space-2) var(--space-8);
   border-radius: var(--radius-pill);
 }
 .eval-borrador { background: var(--color-warning-light); color: var(--color-warning); }
@@ -238,11 +238,11 @@
 .eval-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-14);
 }
 .eval-form__row {
   display: grid;
-  gap: 6px;
+  gap: var(--space-6);
 }
 .eval-form__label {
   font-size: var(--text-sm);
@@ -257,19 +257,19 @@
 .eval-form__textarea {
   width: 100%;
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  padding: var(--space-10) var(--space-12);
   font-size: var(--text-md);
   font-family: inherit;
   color: var(--text-primary);
   outline: none;
-  transition: border-color 120ms, box-shadow 120ms;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   background: var(--surface-card);
 }
 .eval-form__input:focus,
 .eval-form__textarea:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-ring);
+  box-shadow: var(--ring);
 }
 .eval-form__textarea {
   min-height: 120px;
@@ -278,20 +278,20 @@
 .eval-form__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-10);
   justify-content: flex-end;
 }
 .eval-btn {
   border: none;
-  border-radius: 10px;
-  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  padding: var(--space-10) var(--space-16);
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 120ms;
+  gap: var(--space-6);
+  transition: all var(--transition-fast);
 }
 .eval-btn--primary { background: var(--color-primary); color: var(--color-primary-contrast); }
 .eval-btn--primary:hover:not(:disabled) { background: var(--color-primary-hover); }
@@ -307,9 +307,9 @@
 
 .eval-locked {
   border: 1px dashed var(--border-strong);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--surface-raised);
-  padding: 12px 14px;
+  padding: var(--space-12) var(--space-14);
   font-size: var(--text-base);
   color: var(--text-secondary);
 }
