@@ -52,12 +52,6 @@ const LoginForm: React.FC = () => {
         }
     };
 
-    const isFormValid =
-        email.trim() !== '' &&
-        password !== '' &&
-        emailError === null &&
-        passwordError === null;
-
     return (
         <>
             <div className="auth-form-header">
@@ -109,11 +103,20 @@ const LoginForm: React.FC = () => {
                     </div>
                 </div>
 
+                {/* El botón NO se deshabilita por formulario incompleto.
+                    Deshabilitado y gris era lo primero que veía cualquiera al
+                    entrar al producto —la acción principal de la pantalla de
+                    acceso, muerta y sin una sola pista de por qué—, y la única
+                    salida era adivinar qué faltaba. `handleSubmit` ya marca los
+                    dos campos como tocados y corta antes de llamar al API, así
+                    que pulsarlo con el formulario vacío hace lo correcto: decir
+                    qué falta. Solo se bloquea durante el envío, para no duplicar
+                    la petición. */}
                 <IonButton
                     expand="block"
                     type="submit"
                     className="auth-submit-btn"
-                    disabled={loading || !isFormValid}
+                    disabled={loading}
                 >
                     {loading ? <IonSpinner name="crescent" /> : (
                         <>

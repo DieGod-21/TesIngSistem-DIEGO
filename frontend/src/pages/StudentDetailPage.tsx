@@ -11,6 +11,7 @@ import type { CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante
 import { Avatar, Badge, Button, CopyField, EmptyState, Skeleton } from '../components/ui';
 import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE } from '../utils/ternaStatus';
 import { formatShortDate } from '../utils/dates';
+import { ternaHint } from '../utils/thesisStatus';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 import '../styles/student-detail.css';
@@ -111,28 +112,10 @@ const StudentDetailPage: React.FC = () => {
         return n?.updated_at ? formatShortDate(n.updated_at) : null;
     };
 
-    // Estado vacío de terna consciente del prerrequisito (deriva del estado de tesis real).
-    const ternaHint = ((): { title: string; msg: string; step: string } => {
-        if (tesisResult.estado === 'APROBADO') {
-            return {
-                title: 'Elegible · sin terna',
-                msg:   'Cumple el requisito de tesis (PG1 + PG2).',
-                step:  'Siguiente paso: conformar el comité evaluador (3 evaluadores).',
-            };
-        }
-        if (tesisResult.estado === 'REPROBADO') {
-            return {
-                title: 'Terna no disponible',
-                msg:   'No se alcanza la nota mínima en PG1 y/o PG2.',
-                step:  'Se asigna al recuperar la elegibilidad de tesis.',
-            };
-        }
-        return {
-            title: 'Terna pendiente',
-            msg:   'Faltan notas de PG1 y/o PG2 para evaluar la elegibilidad.',
-            step:  'Registra las notas para habilitar la asignación de terna.',
-        };
-    })();
+    // Estado vacío de terna consciente del prerrequisito (deriva del estado de
+    // tesis real). La derivación vive en el dominio: la comparte con la vista
+    // rápida, que responde la misma pregunta sobre el mismo estado.
+    const hint = ternaHint(tesisResult.estado);
 
     const openEdit = (curso: '043' | '049', notaActual: number | null) =>
         setEditModal({ open: true, curso, notaActual });
@@ -229,12 +212,10 @@ const StudentDetailPage: React.FC = () => {
                                     {promedioGeneral != null ? Number(promedioGeneral).toFixed(2) : '—'}
                                 </dd>
                             </div>
-                            <div className="sd-stat">
-                                <dt className="sd-stat__label">Terna</dt>
-                                <dd className={`sd-stat__value ${terna ? '' : 'sd-stat__value--soft'}`}>
-                                    {terna ? `#${String(terna.numero).padStart(2, '0')}` : 'Sin asignar'}
-                                </dd>
-                            </div>
+                            {/* La terna NO se repite aquí. La columna derecha le dedica
+                                una tarjeta entera —número, estado, resolución, promedio
+                                y avance—, y esta tira solo reimprimía el número. Mismo
+                                criterio que ya se aplicó al carné más arriba. */}
                             <div className="sd-stat">
                                 <dt className="sd-stat__label">{lastActivity?.label ?? 'Actividad'}</dt>
                                 <dd className={`sd-stat__value ${lastActivity ? '' : 'sd-stat__value--soft'}`}>
@@ -395,13 +376,13 @@ const StudentDetailPage: React.FC = () => {
                                             <Users size={20} aria-hidden="true" />
                                         </span>
                                         <div className="sd-terna__empty-text">
-                                            <p className="sd-terna__empty-title">{ternaHint.title}</p>
-                                            <p className="sd-terna__empty-msg">{ternaHint.msg}</p>
+                                            <p className="sd-terna__empty-title">{hint.title}</p>
+                                            <p className="sd-terna__empty-msg">{hint.msg}</p>
                                         </div>
                                     </div>
                                     <p className="sd-terna__empty-step">
                                         <ArrowRight size={13} aria-hidden="true" />
-                                        {ternaHint.step}
+                                        {hint.step}
                                     </p>
                                 </article>
                             )}

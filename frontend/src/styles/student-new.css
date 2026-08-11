@@ -56,7 +56,7 @@
 
 .sn-panel__icon {
     display: inline-flex;
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     flex-shrink: 0;
 }
 
@@ -193,7 +193,7 @@
 }
 
 .sn-log__item:hover .sn-log__go {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     transform: translateX(2px);
 }
 
@@ -240,7 +240,7 @@
 }
 
 .sn-dropzone__icon {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     margin-bottom: var(--space-2);
 }
 
@@ -258,7 +258,7 @@
 }
 
 .sn-dropzone__link {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     font-weight: var(--weight-semibold);
 }
 

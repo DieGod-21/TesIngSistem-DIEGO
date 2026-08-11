@@ -30,6 +30,23 @@
     --color-primary-contrast:  oklch(0.99 0.004 275);
     --color-primary-ring:      color-mix(in oklch, var(--indigo-600) 32%, transparent);
 
+    /* ── Primario COMO TEXTO ────────────────────────────────────────────
+       Rol semántico distinto del relleno de marca, no un alias por comodidad.
+
+       Un color que funciona como RELLENO (con texto claro encima) no tiene por
+       qué funcionar como TEXTO sobre una superficie: son dos contrastes
+       opuestos y un solo token no puede satisfacer ambos. En oscuro el
+       primario es `--indigo-500`, que como relleno es correcto y como texto
+       daba 3.34:1 sobre `--surface-raised` — por debajo de AA.
+
+       Medido en Chromium contra las tres superficies (peor caso):
+           claro   --indigo-600  →  6.6:1   ✓
+           oscuro  --indigo-400  →  5.20:1  ✓   (antes 3.34:1 ✗)
+
+       Úsese SIEMPRE que el primario vaya en `color:`. Para bordes, rellenos y
+       anillos sigue mandando `--color-primary`. */
+    --color-primary-text:      var(--indigo-600);
+
     /* ── Marca UMG (legado → reapuntado a la identidad índigo) ── */
     /* El rojo se mantiene REAL: es la firma institucional + destructivo. */
     --umg-red:         oklch(0.552 0.212 24);   /* rojo institucional #c8102e */
@@ -394,6 +411,9 @@ body {
     --color-primary:         var(--indigo-500);
     --color-primary-hover:    var(--indigo-400);
     --color-primary-active:   var(--indigo-300);
+    /* Como texto, el primario sube un escalón: `--indigo-500` daba 3.34:1
+       sobre `--surface-raised`. Con `--indigo-400`, 5.20:1 en el peor caso. */
+    --color-primary-text:     var(--indigo-400);
     --color-primary-soft:     oklch(0.320 0.070 275);
     --color-primary-soft-2:   oklch(0.370 0.090 275);
     --color-primary-ring:     color-mix(in oklch, var(--indigo-400) 40%, transparent);

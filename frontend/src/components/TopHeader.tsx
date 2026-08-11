@@ -6,6 +6,7 @@ import { getRoleLabel } from '../config/permissions';
 import { useTheme } from '../context/ThemeContext';
 import { useStudentSearch } from '../hooks/useStudentSearch';
 import { useGlobalHotkey } from '../hooks/useGlobalHotkey';
+import { highlightRanges } from '../utils/text';
 import { Avatar } from './ui';
 
 interface TopHeaderProps {
@@ -21,6 +22,27 @@ interface TopHeaderProps {
  *   - seleccionar un estudiante (→ detalle), o
  *   - presionar Enter (→ listado filtrado por el término).
  */
+/**
+ * Resalta en el texto lo que el usuario escribió.
+ *
+ * Sin esto la lista obliga a releer cada nombre entero para descubrir POR QUÉ
+ * está ahí: con la búsqueda tolerante a acentos y por tokens, la coincidencia
+ * puede estar en cualquier parte de la cadena.
+ */
+const Resaltado: React.FC<{ texto: string; query: string }> = ({ texto, query }) => {
+    const tramos = highlightRanges(texto, query);
+    if (tramos.length === 0) return <>{texto}</>;
+    const out: React.ReactNode[] = [];
+    let cur = 0;
+    tramos.forEach(([ini, fin], k) => {
+        if (ini > cur) out.push(texto.slice(cur, ini));
+        out.push(<mark key={k} className="dash-search-sug__hit">{texto.slice(ini, fin)}</mark>);
+        cur = fin;
+    });
+    if (cur < texto.length) out.push(texto.slice(cur));
+    return <>{out}</>;
+};
+
 const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
@@ -146,8 +168,11 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                         >
                             <Avatar name={s.nombre} size="sm" />
                             <span className="dash-search-sug__text">
-                                <span className="dash-search-sug__name">{s.nombre}</span>
-                                <span className="dash-search-sug__meta">{s.carnet}{s.carrera ? ` · ${s.carrera}` : ''}</span>
+                                <span className="dash-search-sug__name"><Resaltado texto={s.nombre} query={query} /></span>
+                                <span className="dash-search-sug__meta">
+                                    <Resaltado texto={s.carnet} query={query} />
+                                    {s.carrera ? ` · ${s.carrera}` : ''}
+                                </span>
                             </span>
                         </button>
                     </li>

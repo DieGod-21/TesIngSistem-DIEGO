@@ -113,7 +113,7 @@
 .ui-btn--secondary:hover:not(:disabled) {
     background: var(--surface-raised);
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
 }
 
 .ui-btn--ghost {
@@ -194,6 +194,22 @@
 .ui-icon-btn:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+}
+
+/* ── Objetivo táctil ──────────────────────────────────────────────────
+   Se decide por CAPACIDAD del dispositivo, no por ancho de ventana: una
+   tableta con puntero grueso a 1024px necesita el objetivo grande, y un
+   portátil estrecho con ratón no.
+
+   Solo crecen los botones de ICONO, que son los que se quedaban cortos
+   (32px). Los botones con texto ya llegan por su propio padding —medido:
+   214 controles del producto están en 44px o más—, así que subirlos en
+   bloque solo habría inflado las barras densas sin ganar nada. */
+@media (pointer: coarse) {
+    .ui-icon-btn {
+        width: var(--control-h-lg);
+        height: var(--control-h-lg);
+    }
 }
 
 .ui-btn--block {
@@ -321,7 +337,7 @@
     height: 2.5rem;
     border-radius: var(--radius-card);
     flex-shrink: 0;
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     background: linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-primary-soft-2) 100%);
     box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.4), var(--shadow-xs);
 }
@@ -565,10 +581,20 @@
     border-radius: var(--radius-sm);
     transition: color var(--transition-fast);
 }
-.ui-breadcrumb__link:hover { color: var(--color-primary); }
+.ui-breadcrumb__link:hover { color: var(--color-primary-text); }
 .ui-breadcrumb__link:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+}
+
+/* Con el dedo, un enlace de 17px de alto es un objetivo pobre. Se gana altura
+   con padding vertical y se compensa con margen negativo para NO mover la
+   miga de pan: el área táctil crece, la composición no se entera. */
+@media (pointer: coarse) {
+    .ui-breadcrumb__link {
+        padding-block: var(--space-8);
+        margin-block: calc(-1 * var(--space-8));
+    }
 }
 
 .ui-breadcrumb__sep {
@@ -637,7 +663,11 @@
     min-height: var(--control-h-sm);
     padding: var(--space-4) var(--space-8);
     margin-left: calc(-1 * var(--space-8));   /* alinea ópticamente con el texto de arriba */
-    border: 1px solid transparent;
+    /* Contorno en REPOSO: sin él, el control pasaba por texto con un icono al
+       lado y solo se delataba al apuntarlo, cosa que en táctil no ocurre nunca.
+       El borde ya estaba reservado en transparente, así que darle color no
+       cambia una sola medida: los cinco estados conservan la misma caja. */
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: transparent;
     font: inherit;
@@ -653,22 +683,28 @@
 .ui-copy__value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* La acción se insinúa en reposo y se afirma al apuntar: el dato es lo que
-   importa, copiar es lo que se ofrece. */
+   importa, copiar es lo que se ofrece.
+   A 0.45 el icono se leía como un adorno gris y el control entero pasaba por
+   texto plano: nada decía que se pudiera pulsar hasta apuntarlo, y en táctil no
+   hay «apuntar». 0.7 lo mantiene subordinado al dato pero visible desde el
+   primer vistazo. */
 .ui-copy__action {
     display: inline-flex;
     margin-left: auto;
     color: var(--text-muted);
-    opacity: 0.45;
+    opacity: 0.7;
     transition: opacity var(--transition-fast), color var(--transition-fast),
                 transform var(--transition-fast);
 }
 
+/* Al apuntar hay que ESCALAR sobre el reposo: ahora que el reposo ya tiene
+   borde, repetir `--border` en hover no comunicaba nada. */
 .ui-copy:hover {
     background: var(--surface-raised);
     color: var(--text-primary);
-    border-color: var(--border);
+    border-color: var(--border-strong);
 }
-.ui-copy:hover .ui-copy__action { opacity: 1; color: var(--color-primary); }
+.ui-copy:hover .ui-copy__action { opacity: 1; color: var(--color-primary-text); }
 .ui-copy:focus-visible { outline: none; border-color: var(--color-primary); box-shadow: var(--ring); }
 
 /* Acuse: verde, breve, y se retira solo (useCopyToClipboard). */
@@ -753,7 +789,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     box-shadow: var(--ring);
 }
 
-.ui-field__control:focus-within .ui-field__icon { color: var(--color-primary); }
+.ui-field__control:focus-within .ui-field__icon { color: var(--color-primary-text); }
 
 .ui-field__input:disabled {
     background: var(--surface-raised);
@@ -821,7 +857,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 }
 .ui-modal__icon--danger  { background: var(--color-danger-light);  color: var(--color-danger); }
 .ui-modal__icon--warning { background: var(--color-warning-light); color: var(--color-warning); }
-.ui-modal__icon--primary { background: var(--color-primary-soft);  color: var(--color-primary); }
+.ui-modal__icon--primary { background: var(--color-primary-soft);  color: var(--color-primary-text); }
 
 .ui-modal__title {
     font-size: var(--text-lg);
@@ -944,7 +980,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     text-transform: uppercase;
     /* Tono institucional: un punto más de tracking y de aire bajo la etiqueta. */
     letter-spacing: 0.14em;
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     margin: 0 0 var(--space-8);
 }
 .ui-kicker::before {
@@ -1102,7 +1138,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     margin-bottom: var(--space-8);
     box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.5), var(--shadow-xs);
 }
-.ui-empty--primary .ui-empty__icon { color: var(--color-primary); background: linear-gradient(135deg, var(--color-primary-soft), var(--color-primary-soft-2)); }
+.ui-empty--primary .ui-empty__icon { color: var(--color-primary-text); background: linear-gradient(135deg, var(--color-primary-soft), var(--color-primary-soft-2)); }
 .ui-empty--success .ui-empty__icon { color: var(--color-success); background: var(--color-success-light); }
 .ui-empty--danger  .ui-empty__icon { color: var(--color-danger);  background: var(--color-danger-light); }
 .ui-empty--neutral .ui-empty__icon { color: var(--text-secondary); background: var(--surface-raised); }

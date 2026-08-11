@@ -22,6 +22,7 @@ import {
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import { useStudentDossier } from '../../../hooks/useStudentDossier';
 import { THESIS_MIN_GRADE } from '../../../config/apiConfig';
+import { ternaHint, verdictReason } from '../../../utils/thesisStatus';
 import { VOCAB } from '../../../config/vocabulary';
 import { Alert, Avatar, Badge, Button, CopyField, Skeleton } from '../../../components/ui';
 import type { BadgeTone } from '../../../components/ui';
@@ -64,6 +65,15 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
     const panelRef = useFocusTrap<HTMLDivElement>(open, onClose);
     const dossier = useStudentDossier(studentId);
 
+    // Motivo del veredicto y siguiente paso: ambos derivados del MISMO estado
+    // de tesis que ya calcula el dossier, con la misma función que el
+    // expediente. Sin reglas de negocio nuevas ni datos inventados.
+    const razon = verdictReason({
+        pg1: dossier.grades.find((g) => g.curso === '043')?.nota_final ?? null,
+        pg2: dossier.grades.find((g) => g.curso === '049')?.nota_final ?? null,
+    });
+    const hint = ternaHint(dossier.tesis.estado);
+
     // ↑/↓ recorren el padrón sin cerrar el panel: el flujo de revisión no se
     // interrumpe. Se ignoran mientras el foco está en un campo de texto.
     const onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -99,7 +109,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                 <div className="qv-bar">
                     <button
                         type="button"
-                        className="qv-icon-btn"
+                        className="ui-icon-btn"
                         onClick={onClose}
                         aria-label="Cerrar vista rápida"
                         data-autofocus
@@ -116,7 +126,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                     <div className="qv-bar__nav">
                         <button
                             type="button"
-                            className="qv-icon-btn"
+                            className="ui-icon-btn"
                             onClick={onPrev}
                             disabled={!onPrev}
                             aria-label="Estudiante anterior (flecha arriba)"
@@ -126,7 +136,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                         </button>
                         <button
                             type="button"
-                            className="qv-icon-btn"
+                            className="ui-icon-btn"
                             onClick={onNext}
                             disabled={!onNext}
                             aria-label="Estudiante siguiente (flecha abajo)"
@@ -159,41 +169,35 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                             «arriba» reconocible y evita que el contenido flote
                             sobre una superficie plana. */}
                         <header className="qv-identity">
-                            <Avatar name={student.nombre} size="lg" shape="square" />
+                            <Avatar name={student.nombre} size="xl" shape="square" />
                             <div className="qv-identity__text">
                                 <h2 className="qv-identity__name">{student.nombre}</h2>
+                                {/* El complemento del veredicto tiene que APOYARLO, no
+                                    competir con él. El promedio solo se muestra cuando
+                                    concuerda; si no, se dice el motivo real, que es por
+                                    curso. Con 69 y 92 el encabezado llegaba a poner
+                                    «Nota insuficiente · Promedio 80.5» con el mínimo 70
+                                    escrito justo debajo. */}
                                 <div className="qv-verdict">
                                     <Badge tone={verdict.tone} dot>{verdict.label}</Badge>
-                                    {promedio != null && (
-                                        <span className="qv-verdict__avg">
-                                            Promedio <strong className="ui-tnum">{promedio}</strong>
-                                        </span>
-                                    )}
+                                    {razon
+                                        ? <span className="qv-verdict__why">{razon}</span>
+                                        : promedio != null && (
+                                            <span className="qv-verdict__avg">
+                                                {/* Dos decimales, como en TODO el producto (expediente,
+                                                    ternas, reportes, tarjeta de elegibilidad). El panel
+                                                    era el único sitio que imprimía el número crudo: el
+                                                    mismo alumno pasaba de «84.5» a «84.50» al abrir el
+                                                    expediente. */}
+                                                Promedio <strong className="ui-tnum">{Number(promedio).toFixed(2)}</strong>
+                                            </span>
+                                        )}
                                 </div>
                             </div>
                         </header>
 
                         <div className="qv-body">
-                            {/* ── 2. Identificadores: se copian, no se leen ── */}
-                            <div className="qv-ids">
-                                <CopyField
-                                    value={student.carnet}
-                                    label="carné"
-                                    icon={<IdCard size={14} />}
-                                    resetKey={studentId}
-                                    tnum
-                                />
-                                {student.email && (
-                                    <CopyField
-                                        value={student.email}
-                                        label="correo"
-                                        icon={<Mail size={14} />}
-                                        resetKey={studentId}
-                                    />
-                                )}
-                            </div>
-
-                            {/* ── 3. ¿Qué falta? Requisito de tesis, curso a curso ── */}
+                            {/* ── 2. ¿Qué falta? Requisito de tesis, curso a curso ── */}
                             <section className="qv-section" aria-label="Requisito de tesis">
                                 <div className="qv-section__head">
                                     <h3 className="qv-section__title">Requisito de tesis</h3>
@@ -222,7 +226,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 </ul>
                             </section>
 
-                            {/* ── 4. Terna: solo si aporta. Si no, una línea ── */}
+                            {/* ── 3. Terna: solo si aporta. Si no, una línea ── */}
                             <section className="qv-section" aria-label={VOCAB.committee}>
                                 <div className="qv-section__head">
                                     <h3 className="qv-section__title">{VOCAB.committee}</h3>
@@ -233,6 +237,14 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                         <span className="qv-terna__num">
                                             {VOCAB.committee} {terna.numero}
                                         </span>
+                                        {/* Lo que falta de la terna es un dato real que el
+                                            expediente ya muestra y el panel omitía: sin él
+                                            «En progreso» no dice cuánto queda. */}
+                                        {terna.total_evaluadores > 0 && (
+                                            <span className="qv-terna__prog ui-tnum">
+                                                {terna.evaluaciones_enviadas}/{terna.total_evaluadores}
+                                            </span>
+                                        )}
                                         <Badge tone={terna.estado === 'completada' ? 'success' : 'neutral'}>
                                             {terna.estado === 'completada' ? 'Completada'
                                                 : terna.estado === 'en_progreso' ? 'En progreso' : 'Pendiente'}
@@ -247,6 +259,51 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 )}
                             </section>
 
+                            {/* ── 4. Qué sigue ──
+                                Cuarta pregunta que el panel promete responder, y la
+                                única que no respondía. No es relleno inventado: es la
+                                misma derivación que ya usa el expediente sobre el
+                                estado de tesis real de este alumno.
+
+                                SOLO cuando NO hay terna. `ternaHint` se escribió para
+                                el estado vacío de terna, y mostrarlo con una terna
+                                asignada producía la contradicción de anunciar «se
+                                asigna al recuperar la elegibilidad» justo debajo de
+                                «Terna 7 · En progreso». Cuando hay terna, lo que sigue
+                                lo dice su propio avance de evaluaciones. */}
+                            {!terna && (
+                                <p className="qv-next">
+                                    <ArrowRight size={13} aria-hidden="true" />
+                                    {hint.step}
+                                </p>
+                            )}
+
+                            {/* ── 5. Identificadores: el dato de MENOR rango del panel ──
+                                Estaban arriba del todo, justo bajo el nombre, ocupando
+                                el mejor sitio del cuerpo con la información menos
+                                decisiva: un carné no ayuda a decidir nada, se copia
+                                para pegarlo en otro sistema. Al bajarlos, el orden de
+                                lectura pasa a ser quién → qué estado → por qué → qué
+                                sigue → cómo lo contacto, y el hueco muerto del 40% se
+                                convierte en la separación entre la zona de decisión y
+                                la zona de utilidad (`margin-top:auto`). */}
+                            <div className="qv-ids">
+                                <CopyField
+                                    value={student.carnet}
+                                    label="carné"
+                                    icon={<IdCard size={14} />}
+                                    resetKey={studentId}
+                                    tnum
+                                />
+                                {student.email && (
+                                    <CopyField
+                                        value={student.email}
+                                        label="correo"
+                                        icon={<Mail size={14} />}
+                                        resetKey={studentId}
+                                    />
+                                )}
+                            </div>
                         </div>
 
                         {/* ── Pie: continuar al expediente es LA acción del panel ──

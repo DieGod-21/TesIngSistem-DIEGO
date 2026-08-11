@@ -13,14 +13,35 @@ import { COURSE_CODES } from '../config/apiConfig';
 import { Alert, Badge, Button } from './ui';
 import '../styles/import-modal.css';
 
+/**
+ * `partial` es un TERCER resultado, no un matiz del éxito.
+ *
+ * El estado se decidía por si la petición había resuelto o lanzado, no por lo
+ * que decía la respuesta. Con `errores: [...]` el modal pintaba un recuadro
+ * VERDE con un check y el texto «3 error(es)»: una importación que rechazó
+ * filas se anunciaba como correcta, y los motivos —que el servidor sí manda—
+ * se descartaban, así que no había forma de saber qué corregir.
+ */
 interface SectionState {
     file: File | null;
     loading: boolean;
-    status: 'idle' | 'success' | 'error';
+    status: 'idle' | 'success' | 'partial' | 'error';
     message: string;
+    /** Motivos de las filas rechazadas, ya normalizados a texto. */
+    issues: string[];
 }
 
-const blank = (): SectionState => ({ file: null, loading: false, status: 'idle', message: '' });
+const blank = (): SectionState => ({ file: null, loading: false, status: 'idle', message: '', issues: [] });
+
+/** Los errores llegan como cadenas o como objetos {fila, carnet, error}. */
+function toIssues(r: ImportarResult): string[] {
+    if (!Array.isArray(r.errores)) return [];
+    return r.errores.map((e) => {
+        if (typeof e === 'string') return e;
+        const donde = e.fila != null ? `Fila ${e.fila}` : e.carnet ? `Carné ${e.carnet}` : null;
+        return donde ? `${donde}: ${e.error}` : e.error;
+    });
+}
 
 const CURSOS = [
     { label: 'PG1 – Proyecto de Graduación I',  value: COURSE_CODES.PG1 },
@@ -33,7 +54,8 @@ function summarize(r: ImportarResult): string {
     if (r.creados    != null)   parts.push(`${r.creados} creados`);
     if (r.procesados != null)   parts.push(`${r.procesados} procesados`);
     if (r.duplicados != null)   parts.push(`${r.duplicados} duplicados`);
-    if (Array.isArray(r.errores) && r.errores.length > 0) parts.push(`${r.errores.length} error(es)`);
+    // El recuento de errores YA NO va aquí: tiene su propio bloque, con los
+    // motivos. Meterlo en la línea de éxito era lo que producía «✓ 3 error(es)».
     return parts.join(' · ') || 'Importación completada.';
 }
 
@@ -86,7 +108,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
             setEst((s) => ({ ...s, file: null, status: 'error', message: 'Solo se permiten archivos .xlsx, .xls o .csv.' }));
             return;
         }
-        setEst((s) => ({ ...s, file, status: 'idle', message: '' }));
+        setEst((s) => ({ ...s, file, status: 'idle', message: '', issues: [] }));
     };
 
     const pickNotFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,21 +118,26 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
             setNot((s) => ({ ...s, file: null, status: 'error', message: 'Solo se permiten archivos .pdf.' }));
             return;
         }
-        setNot((s) => ({ ...s, file, status: 'idle', message: '' }));
+        setNot((s) => ({ ...s, file, status: 'idle', message: '', issues: [] }));
     };
 
     const uploadEst = async () => {
         if (!est.file) {
-            setEst((s) => ({ ...s, status: 'error', message: 'Selecciona un archivo antes de importar.' }));
+            setEst((s) => ({ ...s, status: 'error', message: 'Selecciona un archivo antes de importar.', issues: [] }));
             return;
         }
-        setEst((s) => ({ ...s, loading: true, status: 'idle', message: '' }));
+        setEst((s) => ({ ...s, loading: true, status: 'idle', message: '', issues: [] }));
         try {
             const r = await importarEstudiantes(est.file);
             if (estRef.current) estRef.current.value = '';
-            setEst((s) => ({ ...s, file: null, status: 'success', message: summarize(r) }));
+            const issues = toIssues(r);
+            setEst((s) => ({
+                ...s, file: null,
+                status: issues.length > 0 ? 'partial' : 'success',
+                message: summarize(r), issues,
+            }));
         } catch (e) {
-            setEst((s) => ({ ...s, status: 'error', message: extractError(e) }));
+            setEst((s) => ({ ...s, status: 'error', message: extractError(e), issues: [] }));
         } finally {
             setEst((s) => ({ ...s, loading: false }));
         }
@@ -118,16 +145,21 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
 
     const uploadNot = async () => {
         if (!not.file) {
-            setNot((s) => ({ ...s, status: 'error', message: 'Selecciona un archivo antes de importar.' }));
+            setNot((s) => ({ ...s, status: 'error', message: 'Selecciona un archivo antes de importar.', issues: [] }));
             return;
         }
-        setNot((s) => ({ ...s, loading: true, status: 'idle', message: '' }));
+        setNot((s) => ({ ...s, loading: true, status: 'idle', message: '', issues: [] }));
         try {
             const r = await importarNotas(curso, not.file);
             if (notRef.current) notRef.current.value = '';
-            setNot((s) => ({ ...s, file: null, status: 'success', message: summarize(r) }));
+            const issues = toIssues(r);
+            setNot((s) => ({
+                ...s, file: null,
+                status: issues.length > 0 ? 'partial' : 'success',
+                message: summarize(r), issues,
+            }));
         } catch (e) {
-            setNot((s) => ({ ...s, status: 'error', message: extractError(e) }));
+            setNot((s) => ({ ...s, status: 'error', message: extractError(e), issues: [] }));
         } finally {
             setNot((s) => ({ ...s, loading: false }));
         }
@@ -190,7 +222,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                             </Button>
                         </div>
                         {est.status !== 'idle' && (
-                            <Feedback status={est.status} message={est.message} />
+                            <Feedback status={est.status} message={est.message} issues={est.issues} />
                         )}
                     </section>
 
@@ -244,7 +276,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                             </Button>
                         </div>
                         {not.status !== 'idle' && (
-                            <Feedback status={not.status} message={not.message} />
+                            <Feedback status={not.status} message={not.message} issues={not.issues} />
                         )}
                     </section>
                 </div>
@@ -254,12 +286,26 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
     );
 };
 
-const Feedback: React.FC<{ status: 'success' | 'error'; message: string }> = ({ status, message }) => (
+const MAX_ISSUES = 5;
+
+const Feedback: React.FC<{ status: 'success' | 'partial' | 'error'; message: string; issues?: string[] }> = ({
+    status, message, issues = [],
+}) => (
     <Alert
-        tone={status === 'success' ? 'success' : 'danger'}
+        tone={status === 'success' ? 'success' : status === 'partial' ? 'warning' : 'danger'}
         icon={status === 'success' ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
     >
-        {message}
+        {status === 'partial'
+            ? `${message} · ${issues.length} fila${issues.length !== 1 ? 's' : ''} rechazada${issues.length !== 1 ? 's' : ''}`
+            : message}
+        {issues.length > 0 && (
+            <ul className="im-issues">
+                {issues.slice(0, MAX_ISSUES).map((t, i) => <li key={i}>{t}</li>)}
+                {issues.length > MAX_ISSUES && (
+                    <li className="im-issues__more">y {issues.length - MAX_ISSUES} más…</li>
+                )}
+            </ul>
+        )}
     </Alert>
 );
 

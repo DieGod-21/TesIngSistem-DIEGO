@@ -136,6 +136,36 @@ describe('CSS válido', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
+describe('Roles semánticos del color primario', () => {
+    /**
+     * `--color-primary` es un RELLENO de marca; `--color-primary-text` es el
+     * mismo color en su papel de TEXTO. Son contrastes opuestos y un solo
+     * token no puede satisfacer los dos: como relleno lleva texto claro
+     * encima, como texto va sobre una superficie.
+     *
+     * En oscuro el primario es `--indigo-500`, que como texto daba 3.34:1
+     * sobre `--surface-raised` — por debajo de AA. El token de texto usa
+     * `--indigo-400`: 5.20:1 en el peor caso, medido en Chromium.
+     *
+     * Esta regla es lo que permite que el medidor de contraste deje de
+     * evaluar `--color-primary` como si fuera un color de texto: aquí queda
+     * garantizado que nunca lo es.
+     */
+    it('el primario nunca se usa como color de texto', () => {
+        const offenders: string[] = [];
+        for (const f of cssFiles) {
+            if (themeFile(f)) continue;                 // el tema DECLARA los tokens
+            const src = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            for (const m of src.matchAll(/(?<![-\w])color:\s*var\(\s*--color-primary\s*\)/g)) {
+                const line = src.slice(0, m.index).split('\n').length;
+                offenders.push(`${rel(f)}:${line} → usa --color-primary-text`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
 describe('Estabilidad al apuntar', () => {
     /**
      * Un `:hover` NUNCA puede desplazar al propio elemento apuntado.
@@ -451,6 +481,25 @@ describe('Ninguna fecha cruda en pantalla', () => {
         const violations: string[] = [];
         for (const f of codeFiles.filter((f) => f.endsWith('.tsx'))) {
             for (const m of read(f).matchAll(raw)) violations.push(`${rel(f)} → ${m[0]}`);
+        }
+        expect(violations).toEqual([]);
+    });
+
+    /**
+     * El mismo módulo existe para que la fecha tenga UN tratamiento, y aun así
+     * el tiempo relativo se había bifurcado: la cola de trabajo escribía
+     * `hace ${ageDays} d` y la tira de cambios `hace ${d} días`. Dos
+     * abreviaturas para una idea, y la primera no pasaba nunca de días
+     * («hace 314 d»). `formatAgo` es el único autorizado a componer esa frase.
+     */
+    it('nadie compone «hace …» a mano fuera de utils/dates', () => {
+        const violations: string[] = [];
+        for (const f of codeFiles) {
+            if (/utils[\\/]dates\./.test(f)) continue;
+            const src = read(f);
+            for (const m of src.matchAll(/`[^`]*\bhace \$\{[^`]*`/g)) {
+                violations.push(`${rel(f)} → ${m[0].slice(0, 52)} … usa formatAgo()`);
+            }
         }
         expect(violations).toEqual([]);
     });

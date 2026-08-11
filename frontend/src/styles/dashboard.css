@@ -335,7 +335,7 @@
 }
 
 .dash-header__search-wrapper:focus-within .dash-header__search-icon {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
 }
 
 /* El buscador global es el control MÁS FRECUENTE del producto: aparece en las
@@ -428,6 +428,17 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Coincidencia con lo escrito. `<mark>` trae un amarillo de navegador que no
+   pertenece a ninguna paleta: se reemplaza por un tinte de marca. El peso sube
+   un escalón para que el resalte también se lea sin color. */
+.dash-search-sug__hit {
+    background: color-mix(in oklch, var(--color-primary) 16%, transparent);
+    color: inherit;
+    font-weight: var(--weight-bold);
+    border-radius: var(--radius-xs);
+    padding: 0 1px;
 }
 
 .dash-search-panel__state {
@@ -770,7 +781,7 @@ button.kpi-card {
 
 .kpi-card__icon-box--blue {
     background: linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-primary-soft-2) 100%);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
 }
 
 .kpi-card__icon-box--red {

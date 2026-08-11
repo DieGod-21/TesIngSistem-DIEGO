@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import type { EstadoTesis, CursoNotaResumen, EstadoNota } from '../../types/api';
 import { computeEstadoTesis, extractGradesFromReporte } from '../../utils/thesisStatus';
+import { VOCAB } from '../../config/vocabulary';
 import './thesis-status.css';
 
 interface Props {
@@ -20,22 +21,32 @@ interface GradeRow {
     estado: EstadoNota | null;
 }
 
-const STATUS_META: Record<VisualStatus, { label: string; headline: string; Icon: React.ElementType; modifier: string }> = {
+/**
+ * Etiquetas del veredicto: las de VOCAB, las mismas que la vista rápida.
+ *
+ * Decían «Aprobado / Reprobado / Pendiente» mientras el panel de inspección
+ * decía «Elegible a tesis / Nota insuficiente / Faltan notas» para EL MISMO
+ * alumno: se pasa de uno a otro con un clic y el veredicto cambiaba de nombre
+ * por el camino. Además «Aprobado» es ambiguo sin contexto —¿aprobó el curso o
+ * la tesis?—, que es justo lo que VOCAB.verdict* existe para evitar.
+ *
+ * Ya no hay `headline`: repetía el `razon` que la propia tarjeta imprime en el
+ * pie con más precisión («Cumple requisito de tesis» sobre «Cumple con la nota
+ * mínima (70) en PG1 y PG2»). Se conserva el dato, se retira el eco.
+ */
+const STATUS_META: Record<VisualStatus, { label: string; Icon: React.ElementType; modifier: string }> = {
     eligible: {
-        label:    'Aprobado',
-        headline: 'Cumple requisito de tesis',
+        label:    VOCAB.verdictEligible,
         Icon:     CheckCircle2,
         modifier: 'tsb--eligible',
     },
     not_eligible: {
-        label:    'Reprobado',
-        headline: 'No cumple requisito',
+        label:    VOCAB.verdictBelowMin,
         Icon:     XCircle,
         modifier: 'tsb--not-eligible',
     },
     pending: {
-        label:    'Pendiente',
-        headline: 'Sin notas registradas',
+        label:    VOCAB.verdictMissing,
         Icon:     HelpCircle,
         modifier: 'tsb--pending',
     },
@@ -95,7 +106,6 @@ const ThesisStatusBadge: React.FC<Props> = ({ estado, variant = 'card', title })
                     <Icon size={22} />
                 </span>
                 <div>
-                    <p className="tsb-card__headline">{meta.headline}</p>
                     <p className="tsb-card__status-label">{meta.label}</p>
                     <p className="tsb-card__min">
                         Mínimo requerido: <strong>{estado.nota_minima}</strong> en cada curso

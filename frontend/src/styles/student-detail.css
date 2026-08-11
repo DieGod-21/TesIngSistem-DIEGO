@@ -20,7 +20,7 @@
 }
 .nota-edit-btn:hover {
     background: var(--surface-raised);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
 }
 
 /* ── Add nota (registrar nota faltante, dentro del record del timeline) ── */
@@ -40,7 +40,7 @@
 }
 .nota-add-btn:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     background: var(--color-primary-soft);
 }
 
@@ -255,7 +255,7 @@
     text-decoration: none;
     transition: color var(--transition-fast);
 }
-.sd-hero__email:hover { color: var(--color-primary); }
+.sd-hero__email:hover { color: var(--color-primary-text); }
 .sd-hero__verdict {
     display: flex;
     flex-direction: column;
@@ -507,7 +507,7 @@
     line-height: var(--leading-snug);
     color: var(--color-primary-hover);
 }
-.sd-terna__empty-step svg { flex-shrink: 0; color: var(--color-primary); }
+.sd-terna__empty-step svg { flex-shrink: 0; color: var(--color-primary-text); }
 
 /* ── Notas: timeline + record (centro visual del contenido) ──────────────
    Cada nota es un registro académico: nodo en la línea de tiempo, curso,
@@ -569,7 +569,7 @@
     font-size: var(--text-2xs);
     font-weight: var(--weight-bold);
     letter-spacing: 0.04em;
-    color: var(--color-primary);
+    color: var(--color-primary-text);
 }
 .sd-rec__code--muted { color: var(--text-muted); }
 .sd-rec__title {

@@ -200,6 +200,17 @@ Cada regla nace de un fallo real. **No son recordatorios: son precondiciones.**
 | P11 | **Un instrumento no se declara estable por el TEXTO.** Un fundido no cambia una sola letra: la página parece quieta con la animación viva. `settle()` espera además a `document.getAnimations()`, excluyendo las infinitas. | it. 11: la tarjeta de login fotografiada al 85 % de opacidad se leyó como «translúcida y lavanda» |
 | P12 | **Un arreglo de instrumento que vive duplicado se pagará dos veces.** Cuando el mismo fallo aparece en dos scripts, la causa raíz no es el fallo: es la duplicación. El arranque de página (tema + sesión + doble de API) es UNO solo, en `harness.openPage`. | it. 8 y it. 11: el mismo bug del tema, en `dialogs.mjs` y en `capture.mjs`, arreglado por separado |
 | P13 | **Antes de reportar que una superficie carece de una propiedad, verificar el disparador de la sonda.** Dos «defectos de accesibilidad» eran selectores muertos del arnés: el panel se gobierna por URL y el botón buscado no existía con ese nombre. | it. 11: `role=dialog` ausente y modal que «no abría» |
+| P14 | **Contar elementos movidos no es medir desplazamiento.** Identificar nodos por «el n-esimo con etiqueta X» se rompe en cuanto el DOM INSERTA nodos: se comparan elementos distintos. Se miden hitos CON NOMBRE (selector estable) y se reporta la magnitud, no el recuento. | it. 12: la busqueda daba «234 elementos desplazados» y «780px» en una pagina quieta; el desplazamiento real era 0 |
+| P15 | **Un dataset sin variacion audita una sola rama.** Si todos los fixtures son el camino feliz, las pantallas que el producto sabe pintar para los demas casos no se han visto NUNCA, y ninguna cantidad de capturas lo revela. El dataset debe cubrir explicitamente los estados que el codigo distingue. | it. 12: `NOTAS(i)` devolvia siempre las mismas dos notas aprobadas; PG1 pendiente, sin notas y nota insuficiente jamas se habian renderizado |
+| P16 | **Todo campo del doble se DERIVA o se justifica.** Un valor fijo dentro de una respuesta por lo demas derivada acaba contradiciendo al resto y se audita como defecto del producto. | it. 12: `promedio: 84.33, resolucion: 'aprueba_tesis'` fijos hacian que un alumno con 0/3 evaluaciones mostrara «Aprueba tesis» |
+| P17 | **La calibracion no es opcional aunque el probe sea de tres lineas.** Un medidor de contraste sin caso conocido devolvio 1.00:1 para SEIS candidatos distintos y parecia un resultado, no un fallo. La regla P1 existia y la salte por ser un script pequeño: el tamaño del instrumento no cambia la regla. | it. 13: `getComputedStyle().color` devuelve `oklch()` literal en Chromium; leer sus numeros como RGB da basura |
+| P18 | **Un token con dos papeles opuestos no puede satisfacer a los dos.** Relleno de marca y texto de marca son contrastes contrarios. Cuando un token falla contraste «solo en algunos sitios», la respuesta no es retocarlo: es partirlo por rol y hacer ejecutable que cada uno se use donde toca. | it. 13: `--color-primary` daba 3.34:1 como texto en oscuro |
+| P19 | **Medir antes de creerse el diagnostico propio.** Di por hecho que «los botones estan a 36px en movil» y lo arrastre en dos informes. La medicion con puntero grueso real: 214 controles ya en ≥44px y solo 3 por debajo de 32. Casi «arreglo» un problema inexistente y habria inflado las barras densas. | it. 13 |
+| P20 | **Los digitos de una captura no son un dato.** Estuve a punto de reportar que el panel se contradecia —KPIs «26/14/11» frente a «27/15/12» en la columna de progreso— y de llamarlo defecto de credibilidad. El DOM decia 27/15/12 en los dos sitios: lei mal los numeros de la imagen. Las capturas sirven para juzgar composicion, jerarquia, ritmo y color; los VALORES se leen del DOM. | it. 14 |
+| P21 | **Nunca canalizar un script de render por `head`/`tail`.** `node render.mjs \| head -5` manda SIGPIPE al proceso y mata el bucle: las capturas 6 a 12 nunca se regeneraron y estuve comparando una pantalla nueva contra una imagen vieja. La salida se redirige a fichero y se recorta DESPUES. | it. 14 |
+| P22 | **Un medidor que solo imprime fallos es indistinguible de uno roto cuando calla.** Todo probe que reporte por excepcion debe imprimir tambien el recuento de lo que SI comprobo, y pasar por un par conocido-bueno y otro conocido-malo. | it. 14: `token-contrast.mjs` llevaba iteraciones diciendo «nada» sin demostrar que supiera decir «algo» |
+| P23 | **Antes de dar espacio a un campo, comprobar que discrimina.** `carrera` parecia el relleno natural para el hueco de la vista rapida: es dato real y ya venia cargado. Son 26 de 27 alumnos con el MISMO valor. Habria repetido «Ingenieria en Sistemas» en cada ficha sin informar de nada. | it. 14 |
+| P24 | **Deshabilitar un boton por formulario incompleto es esconder el motivo.** El CTA de acceso —la accion principal de la entrada al producto— salia gris y muerto, sin decir que faltaba. El guardia ya estaba en `handleSubmit`: habilitarlo convierte un control mudo en uno que explica. | it. 14 |
 
 ---
 
@@ -386,3 +397,134 @@ del apuntado (la flecha dentro del botón), porque el disparador no se mueve.
   pero si alguien lo usa para «flotar» algo, en claro se hundirá.
 - El margen de contraste del modo claro es ahora estrecho (~4.5:1 justo). Bajar
   `--surface-base` otro punto vuelve a romperlo. Está medido, no supuesto.
+
+
+---
+
+## Iteracion 12 — Datos de demo y experiencia de estudiante
+
+### Observacion
+El plan pedia habilitar datos de demo porque varias rutas «no eran
+inspeccionables». La verificacion mostro que **todas** las rutas ya se
+renderizaban con el arnes de pruebas visuales (la propia opcion preferente #1
+del plan). El hueco real era otro y mas grave: **el dataset no tenia
+variacion**. `NOTAS(i)` devolvia siempre las mismas dos notas aprobadas, asi
+que la vista rapida y el expediente solo se habian visto con un alumno
+perfecto. Las ramas que el producto SI implementa —PG1 pendiente, sin ninguna
+nota, nota insuficiente, justo en el umbral— no se habian renderizado nunca.
+
+Decision de mecanismo: NO se añadio una capa de datos de demo dentro de la
+aplicacion. El arnes ya existente cubre el objetivo del plan (§0) con la opcion
+que el propio plan ordena primero, vive fuera del repositorio —por lo que no
+puede afectar a produccion en ningun escenario— y añadir una segunda
+implementacion habria violado §21 («do not create parallel implementations»).
+
+### Evidencia y decisiones
+| Defecto observado | Decision |
+|---|---|
+| El encabezado del panel decia «Nota insuficiente · Promedio 80.5» con el minimo 70 debajo | El complemento del veredicto pasa a ser el MOTIVO por curso; el promedio solo se muestra cuando concuerda |
+| El panel no respondia «que sigue», su cuarta promesa | Linea de siguiente paso derivada del estado de tesis, con la MISMA funcion que ya usaba el expediente |
+| «En progreso» sin decir cuanto falta | Avance de evaluaciones (2/3) en la fila de terna |
+| Las sugerencias no marcaban la coincidencia | `highlightRanges` + `<mark>` tintado de marca, con mapa de indices que sobrevive a los diacriticos |
+| `ternaHint` duplicado (expediente si, panel no) | Extraido a `utils/thesisStatus`, dos consumidores migrados |
+
+### Errores cometidos
+- **Introduje una contradiccion al arreglar otra.** La linea de «siguiente paso»
+  se pinto tambien cuando SI habia terna, anunciando «se asigna al recuperar la
+  elegibilidad» justo debajo de «Terna 7 · En progreso». Lo caze en la fase de
+  auto-ataque, mirando el render del cambio que acababa de hacer.
+- **Dos instrumentos de busqueda seguidos dieron falsos positivos** por
+  identificar nodos por indice (P14). El tercero, sobre hitos con nombre, dio 0.
+- **Deje un objeto sin derivar en el doble** y produjo «Aprueba tesis · 84.33»
+  para un alumno con 0/3 evaluaciones (P16).
+
+### Riesgos futuros
+- Los perfiles academicos son ahora la unica fuente de verdad del arnes. Si
+  alguien añade un endpoint que devuelva notas sin pasar por `perfil(i)`,
+  reaparece la clase de incoherencia. El selftest cubre los que existen hoy.
+- `verdictReason` y `ternaHint` producen copia en castellano dentro de
+  `utils/`. Es el sitio correcto mientras la copia derive del dominio; si crece,
+  merece su propio modulo de vocabulario.
+
+
+---
+
+## Iteracion 13 — Cierre de huecos de auditoria
+
+### Observacion
+Los cuatro huecos que el informe anterior dejo abiertos por escrito. Tres se
+cerraron con medicion; uno resulto no existir tal y como yo lo habia descrito.
+
+### Evidencia y decisiones
+| Hueco | Resultado |
+|---|---|
+| Contraste del primario como texto en oscuro | Rol partido: `--color-primary` (relleno) vs `--color-primary-text`. Oscuro 3.34:1 → **5.20:1** en el peor caso. 25 usos migrados. Regla de arquitectura que prohibe `color: var(--color-primary)` |
+| Notas por estados | 5 estados abiertos. Defecto: registrar una nota que no existe titulaba el dialogo **«Editar Nota»** |
+| Usuarios por estados | 5 estados abiertos (listado, alta, validacion, vacio, error 500). Sin defectos. El color del avatar por rol se verifico INTENCIONAL (`tone` explicito, documentado en el propio componente), no duplicacion accidental |
+| Objetivos tactiles | Mi diagnostico previo era falso. Reales: 214 controles ≥44px, 3 por debajo de 32. `.qv-icon-btn` era un DUPLICADO de `.ui-icon-btn` a 30px → migrado y eliminado. Iconos a 44px solo bajo `(pointer: coarse)` |
+
+### Errores cometidos
+- **Salte mi propia regla P1** por escribir un probe «pequeño»: sin caso
+  conocido, seis candidatos dieron 1.00:1 y el resultado parecia valido. Solo
+  al añadir «negro sobre blanco = 21:1» quedo claro que el color nunca se
+  aplicaba. Tras arreglarlo, los numeros coincidieron EXACTAMENTE con los del
+  medidor independiente que ya existia — esa coincidencia es la prueba.
+- **Arrastre un diagnostico no medido** («botones a 36px en movil») durante dos
+  informes. La medicion lo desmintio.
+
+### Riesgos futuros
+- `--color-primary-text` solo esta garantizado en `color:`. Si alguien lo usa
+  como relleno, el contraste al reves no esta vigilado.
+- El objetivo tactil crece solo para botones de icono. Si aparece un control
+  interactivo nuevo con caja propia, no lo cubre nadie.
+
+---
+
+## Iteracion 14 — Pasada de refinamiento visual
+
+Fase de PRODUCTO, no de auditoria: el objetivo era lo que un revisor humano nota
+en los primeros treinta segundos.
+
+### El hueco de la vista rapida no era falta de contenido, era orden
+
+El panel insignia tenia **entre el 34 % y el 40 % de su alto vacio en los diez
+arquetipos**, medido con `probe-qv-space.mjs`. La tentacion era rellenarlo. Lo
+que sobraba no era espacio: era jerarquia invertida.
+
+El carne y el correo ocupaban el primer lugar del cuerpo —justo bajo el nombre—
+siendo el dato MENOS decisivo del panel: no ayudan a decidir nada, se copian
+para pegarlos en otro sistema. Bajarlos al pie con `margin-top:auto` hizo tres
+cosas de una vez: el orden de lectura paso a ser *quien → que estado → por que →
+que sigue → como lo contacto*, el hueco se convirtio en la frontera declarada
+entre la zona de decision y la de utilidad, y el fondo del panel dejo de estar
+vacio. Hueco residual: **24 px** (el propio relleno del cuerpo).
+
+Se verifico que el `margin-top:auto` COLAPSA cuando el contenido desborda: a 560
+px de alto los ocho casos vuelven a desplazarse con normalidad.
+
+### El mismo alumno tenia dos nombres para el mismo veredicto
+
+La vista rapida decia «Elegible a tesis» y el expediente, a un clic, «Aprobado».
+`VOCAB.verdict*` existia precisamente para eso y el expediente no lo usaba.
+Ademas la tarjeta de elegibilidad decia la misma cosa tres veces: titular
+(«Cumple requisito de tesis»), etiqueta («APROBADO») y motivo al pie («Cumple con
+la nota minima (70) en PG1 y PG2»). Se unificaron las etiquetas y se retiro el
+titular, que era el eco mas debil; el veredicto hereda su peso tipografico.
+
+El promedio se imprimia `84.5` en el panel y `84.50` en el expediente. `toFixed(2)`
+es el formato de las otras siete llamadas del producto: el panel era el unico
+outlier.
+
+### Dos formateadores de tiempo relativo
+
+«hace 2 dias» en la tira de cambios y «hace 314 d» en la cola de trabajo. La
+segunda ni se lee: hay que dividir mentalmente. `formatAgo` vive ahora en
+`utils/dates.ts` —el modulo que ya existia contra esta misma deriva— con escala
+hasta meses y años, y una regla de arquitectura impide volver a componer
+«hace …» a mano.
+
+### Lo que NO se cambio
+
+El hueco central de la vista rapida sigue siendo grande. No hay mas informacion
+real que mostrar y no se inventa contenido academico para llenarlo. La carrera
+se descarto por medicion, no por criterio (P23).

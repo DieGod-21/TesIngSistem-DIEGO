@@ -18,7 +18,7 @@
     font-size: var(--text-sm);
     color: var(--text-secondary);
 }
-.dash-widget__insight svg { color: var(--color-primary); flex-shrink: 0; }
+.dash-widget__insight svg { color: var(--color-primary-text); flex-shrink: 0; }
 
 /* ── Estado vacío elegante (extensible) ── */
 .dash-widget__empty {
@@ -37,7 +37,7 @@
     height: 2.75rem;
     border-radius: var(--radius-card);
     margin-bottom: var(--space-6);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     background: linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-primary-soft-2) 100%);
     box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.5);
 }

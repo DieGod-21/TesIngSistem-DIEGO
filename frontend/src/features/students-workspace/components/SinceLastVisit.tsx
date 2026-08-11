@@ -13,18 +13,12 @@ import { History, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import type { PipelineStage } from '../domain/types';
 import type { SnapshotDiff } from '../domain/snapshot';
 import { assertNever } from '../../../utils/assertNever';
+import { formatAgo } from '../../../utils/dates';
 import '../styles/since-last-visit.css';
 
-/** Tiempo relativo legible desde la visita previa. */
-function formatSince(ms: number): string {
-    const min = Math.floor(ms / 60_000);
-    if (min < 1) return 'hace un momento';
-    if (min < 60) return `hace ${min} min`;
-    const h = Math.floor(min / 60);
-    if (h < 24) return `hace ${h} h`;
-    const d = Math.floor(h / 24);
-    return `hace ${d} ${d === 1 ? 'día' : 'días'}`;
-}
+/* El formateador relativo vive en `utils/dates`: era local aquí y la cola de
+   trabajo tenía el suyo con otra abreviatura. Un solo formateador, dos
+   consumidores. */
 
 /** Copy por etapa según el signo del delta (n = magnitud). */
 function describeStageDelta(stage: PipelineStage, delta: number): string {
@@ -64,7 +58,7 @@ const SinceLastVisit: React.FC<SinceLastVisitProps> = ({ diff }) => {
                 <History size={14} aria-hidden="true" />
                 <span>Desde tu última visita</span>
                 {diff.sincePreviousMs != null && (
-                    <span className="slv__since"> · {formatSince(diff.sincePreviousMs)}</span>
+                    <span className="slv__since"> · {formatAgo(diff.sincePreviousMs)}</span>
                 )}
             </p>
             <ul className="slv__list">

@@ -429,20 +429,22 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
-/* Deshabilitado (formulario incompleto): SUPERFICIE NEUTRA, no un primario
-   descolorido. Ionic baja la opacidad del host al 50 %, y sobre el gradiente
-   de marca eso producía un lavanda pastel que se lee como «este botón está
-   roto» en vez de «todavía no se puede pulsar» — y dejaba la etiqueta casi
-   ilegible. Se apaga la opacidad del host y el estado lo dicen los colores. */
+/* El único momento en que este botón se deshabilita es MIENTRAS ENVÍA: ya no se
+   bloquea por formulario incompleto (ver LoginForm). Así que «deshabilitado»
+   aquí significa «trabajando», no «no disponible», y debe seguir siendo de
+   marca: apagarlo a gris mientras gira el spinner diría que la acción se cayó
+   justo cuando está ocurriendo.
+   Ionic baja la opacidad del host al 50 %, lo que sobre el gradiente producía un
+   lavanda pastel ilegible; se anula y el estado lo dice el spinner. */
 .auth-submit-btn.button-disabled {
   opacity: 1;
+  cursor: progress;
 }
 .auth-submit-btn.button-disabled::part(native) {
-  background: var(--surface-raised);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  box-shadow: none;
-  filter: none;
+  background: var(--gradient-brand);
+  color: var(--color-primary-contrast);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 oklch(1 0 0 / 0.18);
+  filter: saturate(0.92);
 }
 .auth-submit-btn .btn-icon {
   width: 1.25rem;

@@ -99,7 +99,14 @@ const EditNotaModal: React.FC<Props> = ({
         >
             <div className="en-modal" ref={modalRef}>
                 <header className="en-modal__header">
-                    <h2 id="en-title" className="en-modal__title">Editar Nota</h2>
+                    {/* El mismo diálogo sirve para EDITAR una nota existente y
+                        para REGISTRAR una que falta, y el título decía siempre
+                        «Editar Nota»: desde el botón «Registrar» de un curso sin
+                        nota se abría un modal que afirmaba estar editando algo
+                        que no existe. El título lo decide el dato, no la plantilla. */}
+                    <h2 id="en-title" className="en-modal__title">
+                        {initialNota != null ? 'Editar Nota' : 'Registrar Nota'}
+                    </h2>
                     <button
                         type="button"
                         className="ui-icon-btn"

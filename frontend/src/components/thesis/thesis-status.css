@@ -93,20 +93,16 @@
   color: var(--accent);
   flex-shrink: 0;
 }
-.tsb-card__headline {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-md);
-  font-weight: var(--weight-bold);
-  color: var(--text-primary);
-  line-height: var(--leading-tight);
-}
+/* `.tsb-card__headline` ELIMINADO: repetía el `razon` del pie, que dice lo
+   mismo con el dato real. Al quedarse solo, el veredicto hereda su peso: era
+   una versalita de apoyo bajo un titular, y ahora ES el titular. Se retira la
+   caja alta, que a este tamaño y con «Elegible a tesis» gritaría. */
 .tsb-card__status-label {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   font-weight: var(--weight-bold);
   color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  line-height: var(--leading-tight);
 }
 .tsb-card__min {
   margin: var(--space-4) 0 0;

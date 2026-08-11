@@ -21,6 +21,7 @@ import {
     ChevronRight, Check, Inbox, X, type LucideIcon,
 } from 'lucide-react';
 import { Skeleton } from '../../../components/ui';
+import { DAY_MS, formatAgo } from '../../../utils/dates';
 import type { Capabilities } from '../../../config/permissions';
 import type { PipelineStage, WorkItem, WorkItemKind } from '../domain/types';
 import { visibleActionableItems, isPendingItem } from '../queuePolicy';
@@ -186,7 +187,10 @@ const WorkQueue: React.FC<WorkQueueProps> = ({
                                                 {item.reason}
                                                 {item.ageDays != null && (
                                                     <span className="wq__age">
-                                                        {item.ageDays === 0 ? ' · hoy' : ` · hace ${item.ageDays} d`}
+                                                        {/* Antes: `hace 314 d`. Ni se lee ni coincidía con
+                                                            «hace 2 días» de la tira de cambios. Mismo
+                                                            formateador que el resto del producto. */}
+                                                        {item.ageDays === 0 ? ' · hoy' : ` · ${formatAgo(item.ageDays * DAY_MS)}`}
                                                     </span>
                                                 )}
                                             </span>

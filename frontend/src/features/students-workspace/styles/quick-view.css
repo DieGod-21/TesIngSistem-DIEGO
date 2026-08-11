@@ -62,32 +62,11 @@
     gap: var(--space-4);
 }
 
-.qv-icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    flex-shrink: 0;
-    border: 0;
-    border-radius: var(--radius-md);
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.qv-icon-btn:hover:not(:disabled) {
-    background: var(--surface-raised);
-    color: var(--text-primary);
-}
-
-.qv-icon-btn:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-}
-
-.qv-icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+/* `.qv-icon-btn` ELIMINADO → `.ui-icon-btn`.
+   Era una reimplementación del botón de icono del sistema de diseño, 2px más
+   pequeña (30px frente a 32px). La medición con puntero grueso la delató: es
+   el único control del panel que no llegaba al mínimo cómodo, y además el
+   panel es la superficie donde más se pulsa en móvil. */
 
 /* ── Cuerpo ───────────────────────────────────────────────────────── */
 
@@ -129,7 +108,7 @@
    antes compartía tamaño con los títulos de sección. */
 .qv-identity__name {
     margin: 0;
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     font-weight: var(--weight-bold);
     letter-spacing: -0.02em;
     line-height: var(--leading-tight);
@@ -137,10 +116,17 @@
     text-wrap: balance;
 }
 
-/* Identificadores copiables, apilados y alineados con el cuerpo. */
-/* Los identificadores se ajustan a su contenido: el icono de copiar debe
-   quedar junto al dato, no empujado al borde del panel. */
+/* Identificadores copiables, anclados al PIE del cuerpo.
+   `margin-top:auto` es lo que convierte el hueco en intención: empuja el bloque
+   de utilidad contra el pie y deja el aire como separación declarada entre la
+   zona de decisión (arriba) y la de acción (abajo), en vez de como sobra al
+   final de una pila. El borde superior nombra esa frontera.
+   Se ajustan a su contenido: el icono de copiar debe quedar junto al dato, no
+   empujado al borde del panel. */
 .qv-ids {
+    margin-top: auto;
+    padding-top: var(--space-16);
+    border-top: 1px dashed var(--border);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -162,6 +148,13 @@
     color: var(--text-secondary);
 }
 .qv-verdict__avg strong { color: var(--text-primary); font-weight: var(--weight-bold); }
+
+/* Motivo del veredicto: mismo rango tipográfico que el promedio al que
+   sustituye. Es una aclaración, no un segundo titular. */
+.qv-verdict__why {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
 
 /* ── Secciones ────────────────────────────────────────────────────── */
 
@@ -272,6 +265,29 @@
     margin-right: auto;
 }
 
+/* Avance de evaluaciones: cifra de apoyo, nunca compite con la píldora. */
+.qv-terna__prog {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+/* «Qué sigue»: cierra el cuerpo del panel. Va tintado de marca porque es la
+   única línea del panel que apunta hacia una acción, no hacia un dato. */
+.qv-next {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-8);
+    margin: var(--space-4) 0 0;
+    padding: var(--space-10) var(--space-12);
+    border: 1px solid color-mix(in oklch, var(--color-primary) 18%, transparent);
+    border-radius: var(--radius-md);
+    background: var(--color-primary-soft);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    color: var(--color-primary-hover);
+}
+.qv-next svg { flex-shrink: 0; margin-top: 0.15em; color: var(--color-primary-text); }
+
 /* Estado vacío de una línea: nunca un bloque grande sin contenido. */
 .qv-empty-line {
     margin: 0;
@@ -323,7 +339,6 @@
 @media (prefers-reduced-motion: reduce) {
     .qv-scrim,
     .qv-panel { animation: none; }
-    .qv-icon-btn { transition: none; }
     /* Se conserva el cambio de estado del CTA; se elimina el desplazamiento. */
     .qv-cta__arrow { transition: none; }
     .qv-cta:hover .qv-cta__arrow { transform: none; }
