@@ -95,6 +95,15 @@ const LoginPage: React.FC = () => {
 
                 {/* ── Panel derecho: Formulario ─────────────────────────── */}
                 <section className="auth-form-section" aria-label="Formulario de acceso">
+                    {/* Marca en móvil: vive FUERA de la tarjeta, sobre la banda
+                        índigo. Estaba dentro, y la hoja de estilo la pintaba de
+                        blanco para un fondo sobre el que nunca se apoyaba: el
+                        título salía blanco sobre blanco, invisible. */}
+                    <div className="auth-mobile-logo">
+                        <img src={umgLogo} alt="Logo Universidad Mariano Gálvez" />
+                        <span className="auth-mobile-logo__title">Gestión PG1-PG2</span>
+                    </div>
+
                     <div className="auth-form-container">
                         <LoginForm />
                     </div>

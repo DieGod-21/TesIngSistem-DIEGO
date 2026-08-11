@@ -172,11 +172,18 @@
 }
 .dash-sidebar__nav-item svg { transition: color var(--dash-transition); }
 
+/* Apuntar ANTICIPA el estado activo en vez de deslizar la fila: sube el fondo
+   y el icono toma la firma cian de la aurora, que es exactamente lo que hace
+   `--active`. Así apuntar y estar activo hablan el mismo idioma y el ítem
+   nunca se mueve (ver REGLA DE ESTADO AL APUNTAR en ui.css: el translateX de
+   2px dejaba una banda de rebote en el borde izquierdo de los 8 ítems, en
+   todas las pantallas del producto). */
 .dash-sidebar__nav-item:hover {
-    background: rgba(255, 255, 255, 0.10);
-    color: #ffffff;
-    transform: translateX(2px);
-    transition: background var(--dash-transition), color var(--dash-transition), transform var(--transition-fast);
+    background: oklch(1 0 0 / 0.10);
+    color: oklch(1 0 0);
+}
+.dash-sidebar__nav-item:hover svg {
+    color: color-mix(in oklch, var(--aurora-3) 62%, white);
 }
 
 /* Estado activo: solo texto/ícono. El fondo y el rail los aporta el indicador
@@ -653,13 +660,13 @@ button.kpi-card {
     cursor: pointer;
 }
 
+/* Sin desplazamiento: ver REGLA DE ESTADO AL APUNTAR en ui.css. */
 .kpi-card--clickable:hover {
-    transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
 
 .kpi-card--clickable:active {
-    transform: translateY(0);
+    transform: scale(0.995);
 }
 
 .kpi-card--clickable:focus-visible {
@@ -701,15 +708,8 @@ button.kpi-card {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .kpi-card--clickable:hover {
-        transform: none;
-    }
     .kpi-card--clickable::after {
         transition: none;
-    }
-    .kpi-card:hover,
-    .kpi-card:hover .kpi-card__icon-box {
-        transform: none;
     }
 }
 
@@ -910,9 +910,8 @@ button.kpi-card {
 
 /* ── KPI Cards: elevación premium en hover (sin franja de color) ──── */
 .kpi-card:hover {
-    box-shadow: var(--shadow-md), var(--hairline);
-    border-color: color-mix(in oklch, var(--color-primary) 30%, var(--dash-border));
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--hairline);
+    border-color: color-mix(in oklch, var(--color-primary) 34%, var(--dash-border));
 }
 
 /* Los títulos de sección usan la primitiva .ui-section-head (título + subtítulo). */
@@ -979,57 +978,9 @@ button.kpi-card {
 [data-theme="dark"] .kpi-card--clickable:focus-visible {
     outline-color: #60a5fa;
 }
-/* ── Completación de la cohorte ───────────────────────────────────────
-   Era una tarjeta KPI sin destino, en una sección que promete que cada
-   indicador lleva a algún sitio, y su valor (aprobados/total) solo repetía
-   otras dos tarjetas. Como progreso de la sección informa igual y deja de
-   competir por el espacio de los indicadores accionables. */
-
-.dash-completion {
-    display: grid;
-    grid-template-columns: auto auto;
-    align-items: baseline;
-    gap: var(--space-2) var(--space-10);
-    min-width: 190px;
-    flex-shrink: 0;
-}
-
-.dash-completion__value {
-    font-size: var(--text-xl);
-    font-weight: var(--weight-bold);
-    letter-spacing: -0.02em;
-    line-height: var(--leading-none);
-    color: var(--text-primary);
-}
-
-.dash-completion__label {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-}
-
-.dash-completion__track {
-    grid-column: 1 / -1;
-    margin-top: var(--space-8);
-    height: 5px;
-    border-radius: var(--radius-pill);
-    background: var(--surface-raised);
-    overflow: hidden;
-}
-
-.dash-completion__fill {
-    height: 100%;
-    border-radius: inherit;
-    background: var(--gradient-brand);
-    transition: width var(--transition-slow);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .dash-completion__fill { transition: none; }
-}
-
-@media (max-width: 640px) {
-    .dash-completion { width: 100%; }
-}
+/* `.dash-completion*` ELIMINADO junto con su render: el porcentaje de la
+   cohorte se mostraba aquí y otra vez en el anillo de «Progreso académico».
+   Un solo dato, una sola representación — la que va con su composición. */
 
 /* Pista del atajo de búsqueda. Se apoya en el mismo lenguaje de tecla que ya
    usa el panel de inspección rápida (.qv-foot__hint kbd): una sola forma de

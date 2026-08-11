@@ -141,13 +141,19 @@ const DashboardPage: React.FC = () => {
                     />
                 )}
                 {summary.status === 'success' && (() => {
-                    const completion = summary.data.kpis.find((k) => k.id === PROGRESS_KPI_ID);
                     const cards = summary.data.kpis
                         .filter((k) => k.id !== PROGRESS_KPI_ID)
                         .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k));
 
                     return (
                         <section aria-labelledby="dash-cohort-title">
+                            {/* El porcentaje de la cohorte se mostraba AQUÍ y otra vez
+                                en el anillo de «Progreso académico»: el mismo 52 % dos
+                                veces en cuerpo grande, en la misma pantalla. Se queda
+                                en el anillo, que es donde va acompañado de su
+                                composición (elegibles / pendientes / total). De paso,
+                                este era el único `ui-section-head` del producto que
+                                cargaba una métrica; el resto son título + subtítulo. */}
                             <div className="ui-section-head">
                                 <div className="ui-section-head__text">
                                     <h2 id="dash-cohort-title" className="ui-section-head__title">
@@ -157,29 +163,6 @@ const DashboardPage: React.FC = () => {
                                         Avance de PG1–PG2 este ciclo. Toca un indicador para ver el detalle.
                                     </p>
                                 </div>
-                                {completion?.progressValue != null && (
-                                    <div className="dash-completion">
-                                        <span className="dash-completion__value ui-tnum">
-                                            {completion.value}
-                                        </span>
-                                        <span className="dash-completion__label">
-                                            {completion.description}
-                                        </span>
-                                        <div
-                                            className="dash-completion__track"
-                                            role="progressbar"
-                                            aria-valuenow={completion.progressValue}
-                                            aria-valuemin={0}
-                                            aria-valuemax={100}
-                                            aria-label={`Completación de la cohorte: ${completion.value}`}
-                                        >
-                                            <div
-                                                className="dash-completion__fill"
-                                                style={{ width: `${completion.progressValue}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                             <div className="dash-kpi-grid">
                                 {cards.map((kpi) => (

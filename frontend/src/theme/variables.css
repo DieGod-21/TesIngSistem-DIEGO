@@ -61,13 +61,13 @@
        daba ~2.2:1 sobre su propio chip). Los rellenos decorativos (puntos,
        segmentos, barras) simplemente quedan más profundos.
        Para fondos sólidos con texto claro encima existe `-solid`. */
-    --color-success:       oklch(0.520 0.145 152);
+    --color-success:       oklch(0.508 0.145 152);
     --color-success-light: oklch(0.945 0.045 152);
-    --color-warning:       oklch(0.545 0.140 62);
+    --color-warning:       oklch(0.532 0.140 62);
     --color-warning-light: oklch(0.945 0.055 80);
     --color-danger:        oklch(0.520 0.200 25);
     --color-danger-light:  oklch(0.940 0.030 25);
-    --color-info:          oklch(0.530 0.150 245);
+    --color-info:          oklch(0.518 0.150 245);
     --color-info-light:    oklch(0.950 0.035 235);
 
     /* Relleno sólido que lleva texto claro encima (botón destructivo):
@@ -95,10 +95,21 @@
        de dramatismo: es lo que hacen Stripe y GitHub. */
     --text-primary:    var(--gray-800);              /* ~11:1 */
     --text-secondary:  oklch(0.500 0.020 275);       /* ~5.4:1 */
-    --text-muted:      oklch(0.535 0.018 275);       /* ~4.7:1 en las tres superficies */
+    --text-muted:      oklch(0.522 0.018 275);       /* re-medido tras bajar --surface-base */
 
-    /* ── Superficies (semántico) ── */
-    --surface-base:   var(--gray-100);
+    /* ── Superficies (semántico) ──────────────────────────────────────────
+       La SEPARACIÓN entre el plano de página y la tarjeta es lo que hace que
+       una tarjeta se lea como un objeto. Medida contra el tema oscuro, la
+       versión clara tenía la mitad de profundidad:
+
+           claro:   base 0.968 → card 0.995   ΔL 0.027
+           oscuro:  base 0.205 → card 0.258   ΔL 0.053
+
+       El resultado era el modo claro «blanco plano» que el plan pide evitar:
+       las tarjetas no flotaban, solo tenían un filete. Se baja el plano de
+       página y se le sube un punto de croma hacia el índigo de marca (nunca
+       gris puro), hasta ΔL 0.043 — comparable al oscuro, y todavía sereno. */
+    --surface-base:   oklch(0.952 0.007 275);
     --surface-card:   oklch(0.995 0.002 275);
     --surface-raised: oklch(0.978 0.004 275);   /* headers de tabla, inner cards */
     --surface-float:  oklch(0.995 0.002 275);

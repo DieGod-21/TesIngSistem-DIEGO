@@ -197,6 +197,9 @@ Cada regla nace de un fallo real. **No son recordatorios: son precondiciones.**
 | P8 | **Antes de implementar, ordenar por impacto × frecuencia × riesgo ÷ coste.** Resolver primero la mayor fuente de inconsistencia. | it. 9 |
 | P9 | **Un token inexistente es un fallo silencioso.** Referenciar `var(--space-18)` cuando la escala salta de 16 a 20 hace que el navegador descarte la declaración entera. Hay regla de arquitectura que lo detecta. | it. 10 |
 | P10 | **Para forzar un estado de la app en una auditoría, hay que usar el mecanismo de la app**, no manipular el DOM. Fijar `data-theme` a mano lo pisa React al montar; el tema se fija por `localStorage`, que es de donde lee el `ThemeProvider`. | it. 10 |
+| P11 | **Un instrumento no se declara estable por el TEXTO.** Un fundido no cambia una sola letra: la página parece quieta con la animación viva. `settle()` espera además a `document.getAnimations()`, excluyendo las infinitas. | it. 11: la tarjeta de login fotografiada al 85 % de opacidad se leyó como «translúcida y lavanda» |
+| P12 | **Un arreglo de instrumento que vive duplicado se pagará dos veces.** Cuando el mismo fallo aparece en dos scripts, la causa raíz no es el fallo: es la duplicación. El arranque de página (tema + sesión + doble de API) es UNO solo, en `harness.openPage`. | it. 8 y it. 11: el mismo bug del tema, en `dialogs.mjs` y en `capture.mjs`, arreglado por separado |
+| P13 | **Antes de reportar que una superficie carece de una propiedad, verificar el disparador de la sonda.** Dos «defectos de accesibilidad» eran selectores muertos del arnés: el panel se gobierna por URL y el botón buscado no existía con ese nombre. | it. 11: `role=dialog` ausente y modal que «no abría» |
 
 ---
 
@@ -309,3 +312,77 @@ hueco por buscarla mal.
   criterio, deja de significar «esta es la identidad» y pasa a ser decoración.
 - `backdrop-filter` tiene coste de composición. Está en una sola superficie y
   solo mientras el panel está abierto; vigilar si se extiende.
+
+
+---
+
+## Iteración 11 — Pasada WOW / Perfección
+
+### Observación
+El plan denunciaba «rebotes» al apuntar tarjetas en el expediente. Leer el CSS
+no bastaba para confirmarlo ni para descartarlo, así que se construyó un
+instrumento (`probe-hover.mjs`) que mide sobre el render dos magnitudes
+distintas: si apuntar mueve a OTROS elementos, y cuánto se mueve el elemento
+a sí mismo.
+
+El resultado corrigió mi hipótesis de partida: **desplazamiento ajeno = 0** en
+las 10 rutas. La regla dura del plan ya se cumplía. Lo que sí existía eran
+**106 elementos que se desplazan a sí mismos**, 80 de ellos en la barra
+lateral, presente en todas las pantallas.
+
+### Causa raíz
+El sistema de diseño codificaba «interactivo» **moviendo el elemento**. El
+desplazamiento es el único canal de hover capaz de invalidar su propio
+disparador: si la tarjeta sube 2px queda una banda de 2px en su borde inferior
+donde el cursor deja de estar encima; el navegador cancela el `:hover`, la
+tarjeta baja, el cursor vuelve a entrar. A 1-2px el bucle se lee como parpadeo.
+Además el desplazamiento DUPLICA lo que la sombra ya dice: la elevación es la
+sombra.
+
+Regla nueva, con test de arquitectura que la sostiene: *el estado al apuntar se
+comunica con luz —sombra, borde, fondo, color—, nunca con posición.* Siguen
+permitidos `:active` (el puntero está capturado) y transformar un descendiente
+del apuntado (la flecha dentro del botón), porque el disparador no se mueve.
+
+### Evidencia y decisiones
+| Defecto medido | Decisión |
+|---|---|
+| 106 elementos con banda de rebote al apuntar | Se elimina el `transform` de los 9 `:hover` propios; la sombra sube un escalón para compensar |
+| El copyright del login se renderizaba DOS veces en escritorio | El pie fijo del panel derecho solo existe en móvil, donde el panel de marca está oculto |
+| Mitad derecha del login: formulario desnudo sobre una superficie plana | El panel pasa a `--surface-base` y el formulario se convierte en tarjeta: la mitad derecha gana el plano acotado que la izquierda ya tenía |
+| «Gestión PG1-PG2» blanco sobre blanco en móvil | El bloque de marca vivía DENTRO de la hoja blanca; se mueve fuera, sobre la banda índigo |
+| CTA deshabilitado como gradiente de marca al 50 % | Superficie neutra: «todavía no», no «roto» |
+| `INGRESAR` en mayúsculas (Ionic) frente a todos los `.ui-btn` en caja normal | `text-transform: none` |
+| Modo claro con la MITAD de profundidad que el oscuro (ΔL 0.027 vs 0.053) | `--surface-base` baja a 0.952 con un punto de croma de marca → ΔL 0.043 |
+| «52 %» dos veces en cuerpo grande en la misma pantalla | El dato se queda en el anillo, que lo acompaña de su composición |
+
+### Errores cometidos
+- **Afirmé un defecto que no existía.** Al leer el CSS con `grep` interpreté un
+  `\*` del render de la herramienta como un comentario mal abierto y concluí que
+  una regla entera se descartaba. Los bytes decían `/*`. Comprobarlo costó una
+  orden. Lección: una herramienta de búsqueda no es un lector de bytes.
+- **Introduje una regresión de contraste** al bajar `--surface-base`: el modo
+  claro pasó de 0 a 4 pares por debajo de AA. Lo detectó el propio instrumento
+  en la fase de auto-ataque, antes de dar nada por bueno. Se corrigió bajando
+  los cuatro tokens de primer plano afectados, no revirtiendo la profundidad.
+- **Tercera animación a medio vuelo** leída como defecto visual (P11).
+- **Mismo bug de instrumento, arreglado dos veces por duplicación** (P12).
+
+### Alternativas rechazadas
+- **Conservar el `translateY` y ampliar el área sensible** con un pseudo-elemento
+  que cubriera la banda de rebote. Rechazada: añade una capa invisible por cada
+  tarjeta para sostener un efecto que ya era redundante con la sombra.
+- **Quitar el anillo de «Progreso académico»** en vez de la métrica de cabecera.
+  Habría dejado el carril derecho vacío y obligado a rehacer la rejilla; el plan
+  pide explícitamente no reescribir páginas sin necesidad.
+- **Revertir la profundidad del modo claro** al aparecer los fallos de contraste.
+  Rechazada: el problema no era la profundidad sino cuatro tokens calibrados
+  contra el fondo anterior.
+
+### Riesgos futuros
+- `--surface-raised` (0.978) queda ENTRE base (0.952) y card (0.995) en claro,
+  mientras que en oscuro está POR ENCIMA de card. El modelo de elevación no es
+  simétrico entre temas. No molesta hoy porque se usa como relleno interior,
+  pero si alguien lo usa para «flotar» algo, en claro se hundirá.
+- El margen de contraste del modo claro es ahora estrecho (~4.5:1 justo). Bajar
+  `--surface-base` otro punto vuelve a romperlo. Está medido, no supuesto.

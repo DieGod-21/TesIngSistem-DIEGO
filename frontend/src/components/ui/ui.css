@@ -53,6 +53,31 @@
     transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-fast);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   REGLA DE ESTADO AL APUNTAR (rige TODO el sistema de diseño)
+   ───────────────────────────────────────────────────────────────────
+   El estado «apuntado» se comunica con LUZ —sombra, borde, fondo, color—
+   nunca con POSICIÓN.
+
+   El motivo no es estético. El desplazamiento es el único canal de hover
+   capaz de invalidar su propio disparador: si la tarjeta sube 2 px, queda
+   una banda de 2 px en su borde inferior donde el cursor deja de estar
+   sobre ella; el navegador cancela el :hover, la tarjeta baja, el cursor
+   vuelve a entrar, y el ciclo se repite. A 1-2 px el bucle es tan rápido
+   que no se lee como deslizamiento sino como parpadeo. La medición sobre
+   el render encontró 106 elementos con esta banda, 80 de ellos en la barra
+   lateral, presente en todas las pantallas.
+
+   Además el desplazamiento duplica lo que la sombra ya dice: la elevación
+   ES la sombra. Quitar el translate no resta información, resta ruido.
+
+   SIGUEN PERMITIDOS, porque no pueden oscilar:
+     · `:active { transform }` — durante la pulsación el puntero está
+       capturado y el elemento no puede perder el estado.
+     · transformar un DESCENDIENTE del elemento apuntado (la flecha dentro
+       del botón): el disparador del :hover no se mueve.
+═══════════════════════════════════════════════════════════════════ */
+
 .ui-btn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
@@ -78,7 +103,6 @@
 .ui-btn--primary:hover:not(:disabled) {
     filter: saturate(1.08) brightness(1.03);
     box-shadow: var(--shadow-primary), inset 0 1px 0 oklch(1 0 0 / 0.22);
-    transform: translateY(-1px);
 }
 
 .ui-btn--secondary {
@@ -109,7 +133,7 @@
 }
 .ui-btn--danger:hover:not(:disabled) {
     filter: brightness(1.06);
-    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 /* Para superficies oscuras (hero): botón claro de alto contraste */
@@ -119,7 +143,6 @@
     box-shadow: var(--shadow-md);
 }
 .ui-btn--contrast:hover:not(:disabled) {
-    transform: translateY(-1px);
     box-shadow: var(--shadow-lg);
 }
 .ui-btn--contrast:focus-visible {
@@ -252,10 +275,12 @@
     font: inherit;
     color: inherit;
 }
+/* Elevación por sombra + borde, sin desplazamiento (ver REGLA DE ESTADO AL
+   APUNTAR). La sombra sube dos escalones en vez de uno para que la tarjeta
+   siga despegándose del fondo ahora que no se mueve. */
 .ui-card--interactive:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-    border-color: var(--border-strong);
+    box-shadow: var(--shadow-lg);
+    border-color: color-mix(in oklch, var(--color-primary) 32%, var(--border-strong));
 }
 .ui-card--interactive:focus-visible {
     outline: 2px solid var(--color-primary);
@@ -263,7 +288,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
     .ui-card--interactive { transition: none; }
-    .ui-card--interactive:hover { transform: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -984,11 +1008,11 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     border-radius: var(--radius-card);
     padding: var(--space-16) var(--space-20);
     box-shadow: var(--shadow-sm), var(--hairline);
-    transition: box-shadow 200ms var(--ease-out-expo), transform 200ms var(--ease-out-expo);
+    transition: box-shadow 200ms var(--ease-out-expo), border-color 200ms var(--ease-out-expo);
 }
 .ui-stat:hover {
     box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
+    border-color: var(--border-strong);
 }
 
 .ui-stat__value {

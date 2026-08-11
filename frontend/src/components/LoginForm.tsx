@@ -3,7 +3,6 @@ import { IonButton, IonInput, IonSpinner } from '@ionic/react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SESSION_MSG_KEY } from '../services/apiClient';
-import umgLogo from '../assets/umg_logo.png';
 
 const LoginForm: React.FC = () => {
     const { login, loading, error } = useAuth();
@@ -61,11 +60,6 @@ const LoginForm: React.FC = () => {
 
     return (
         <>
-            <div className="auth-mobile-logo">
-                <img src={umgLogo} alt="Logo Universidad Mariano Gálvez" />
-                <span className="auth-mobile-logo__title">Gestión PG1-PG2</span>
-            </div>
-
             <div className="auth-form-header">
                 <h2 className="auth-form-header__title">Bienvenido</h2>
                 <p className="auth-form-header__subtitle">

@@ -36,13 +36,13 @@
   text-align: left;
   cursor: pointer;
   box-shadow: var(--shadow-sm), var(--hairline);
-  transition: transform 160ms var(--ease-out-expo), box-shadow 160ms var(--ease-out-expo), border-color 160ms var(--ease-out-expo);
+  transition: box-shadow 160ms var(--ease-out-expo), border-color 160ms var(--ease-out-expo);
   position: relative;
   overflow: hidden;
 }
+/* Sin desplazamiento: ver REGLA DE ESTADO AL APUNTAR en ui.css. */
 .terna-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   border-color: var(--border-strong);
   border-top-color: var(--color-primary);
 }

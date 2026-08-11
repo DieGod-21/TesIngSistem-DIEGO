@@ -38,7 +38,7 @@
     flex-direction: column;
     gap: var(--space-8);
     box-shadow: var(--shadow-sm), var(--hairline);
-    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+    transition: box-shadow var(--transition-base), border-color var(--transition-base);
 }
 
 /* El pie se ancla abajo: con títulos de una, dos o tres líneas, los pies de una
@@ -68,10 +68,11 @@
 }
 .proy-card__student svg { color: var(--text-muted); flex-shrink: 0; }
 
+/* Sin desplazamiento: ver REGLA DE ESTADO AL APUNTAR en ui.css. La sombra
+   sube dos escalones para conservar la sensación de despegue. */
 .proy-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: color-mix(in oklch, var(--color-primary) 30%, var(--border));
+    box-shadow: var(--shadow-lg);
+    border-color: color-mix(in oklch, var(--color-primary) 34%, var(--border));
 }
 
 /* Entrada escalonada — mismo lenguaje de movimiento que Reportes/Ternas.

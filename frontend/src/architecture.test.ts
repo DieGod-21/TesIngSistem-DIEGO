@@ -136,6 +136,46 @@ describe('CSS válido', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
+describe('Estabilidad al apuntar', () => {
+    /**
+     * Un `:hover` NUNCA puede desplazar al propio elemento apuntado.
+     *
+     * No es una preferencia estética. El desplazamiento es el único canal de
+     * hover capaz de invalidar su propio disparador: si la tarjeta sube 2px,
+     * queda una banda de 2px en su borde inferior donde el cursor deja de
+     * estar sobre ella; el navegador cancela el :hover, la tarjeta baja, el
+     * cursor vuelve a entrar. A 1-2px el bucle se percibe como parpadeo.
+     *
+     * La medición sobre el render (probe-hover) encontró 106 elementos con esa
+     * banda, 80 en la barra lateral —presente en TODAS las pantallas—. Ninguno
+     * empujaba a sus vecinos, así que ni los tests ni el build lo veían: solo
+     * se notaba con el ratón encima.
+     *
+     * SIGUEN PERMITIDOS, porque no pueden oscilar:
+     *   · `:active { transform }` — el puntero está capturado en la pulsación.
+     *   · transformar un DESCENDIENTE del apuntado (`.cta:hover .flecha`):
+     *     el disparador no se mueve.
+     */
+    it('ningún :hover desplaza al elemento que lo dispara', () => {
+        const offenders: string[] = [];
+        for (const f of cssFiles) {
+            const src = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            for (const m of src.matchAll(/([^{}]*:hover[^{}]*)\{([^}]*)\}/g)) {
+                const [, selector, body] = m;
+                const value = /transform\s*:\s*([^;]+)/.exec(body)?.[1]?.trim();
+                if (!value || value === 'none') continue;
+                // El transform recae en el propio apuntado solo si el ÚLTIMO
+                // componente del selector es el que lleva :hover.
+                const target = selector.split(',')[0].trim();
+                if (!/:hover(:not\([^)]*\))?$/.test(target)) continue;
+                offenders.push(`${rel(f)} → ${target.replace(/\s+/g, ' ')} { transform: ${value} }`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
 describe('Fronteras de módulo', () => {
     /**
      * Una feature no importa la hoja de estilo de otra. Es un fallo real y

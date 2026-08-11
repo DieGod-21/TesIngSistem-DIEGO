@@ -229,6 +229,12 @@
 }
 
 /* ─── Panel derecho — Formulario ──────────────────────────────────── */
+/* El panel pasa a ser el PLANO DE FONDO (`--surface-base`, un escalón por
+   debajo de la tarjeta). Antes era `--surface-card`: el formulario iba desnudo
+   sobre el mismo color que debería tener una tarjeta, así que no tenía bordes
+   ni plano propio y flotaba en un vacío plano — mientras la mitad izquierda es
+   una superficie acotada, texturada y con capas. Esa asimetría de MATERIAL era
+   el defecto, no la falta de adornos. */
 .auth-form-section {
   flex: 1;
   position: relative;
@@ -238,18 +244,23 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-24);
-  background: var(--surface-card);
+  background: var(--surface-base);
   animation: slideInRight 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (min-width: 768px)  { .auth-form-section { padding: var(--space-48); } }
 @media (min-width: 1024px) { .auth-form-section { padding: var(--space-96); } }
 
-/* Costura con profundidad: en escritorio el panel del formulario recibe una
-   sombra interior muy suave desde el borde del hero, reforzando la lectura de
-   dos planos (premium) sin alterar el layout. */
+/* Costura entre las dos mitades: el hero es una superficie luminosa, y su luz
+   se derrama sobre el plano contiguo. Es un gradiente muy tenue anclado al
+   borde izquierdo, no un adorno centrado. */
 @media (min-width: 768px) {
   .auth-form-section {
+    background:
+      linear-gradient(90deg,
+        color-mix(in oklch, var(--color-primary) 7%, transparent) 0%,
+        transparent 22%),
+      var(--surface-base);
     box-shadow: inset 18px 0 40px -34px oklch(0.20 0.02 275 / 0.45);
   }
 }
@@ -259,6 +270,22 @@
   max-width: 28rem;
   padding-bottom: var(--space-96);            /* evita que el footer fixed tape el contenido */
   animation: fadeSlideIn 0.6s ease forwards;
+}
+
+/* En escritorio el formulario ES un objeto: superficie, borde, radio y
+   elevación. Le da a la mitad derecha el plano acotado que la izquierda ya
+   tenía, y el vacío inferior deja de leerse como «falta algo» para leerse
+   como aire alrededor de una pieza. */
+@media (min-width: 768px) {
+  .auth-form-container {
+    max-width: 26rem;
+    padding: var(--space-40);
+    padding-bottom: var(--space-40);          /* el pie fijo se oculta en escritorio */
+    background: var(--surface-card-grad), var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lg), var(--hairline);
+  }
 }
 
 /* Logo móvil (solo en pantallas pequeñas) */
@@ -379,9 +406,13 @@
   font-size: var(--text-md);
   height: 3.25rem;
   letter-spacing: 0.01em;
+  /* Ionic pone `text-transform: uppercase` por defecto en sus botones: el CTA
+     salía «INGRESAR» mientras TODOS los botones del producto (`.ui-btn`) van en
+     caja normal. Era la única pieza del sistema que hablaba en mayúsculas. */
+  text-transform: none;
 }
 /* Mismo lenguaje que .ui-btn--primary del DS: gradiente + highlight interno,
-   elevación sutil en hover (-1px) y presión (scale .98). */
+   elevación por SOMBRA al apuntar y presión (scale .98) al pulsar. */
 .auth-submit-btn::part(native) {
   transition: transform var(--transition-base), box-shadow var(--transition-base), filter var(--transition-base);
   background: var(--gradient-brand);
@@ -389,7 +420,6 @@
 }
 .auth-submit-btn::part(native):hover {
   filter: saturate(1.08) brightness(1.03);
-  transform: translateY(-1px);
   box-shadow: var(--shadow-primary), inset 0 1px 0 oklch(1 0 0 / 0.22);
 }
 .auth-submit-btn::part(native):active {
@@ -399,8 +429,18 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
-/* Deshabilitado (formulario incompleto): plano e inactivo, no "elevado pero muerto". */
+/* Deshabilitado (formulario incompleto): SUPERFICIE NEUTRA, no un primario
+   descolorido. Ionic baja la opacidad del host al 50 %, y sobre el gradiente
+   de marca eso producía un lavanda pastel que se lee como «este botón está
+   roto» en vez de «todavía no se puede pulsar» — y dejaba la etiqueta casi
+   ilegible. Se apaga la opacidad del host y el estado lo dicen los colores. */
+.auth-submit-btn.button-disabled {
+  opacity: 1;
+}
 .auth-submit-btn.button-disabled::part(native) {
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
   box-shadow: none;
   filter: none;
 }
@@ -428,7 +468,10 @@
   color: var(--text-secondary);
   margin: 0;
 }
-/* Footer copyright — fixed para bypassear el shadow DOM de IonContent */
+/* Footer copyright — fixed para bypassear el shadow DOM de IonContent.
+   Solo existe en móvil: ahí el panel de marca (que ya lleva su propio
+   copyright) está oculto. En escritorio ambos se renderizaban a la vez y el
+   mismo texto aparecía DOS VECES, abajo a la izquierda y abajo a la derecha. */
 .auth-copyright-footer {
   position: fixed;
   right: var(--space-16);
@@ -438,6 +481,9 @@
   color: var(--text-muted);
   opacity: 0.85;
   pointer-events: none;
+}
+@media (min-width: 768px) {
+  .auth-copyright-footer { display: none; }
 }
 
 /* ─── IonContent: forzar altura completa ──────────────────────────── */
@@ -477,8 +523,9 @@ ion-content::part(scroll) {
   }
   .auth-mobile-logo {
     width: 100%;
-    padding: var(--space-40) var(--space-24) var(--space-32);
+    padding: var(--space-32) var(--space-24) var(--space-24);
     gap: var(--space-12);
+    margin-bottom: 0;
   }
   .auth-mobile-logo img {
     width: 5rem;
@@ -494,15 +541,40 @@ ion-content::part(scroll) {
     font-size: var(--text-lg);
     font-weight: var(--weight-bold);
   }
+  /* Misma IDEA que en escritorio: el formulario es una tarjeta. Antes era una
+     hoja anclada al fondo con `flex: 1`, de modo que crecía hasta el borde de
+     la pantalla y el copyright fijo se le montaba encima del texto. Como
+     tarjeta se ajusta a su contenido y deja sitio al pie. */
   .auth-form-container {
-    background: var(--surface-card);
-    border-radius: 24px 24px 0 0;
-    padding: var(--space-32) var(--space-24) var(--space-96);
-    box-shadow: 0 -8px 30px oklch(0.20 0.02 275 / 0.18);
-    flex: 1;
-    width: 100%;
+    background: var(--surface-card-grad), var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-24);
+    box-shadow: var(--shadow-lg);
+    margin: 0 var(--space-16);
+    width: auto;
+    align-self: stretch;
     max-width: none;
   }
+
+  /* En flujo, no fijo: un pie `position: fixed` sobre una pantalla que ahora
+     puede desplazarse se monta sobre el contenido. Aquí cae debajo de la
+     tarjeta, sobre la banda índigo, y por eso va en claro. */
+  .auth-copyright-footer {
+    position: static;
+    padding: var(--space-20) var(--space-24) var(--space-24);
+    text-align: center;
+    color: oklch(1 0 0 / 0.62);
+    opacity: 1;
+  }
+}
+
+/* El alto del formulario NO es fijo: cada error de validación añade una línea.
+   Con `--overflow: hidden` un móvil corto recortaba el contenido sin aviso.
+   En escritorio se conserva la pantalla completa sin scroll. */
+@media (max-width: 767px) {
+  ion-content { --overflow: auto; }
+  ion-content::part(scroll) { min-height: 100%; }
 }
 
 /* ─── Keyframes ───────────────────────────────────────────────────── */
