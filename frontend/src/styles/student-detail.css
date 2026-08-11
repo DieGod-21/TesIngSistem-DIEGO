@@ -175,10 +175,26 @@
 
 /* ── Encabezado de perfil ABIERTO: sin tarjeta; el estudiante es el objeto
    principal, respirando sobre el fondo de página (no una caja más). ──── */
+/* El expediente es el destino del CTA de la vista rápida. Comparte con ella el
+   mismo lavado de marca para que la transición se lea como «el mismo lugar, con
+   más profundidad», no como otra pantalla. */
 .sd-hero {
     display: flex;
     flex-direction: column;
-    padding: var(--space-4) var(--space-4) var(--space-2);
+    padding: var(--space-20) var(--space-24) var(--space-16);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border);
+    background: var(--aurora-wash), var(--surface-card);
+    box-shadow: var(--shadow-sm), var(--hairline);
+}
+
+/* Identificadores copiables, alineados bajo el nombre. */
+.sd-hero__ids {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-8);
+    margin-top: var(--space-6);
 }
 .sd-hero__top {
     display: flex;

@@ -306,3 +306,13 @@
     box-shadow: var(--shadow-lg);
     border-color: var(--border-strong);
 }
+
+/* Identificadores copiables del estudiante: mismo bloque que en la vista
+   rápida y el expediente. Se apilan en columna porque la tarjeta es estrecha. */
+.rep-ids {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}

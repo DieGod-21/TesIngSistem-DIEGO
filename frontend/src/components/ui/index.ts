@@ -24,3 +24,5 @@ export { default as Alert } from './Alert';
 export type { AlertProps, AlertTone } from './Alert';
 export { default as Skeleton } from './Skeleton';
 export type { SkeletonProps } from './Skeleton';
+export { default as CopyField } from './CopyField';
+export type { CopyFieldProps } from './CopyField';

@@ -105,6 +105,34 @@ describe('CSS válido', () => {
         const bad = countBy(cssFiles, /var\(--[a-z0-9-]*(?:;|\s*\})/gi);
         expect(bad).toEqual({});
     });
+
+    /**
+     * Referenciar un token que NO existe es el mismo fallo silencioso que
+     * `-var(--x)`: el navegador descarta la declaración entera y la regla
+     * desaparece sin una sola señal en build ni en tests.
+     *
+     * Ocurrió de nuevo en la iteración 10 con `var(--space-18)` —la escala salta
+     * de 16 a 20— y colapsó el ritmo vertical de un panel completo. Se detectó
+     * mirando una captura, no compilando. Esta regla lo convierte en un fallo.
+     *
+     * Solo se vigilan los tokens de ESCALA (los que forman un sistema cerrado).
+     * Los tokens con fallback `var(--x, y)` son deliberados y se permiten.
+     */
+    it('no referencia tokens de escala inexistentes', () => {
+        const declared = new Set(
+            [...read(cssFiles.find(themeFile)!).matchAll(/^\s*(--[a-z0-9-]+)\s*:/gim)].map((m) => m[1]),
+        );
+        const SCALES = /^--(space|text|weight|leading|radius|control-h|shadow|transition|color|surface|border|text-|ring|glass|aurora|gray|indigo)/;
+        const missing = new Set<string>();
+        for (const f of cssFiles) {
+            for (const m of read(f).matchAll(/var\(\s*(--[a-z0-9-]+)\s*\)/gi)) {
+                const name = m[1];
+                if (!SCALES.test(name) || declared.has(name)) continue;
+                missing.add(`${rel(f)} → ${name}`);
+            }
+        }
+        expect([...missing]).toEqual([]);
+    });
 });
 
 // ─────────────────────────────────────────────────────────────────────────

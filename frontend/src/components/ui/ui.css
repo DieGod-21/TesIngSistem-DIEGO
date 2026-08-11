@@ -601,6 +601,71 @@
     transition: color var(--transition-base);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   COPY FIELD — un dato que se copia de un clic
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    max-width: 100%;
+    min-height: var(--control-h-sm);
+    padding: var(--space-4) var(--space-8);
+    margin-left: calc(-1 * var(--space-8));   /* alinea ópticamente con el texto de arriba */
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: transparent;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast),
+                border-color var(--transition-fast);
+}
+
+.ui-copy__icon  { display: inline-flex; color: var(--text-muted); flex-shrink: 0; }
+.ui-copy__value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* La acción se insinúa en reposo y se afirma al apuntar: el dato es lo que
+   importa, copiar es lo que se ofrece. */
+.ui-copy__action {
+    display: inline-flex;
+    margin-left: auto;
+    color: var(--text-muted);
+    opacity: 0.45;
+    transition: opacity var(--transition-fast), color var(--transition-fast),
+                transform var(--transition-fast);
+}
+
+.ui-copy:hover {
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+.ui-copy:hover .ui-copy__action { opacity: 1; color: var(--color-primary); }
+.ui-copy:focus-visible { outline: none; border-color: var(--color-primary); box-shadow: var(--ring); }
+
+/* Acuse: verde, breve, y se retira solo (useCopyToClipboard). */
+.ui-copy.is-copied {
+    color: var(--color-success);
+    border-color: color-mix(in oklch, var(--color-success) 34%, transparent);
+    background: var(--color-success-light);
+}
+.ui-copy.is-copied .ui-copy__icon,
+.ui-copy.is-copied .ui-copy__action { color: var(--color-success); opacity: 1; }
+.ui-copy.is-copied .ui-copy__action { animation: ui-copy-pop 260ms var(--ease-out-expo) both; }
+
+@keyframes ui-copy-pop {
+    0%   { transform: scale(0.55); opacity: 0; }
+    100% { transform: scale(1);    opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-copy.is-copied .ui-copy__action { animation: none; }
+}
+
 /* ── Superficie de control (la CAJA de cualquier campo) ──────────────
    Medición sobre render (iteración 9): 10 clases de campo con 6 alturas
    (33/35/36/37/41px). `.ui-field__input`, el campo del sistema, se usaba en
@@ -790,9 +855,43 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
         radial-gradient(100% 120% at 0% 100%, color-mix(in oklch, var(--aurora-3) 40%, transparent) 0%, transparent 50%),
         linear-gradient(135deg, var(--indigo-900) 0%, var(--indigo-800) 60%, var(--indigo-700) 100%);
     color: #fff;
-    box-shadow: var(--shadow-lg);
+    /* Sombra tintada al hue de marca + filo superior de luz. El filo es lo que
+       hace que la superficie se lea como un MATERIAL con canto y no como un
+       rectángulo de color: es el mismo recurso del cristal, sin desenfoque. */
+    box-shadow:
+        0 18px 40px -18px color-mix(in oklch, var(--indigo-800) 55%, transparent),
+        var(--shadow-lg),
+        inset 0 1px 0 oklch(1 0 0 / 0.16);
     isolation: isolate;
 }
+
+/* Luz ambiental: una sola veladura que deriva muy despacio. 22 s y 6 % de
+   amplitud — a esa velocidad no se percibe como animación, se percibe como
+   que la superficie está viva. Cualquier cosa más rápida sería decoración. */
+.ui-hero::after {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    background: radial-gradient(
+        38% 44% at 70% 22%,
+        color-mix(in oklch, var(--aurora-3) 30%, transparent) 0%,
+        transparent 68%
+    );
+    pointer-events: none;
+    z-index: -1;
+    animation: ui-hero-drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes ui-hero-drift {
+    from { transform: translate3d(-3%, -2%, 0) scale(1); opacity: 0.75; }
+    to   { transform: translate3d(4%, 3%, 0) scale(1.06); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Se conserva la luz, se detiene el movimiento. */
+    .ui-hero::after { animation: none; }
+}
+
 /* Textura de puntos superpuesta, enmascarada para desvanecer */
 .ui-hero::before {
     content: '';

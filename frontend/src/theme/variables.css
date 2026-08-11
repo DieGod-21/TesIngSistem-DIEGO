@@ -107,6 +107,31 @@
     --border:         var(--gray-200);
     --border-strong:  var(--gray-300);
 
+    /* ── Material «cristal» ──────────────────────────────────────────────
+       Tres tokens, no un efecto suelto. Se usa en MUY pocos sitios y siempre
+       por la misma razón: separar una capa flotante del contenido que tapa.
+       Nunca decorativo, nunca sobre texto largo.
+
+       `--glass-scrim` es el velo de un panel modal: oscurece y desenfoca lo de
+       debajo para que el panel gane foco sin que el fondo desaparezca.
+       `--glass-surface` y `--glass-border` visten la capa flotante en sí.
+
+       El desenfoque es moderado (12px) a propósito: por encima de ~20px el
+       fondo se vuelve papilla y el efecto delata «plantilla». */
+    --glass-scrim:   oklch(0.22 0.035 275 / 0.42);
+    --glass-blur:    12px;
+    --glass-surface: color-mix(in oklch, var(--surface-card) 88%, transparent);
+    --glass-border:  color-mix(in oklch, oklch(1 0 0) 60%, var(--border));
+
+    /* Lavado de marca para anclar una cabecera. Muy tenue: da profundidad y
+       temperatura, no color. */
+    --aurora-wash: radial-gradient(
+        125% 150% at 100% 0%,
+        color-mix(in oklch, var(--color-primary) 17%, transparent) 0%,
+        color-mix(in oklch, var(--aurora-3, var(--color-primary)) 11%, transparent) 45%,
+        transparent 74%
+    );
+
     /* ── Dashboard layout (legado → semántico) ── */
     --dash-bg:              var(--surface-base);
     --dash-sidebar-bg:      var(--indigo-800);
@@ -335,6 +360,13 @@ body {
     --surface-base:   oklch(0.205 0.020 275);
     --surface-card:   oklch(0.258 0.022 275);
     --surface-raised: oklch(0.300 0.024 275);   /* más clara que la card → profundidad */
+
+    /* Cristal en oscuro: el velo aprieta más (el fondo ya es oscuro y hay que
+       separarlo igual) y el borde deja de ser un brillo blanco —que en oscuro
+       se lee como un arañazo— para volverse una luz muy tenue. */
+    --glass-scrim:   oklch(0.12 0.030 275 / 0.58);
+    --glass-surface: color-mix(in oklch, var(--surface-card) 90%, transparent);
+    --glass-border:  color-mix(in oklch, oklch(1 0 0) 12%, var(--border));
     --surface-float:  oklch(0.322 0.026 275);
     --border:         oklch(0.360 0.028 275);
     --border-strong:  oklch(0.430 0.030 275);

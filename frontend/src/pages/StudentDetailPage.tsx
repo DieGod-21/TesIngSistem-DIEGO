@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useHistory, useLocation } from 'react-router-dom';
-import { ChevronLeft, Mail, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, ArrowRight } from 'lucide-react';
+import { ChevronLeft, Mail, IdCard, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, ArrowRight } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
 import { THESIS_MIN_GRADE } from '../config/apiConfig';
@@ -8,7 +8,7 @@ import { useStudentDossier } from '../hooks/useStudentDossier';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import type { CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
-import { Avatar, Badge, Button, EmptyState, Skeleton } from '../components/ui';
+import { Avatar, Badge, Button, CopyField, EmptyState, Skeleton } from '../components/ui';
 import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE } from '../utils/ternaStatus';
 import { formatShortDate } from '../utils/dates';
 import '../features/ternas/styles/ternas.css';
@@ -178,14 +178,25 @@ const StudentDetailPage: React.FC = () => {
                                         {state.student.carrera && (
                                             <span className="sd-hero__career">{state.student.carrera}</span>
                                         )}
-                                        {state.student.carrera && state.student.email && (
-                                            <span className="sd-hero__dot" aria-hidden="true">·</span>
-                                        )}
+                                    </div>
+                                    {/* Mismo lenguaje de copiado que la vista rápida: el
+                                        coordinador llega aquí DESDE ese panel y la
+                                        afordancia no puede desaparecer por el camino. */}
+                                    <div className="sd-hero__ids">
+                                        <CopyField
+                                            value={state.student.carnet}
+                                            label="carné"
+                                            icon={<IdCard size={14} />}
+                                            resetKey={state.student.id}
+                                            tnum
+                                        />
                                         {state.student.email && (
-                                            <a className="sd-hero__email" href={`mailto:${state.student.email}`}>
-                                                <Mail size={13} aria-hidden="true" />
-                                                {state.student.email}
-                                            </a>
+                                            <CopyField
+                                                value={state.student.email}
+                                                label="correo"
+                                                icon={<Mail size={14} />}
+                                                resetKey={state.student.id}
+                                            />
                                         )}
                                     </div>
                                 </div>
@@ -201,10 +212,8 @@ const StudentDetailPage: React.FC = () => {
 
                         {/* Stats integradas al encabezado (sin cajas, una sola superficie) */}
                         <dl className="sd-hero__stats">
-                            <div className="sd-stat">
-                                <dt className="sd-stat__label">Carné</dt>
-                                <dd className="sd-stat__value sd-stat__value--mono">{state.student.carnet}</dd>
-                            </div>
+                            {/* El carné vive arriba, junto a la identidad y copiable.
+                                Repetirlo aquí solo añadía ruido a la tira de cifras. */}
                             <div className="sd-stat">
                                 <dt className="sd-stat__label">Estado</dt>
                                 <dd className="sd-stat__value">

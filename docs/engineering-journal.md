@@ -195,6 +195,8 @@ Cada regla nace de un fallo real. **No son recordatorios: son precondiciones.**
 | P6 | **Ninguna medición se limita a lo que la sonda alcanza.** Las superficies tras `<details>`, modales o rutas por rol quedan fuera y deben abrirse explícitamente. | it. 9: el formulario de evaluación y el login quedaron fuera de dos barridos |
 | P7 | **No declarar un problema resuelto sin medir el resultado.** Un comentario que afirma consistencia sin número al lado es una hipótesis. | it. 7: «consistencia total» falsa |
 | P8 | **Antes de implementar, ordenar por impacto × frecuencia × riesgo ÷ coste.** Resolver primero la mayor fuente de inconsistencia. | it. 9 |
+| P9 | **Un token inexistente es un fallo silencioso.** Referenciar `var(--space-18)` cuando la escala salta de 16 a 20 hace que el navegador descarte la declaración entera. Hay regla de arquitectura que lo detecta. | it. 10 |
+| P10 | **Para forzar un estado de la app en una auditoría, hay que usar el mecanismo de la app**, no manipular el DOM. Fijar `data-theme` a mano lo pisa React al montar; el tema se fija por `localStorage`, que es de donde lee el `ThemeProvider`. | it. 10 |
 
 ---
 
@@ -264,3 +266,46 @@ El sistema de diseño pasa a poseer las tres cajas fundamentales: botón
   pero no un campo desnudo. Es el siguiente eslabón a cerrar.
 - 44 px es cómodo en escritorio y correcto al tacto, pero engorda los
   formularios densos. Si aparece un formulario de más de 6 campos, revisar.
+
+---
+
+## Iteración 10 — Sprint WOW: percepción
+
+### Observación
+Primera vez que se renderiza `StudentQuickView`: no tenía disparador de botón,
+se controla por URL (`?preview=<id>`). Llevaba dos iteraciones declarada como
+hueco por buscarla mal.
+
+### Evidencia y decisiones
+| Defecto observado | Decisión |
+|---|---|
+| El acuse «copiado» **nunca se revertía** (solo al cambiar de estudiante) | `useCopyToClipboard` con ventana de 1,6 s y limpieza al desmontar |
+| Carné copiable en un sitio, texto plano en otros dos | Primitiva `CopyField`; 3 superficies con el mismo lenguaje |
+| Franja de color de 3px a la izquierda en las notas | Superficie tonal completa + cifra con color |
+| Franja superior de 3px en Proyectos, codificando la fase que la píldora ya decía | Eliminada; pie anclado con `margin-top:auto` para alinear filas |
+| CTA del panel en `secondary`, «demasiado fácil de perder» | `primary` + flecha que avanza al apuntar |
+| Velo del panel transparente: la lista competía con el panel | `--glass-scrim` + `backdrop-filter`, con respaldo `@supports` |
+
+### Alternativas rechazadas
+- **Cristal en varias superficies** (tarjetas KPI, cabecera, barra lateral).
+  Rechazada: la guía de diseño prohíbe el glassmorphism decorativo y el propio
+  plan pide cristal «solo donde mejore de verdad». Se usa en **una** superficie,
+  el velo de un panel modal, que es su caso canónico.
+- **Rellenar el vacío del panel con más datos del API.** Rechazada: el panel es
+  para decidir rápido; el expediente es para profundizar. Se resolvió con
+  materia (veladura inferior), no con contenido.
+
+### Errores cometidos
+- `var(--space-18)` **no existe**: la escala salta de 16 a 20. La declaración se
+  descartó en silencio y colapsó el ritmo vertical del panel. Detectado mirando
+  una captura, no compilando → regla P9 + test de arquitectura.
+- Arreglé el bug del tema en `dialogs.mjs` en la iteración 8 y **no lo porté a
+  `capture.mjs`**: todo el barrido «dark» de esta sesión salió en claro. Mi
+  propia regla P4 lo advertía. Y el arreglo portado tampoco bastaba: el
+  `ThemeProvider` restaura su estado y pisa el atributo → regla P10.
+
+### Riesgos futuros
+- `--aurora-wash` se aplica ya en dos cabeceras. Si aparece en una tercera sin
+  criterio, deja de significar «esta es la identidad» y pasa a ser decoración.
+- `backdrop-filter` tiene coste de composición. Está en una sola superficie y
+  solo mientras el panel está abierto; vigilar si se extiende.

@@ -8,13 +8,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
-import { ChevronLeft, FileText, Users, AlertTriangle, RefreshCw, BarChart3 } from 'lucide-react';
+import { ChevronLeft, FileText, Users, AlertTriangle, RefreshCw, BarChart3, Mail, IdCard } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { getTernaReport, type ReporteTernaDetalle } from '../../../services/reportesService';
 import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import { ResolutionBadge } from './ReportesPage';
-import { Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
+import { Button, CopyField, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
 import '../styles/reportes.css';
 import '../../ternas/styles/ternas.css';
@@ -136,10 +136,28 @@ const ReportDetailPage: React.FC = () => {
                                     <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                                         {report.estudiante?.nombre}
                                     </p>
-                                    <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                                        <span className="rep-carnet">{report.estudiante?.carnet}</span>
-                                        {report.estudiante?.email && <> · {report.estudiante.email}</>}
-                                    </p>
+                                    {/* Tercera superficie que expone los mismos
+                                        identificadores: mismo lenguaje de copiado
+                                        que la vista rápida y el expediente. */}
+                                    <div className="rep-ids">
+                                        {report.estudiante?.carnet && (
+                                            <CopyField
+                                                value={report.estudiante.carnet}
+                                                label="carné"
+                                                icon={<IdCard size={14} />}
+                                                resetKey={report.terna_id}
+                                                tnum
+                                            />
+                                        )}
+                                        {report.estudiante?.email && (
+                                            <CopyField
+                                                value={report.estudiante.email}
+                                                label="correo"
+                                                icon={<Mail size={14} />}
+                                                resetKey={report.terna_id}
+                                            />
+                                        )}
+                                    </div>
                                 </article>
 
                                 <article className="report-card">

@@ -24,13 +24,16 @@
 
 /* ── Card ────────────────────────────────────────────────────────── */
 
+/* La franja superior de 3px se ELIMINA. Codificaba la fase con color mientras
+   la píldora PG1/PG2 ya la decía con palabras: dos codificaciones para un dato,
+   y la de color no se podía leer sin memorizar la equivalencia. Además una
+   barra pegada a un canto desequilibra la tarjeta y es un recurso de plantilla
+   de alerta, no de una cuadrícula de contenido. */
 .proy-card {
     background: var(--surface-card-grad), var(--surface-card);
     border: 1px solid var(--border);
-    border-top: 3px solid var(--color-primary);
     border-radius: var(--radius-card);
-    /* El acento superior distingue la fase con tokens de marca (PG1 vs PG2). */
-    padding: var(--space-16) var(--space-20);
+    padding: var(--space-20);
     display: flex;
     flex-direction: column;
     gap: var(--space-8);
@@ -38,10 +41,37 @@
     transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
 }
 
+/* El pie se ancla abajo: con títulos de una, dos o tres líneas, los pies de una
+   misma fila quedan alineados. Es la diferencia entre una cuadrícula y un
+   conjunto de tarjetas sueltas del mismo tamaño. */
+.proy-card__foot {
+    margin-top: auto;
+    padding-top: var(--space-12);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-10);
+}
+
+.proy-card__student {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-6);
+    min-width: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.proy-card__student svg { color: var(--text-muted); flex-shrink: 0; }
+
 .proy-card:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
-    border-color: var(--border-strong);
+    border-color: color-mix(in oklch, var(--color-primary) 30%, var(--border));
 }
 
 /* Entrada escalonada — mismo lenguaje de movimiento que Reportes/Ternas.
@@ -64,21 +94,20 @@
     .proy-card { animation: none; }
 }
 
-.proy-card--pg1 { border-top-color: var(--color-primary); }
-.proy-card--pg2 { border-top-color: var(--color-info); }
-
-.proy-card__top {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-}
+/* `.proy-card--pg1/--pg2` y `.proy-card__top` ELIMINADOS con la franja
+   superior y con la fila que solo contenía la píldora de fase. */
 
 .proy-card__title {
     margin: 0;
-    font-size: var(--text-base);
+    /* El título es el dato con el que se escanea la cuadrícula: sube un paso
+       en la escala y gana un poco de tracking negativo para leerse como titular
+       y no como texto corrido. */
+    font-size: var(--text-md);
     font-weight: var(--weight-bold);
+    letter-spacing: -0.012em;
     color: var(--text-primary);
     line-height: var(--leading-snug);
+    text-wrap: balance;
 }
 
 .proy-card__desc {
@@ -92,22 +121,8 @@
     overflow: hidden;
 }
 
-.proy-card__fase {
-    margin: var(--space-4) 0 0;
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    font-weight: var(--weight-medium);
-}
-
-.proy-card__student {
-    margin: 0;
-    font-size: var(--text-sm);
-    color: var(--text-secondary);
-    font-weight: var(--weight-semibold);
-    border-top: 1px solid var(--border);
-    padding-top: var(--space-8);
-    margin-top: var(--space-4);
-}
+/* `.proy-card__fase` ELIMINADO: repetía en texto largo («Proyecto de
+   Graduación I») lo que la píldora del pie ya dice en dos caracteres. */
 
 /* La fase del proyecto usa la primitiva <Badge> del sistema de diseño. */
 

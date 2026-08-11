@@ -6,14 +6,19 @@
  * Skeleton) aportan su propio chrome; aquí solo vive la composición del panel.
  */
 
+/* El velo es el ÚNICO cristal de esta pantalla, y está justificado: separa el
+   panel del padrón que tapa sin borrarlo. El desenfoque hace que la lista
+   siga leyéndose como contexto y deje de competir por la atención. */
 .qv-scrim {
     position: fixed;
     inset: 0;
     z-index: 1000;
     display: flex;
     justify-content: flex-end;
-    background: oklch(0.2 0.03 275 / 0.38);
-    animation: qv-scrim-in 140ms ease both;
+    background: var(--glass-scrim);
+    backdrop-filter: blur(var(--glass-blur)) saturate(0.9);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(0.9);
+    animation: qv-scrim-in 180ms ease both;
 }
 
 .qv-panel {
@@ -23,8 +28,15 @@
     height: 100%;
     background: var(--surface-card);
     border-left: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-    animation: qv-slide-in 200ms var(--ease-out-expo) both;
+    /* Sombra larga y suave hacia la izquierda: el panel se despega del velo. */
+    box-shadow: -24px 0 60px -20px oklch(0.20 0.03 275 / 0.32), var(--shadow-lg);
+    animation: qv-slide-in 260ms var(--ease-out-expo) both;
+}
+
+/* Sin desenfoque disponible, el velo compensa con más opacidad para conservar
+   la separación (Firefox antiguo, GPU deshabilitada). */
+@supports not (backdrop-filter: blur(1px)) {
+    .qv-scrim { background: oklch(0.20 0.03 275 / 0.62); }
 }
 
 /* ── Barra de control ─────────────────────────────────────────────── */
@@ -79,64 +91,70 @@
 
 /* ── Cuerpo ───────────────────────────────────────────────────────── */
 
+/* El cuerpo ocupa el resto del alto, y por debajo del contenido queda aire.
+   Ese aire es correcto —el panel es un carril fijo, no una tarjeta— pero en
+   blanco plano se lee como «falta algo». Una veladura tenue anclada al fondo
+   le da materia y cose el cuerpo con el pie. */
 .qv-body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: var(--space-16) var(--space-20);
+    padding: var(--space-16) var(--space-20) var(--space-24);
     display: flex;
     flex-direction: column;
-    gap: var(--space-16);
+    gap: var(--space-20);
+    background:
+        linear-gradient(180deg, transparent 62%,
+            color-mix(in oklch, var(--surface-raised) 55%, transparent) 100%)
+        no-repeat bottom / 100% 40%;
 }
 
-/* 1. Identidad */
+/* 1. Identidad — bloque anclado fuera del scroll.
+   La pregunta «¿de quién es este expediente?» no debe poder desplazarse fuera
+   de la vista mientras se leen las notas. El lavado de marca vive SOLO aquí. */
 
 .qv-identity {
     display: flex;
     align-items: center;
-    gap: var(--space-12);
+    gap: var(--space-14);
+    flex-shrink: 0;
+    padding: var(--space-20) var(--space-20) var(--space-20);
+    background: var(--aurora-wash), var(--surface-card);
+    border-bottom: 1px solid var(--border);
 }
 
-.qv-identity__text { min-width: 0; }
+.qv-identity__text { min-width: 0; display: flex; flex-direction: column; gap: var(--space-8); }
 
+/* El nombre es el dato de mayor rango del panel y debe leerse como tal:
+   antes compartía tamaño con los títulos de sección. */
 .qv-identity__name {
-    margin: 0 0 var(--space-2);
-    font-size: var(--text-md);
+    margin: 0;
+    font-size: var(--text-lg);
     font-weight: var(--weight-bold);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
     line-height: var(--leading-tight);
     color: var(--text-primary);
+    text-wrap: balance;
 }
 
-/* El carné es un dato que se copia constantemente para cruzar sistemas. */
-.qv-carnet {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-6);
-    padding: var(--space-2) var(--space-6);
-    margin-left: calc(-1 * var(--space-6));
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    font: inherit;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: background var(--transition-fast), color var(--transition-fast);
+/* Identificadores copiables, apilados y alineados con el cuerpo. */
+/* Los identificadores se ajustan a su contenido: el icono de copiar debe
+   quedar junto al dato, no empujado al borde del panel. */
+.qv-ids {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    max-width: 100%;
 }
 
-.qv-carnet:hover { background: var(--surface-raised); color: var(--text-primary); }
-.qv-carnet:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
-
-/* 2. Veredicto — la respuesta que se busca al abrir el panel */
+/* 2. Veredicto — viaja con la identidad: quién es y si cumple, juntos. */
 
 .qv-verdict {
     display: flex;
     align-items: center;
     gap: var(--space-10);
     flex-wrap: wrap;
-    padding-bottom: var(--space-16);
-    border-bottom: 1px solid var(--border);
 }
 
 .qv-verdict__avg {
@@ -186,21 +204,32 @@
     gap: var(--space-6);
 }
 
+/* El estado se comunica con la SUPERFICIE completa y con la cifra, no con una
+   franja lateral: una barra de color pegada al borde izquierdo es un adorno
+   heredado de las plantillas de alerta y desequilibra la fila. */
 .qv-grade {
     display: grid;
     grid-template-columns: 2.5rem auto 1fr;
     align-items: center;
     gap: var(--space-10);
-    padding: var(--space-8) var(--space-12);
-    border: 1px solid var(--border);
+    padding: var(--space-10) var(--space-12);
+    border: 1px solid var(--qv-edge, var(--border));
     border-radius: var(--radius-md);
-    /* Franja de estado: color solo donde comunica el veredicto. */
-    border-left: 3px solid var(--qv-accent, var(--border-strong));
+    background: var(--qv-fill, transparent);
 }
 
-.qv-grade--pass  { --qv-accent: var(--color-success); }
-.qv-grade--fail  { --qv-accent: var(--color-danger); }
-.qv-grade--empty { --qv-accent: var(--border-strong); }
+.qv-grade--pass {
+    --qv-accent: var(--color-success);
+    --qv-fill:   color-mix(in oklch, var(--color-success) 7%, transparent);
+    --qv-edge:   color-mix(in oklch, var(--color-success) 26%, var(--border));
+}
+.qv-grade--fail {
+    --qv-accent: var(--color-danger);
+    --qv-fill:   color-mix(in oklch, var(--color-danger) 7%, transparent);
+    --qv-edge:   color-mix(in oklch, var(--color-danger) 26%, var(--border));
+}
+/* Sin nota no hay veredicto: la fila se mantiene neutra a propósito. */
+.qv-grade--empty { --qv-accent: var(--text-muted); }
 
 .qv-grade__course {
     font-size: var(--text-xs);
@@ -251,38 +280,35 @@
     color: var(--text-muted);
 }
 
-/* 5. Contacto */
-
-.qv-contact {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-6);
-    font-size: var(--text-sm);
-    color: var(--text-secondary);
-    text-decoration: none;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    border-radius: var(--radius-sm);
-}
-
-.qv-contact:hover { color: var(--color-primary); text-decoration: underline; }
-.qv-contact:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-
 /* ── Pie ──────────────────────────────────────────────────────────── */
 
 .qv-foot {
     flex-shrink: 0;
-    padding: var(--space-14) var(--space-20);
+    padding: var(--space-16) var(--space-20);
     border-top: 1px solid var(--border);
     background: var(--surface-raised);
 }
+
+/* La flecha avanza al apuntar: dice «esto continúa hacia otra pantalla», no
+   «esto ejecuta algo aquí». Es el único movimiento del pie. */
+.qv-cta__arrow {
+    margin-left: var(--space-2);
+    transition: transform var(--transition-base);
+}
+.qv-cta:hover .qv-cta__arrow { transform: translateX(3px); }
 
 .qv-foot__hint {
     margin: var(--space-10) 0 0;
     text-align: center;
     font-size: var(--text-xs);
     color: var(--text-muted);
+}
+
+/* Sin puntero fino no hay teclado físico: la pista de atajos ocupa espacio y no
+   ofrece nada. Se decide por CAPACIDAD del dispositivo, no por ancho: una
+   tableta con teclado sigue mereciéndola. */
+@media (pointer: coarse) {
+    .qv-foot__hint { display: none; }
 }
 
 
@@ -297,8 +323,10 @@
 @media (prefers-reduced-motion: reduce) {
     .qv-scrim,
     .qv-panel { animation: none; }
-    .qv-icon-btn,
-    .qv-carnet { transition: none; }
+    .qv-icon-btn { transition: none; }
+    /* Se conserva el cambio de estado del CTA; se elimina el desplazamiento. */
+    .qv-cta__arrow { transition: none; }
+    .qv-cta:hover .qv-cta__arrow { transform: none; }
 }
 
 /* ── Móvil: hoja inferior, mismo patrón que el resto de diálogos ──── */

@@ -17,13 +17,13 @@ import React, { useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
     X, Mail, GraduationCap, Users, ArrowRight, AlertTriangle,
-    ChevronUp, ChevronDown, Check, Copy,
+    ChevronUp, ChevronDown, IdCard,
 } from 'lucide-react';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import { useStudentDossier } from '../../../hooks/useStudentDossier';
 import { THESIS_MIN_GRADE } from '../../../config/apiConfig';
 import { VOCAB } from '../../../config/vocabulary';
-import { Alert, Avatar, Badge, Button, Skeleton } from '../../../components/ui';
+import { Alert, Avatar, Badge, Button, CopyField, Skeleton } from '../../../components/ui';
 import type { BadgeTone } from '../../../components/ui';
 import '../styles/quick-view.css';
 
@@ -63,7 +63,6 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
     const open = studentId != null;
     const panelRef = useFocusTrap<HTMLDivElement>(open, onClose);
     const dossier = useStudentDossier(studentId);
-    const [copied, setCopied] = React.useState(false);
 
     // ↑/↓ recorren el padrón sin cerrar el panel: el flujo de revisión no se
     // interrumpe. Se ignoran mientras el foco está en un campo de texto.
@@ -81,23 +80,10 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
         return () => document.removeEventListener('keydown', onKeyDown);
     }, [open, onKeyDown]);
 
-    // Al cambiar de estudiante se reinicia el acuse de "copiado".
-    useEffect(() => { setCopied(false); }, [studentId]);
-
     if (!open) return null;
 
     const { student, loading, error, grades, tesis, terna, promedio } = dossier;
     const verdict = VERDICT[tesis.estado] ?? VERDICT.PENDIENTE;
-
-    const copyCarnet = async () => {
-        if (!student) return;
-        try {
-            await navigator.clipboard.writeText(student.carnet);
-            setCopied(true);
-        } catch {
-            /* Portapapeles no disponible: el carné sigue visible y seleccionable. */
-        }
-    };
 
     return createPortal(
         <div className="qv-scrim" onMouseDown={onClose}>
@@ -168,33 +154,42 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
 
                 {!loading && !error && student && (
                     <>
-                        <div className="qv-body">
-                            {/* ── 1. ¿Quién es? ── */}
-                            <header className="qv-identity">
-                                <Avatar name={student.nombre} size="lg" shape="square" />
-                                <div className="qv-identity__text">
-                                    <h2 className="qv-identity__name">{student.nombre}</h2>
-                                    <button
-                                        type="button"
-                                        className="qv-carnet"
-                                        onClick={copyCarnet}
-                                        aria-label={copied ? 'Carné copiado' : `Copiar carné ${student.carnet}`}
-                                    >
-                                        <span className="ui-tnum">{student.carnet}</span>
-                                        {copied
-                                            ? <Check size={13} aria-hidden="true" />
-                                            : <Copy size={13} aria-hidden="true" />}
-                                    </button>
+                        {/* ── 1. Identidad: bloque anclado, no una fila más ──
+                            El lavado de marca solo vive aquí. Da al panel un
+                            «arriba» reconocible y evita que el contenido flote
+                            sobre una superficie plana. */}
+                        <header className="qv-identity">
+                            <Avatar name={student.nombre} size="lg" shape="square" />
+                            <div className="qv-identity__text">
+                                <h2 className="qv-identity__name">{student.nombre}</h2>
+                                <div className="qv-verdict">
+                                    <Badge tone={verdict.tone} dot>{verdict.label}</Badge>
+                                    {promedio != null && (
+                                        <span className="qv-verdict__avg">
+                                            Promedio <strong className="ui-tnum">{promedio}</strong>
+                                        </span>
+                                    )}
                                 </div>
-                            </header>
+                            </div>
+                        </header>
 
-                            {/* ── 2. ¿Es elegible? El veredicto es lo primero ── */}
-                            <div className="qv-verdict">
-                                <Badge tone={verdict.tone} dot>{verdict.label}</Badge>
-                                {promedio != null && (
-                                    <span className="qv-verdict__avg">
-                                        Promedio <strong className="ui-tnum">{promedio}</strong>
-                                    </span>
+                        <div className="qv-body">
+                            {/* ── 2. Identificadores: se copian, no se leen ── */}
+                            <div className="qv-ids">
+                                <CopyField
+                                    value={student.carnet}
+                                    label="carné"
+                                    icon={<IdCard size={14} />}
+                                    resetKey={studentId}
+                                    tnum
+                                />
+                                {student.email && (
+                                    <CopyField
+                                        value={student.email}
+                                        label="correo"
+                                        icon={<Mail size={14} />}
+                                        resetKey={studentId}
+                                    />
                                 )}
                             </div>
 
@@ -252,21 +247,22 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 )}
                             </section>
 
-                            {/* ── 5. Contacto: dato de acción, no de lectura ── */}
-                            {student.email && (
-                                <a className="qv-contact" href={`mailto:${student.email}`}>
-                                    <Mail size={14} aria-hidden="true" />
-                                    <span>{student.email}</span>
-                                </a>
-                            )}
                         </div>
 
-                        {/* ── Pie: el expediente completo es la acción secundaria ── */}
+                        {/* ── Pie: continuar al expediente es LA acción del panel ──
+                            Era `secondary` y se perdía. La vista rápida existe
+                            para decidir; cuando la decisión pide profundidad,
+                            este es el único camino y debe verse como tal. */}
                         <footer className="qv-foot">
-                            <Button variant="secondary" onClick={() => onOpenFull(String(student.id))} block>
+                            <Button
+                                variant="primary"
+                                className="qv-cta"
+                                onClick={() => onOpenFull(String(student.id))}
+                                block
+                            >
                                 <GraduationCap size={16} aria-hidden="true" />
                                 Abrir expediente completo
-                                <ArrowRight size={16} aria-hidden="true" />
+                                <ArrowRight size={16} aria-hidden="true" className="qv-cta__arrow" />
                             </Button>
                             <p className="qv-foot__hint">
                                 <kbd className="ui-kbd">↑</kbd><kbd className="ui-kbd">↓</kbd> recorrer · <kbd className="ui-kbd">Esc</kbd> cerrar
