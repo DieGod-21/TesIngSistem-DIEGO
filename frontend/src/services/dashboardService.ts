@@ -58,7 +58,6 @@ export async function getDashboardSummary(opts: { signal?: AbortSignal } = {}): 
     const { resumen } = await apiGet<TesisResumenResponse>(API_PATHS.tesis.resumen, { signal: opts.signal });
 
     const { total_estudiantes, aprobados, reprobados, porcentaje_aprobacion } = resumen;
-    const pending = Math.max(total_estudiantes - aprobados - reprobados, 0);
     const completionPct = Math.round(porcentaje_aprobacion);
 
     const kpis: KpiData[] = [
@@ -85,14 +84,23 @@ export async function getDashboardSummary(opts: { signal?: AbortSignal } = {}): 
             navigateTo:    '/students?status=approved',
         },
         {
+            /*
+             * Cuenta EXACTAMENTE los reprobados, que es lo que hay detrás de
+             * `?status=failed`. Antes sumaba un `pending` calculado como
+             * `total_estudiantes − aprobados − reprobados`, que por definición
+             * del endpoint vale siempre cero: `total_estudiantes` ES la suma de
+             * los otros dos. Aquella aritmética no añadía a nadie y a cambio la
+             * descripción prometía incluir «con nota pendiente», gente que la
+             * tarjeta nunca contó y que el destino tampoco muestra.
+             */
             id:            'kpi-pending',
             label:         'Sin Aprobar',
-            value:         String(reprobados + pending),
+            value:         String(reprobados),
             trend:         '',
-            trendPositive: reprobados + pending === 0,
-            description:   'Reprobados o con nota pendiente',
+            trendPositive: reprobados === 0,
+            description:   `No alcanzan la nota mínima de ${resumen.nota_minima_requerida}`,
             iconName:      'AlertTriangle',
-            iconVariant:   reprobados + pending > 0 ? 'red' : 'blue',
+            iconVariant:   reprobados > 0 ? 'red' : 'blue',
             navigateTo:    '/students?status=failed',
         },
         {
