@@ -151,6 +151,33 @@
     --glass-surface: color-mix(in oklch, var(--surface-card) 88%, transparent);
     --glass-border:  color-mix(in oklch, oklch(1 0 0) 60%, var(--border));
 
+    /* Desenfoque corto para velos: oscurecen más de lo que difuminan, así que
+       no necesitan los 12px de una capa que ES cristal. Existía escrito a mano
+       —3px aquí, 6px allá, 12px más allá— en cuatro archivos distintos. */
+    --glass-blur-sm: 4px;
+
+    /* Filo superior de una capa flotante. Es lo que hace que el cristal parezca
+       tener GROSOR en vez de ser una transparencia: la luz pega en el canto de
+       arriba. Sin él, una superficie translúcida se lee como un fallo de
+       opacidad. */
+    --glass-sheen: inset 0 1px 0 oklch(1 0 0 / 0.30);
+
+    /* ── LOS CUATRO NIVELES DE SUPERFICIE ────────────────────────────────
+       Todo lo que se dibuja pertenece a uno de estos cuatro, y el nivel
+       comunica la RELACIÓN con el contenido, no una preferencia estética:
+
+         1 · base        `--surface-base`   el papel. No flota sobre nada.
+         2 · elevada     `--surface-card`   contenido agrupado, en el flujo.
+         3 · cristal     `.ui-glass`        TAPA contenido que sigue ahí.
+         4 · interactiva `.ui-surface--interactive`  responde al puntero.
+
+       La regla del nivel 3 es la que evita que esto degenere: solo se aplica
+       cuando hay algo REAL debajo que conviene seguir viendo —una cabecera
+       pegajosa por la que pasa la lista, un panel sobre el padrón, un
+       desplegable sobre su propio formulario—. Una tarjeta dentro de una
+       cuadrícula no tapa nada: usarla de cristal es decoración y además cuesta
+       una capa de composición por tarjeta. */
+
     /* Lavado de marca para anclar una cabecera. Muy tenue: da profundidad y
        temperatura, no color. */
     --aurora-wash: radial-gradient(
@@ -395,6 +422,9 @@ body {
     --glass-scrim:   oklch(0.12 0.030 275 / 0.58);
     --glass-surface: color-mix(in oklch, var(--surface-card) 90%, transparent);
     --glass-border:  color-mix(in oklch, oklch(1 0 0) 12%, var(--border));
+    /* El filo de luz baja de 0.30 a 0.08: sobre una superficie oscura, un brillo
+       blanco al canto no se lee como grosor sino como un arañazo. */
+    --glass-sheen:   inset 0 1px 0 oklch(1 0 0 / 0.08);
     --surface-float:  oklch(0.322 0.026 275);
     --border:         oklch(0.360 0.028 275);
     --border-strong:  oklch(0.430 0.030 275);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { User } from 'lucide-react';
+import { User, ChevronRight } from 'lucide-react';
 import { Badge } from '../../../components/ui';
 import type { Proyecto } from '../../../types/api';
 
@@ -10,14 +10,25 @@ import type { Proyecto } from '../../../types/api';
  * fase está. Antes gastaba una fila entera en la píldora de fase, repetía esa
  * misma fase en texto largo justo debajo de la descripción y la separaba del
  * autor con dos divisores. Tres zonas para tres datos que caben en dos.
+ *
+ * Ahora ADEMAS lleva a alguna parte. Toda la tarjeta es el destino y es un
+ * `<button>` de verdad: un unico punto de tabulacion, foco visible, y la
+ * afordancia explicita —cursor, elevacion al apuntar y flecha que avanza— en
+ * lugar de un `onClick` invisible sobre un bloque de texto, que nadie descubre.
  */
 
 interface Props {
     proyecto: Proyecto;
+    onOpen: (id: number) => void;
 }
 
-const ProyectoCard: React.FC<Props> = ({ proyecto }) => (
-    <article className="proy-card">
+const ProyectoCard: React.FC<Props> = ({ proyecto, onOpen }) => (
+    <button
+        type="button"
+        className="proy-card ui-surface--interactive"
+        onClick={() => onOpen(proyecto.id)}
+        aria-label={`Abrir el proyecto «${proyecto.titulo}»`}
+    >
         <h3 className="proy-card__title">{proyecto.titulo}</h3>
 
         {/* La ausencia se NOMBRA. Las tarjetas de una fila comparten alto, así
@@ -41,11 +52,14 @@ const ProyectoCard: React.FC<Props> = ({ proyecto }) => (
                     <span className="proy-card__student-name">{proyecto.estudiante_nombre}</span>
                 </span>
             )}
-            <Badge tone={proyecto.fase === 'PG1' ? 'primary' : 'info'}>
-                {proyecto.fase}
-            </Badge>
+            <span className="proy-card__end">
+                <Badge tone={proyecto.fase === 'PG1' ? 'primary' : 'info'}>
+                    {proyecto.fase}
+                </Badge>
+                <ChevronRight size={16} className="proy-card__go" aria-hidden="true" />
+            </span>
         </footer>
-    </article>
+    </button>
 );
 
 export default ProyectoCard;

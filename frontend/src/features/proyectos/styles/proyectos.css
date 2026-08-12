@@ -30,6 +30,16 @@
    barra pegada a un canto desequilibra la tarjeta y es un recurso de plantilla
    de alerta, no de una cuadrícula de contenido. */
 .proy-card {
+    /* Es un <button>: hay que devolverle la caja de un contenedor. Sin esto el
+       navegador impone su tipografia, centra el texto y recorta la tarjeta al
+       ancho de su contenido. */
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+
     background: var(--surface-card-grad), var(--surface-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
@@ -90,9 +100,6 @@
 @keyframes proy-card-in {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
-}
-@media (prefers-reduced-motion: reduce) {
-    .proy-card { animation: none; }
 }
 
 /* `.proy-card--pg1/--pg2` y `.proy-card__top` ELIMINADOS con la franja
@@ -189,6 +196,66 @@
 /* El modal y las tarjetas usan tokens semánticos: el modo oscuro se resuelve
    por herencia, sin overrides por clase (mismo criterio que NuevoUsuarioModal). */
 
+.pd-block__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-12);
+}
+
+.pd-block__note {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.pd-notas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+    gap: var(--space-10);
+}
+
+.pd-nota {
+    display: flex;
+    align-items: center;
+    gap: var(--space-10);
+    padding: var(--space-12) var(--space-14);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+}
+
+.pd-nota__curso {
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+}
+
+.pd-nota__valor {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    color: var(--text-primary);
+}
+
+.pd-nota__estado {
+    margin-left: auto;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+/* El color va en el BORDE y en la cifra, no en el fondo entero: un relleno
+   verde o rojo a lo ancho de la tarjeta grita mas de lo que informa. */
+.pd-nota--pass { border-color: color-mix(in oklch, var(--color-success) 45%, var(--border)); }
+.pd-nota--pass .pd-nota__valor { color: var(--color-success); }
+.pd-nota--fail { border-color: color-mix(in oklch, var(--color-danger) 45%, var(--border)); }
+.pd-nota--fail .pd-nota__valor { color: var(--color-danger); }
+.pd-nota--empty .pd-nota__valor { color: var(--text-muted); }
+
 /* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
    La hoja inferior del diálogo «Nuevo Proyecto» se declara dentro de una consulta de ancho
    MÁS ABAJO que el bloque de arriba, así que aquel no la alcanzaba: a igual
@@ -213,4 +280,197 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DETALLE DE PROYECTO
+
+   Dos columnas: el contenido a la izquierda, el contexto y los saltos a la
+   derecha. El carril NO es un cajón de sobras: lleva exactamente lo que hace
+   falta para decidir —si el autor puede defender, quién es y si ya tiene
+   terna— y cada pieza es un destino.
+═══════════════════════════════════════════════════════════════════ */
+
+.pd-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(min(19rem, 100%), 19rem);
+    gap: var(--space-20);
+    align-items: start;
+    min-width: 0;
+}
+
+.pd-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    min-width: 0;
+}
+
+.pd-rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    min-width: 0;
+}
+
+/* ── Encabezado ──────────────────────────────────────────────────── */
+
+.pd-hero {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-10);
+    padding: var(--space-24);
+    background: var(--aurora-wash), var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sm), var(--hairline);
+    min-width: 0;
+}
+
+.pd-hero__kicker {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin: 0;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* El título de un anteproyecto puede tener treinta palabras: se le da su
+   propio tamaño y no se recorta, porque en SU pantalla es el contenido. */
+.pd-hero__title {
+    margin: 0;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    color: var(--text-primary);
+    text-wrap: balance;
+}
+
+.pd-hero__tags {
+    display: flex;
+    align-items: center;
+    gap: var(--space-10);
+    flex-wrap: wrap;
+}
+
+.pd-hero__owner {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+/* ── Bloques ─────────────────────────────────────────────────────── */
+
+.pd-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-10);
+    padding: var(--space-20) var(--space-24);
+    min-width: 0;
+}
+
+.pd-block__title {
+    margin: 0;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.pd-desc {
+    margin: 0;
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--text-primary);
+    /* Cota de lectura: una descripción a todo lo ancho de una pantalla de 1440
+       obliga al ojo a saltar de línea a ciegas. */
+    max-width: 68ch;
+}
+
+.pd-desc--empty {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: var(--text-base);
+}
+
+/* ── Carril ──────────────────────────────────────────────────────── */
+
+.pd-tesis {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-8);
+    padding: var(--space-14);
+}
+
+.pd-tesis__label {
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.pd-tesis__why {
+    margin: 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    color: var(--text-secondary);
+}
+
+.pd-fase {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding: var(--space-12) var(--space-14);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pd-fase svg { flex-shrink: 0; color: var(--text-muted); }
+
+/* Bajo 900px el carril deja de ser carril: pasa debajo, a lo ancho. Mantenerlo
+   a 19rem en una tableta dejaba el título del proyecto en una columna de
+   trescientos píxeles. */
+@media (max-width: 900px) {
+    .pd-layout { grid-template-columns: minmax(0, 1fr); }
+    .pd-rail {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    }
+}
+
+/* Extremo derecho del pie: la fase y la señal de que esto lleva a alguna parte. */
+.proy-card__end {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    flex-shrink: 0;
+}
+
+.proy-card__go {
+    color: var(--text-muted);
+    transition: transform var(--transition-base), color var(--transition-base);
+}
+
+/* Se mueve la FLECHA, no la tarjeta: el disparador del hover no puede
+   desplazarse a sí mismo (ver la regla de estado al apuntar en ui.css). */
+.proy-card:hover .proy-card__go {
+    transform: translateX(3px);
+    color: var(--color-primary-text);
+}
+
+/* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
+   Toda animación o transición nueva de este archivo va POR ENCIMA de aquí. */
+@media (prefers-reduced-motion: reduce) {
+    .proy-card,
+    .proy-card__go {
+        animation: none;
+        transition: none;
+    }
+    .proy-card:hover .proy-card__go { transform: none; }
 }

@@ -40,7 +40,8 @@ const TernasListPage    = lazy(() => import('../features/ternas/pages/TernasList
 const TernaDetailPage   = lazy(() => import('../features/ternas/pages/TernaDetailPage'));
 const ReportesPage      = lazy(() => import('../features/reportes/pages/ReportesPage'));
 const ReportDetailPage  = lazy(() => import('../features/reportes/pages/ReportDetailPage'));
-const ProyectosListPage = lazy(() => import('../features/proyectos/pages/ProyectosListPage'));
+const ProyectosListPage  = lazy(() => import('../features/proyectos/pages/ProyectosListPage'));
+const ProyectoDetailPage = lazy(() => import('../features/proyectos/pages/ProyectoDetailPage'));
 const UsuariosPage      = lazy(() => import('../features/usuarios/pages/UsuariosPage'));
 
 // ─── Spinner compartido ───────────────────────────────────────────────
@@ -144,6 +145,7 @@ const AuthenticatedLayout: React.FC = () => {
                     <Route path="/students/new" exact><StudentNewPage /></Route>
                     <Route path="/students/:id" exact><StudentDetailPage /></Route>
                     <Route path="/students" exact><StudentsListPage /></Route>
+                    <Route path="/proyectos/:id" exact><ProyectoDetailPage /></Route>
                     <Route path="/proyectos" exact><ProyectosListPage /></Route>
                     <Route path="/ternas/:id" exact><TernaDetailPage /></Route>
                     <Route path="/ternas" exact><TernasListPage /></Route>

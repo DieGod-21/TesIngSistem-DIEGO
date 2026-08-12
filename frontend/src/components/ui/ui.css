@@ -1478,3 +1478,192 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     line-height: var(--leading-snug);
     color: var(--color-danger);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   NIVEL 3 — CRISTAL
+
+   Se aplica SOLO a capas que tapan contenido que sigue existiendo debajo:
+   cabecera pegajosa, panel sobre el padrón, desplegable sobre su formulario.
+   Una tarjeta dentro de una cuadrícula no tapa nada; ponerle cristal es
+   decoración y ademas cuesta una capa de composición por tarjeta.
+
+   El desenfoque es moderado (12px) a propósito: por encima de ~20px el fondo
+   se vuelve papilla y el efecto delata plantilla en vez de material.
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-glass {
+    background: var(--glass-surface);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
+    /* El filo superior es lo que da GROSOR: sin él, una superficie translúcida
+       se lee como un fallo de opacidad, no como una lámina. */
+    box-shadow: var(--glass-sheen);
+    border-color: var(--glass-border);
+}
+
+/* Sin desenfoque disponible (Firefox antiguo, GPU deshabilitada, ahorro de
+   energía) la translucidez deja de separar y empieza a estorbar: la capa pasa a
+   ser opaca. Es la misma decisión que ya tomaba el velo de la vista rápida. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .ui-glass {
+        background: var(--surface-float);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   NIVEL 4 — INTERACTIVA
+
+   Una superficie que RESPONDE. La diferencia con el nivel 2 no es el color de
+   reposo sino que existe un estado apuntado, uno enfocado y uno pulsado.
+
+   Se comunica con LUZ, nunca con posición: ver la REGLA DE ESTADO AL APUNTAR
+   más arriba en este archivo.
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-surface--interactive {
+    cursor: pointer;
+    transition:
+        box-shadow var(--transition-base),
+        border-color var(--transition-base),
+        background var(--transition-base);
+}
+
+.ui-surface--interactive:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 34%, var(--border));
+    box-shadow: var(--shadow-md);
+}
+
+.ui-surface--interactive:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.ui-surface--interactive:active {
+    /* El puntero está capturado durante la pulsación: el elemento no puede
+       perder el estado y por tanto no puede oscilar. */
+    transform: scale(0.995);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RELATION CARD — salto a una entidad relacionada
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-relation {
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    width: 100%;
+    min-width: 0;
+    padding: var(--space-12) var(--space-14);
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-align: left;
+    font: inherit;
+    color: inherit;
+}
+
+.ui-relation--interactive {
+    cursor: pointer;
+    transition:
+        box-shadow var(--transition-base),
+        border-color var(--transition-base),
+        background var(--transition-base);
+}
+
+.ui-relation--interactive:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 34%, var(--border));
+    box-shadow: var(--shadow-md);
+}
+
+.ui-relation--interactive:hover .ui-relation__chevron {
+    /* Se mueve el HIJO, no el disparador: la tarjeta no puede perder el hover
+       por su propio desplazamiento. */
+    transform: translateX(3px);
+    color: var(--color-primary-text);
+}
+
+.ui-relation--interactive:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.ui-relation--interactive:active { transform: scale(0.995); }
+
+.ui-relation__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--control-h-md);
+    height: var(--control-h-md);
+    border-radius: var(--radius-md);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-text);
+}
+
+/* Sin relación al otro lado, el icono deja de reclamar atención. */
+.ui-relation:not(.ui-relation--interactive) .ui-relation__icon {
+    background: var(--surface-raised);
+    color: var(--text-muted);
+}
+
+.ui-relation__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    flex: 1;
+}
+
+.ui-relation__kicker {
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.ui-relation__title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ui-relation__title--empty {
+    font-weight: var(--weight-normal);
+    color: var(--text-muted);
+}
+
+.ui-relation__meta {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ui-relation__chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform var(--transition-base), color var(--transition-base);
+}
+
+/* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
+   Toda animación o transición nueva de este archivo va POR ENCIMA de aquí. */
+@media (prefers-reduced-motion: reduce) {
+    .ui-surface--interactive,
+    .ui-relation--interactive,
+    .ui-relation__chevron {
+        animation: none;
+        transition: none;
+    }
+    .ui-surface--interactive:active,
+    .ui-relation--interactive:active { transform: none; }
+    .ui-relation--interactive:hover .ui-relation__chevron { transform: none; }
+}

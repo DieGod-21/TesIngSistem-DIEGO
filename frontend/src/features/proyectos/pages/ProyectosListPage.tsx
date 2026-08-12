@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useHistory, useLocation } from 'react-router-dom';
 import { FolderOpen, FolderPlus, Plus, AlertTriangle, RefreshCw, Search, SearchX } from 'lucide-react';
 import { listProyectos } from '../../../services/proyectosService';
 import { isCancel } from '../../../services/apiClient';
@@ -36,12 +37,43 @@ const ProyectosSkeleton: React.FC = () => (
 
 const ProyectosListPage: React.FC = () => {
     const { toast } = useToast();
+    const history = useHistory();
+    const location = useLocation();
+
     const [proyectos, setProyectos] = useState<Proyecto[]>([]);
     const [loading, setLoading]     = useState(true);
     const [error, setError]         = useState<string | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [search, setSearch]       = useState('');
-    const [fase, setFase]           = useState<FaseFilter>('all');
+
+    /*
+     * Los filtros viven en la URL, no en el estado del componente.
+     *
+     * No es purismo: al abrir un proyecto y volver, el filtro que se habia
+     * elegido desaparecia y habia que reconstruirlo a mano. Con la URL como
+     * fuente, «volver» lo restaura solo, el enlace es compartible y el boton
+     * atras del navegador hace lo que se espera. Es ademas el patron que ya
+     * sigue el padron de estudiantes.
+     */
+    const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
+    const search = params.get('q') ?? '';
+    const fase   = (params.get('fase') as FaseFilter) || 'all';
+
+    const setParam = useCallback((clave: string, valor: string | null) => {
+        const p = new URLSearchParams(location.search);
+        if (valor && valor !== 'all' && valor !== '') p.set(clave, valor);
+        else p.delete(clave);
+        const qs = p.toString();
+        history.replace(qs ? `/proyectos?${qs}` : '/proyectos');
+    }, [history, location.search]);
+
+    const setSearch = useCallback((v: string) => setParam('q', v), [setParam]);
+    const setFase   = useCallback((v: FaseFilter) => setParam('fase', v), [setParam]);
+
+    // Al abrir un detalle se lleva la URL actual, para que «volver» devuelva la
+    // vista tal y como estaba.
+    const abrirProyecto = useCallback((id: number) => {
+        history.push(`/proyectos/${id}`, { desde: `${location.pathname}${location.search}` });
+    }, [history, location.pathname, location.search]);
 
     const fetchProyectos = useCallback(async (signal?: AbortSignal) => {
         setLoading(true);
@@ -178,7 +210,7 @@ const ProyectosListPage: React.FC = () => {
                             : `No hay proyectos en ${fase}.`
                     }
                     action={
-                        <Button variant="secondary" onClick={() => { setSearch(''); setFase('all'); }}>
+                        <Button variant="secondary" onClick={() => history.replace('/proyectos')}>
                             Quitar filtros
                         </Button>
                     }
@@ -194,7 +226,7 @@ const ProyectosListPage: React.FC = () => {
                     )}
                     <div className="proy-grid">
                         {visibles.map((p) => (
-                            <ProyectoCard key={p.id} proyecto={p} />
+                            <ProyectoCard key={p.id} proyecto={p} onOpen={abrirProyecto} />
                         ))}
                     </div>
                 </>

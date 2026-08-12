@@ -491,3 +491,21 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* Tarjeta de relaciones del detalle de terna: dos saltos apilados y la fecha. */
+.tdetail-rel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-10);
+}
+
+.tdetail-fecha {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.tdetail-fecha svg { flex-shrink: 0; color: var(--text-muted); }

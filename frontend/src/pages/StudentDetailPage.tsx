@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useHistory, useLocation } from 'react-router-dom';
-import { ChevronLeft, Mail, IdCard, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, ArrowRight, FolderOpen } from 'lucide-react';
+import { ChevronLeft, Mail, IdCard, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, ArrowRight, FolderOpen, ChevronRight } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
 import EditarEstudianteModal from '../components/EditarEstudianteModal';
@@ -331,10 +331,27 @@ const StudentDetailPage: React.FC = () => {
                             {/* El proyecto va ANTES que la terna porque es su
                                 requisito: una terna se forma sobre un proyecto,
                                 y leerlo al revés invierte la causa. */}
-                            <article className="tdetail-card sd-card sd-proyecto">
+                            <article
+                                className={`tdetail-card sd-card sd-proyecto${proyecto ? ' ui-surface--interactive' : ''}`}
+                                {...(proyecto ? {
+                                    role: 'button',
+                                    tabIndex: 0,
+                                    'aria-label': `Abrir el proyecto «${proyecto.titulo}»`,
+                                    onClick: () => history.push(`/proyectos/${proyecto.id}`),
+                                    onKeyDown: (e: React.KeyboardEvent) => {
+                                        // Un div con rol de boton NO recibe gratis el
+                                        // teclado: Enter y Espacio hay que atarlos a mano.
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            history.push(`/proyectos/${proyecto.id}`);
+                                        }
+                                    },
+                                } : {})}
+                            >
                                 <h2 className="tdetail-card__title">
                                     <FolderOpen size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
                                     Proyecto de graduación
+                                    {proyecto && <ChevronRight size={14} className="sd-card__go" aria-hidden="true" />}
                                 </h2>
 
                                 {proyecto ? (
@@ -365,10 +382,23 @@ const StudentDetailPage: React.FC = () => {
                             </article>
 
                             {terna ? (
-                                <article className="tdetail-card sd-card sd-terna">
+                                <article
+                                    className="tdetail-card sd-card sd-terna ui-surface--interactive"
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`Abrir la terna ${terna.numero}`}
+                                    onClick={() => history.push(`/ternas/${terna.id}`)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            history.push(`/ternas/${terna.id}`);
+                                        }
+                                    }}
+                                >
                                     <h2 className="tdetail-card__title">
                                         <Users size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
                                         Terna asignada
+                                        <ChevronRight size={14} className="sd-card__go" aria-hidden="true" />
                                     </h2>
 
                                     <div className="sd-terna__head">
