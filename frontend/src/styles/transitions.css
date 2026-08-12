@@ -58,6 +58,10 @@
 .view-transition {
     animation: view-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
     will-change: opacity, transform;
+    /* Envuelve contenido dentro de contenedores flex y arrastraba el mismo
+       problema que `.dash-main`: como ítem flex con `min-width:auto` se negaba
+       a encoger y transmitía el ancho mínimo de la tabla hacia arriba. */
+    min-width: 0;
 }
 
 /* ─── Accesibilidad: respetar preferencias del usuario ─── */

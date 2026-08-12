@@ -616,7 +616,7 @@
 /* Fila de campos: colapsa a una columna en móvil. */
 .ui-field-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
     gap: var(--space-8) var(--space-20);
 }
 
@@ -1031,7 +1031,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 
 .ui-stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
     gap: var(--space-14);
 }
 

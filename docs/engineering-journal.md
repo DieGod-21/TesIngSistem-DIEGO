@@ -214,6 +214,9 @@ Cada regla nace de un fallo real. **No son recordatorios: son precondiciones.**
 | P25 | **Una sonda que mide UN elemento no ve lo que vive en su padre.** Dos veces seguidas dio falso positivo: el nombre «cortado sin elipsis» estaba bien recortado, y el campo de busqueda «sin indicador de foco» tiene el anillo en el envoltorio por `:focus-within`, que es el patron correcto. Se mide la CADENA elemento-padre-abuelo, no el nodo suelto. | it. 15 |
 | P26 | **Un bloque `prefers-reduced-motion` colocado antes de las animaciones que pretende apagar no apaga nada.** A igual especificidad manda el orden. El CSS se lee correcto, la preferencia se incumple y ninguna lectura lo revela: solo el render. El bloque va al FINAL del archivo, y hay regla de arquitectura que lo verifica. | it. 15: login.css apagaba 1 de 4; proyectos, usuarios y dashboard fallaban solo en movil |
 | P27 | **Una sonda de tiempo de ejecucion solo ve donde mira.** Los tres fallos de movimiento reducido vivian en consultas de ancho movil y en dos rutas que la lista de la sonda no visitaba; la regla estatica los encontro sin abrir el navegador. Las dos clases de instrumento son complementarias: la estatica cubre TODO el codigo, la dinamica prueba el comportamiento real. Usar solo una deja un hueco. | it. 15 |
+| P28 | **`scrollWidth - clientWidth` no detecta contenido RECORTADO.** Cuando un ancestro tiene `overflow:hidden`, el documento no desborda: el contenido simplemente desaparece por el borde, sin barra de scroll y sin senal. Mi sonda de desbordamiento daba 0 mientras a 768px el armazon entero estaba 136px fuera de pantalla. Se mide contra el borde del VIEWPORT, no contra el documento. | it. 16 |
+| P29 | **`min-width: auto` es el valor por defecto de todo item flex, y significa «no encojo».** Basta una tabla ancha dentro para que el contenedor crezca y arrastre la cabecera fuera de la pantalla. Todo contenedor de layout que envuelva contenido de ancho intrinseco necesita `min-width: 0` explicito. | it. 16 |
+| P30 | **Una rejilla se disena para un numero de elementos y ese numero cambia.** `repeat(4, 1fr)` con tres tarjetas dejaba una columna vacia permanente en escritorio y un huerfano 2+1 en tableta: mal a TODAS las anchuras, durante quien sabe cuanto, en la pantalla de inicio. Al cambiar cuantos elementos pinta una rejilla, hay que volver a mirarla renderizada. | it. 16 |
 
 ---
 
@@ -608,3 +611,53 @@ consola             0 errores · 0 avisos en 10 rutas
 recorrido           9/9 pasos (buscar → sugerencia → teclado → detalle → atras)
 recorte             0 textos cortados sin elipsis · 0 que rebasan a su padre
 ```
+
+---
+
+## Iteracion 16 — Transformacion visual: el armazon se rompia y nadie lo veia
+
+Fase de PRODUCTO. El criterio no era «pasa las puertas» sino «se nota al usarlo».
+
+### El defecto mas grave del programa estaba a 768px
+
+La linea base a cinco anchuras lo enseño de inmediato: en `/students` a 768px el
+perfil del usuario, el conmutador de tema, el boton «Importar» y la columna
+entera de acciones quedaban FUERA de la pantalla. Y no habia barra de scroll
+horizontal para recuperarlos, porque nada desbordaba: algo los recortaba.
+
+Por eso `probe-overflow.mjs` llevaba iteraciones diciendo «0 desbordamientos»
+(P28). La causa raiz era `min-width: auto` en dos contenedores de layout (P29):
+la tabla de estudiantes tiene un ancho minimo intrinseco de ~856px y el `main`
+se negaba a encoger por debajo de el. Con `min-width: 0`, el `overflow-x:auto`
+que la tarjeta de la tabla YA tenia por fin funciona: se desplaza la tabla, no
+la aplicacion.
+
+### La rejilla de indicadores estaba mal a todas las anchuras
+
+`repeat(4, 1fr)` para tres tarjetas: cuarta columna vacia en escritorio,
+huerfano 2+1 de 1280 para abajo. En la pantalla de inicio (P30).
+
+### El listado no mostraba aquello por lo que filtra
+
+La lente dice «Elegibles a tesis 15 / Pendientes 6» y la tabla tenia columnas
+Estudiante · Email · Carrera · Estado(activo). Para saber si un alumno cumple
+habia que filtrar o abrir su ficha, uno a uno, en el producto cuyo objeto ES la
+elegibilidad. Los dos conjuntos oficiales ya venian en el mismo lote que
+alimenta la cola de trabajo: solo habia que indexarlos.
+
+«Carrera» cedio el sitio (es identidad, vive en el expediente) y «Activo» dejo
+de ser pildora verde: dos verdes contiguos con significados distintos anulaban
+el escaneo de la columna que importa. El color queda para el veredicto; el
+estado administrativo solo destaca su excepcion.
+
+Comprobado contra las listas oficiales: 15 elegibles, 6 insuficientes, 6 sin
+notas, 27 filas, 0 sin clasificar.
+
+### Escape no cerraba la navegacion movil
+
+El cajon tiene velo y tapa el contenido, pero Escape no hacia nada y el foco se
+quedaba fuera, en el boton de menu. Los otros cuatro dialogos del producto
+cierran con Escape y atrapan el foco: el usuario aprende la regla en todo el
+sistema y aqui dejaba de valer. `useFocusTrap` ya existia y es inerte cuando el
+cajon esta cerrado, asi que la barra fija de escritorio no se entera
+(verificado: el foco sale de la barra al tabular a 1440px).

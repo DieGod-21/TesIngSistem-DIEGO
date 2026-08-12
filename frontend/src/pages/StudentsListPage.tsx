@@ -36,11 +36,14 @@ import { userMessageFor } from '../services/errorMessages';
 import ImportModal from '../components/ImportModal';
 import { useAuth } from '../context/AuthContext';
 import { Alert, Avatar, Button, Badge, EmptyState, Skeleton, PageHeader } from '../components/ui';
+import type { BadgeTone } from '../components/ui';
+import { VOCAB } from '../config/vocabulary';
 import ProgressBand, { STAGE_LABEL } from '../features/students-workspace/components/ProgressBand';
 import StudentQuickView from '../features/students-workspace/components/StudentQuickView';
 import WorkQueue from '../features/students-workspace/components/WorkQueue';
 import SinceLastVisit from '../features/students-workspace/components/SinceLastVisit';
 import { useStudentsPipeline } from '../features/students-workspace/hooks/useStudentsPipeline';
+import type { VerdictByCarnet } from '../features/students-workspace/hooks/useStudentsPipeline';
 import { useSinceLastVisit } from '../features/students-workspace/hooks/useSinceLastVisit';
 import { resolveWorkItemHref } from '../features/students-workspace/navigation';
 import type { PipelineStage } from '../features/students-workspace/domain/types';
@@ -55,6 +58,19 @@ import '../styles/students-list.css';
 import '../styles/transitions.css';
 
 type TesisFilter = 'aprobados' | 'reprobados';
+
+/* Mismas palabras y mismos tonos que la vista rapida y el expediente: el
+   coordinador ve «Elegible a tesis» en la lista, en el panel y en la ficha. */
+const VERDICT_LABEL: Record<'APROBADO' | 'REPROBADO' | 'PENDIENTE', string> = {
+    APROBADO:  VOCAB.verdictEligible,
+    REPROBADO: VOCAB.verdictBelowMin,
+    PENDIENTE: VOCAB.verdictMissing,
+};
+const VERDICT_TONE: Record<'APROBADO' | 'REPROBADO' | 'PENDIENTE', BadgeTone> = {
+    APROBADO:  'success',
+    REPROBADO: 'danger',
+    PENDIENTE: 'warning',
+};
 
 const StudentsListPage: React.FC = () => {
     const history  = useHistory();
@@ -181,6 +197,7 @@ const StudentsListPage: React.FC = () => {
                     {filter
                         ? <TesisFilteredView filter={filter} initialSearch={initialSearch} />
                         : <DefaultStudentsView
+                            verdictByCarnet={pipeline.verdictByCarnet}
                             initialSearch={initialSearch}
                             history={history}
                             locationSearch={location.search}
@@ -196,7 +213,9 @@ const DefaultStudentsView: React.FC<{
     initialSearch: string;
     history: ReturnType<typeof useHistory>;
     locationSearch: string;
-}> = ({ initialSearch, history, locationSearch }) => {
+    /** Veredicto de tesis por carne, derivado del mismo lote que la cola. */
+    verdictByCarnet: VerdictByCarnet | null;
+}> = ({ initialSearch, history, locationSearch, verdictByCarnet }) => {
     const urlPage = parsePage(locationSearch);
     const urlPerPage = parsePerPage(locationSearch);
 
@@ -295,7 +314,13 @@ const DefaultStudentsView: React.FC<{
                         <tr>
                             <th className="sl-table__th">Estudiante</th>
                             <th className="sl-table__th">Email</th>
-                            <th className="sl-table__th">Carrera</th>
+                            {/* «Carrera» cede el sitio al ESTADO DE TESIS. La lente de
+                                arriba filtra por elegibilidad y la tabla no la mostraba:
+                                habia que filtrar o abrir cada ficha para saber quien
+                                cumple, en el producto cuyo objeto es precisamente eso.
+                                La carrera sigue en el expediente, que es donde se
+                                consulta la identidad del alumno. */}
+                            <th className="sl-table__th">Tesis</th>
                             <th className="sl-table__th">Estado</th>
                             <th className="sl-table__th" aria-label="Acciones" />
                         </tr>
@@ -363,12 +388,23 @@ const DefaultStudentsView: React.FC<{
                                     <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{s.email || '—'}</span>
                                 </td>
                                 <td className="sl-table__td">
-                                    <Badge tone="neutral">{s.carrera || '—'}</Badge>
+                                    {(() => {
+                                        const v = verdictByCarnet?.get(s.carnet);
+                                        if (!v) return <span className="sl-verdict-none">—</span>;
+                                        return <Badge tone={VERDICT_TONE[v]} dot>{VERDICT_LABEL[v]}</Badge>;
+                                    })()}
                                 </td>
                                 <td className="sl-table__td">
-                                    <Badge tone={s.activo ? 'success' : 'neutral'} dot>
-                                        {s.activo ? 'Activo' : 'Inactivo'}
-                                    </Badge>
+                                    {/* «Activo» es el estado por defecto de casi todo el
+                                        padron: como pildora verde competia con la de
+                                        tesis —dos verdes contiguos con significados
+                                        distintos— y anulaba el valor de escaneo de la
+                                        columna que de verdad importa. El color queda
+                                        reservado al veredicto; aqui solo destaca la
+                                        EXCEPCION, que es estar inactivo. */}
+                                    {s.activo
+                                        ? <span className="sl-estado-activo">Activo</span>
+                                        : <Badge tone="neutral" dot>Inactivo</Badge>}
                                 </td>
                                 <td className="sl-table__td sl-table__td--center">
                                     <ChevronRight size={18} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />

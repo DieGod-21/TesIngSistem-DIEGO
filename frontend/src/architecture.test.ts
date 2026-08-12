@@ -166,6 +166,27 @@ describe('Roles semánticos del color primario', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
+describe('Rejillas que pueden encoger', () => {
+    /**
+     * Una pista `minmax(320px, 1fr)` NO puede encoger por debajo de 320px: en un
+     * contenedor mas estrecho la tarjeta sobresale del viewport. Paso de verdad
+     * con la ficha de terna a 320px. `minmax(min(320px, 100%), 1fr)` conserva el
+     * ancho deseado cuando hay sitio y cede cuando no lo hay.
+     */
+    it('ninguna pista de rejilla declara un minimo fijo que no pueda ceder', () => {
+        const offenders: string[] = [];
+        for (const f of cssFiles) {
+            const src = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            for (const m of src.matchAll(/minmax\(\s*(\d+)(px|rem)\s*,/g)) {
+                if (m.index == null) continue;
+                const linea = src.slice(0, m.index).split('\n').length;
+                offenders.push(`${rel(f)}:${linea} -> minmax(${m[1]}${m[2]}, ...) usa min(${m[1]}${m[2]}, 100%)`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+});
+
 describe('Movimiento reducido', () => {
     /**
      * FALLO SILENCIOSO: el bloque `prefers-reduced-motion` de login.css estaba

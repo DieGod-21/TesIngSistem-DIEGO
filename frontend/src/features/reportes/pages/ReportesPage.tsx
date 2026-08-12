@@ -195,12 +195,12 @@ const ReportesPage: React.FC = () => {
                                     >
                                         <td><span className="rep-numero">{String(t.numero).padStart(2, '0')}</span></td>
                                         <td>
-                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <div className="rep-estudiante">
                                                 <strong>{t.estudiante}</strong>
                                                 <span className="rep-carnet">{t.carnet}</span>
                                             </div>
                                         </td>
-                                        <td style={{ maxWidth: 320 }}>{t.titulo || '—'}</td>
+                                        <td><div className="rep-proyecto">{t.titulo || '—'}</div></td>
                                         <td>
                                             {t.promedio != null ? (
                                                 <span className="rep-promedio">{Number(t.promedio).toFixed(2)}</span>
@@ -209,7 +209,7 @@ const ReportesPage: React.FC = () => {
                                             )}
                                         </td>
                                         <td><ResolutionBadge value={t.resolucion} /></td>
-                                        <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
+                                        <td className="rep-acciones">
                                             <ChevronRight size={16} aria-hidden="true" />
                                         </td>
                                     </tr>

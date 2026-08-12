@@ -330,3 +330,14 @@
     font-variant-numeric: tabular-nums;
 }
 /* .sl-pager usa tokens semánticos: el modo oscuro se resuelve por herencia. */
+
+/* Sin veredicto disponible (el lote del pipeline aun no llego o el rol no
+   puede consultarlo): se dice con una raya neutra, no con un hueco. */
+.sl-verdict-none { color: var(--text-muted); }
+
+/* Estado administrativo por defecto: presente pero sin color. Ver el motivo en
+   StudentsListPage (el verde queda para el veredicto de tesis). */
+.sl-estado-activo {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}

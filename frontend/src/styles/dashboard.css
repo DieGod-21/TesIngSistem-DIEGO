@@ -282,6 +282,16 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+    /* `min-width: 0` NO es cosmético: es lo que permite que el armazón encoja.
+       Un ítem flex vale por defecto `min-width: auto`, es decir, se niega a ser
+       más estrecho que su contenido. Con la tabla de estudiantes dentro (ancho
+       mínimo intrínseco ~856px), a 768px este `main` crecía a 904 y arrastraba
+       la cabecera con él: el perfil, el conmutador de tema y el botón de acción
+       quedaban FUERA de la pantalla, irrecuperables porque el documento no
+       desbordaba —algo lo recortaba— y por tanto tampoco había barra de scroll.
+       Con 0, el ancho lo manda el layout y el `overflow-x:auto` de la tabla
+       hace por fin su trabajo: se desplaza la tabla, no la aplicación. */
+    min-width: 0;
     box-sizing: border-box;
 }
 
@@ -575,10 +585,16 @@
     gap: var(--space-16);
 }
 
-/* KPI Grid */
+/* KPI Grid
+   Declaraba `repeat(4, 1fr)` porque en su dia hubo cuatro indicadores. Hoy son
+   TRES —el de completacion paso al anillo de progreso— y la rejilla nunca se
+   actualizo: a 1440px la cuarta columna quedaba vacia de forma permanente (261px
+   desperdiciados y las tarjetas mas estrechas de lo que les toca), y de 1280
+   hacia abajo la escalera bajaba a dos columnas dejando la tercera huerfana en
+   una fila propia. Estaba mal a TODAS las anchuras. */
 .dash-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-20);
 }
 
@@ -815,12 +831,6 @@ button.kpi-card {
    8. RESPONSIVE
 ═══════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 1280px) {
-    .dash-kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
 @media (max-width: 768px) {
 
     /* Sidebar oculta fuera de pantalla en móvil — deslizamiento premium. */
@@ -875,13 +885,17 @@ button.kpi-card {
         align-items: flex-start;
     }
 
-    .dash-kpi-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
     .dash-header__search-wrapper {
         max-width: none;
     }
+}
+
+/* Con tres columnas fijas, entre ~850 y ~1100px la tarjeta baja a ~180px y el
+   relleno de 24px se come el texto. Se estrecha el relleno en vez de romper la
+   fila: tres indicadores alineados siguen siendo mas legibles que dos y un
+   huerfano. */
+@media (max-width: 1100px) {
+    .kpi-card { padding: var(--space-16); }
 }
 
 @media (max-width: 480px) {

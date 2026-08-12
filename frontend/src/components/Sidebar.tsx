@@ -22,6 +22,7 @@ import {
     LogOut,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import type { Capabilities } from '../config/permissions';
 import umgLogo from '../assets/umg_logo.png';
 
@@ -104,6 +105,10 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
         return () => window.removeEventListener('resize', onResize);
     }, [measure]);
 
+    // El cajon solo es modal cuando `open` es true (movil): en escritorio la
+    // barra es navegacion permanente y el hook no debe hacer nada.
+    const drawerRef = useFocusTrap<HTMLElement>(Boolean(open), onClose);
+
     const handleLogout = async () => {
         await logout();
         history.push('/login');
@@ -120,7 +125,16 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                 />
             )}
 
+            {/* En movil esta barra ES un cajon modal: entra sobre el contenido y
+                lo tapa con un velo. Se comportaba como tal a medias —el velo
+                cerraba al pulsar, pero Escape no hacia nada y el foco se quedaba
+                fuera, en el boton de menu—, mientras los otros cuatro dialogos
+                del producto cierran con Escape y atrapan el foco. El usuario
+                aprende una regla en todo el sistema y aqui dejaba de valer.
+                `useFocusTrap` es inerte cuando `open` es false, asi que la barra
+                fija de escritorio no se ve afectada. */}
             <aside
+                ref={drawerRef}
                 className={`dash-sidebar${open ? ' dash-sidebar--open' : ''}`}
                 aria-label="Menú de navegación"
             >
