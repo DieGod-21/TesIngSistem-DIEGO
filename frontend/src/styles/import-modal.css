@@ -2,68 +2,9 @@
    Totalmente tokenizado: el modo oscuro se resuelve por herencia de los tokens
    semánticos, sin overrides locales. Comparte lenguaje con .en-* / .ui-modal. */
 
-.im-overlay {
-    position: fixed;
-    inset: 0;
-    background: oklch(0.20 0.02 275 / 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: var(--space-16);
-    backdrop-filter: blur(2px);
-}
-
-.im-modal {
-    background: var(--surface-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 560px;
-    max-height: 90vh;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    animation: modal-enter 200ms var(--ease-out-expo) both;
-}
-
-/* Bottom-sheet en móvil (mismo patrón que el resto de diálogos del DS). */
-@media (max-width: 640px) {
-    .im-overlay { align-items: flex-end; padding: 0; }
-    .im-modal {
-        max-width: none;
-        max-height: 92vh;
-        border-radius: 20px 20px 0 0;
-        animation: sheet-up 260ms var(--ease-out-expo) both;
-    }
-}
-
-.im-modal__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-20) var(--space-24) var(--space-16);
-    border-bottom: 1px solid var(--border);
-}
-
-.im-modal__title {
-    font-size: var(--text-lg);
-    font-weight: var(--weight-bold);
-    color: var(--text-primary);
-    margin: 0;
-}
-
 /* `.im-modal__close` ELIMINADO → `.ui-icon-btn`. Los cuatro modales del
    producto implementaban su propio botón de cerrar (32/32/26px, dos radios,
    dos opacidades y solo uno con `:focus-visible`). */
-
-.im-modal__body {
-    padding: var(--space-24);
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
 
 /* ── Sección ──────────────────────────────────────────────────── */
 

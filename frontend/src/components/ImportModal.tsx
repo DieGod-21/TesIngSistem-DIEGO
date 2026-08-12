@@ -167,15 +167,15 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
 
     return createPortal(
         <div
-            className="im-overlay"
+            className="ui-modal-overlay"
             role="dialog"
             aria-modal="true"
             aria-label="Importación masiva"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="im-modal" ref={modalRef}>
-                <header className="im-modal__header">
-                    <h2 className="im-modal__title">Importación masiva</h2>
+            <div className="ui-modal ui-modal--form ui-modal--wide" ref={modalRef}>
+                <header className="ui-modal__header">
+                    <h2 className="ui-modal__title">Importación masiva</h2>
                     <button
                         type="button"
                         className="ui-icon-btn"
@@ -187,7 +187,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                     </button>
                 </header>
 
-                <div className="im-modal__body">
+                <div className="ui-modal__body">
                     {/* ── Estudiantes ── */}
                     <section className="im-section" aria-labelledby="im-est-heading">
                         <div className="im-section__heading">

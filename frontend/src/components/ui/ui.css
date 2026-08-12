@@ -756,6 +756,12 @@
     border-color: var(--color-primary);
     box-shadow: var(--ring);
 }
+/* Control en error. Existía tres veces como `np-input--error`, `nu-input--error`
+   y `en-input--error`, con la misma declaración en tres hojas de feature. */
+.ui-control--error,
+.ui-control--error:focus { border-color: var(--color-danger); }
+.ui-control--error:focus { box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-danger) 18%, transparent); }
+
 .ui-control:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -877,6 +883,102 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     display: flex;
     justify-content: flex-end;
     gap: var(--space-10);
+}
+
+/* ── Variante de formulario: cabecera, cuerpo y pie ────────────────────
+   El producto tenía CINCO armazones de diálogo (np-, nu-, im-, en- y este)
+   que hacían lo mismo discrepando justo en lo que se nota al abrir dos
+   seguidos: relleno de cabecera 20/24 frente a 16/20, cuerpo 24 frente a 20,
+   radio `xl` frente a `lg` y título `lg` frente a `md`. Ninguna diferencia
+   respondía a una razón; eran cuatro copias envejeciendo por separado.
+   Aquí queda una sola, y `--form` solo añade la estructura que el diálogo
+   simple no necesita. */
+
+.ui-modal--form {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow-y: auto;
+    /* El relleno lo ponen las tres zonas, no el panel. */
+    padding: 0;
+}
+
+.ui-modal--form.ui-modal--wide { max-width: 34rem; }
+
+.ui-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-12);
+    padding: var(--space-20) var(--space-24) var(--space-16);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Dentro del armazón de formulario el título convive con el botón de cerrar y
+   pierde el margen inferior que sí necesita el diálogo simple. */
+.ui-modal--form .ui-modal__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    margin: 0;
+    min-width: 0;
+}
+
+.ui-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    padding: var(--space-24);
+    min-width: 0;
+}
+
+.ui-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-10);
+    margin-top: var(--space-4);
+}
+
+/* Campo dentro de un diálogo: etiqueta + control apilados. La CAJA sigue
+   siendo `.ui-control`; esto es solo el apilado y la etiqueta, que np-, nu- y
+   en- repetían idénticos en tres hojas distintas. */
+
+.ui-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    min-width: 0;
+}
+
+.ui-modal__label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-secondary);
+}
+
+/* Asterisco de obligatorio. */
+.ui-modal__label > span[aria-hidden] {
+    color: var(--color-danger);
+    margin-left: var(--space-2);
+}
+
+/* «(opcional)»: la misma etiqueta, en tono de metadato. Marcar lo opcional
+   evita el asterisco por omisión, que obliga a leer todo el formulario para
+   descubrir qué se puede saltar. */
+.ui-modal__opt {
+    margin-left: var(--space-4);
+    font-weight: var(--weight-normal);
+    color: var(--text-muted);
+}
+
+.ui-modal__field .ui-control { width: 100%; box-sizing: border-box; }
+
+.ui-modal__field textarea.ui-control { resize: vertical; min-height: 6rem; }
+
+.ui-modal__error {
+    font-size: var(--text-xs);
+    color: var(--color-danger);
+    font-weight: var(--weight-medium);
 }
 
 @keyframes ui-overlay-in { from { opacity: 0; } to { opacity: 1; } }
@@ -1216,4 +1318,163 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     flex-direction: column;
     gap: var(--space-6);
     flex: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PICKER — combobox de entidad (estudiante, evaluador…)
+
+   Vive en el sistema de diseño y no en la hoja de una feature porque lo
+   consumen varias altas: el proyecto necesita a quién pertenece y la terna
+   necesita a quién evalúa. La caja reproduce EXACTAMENTE la geometría de
+   `.ui-search` (el envoltorio manda, el input va desnudo) para que un campo
+   de búsqueda y un selector no se vean como dos controles distintos.
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-picker {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.ui-picker__box {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-height: var(--control-h-lg);
+    padding: 0 var(--space-12);
+    background: var(--surface-card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.ui-picker__box:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
+}
+
+.ui-picker__box--error { border-color: var(--color-danger); }
+
+.ui-picker__icon { color: var(--text-muted); flex-shrink: 0; }
+
+.ui-picker__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    outline: none;
+    padding: var(--space-8) 0;
+    font: inherit;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+}
+
+.ui-picker__input::placeholder { color: var(--text-muted); }
+
+/* ── Desplegable ─────────────────────────────────────────────────── */
+
+.ui-picker__list {
+    position: absolute;
+    top: calc(var(--control-h-lg) + var(--space-4));
+    left: 0;
+    right: 0;
+    z-index: 20;
+    margin: 0;
+    padding: var(--space-4);
+    list-style: none;
+    max-height: 17rem;
+    overflow-y: auto;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+}
+
+.ui-picker__option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-10);
+    padding: var(--space-8) var(--space-10);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    min-width: 0;
+}
+
+/* Una sola fila resaltada a la vez, la misma con teclado y con puntero: el
+   ratón mueve el índice activo en lugar de pintar un segundo resaltado. */
+.ui-picker__option.is-active { background: var(--surface-raised); }
+
+.ui-picker__option-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.ui-picker__option-name {
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ui-picker__option-meta {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.ui-picker__tick { color: var(--color-primary-text); flex-shrink: 0; }
+
+.ui-picker__note {
+    padding: var(--space-12) var(--space-10);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+/* ── Selección hecha ─────────────────────────────────────────────── */
+
+.ui-picker__chosen {
+    display: flex;
+    align-items: center;
+    gap: var(--space-10);
+    min-height: var(--control-h-lg);
+    padding: var(--space-6) var(--space-8) var(--space-6) var(--space-12);
+    background: var(--surface-card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    min-width: 0;
+}
+
+.ui-picker__chosen-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.ui-picker__chosen-name {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ui-picker__chosen-meta {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Espacio reservado como en `.ui-field__msg`: validar no debe mover el diálogo. */
+.ui-picker__msg {
+    margin: var(--space-4) 0 0;
+    min-height: 1rem;
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    color: var(--color-danger);
 }
