@@ -5,6 +5,7 @@ import { createUsuario } from '../../../services/usuariosService';
 import type { RolUsuario } from '../../../types/api';
 import { Button, Alert } from '../../../components/ui';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
+import { userMessageFor } from '../../../services/errorMessages';
 
 interface Props {
     open: boolean;
@@ -81,7 +82,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
             setErrors({});
             onCreated(nombre);
         } catch (err) {
-            setApiError(err instanceof Error ? err.message : 'No se pudo crear el usuario. Inténtalo de nuevo.');
+            setApiError(userMessageFor(err) || 'No se pudo crear el usuario. Inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }

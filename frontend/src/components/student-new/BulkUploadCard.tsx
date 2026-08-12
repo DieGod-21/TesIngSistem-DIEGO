@@ -9,9 +9,10 @@
 
 import React, { useRef, useState } from 'react';
 import { IonToast } from '@ionic/react';
-import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, X, AlertTriangle } from 'lucide-react';
 import { importarEstudiantes, type ImportarEstudiantesResult } from '../../services/importarService';
 import { Alert, Button, Card } from '../ui';
+import { userMessageFor } from '../../services/errorMessages';
 
 const ACCEPTED_EXT = ['.xlsx', '.xls', '.pdf'];
 const ACCEPTED_MIME = [
@@ -77,11 +78,11 @@ const BulkUploadCard: React.FC = () => {
             setResult(res);
             setToast({
                 open: true,
-                message: res.mensaje ?? res.message ?? 'Importación completada.',
+                message: res.mensaje ?? `${res.estudiantes.total_procesados} estudiante${res.estudiantes.total_procesados !== 1 ? 's' : ''} procesado${res.estudiantes.total_procesados !== 1 ? 's' : ''}.`,
                 color: 'success',
             });
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : 'No se pudo importar el archivo.';
+            const msg = userMessageFor(err) || 'No se pudo importar el archivo.';
             setError(msg);
             setToast({ open: true, message: msg, color: 'danger' });
         } finally {
@@ -165,19 +166,30 @@ const BulkUploadCard: React.FC = () => {
                         </Alert>
                     )}
 
+                    {/* Los campos que esta lista leía —`total`, `creados`,
+                        `duplicados`, `errores`— no existen en el contrato: no
+                        llegaban nunca y el bloque salía siempre vacío bajo el
+                        título «Importación completada». Estos otros sí los declara
+                        el servidor, y `filas_invalidas` decide además el tono: un
+                        archivo con filas rechazadas no es un éxito. */}
                     {result && (
                         <Alert
-                            tone="success"
-                            icon={<CheckCircle2 size={16} />}
-                            title="Importación completada."
+                            tone={result.filas_invalidas > 0 ? 'warning' : 'success'}
+                            icon={result.filas_invalidas > 0 ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
+                            title={result.filas_invalidas > 0
+                                ? 'Importación completada con incidencias'
+                                : 'Importación completada'}
                             className="sn-alert"
                         >
                             <ul className="ui-alert__list">
-                                {typeof result.total      === 'number' && <li>Total procesados: {result.total}</li>}
-                                {typeof result.creados    === 'number' && <li>Creados: {result.creados}</li>}
-                                {typeof result.duplicados === 'number' && <li>Duplicados: {result.duplicados}</li>}
-                                {Array.isArray(result.errores) && result.errores.length > 0 && (
-                                    <li>Con errores: {result.errores.length}</li>
+                                <li>{result.total_en_archivo} fila{result.total_en_archivo !== 1 ? 's' : ''} en el archivo</li>
+                                <li>{result.estudiantes.insertados} nuevo{result.estudiantes.insertados !== 1 ? 's' : ''}
+                                    {' · '}{result.estudiantes.actualizados} actualizado{result.estudiantes.actualizados !== 1 ? 's' : ''}</li>
+                                {result.inscripciones_nuevas > 0 && (
+                                    <li>{result.inscripciones_nuevas} inscripción{result.inscripciones_nuevas !== 1 ? 'es' : ''} nueva{result.inscripciones_nuevas !== 1 ? 's' : ''}</li>
+                                )}
+                                {result.filas_invalidas > 0 && (
+                                    <li>{result.filas_invalidas} fila{result.filas_invalidas !== 1 ? 's' : ''} rechazada{result.filas_invalidas !== 1 ? 's' : ''}</li>
                                 )}
                             </ul>
                         </Alert>

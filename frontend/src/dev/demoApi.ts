@@ -461,8 +461,68 @@ async function responder(metodo: string, url: URL, cuerpo: unknown): Promise<Res
     }
 
     // ── Importación ──
-    if (ruta.startsWith('/api/importar/')) {
-        return ok({ mensaje: 'Importación simulada (conjunto de demostración: no persiste).', total: 0, creados: 0, duplicados: 0 });
+    // Se devuelve la forma EXACTA que declara /api-docs.json, con detalle por
+    // estudiante, porque es la única manera de comprobar que la pantalla de
+    // resultado dibuja lo que el servidor manda de verdad. Nada se persiste.
+    {
+        const m = M(/^\/api\/importar\/notas\/(.+)$/);
+        if (m) {
+            const codigo = decodeURIComponent(m[1]);
+            const curso = CURSOS.find((c) => c.codigo === codigo);
+            // Una muestra del padrón, más DOS carnés que no existen: el caso que
+            // de verdad importa comprobar es el del acta con gente sin registrar.
+            const muestra = estudiantes.slice(0, 9);
+            const detalle = muestra.map((e, i) => {
+                const p = PERFIL_POR_CARNET.get(e.carnet);
+                const nota = (codigo === '049' ? p?.pg2 : p?.pg1) ?? 78;
+                return {
+                    carnet: e.carnet,
+                    nombre: e.nombre,
+                    nota_final: nota,
+                    estado: nota >= NOTA_MINIMA ? 'APROBADO' : nota === 0 ? 'NSP' : 'REPROBADO',
+                    resultado: i % 3 === 0 ? 'INSERTADO' : 'ACTUALIZADO',
+                };
+            });
+            const fantasmas = [
+                { carnet: '1890-19-40771', nombre: 'MARIO ALBERTO CUC POP',      nota_final: 81, estado: 'APROBADO',  resultado: 'NO_ENCONTRADO' },
+                { carnet: '1890-20-40993', nombre: 'GLORIA ESPERANZA IXCOT BOJ', nota_final: 66, estado: 'REPROBADO', resultado: 'NO_ENCONTRADO' },
+            ];
+            const filas = [...detalle, ...fantasmas];
+            return ok({
+                curso: codigo,
+                ciclo: curso?.ciclo ?? 'Ciclo 1-2025',
+                fecha_acta: '07/06/2025',
+                totales: {
+                    en_pdf: filas.length,
+                    procesados: detalle.length,
+                    no_encontrados: fantasmas.length,
+                },
+                // El reparto por estado cuenta lo REGISTRADO, no lo leído: si
+                // sumara también los carnés que no existen en el padrón, el
+                // desglose daría once y las registradas nueve, y la pantalla se
+                // contradiría a sí misma.
+                estados: {
+                    aprobados:  detalle.filter((f) => f.estado === 'APROBADO').length,
+                    reprobados: detalle.filter((f) => f.estado === 'REPROBADO').length,
+                    nsp:        detalle.filter((f) => f.estado === 'NSP').length,
+                },
+                operaciones: {
+                    insertados:   detalle.filter((f) => f.resultado === 'INSERTADO').length,
+                    actualizados: detalle.filter((f) => f.resultado === 'ACTUALIZADO').length,
+                },
+                detalle: filas,
+            });
+        }
+    }
+    if (ruta === '/api/importar/estudiantes') {
+        return ok({
+            curso: '043',
+            total_en_archivo: 12,
+            estudiantes: { insertados: 9, actualizados: 2, total_procesados: 11 },
+            inscripciones_nuevas: 9,
+            filas_invalidas: 1,
+            detalle_invalidos: [{ fila: 7, carnet: '', error: 'Carné vacío' }],
+        });
     }
 
     if (ruta === '/health') return ok({ status: 'ok', database: 'demo' });

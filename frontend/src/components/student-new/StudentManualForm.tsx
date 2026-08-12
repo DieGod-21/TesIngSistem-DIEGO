@@ -15,6 +15,7 @@ import type { Student } from '../../types/student';
 import { useForm } from '../../hooks/useForm';
 import { runValidators, validators } from '../../utils/validators';
 import { Avatar, Button, Card, Field } from '../ui';
+import { userMessageFor } from '../../services/errorMessages';
 
 type FormFields = {
     nombreCompleto:      string;
@@ -73,7 +74,7 @@ const StudentManualForm: React.FC = () => {
                     setCreated((prev) => [student, ...prev]);
                     setToast({ open: true, message: 'Estudiante registrado exitosamente.', color: 'success' });
                 } catch (err: unknown) {
-                    const msg = err instanceof Error ? err.message : 'Error al registrar. Intenta de nuevo.';
+                    const msg = userMessageFor(err) || 'Error al registrar. Intenta de nuevo.';
                     setToast({ open: true, message: msg, color: 'danger' });
                     throw err;
                 }

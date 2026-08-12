@@ -4,6 +4,7 @@ import { Save, X } from 'lucide-react';
 import { upsertNota } from '../services/notasService';
 import { Button, Alert } from './ui';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { userMessageFor } from '../services/errorMessages';
 
 const CURSOS = [
     { code: '043' as const, label: 'Proyecto de Graduación I' },
@@ -83,7 +84,7 @@ const EditNotaModal: React.FC<Props> = ({
             });
             onSaved();
         } catch (err) {
-            setApiError(err instanceof Error ? err.message : 'No se pudo guardar la nota. Inténtalo de nuevo.');
+            setApiError(userMessageFor(err) || 'No se pudo guardar la nota. Inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }

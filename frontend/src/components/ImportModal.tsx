@@ -6,7 +6,8 @@ import {
     FileText, Users,
 } from 'lucide-react';
 import { importarEstudiantes, importarNotas } from '../services/importarService';
-import type { ImportarResult } from '../services/importarService';
+import type { ImportarEstudiantesResult, ImportarNotasResult } from '../services/importarService';
+import ImportOutcome from './ImportOutcome';
 import { ApiError } from '../services/apiClient';
 import { userMessageFor } from '../services/errorMessages';
 import { COURSE_CODES } from '../config/apiConfig';
@@ -22,41 +23,53 @@ import '../styles/import-modal.css';
  * filas se anunciaba como correcta, y los motivos —que el servidor sí manda—
  * se descartaban, así que no había forma de saber qué corregir.
  */
-interface SectionState {
+interface SectionState<R> {
     file: File | null;
     loading: boolean;
     status: 'idle' | 'success' | 'partial' | 'error';
+    /** Solo para el estado de error: el resto lo cuenta el propio resultado. */
     message: string;
-    /** Motivos de las filas rechazadas, ya normalizados a texto. */
-    issues: string[];
+    resultado: R | null;
 }
 
-const blank = (): SectionState => ({ file: null, loading: false, status: 'idle', message: '', issues: [] });
-
-/** Los errores llegan como cadenas o como objetos {fila, carnet, error}. */
-function toIssues(r: ImportarResult): string[] {
-    if (!Array.isArray(r.errores)) return [];
-    return r.errores.map((e) => {
-        if (typeof e === 'string') return e;
-        const donde = e.fila != null ? `Fila ${e.fila}` : e.carnet ? `Carné ${e.carnet}` : null;
-        return donde ? `${donde}: ${e.error}` : e.error;
-    });
+function blank<R>(): SectionState<R> {
+    return { file: null, loading: false, status: 'idle', message: '', resultado: null };
 }
+
+/** Describe una fila que el servidor rechazó, sea cual sea su forma. */
+function describirInvalido(x: Record<string, unknown> | string): string {
+    if (typeof x === 'string') return x;
+    const fila   = x.fila ?? x.row;
+    const carnet = x.carnet;
+    const motivo = x.error ?? x.motivo ?? x.message ?? 'Fila rechazada';
+    const donde = fila != null ? `Fila ${fila}` : carnet ? `Carné ${carnet}` : null;
+    return donde ? `${donde}: ${String(motivo)}` : String(motivo);
+}
+
+/** Filas rechazadas que se listan antes de resumir el resto. */
+const MAX_ISSUES = 5;
 
 const CURSOS = [
     { label: 'PG1 – Proyecto de Graduación I',  value: COURSE_CODES.PG1 },
     { label: 'PG2 – Proyecto de Graduación II', value: COURSE_CODES.PG2 },
 ] as const;
 
-function summarize(r: ImportarResult): string {
-    const parts: string[] = [];
-    if (r.mensaje || r.message) parts.push((r.mensaje ?? r.message)!);
-    if (r.creados    != null)   parts.push(`${r.creados} creados`);
-    if (r.procesados != null)   parts.push(`${r.procesados} procesados`);
-    if (r.duplicados != null)   parts.push(`${r.duplicados} duplicados`);
-    // El recuento de errores YA NO va aquí: tiene su propio bloque, con los
-    // motivos. Meterlo en la línea de éxito era lo que producía «✓ 3 error(es)».
-    return parts.join(' · ') || 'Importación completada.';
+/**
+ * Resumen del alta masiva de estudiantes.
+ *
+ * Antes leía `creados`, `procesados` y `duplicados`, tres campos que el
+ * contrato no declara en ninguna parte: no llegaban nunca y el resumen caía
+ * siempre en su texto por defecto, «Importación completada», que no dice nada.
+ */
+function resumirEstudiantes(r: ImportarEstudiantesResult): string {
+    const p: string[] = [];
+    if (r.estudiantes.insertados)   p.push(`${r.estudiantes.insertados} nuevos`);
+    if (r.estudiantes.actualizados) p.push(`${r.estudiantes.actualizados} actualizados`);
+    if (r.inscripciones_nuevas)     p.push(`${r.inscripciones_nuevas} inscripciones`);
+    const cabeza = r.total_en_archivo
+        ? `${r.total_en_archivo} fila${r.total_en_archivo !== 1 ? 's' : ''} en el archivo`
+        : 'Importación completada';
+    return p.length ? `${cabeza} · ${p.join(' · ')}` : cabeza;
 }
 
 function extractError(e: unknown): string {
@@ -82,8 +95,8 @@ interface Props {
 }
 
 const ImportModal: React.FC<Props> = ({ open, onClose }) => {
-    const [est, setEst]   = useState<SectionState>(blank);
-    const [not, setNot]   = useState<SectionState>(blank);
+    const [est, setEst] = useState<SectionState<ImportarEstudiantesResult>>(blank);
+    const [not, setNot] = useState<SectionState<ImportarNotasResult>>(blank);
     const [curso, setCurso] = useState<string>(COURSE_CODES.PG1);
     const estRef = useRef<HTMLInputElement>(null);
     const notRef = useRef<HTMLInputElement>(null);
@@ -105,39 +118,38 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
         const file = e.target.files?.[0] ?? null;
         if (file && !isExcelFile(file)) {
             if (estRef.current) estRef.current.value = '';
-            setEst((s) => ({ ...s, file: null, status: 'error', message: 'Solo se permiten archivos .xlsx, .xls o .csv.' }));
+            setEst((s) => ({ ...s, file: null, status: 'error', message: 'Solo se permiten archivos .xlsx, .xls o .csv.', resultado: null }));
             return;
         }
-        setEst((s) => ({ ...s, file, status: 'idle', message: '', issues: [] }));
+        setEst((s) => ({ ...s, file, status: 'idle', message: '', resultado: null }));
     };
 
     const pickNotFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] ?? null;
         if (file && !isPdfFile(file)) {
             if (notRef.current) notRef.current.value = '';
-            setNot((s) => ({ ...s, file: null, status: 'error', message: 'Solo se permiten archivos .pdf.' }));
+            setNot((s) => ({ ...s, file: null, status: 'error', message: 'Solo se permiten archivos .pdf.', resultado: null }));
             return;
         }
-        setNot((s) => ({ ...s, file, status: 'idle', message: '', issues: [] }));
+        setNot((s) => ({ ...s, file, status: 'idle', message: '', resultado: null }));
     };
 
     const uploadEst = async () => {
         if (!est.file) {
-            setEst((s) => ({ ...s, status: 'error', message: 'Selecciona un archivo antes de importar.', issues: [] }));
+            setEst((s) => ({ ...s, status: 'error', message: 'Selecciona un archivo antes de importar.', resultado: null }));
             return;
         }
-        setEst((s) => ({ ...s, loading: true, status: 'idle', message: '', issues: [] }));
+        setEst((s) => ({ ...s, loading: true, status: 'idle', message: '', resultado: null }));
         try {
             const r = await importarEstudiantes(est.file);
             if (estRef.current) estRef.current.value = '';
-            const issues = toIssues(r);
             setEst((s) => ({
                 ...s, file: null,
-                status: issues.length > 0 ? 'partial' : 'success',
-                message: summarize(r), issues,
+                status: r.filas_invalidas > 0 ? 'partial' : 'success',
+                message: '', resultado: r,
             }));
         } catch (e) {
-            setEst((s) => ({ ...s, status: 'error', message: extractError(e), issues: [] }));
+            setEst((s) => ({ ...s, status: 'error', message: extractError(e), resultado: null }));
         } finally {
             setEst((s) => ({ ...s, loading: false }));
         }
@@ -145,21 +157,22 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
 
     const uploadNot = async () => {
         if (!not.file) {
-            setNot((s) => ({ ...s, status: 'error', message: 'Selecciona un archivo antes de importar.', issues: [] }));
+            setNot((s) => ({ ...s, status: 'error', message: 'Selecciona un archivo antes de importar.', resultado: null }));
             return;
         }
-        setNot((s) => ({ ...s, loading: true, status: 'idle', message: '', issues: [] }));
+        setNot((s) => ({ ...s, loading: true, status: 'idle', message: '', resultado: null }));
         try {
             const r = await importarNotas(curso, not.file);
             if (notRef.current) notRef.current.value = '';
-            const issues = toIssues(r);
             setNot((s) => ({
                 ...s, file: null,
-                status: issues.length > 0 ? 'partial' : 'success',
-                message: summarize(r), issues,
+                // Un carné del acta que no está en el padrón NO es un éxito: esa
+                // nota no se registró y alguien tiene que actuar.
+                status: r.totales.no_encontrados > 0 ? 'partial' : 'success',
+                message: '', resultado: r,
             }));
         } catch (e) {
-            setNot((s) => ({ ...s, status: 'error', message: extractError(e), issues: [] }));
+            setNot((s) => ({ ...s, status: 'error', message: extractError(e), resultado: null }));
         } finally {
             setNot((s) => ({ ...s, loading: false }));
         }
@@ -226,8 +239,36 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                                 {est.loading ? 'Importando…' : 'Importar'}
                             </Button>
                         </div>
-                        {est.status !== 'idle' && (
-                            <Feedback status={est.status} message={est.message} issues={est.issues} />
+                        {est.status === 'error' && (
+                            <Alert tone="danger" icon={<AlertTriangle size={15} />}>{est.message}</Alert>
+                        )}
+                        {est.resultado && (
+                            <Alert
+                                tone={est.status === 'partial' ? 'warning' : 'success'}
+                                icon={est.status === 'partial' ? <AlertTriangle size={15} /> : <CheckCircle2 size={15} />}
+                            >
+                                {resumirEstudiantes(est.resultado)}
+                                {est.resultado.filas_invalidas > 0 && (
+                                    <>
+                                        <br />
+                                        {est.resultado.filas_invalidas} fila
+                                        {est.resultado.filas_invalidas !== 1 ? 's' : ''} rechazada
+                                        {est.resultado.filas_invalidas !== 1 ? 's' : ''}.
+                                        {est.resultado.detalle_invalidos.length > 0 && (
+                                            <ul className="im-issues">
+                                                {est.resultado.detalle_invalidos.slice(0, MAX_ISSUES).map((x, i) => (
+                                                    <li key={i}>{describirInvalido(x)}</li>
+                                                ))}
+                                                {est.resultado.detalle_invalidos.length > MAX_ISSUES && (
+                                                    <li className="im-issues__more">
+                                                        y {est.resultado.detalle_invalidos.length - MAX_ISSUES} más…
+                                                    </li>
+                                                )}
+                                            </ul>
+                                        )}
+                                    </>
+                                )}
+                            </Alert>
                         )}
                     </section>
 
@@ -280,9 +321,14 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                                 {not.loading ? 'Importando…' : 'Importar'}
                             </Button>
                         </div>
-                        {not.status !== 'idle' && (
-                            <Feedback status={not.status} message={not.message} issues={not.issues} />
+                        {not.status === 'error' && (
+                            <Alert tone="danger" icon={<AlertTriangle size={15} />}>{not.message}</Alert>
                         )}
+                        {/* El resultado del acta NO cabe en una línea de texto: el
+                            servidor manda el reparto por estado y el detalle nombre
+                            a nombre, y esa es justamente la información que hace
+                            falta para saber si el acta entró bien. */}
+                        {not.resultado && <ImportOutcome resultado={not.resultado} />}
                     </section>
                 </div>
             </div>
@@ -290,28 +336,5 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
         document.body,
     );
 };
-
-const MAX_ISSUES = 5;
-
-const Feedback: React.FC<{ status: 'success' | 'partial' | 'error'; message: string; issues?: string[] }> = ({
-    status, message, issues = [],
-}) => (
-    <Alert
-        tone={status === 'success' ? 'success' : status === 'partial' ? 'warning' : 'danger'}
-        icon={status === 'success' ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
-    >
-        {status === 'partial'
-            ? `${message} · ${issues.length} fila${issues.length !== 1 ? 's' : ''} rechazada${issues.length !== 1 ? 's' : ''}`
-            : message}
-        {issues.length > 0 && (
-            <ul className="im-issues">
-                {issues.slice(0, MAX_ISSUES).map((t, i) => <li key={i}>{t}</li>)}
-                {issues.length > MAX_ISSUES && (
-                    <li className="im-issues__more">y {issues.length - MAX_ISSUES} más…</li>
-                )}
-            </ul>
-        )}
-    </Alert>
-);
 
 export default ImportModal;

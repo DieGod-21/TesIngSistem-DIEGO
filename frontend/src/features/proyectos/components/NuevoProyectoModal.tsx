@@ -6,6 +6,7 @@ import type { Estudiante, FaseProyecto } from '../../../types/api';
 import { Button, Alert } from '../../../components/ui';
 import StudentPicker from '../../../components/StudentPicker';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
+import { userMessageFor } from '../../../services/errorMessages';
 
 interface Props {
     open: boolean;
@@ -90,7 +91,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated, carnets
             setErrors({});
             onCreated(titulo);
         } catch (err) {
-            setApiError(err instanceof Error ? err.message : 'No se pudo crear el proyecto. Inténtalo de nuevo.');
+            setApiError(userMessageFor(err) || 'No se pudo crear el proyecto. Inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }

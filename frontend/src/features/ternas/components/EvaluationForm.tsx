@@ -19,6 +19,7 @@ import { useToast } from '../../../context/ToastContext';
 import ConfirmModal from '../../../components/ConfirmModal';
 import { Button } from '../../../components/ui';
 import type { TernaDetalle, EvaluadorTerna } from '../../../types/api';
+import { userMessageFor } from '../../../services/errorMessages';
 
 interface Props {
     terna: TernaDetalle;
@@ -90,7 +91,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
             toast.success('Borrador guardado.');
             await onChanged();
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Error al guardar borrador.');
+            toast.error(userMessageFor(e) || 'Error al guardar borrador.');
         } finally {
             setBusy(null);
         }
@@ -117,7 +118,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
             setPending(null);
             await onChanged();
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Error al enviar la evaluación.');
+            toast.error(userMessageFor(e) || 'Error al enviar la evaluación.');
         } finally {
             setBusy(null);
         }
@@ -138,7 +139,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
             setPending(null);
             await onChanged();
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Error al reabrir la evaluación.');
+            toast.error(userMessageFor(e) || 'Error al reabrir la evaluación.');
         } finally {
             setBusy(null);
         }

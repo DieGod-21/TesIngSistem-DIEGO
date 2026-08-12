@@ -154,3 +154,167 @@
     opacity: 0.55;
 }
 .im-issues__more { font-style: italic; opacity: 0.8; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESULTADO DE LA IMPORTACIÓN DE UN ACTA
+
+   El servidor cuenta qué pasó nombre a nombre y el producto lo tiraba. Estas
+   cifras y esta lista son esa respuesta, no una decoración del éxito.
+═══════════════════════════════════════════════════════════════════ */
+
+.imo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    padding: var(--space-16);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    min-width: 0;
+}
+
+.imo-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(7rem, 100%), 1fr));
+    gap: var(--space-10);
+}
+
+.imo-stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-10) var(--space-12);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-card);
+}
+
+.imo-stat__valor {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    color: var(--text-primary);
+}
+
+.imo-stat__etiqueta {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+/* El color solo aparece cuando la cifra significa algo: lo registrado y lo que
+   quedó fuera. El total del archivo es un dato neutro. */
+.imo-stat--ok .imo-stat__valor     { color: var(--color-success); }
+.imo-stat--alerta                  { border-color: color-mix(in oklch, var(--color-warning) 50%, var(--border)); }
+.imo-stat--alerta .imo-stat__valor { color: var(--color-warning); }
+
+.imo-line {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.imo-line--estados {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+}
+
+.imo-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+}
+
+/* El primer punto no lleva margen: el `gap` ya separa. Del segundo en adelante
+   se despega del texto anterior. */
+.imo-dot + .imo-dot,
+.imo-line--estados .imo-dot:not(:first-child) { margin-left: var(--space-8); }
+
+.imo-dot--ok  { background: var(--color-success); }
+.imo-dot--bad { background: var(--color-danger); }
+.imo-dot--nsp { background: var(--color-warning); }
+
+.imo-missing {
+    margin: var(--space-6) 0;
+    padding-left: var(--space-16);
+    font-size: var(--text-xs);
+}
+
+.imo-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    min-width: 0;
+}
+
+.imo-filas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 15rem;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.imo-fila {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+    align-items: center;
+    gap: var(--space-10);
+    padding: var(--space-8) var(--space-4);
+    border-top: 1px solid var(--border);
+    font-size: var(--text-xs);
+    min-width: 0;
+}
+
+.imo-fila:first-child { border-top: 0; }
+
+.imo-fila__carnet { color: var(--text-secondary); }
+
+.imo-fila__nombre {
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.imo-fila__nota {
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+}
+
+.imo-fila__op { color: var(--text-muted); }
+
+.imo-mas {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-6);
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-10);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-card);
+    font: inherit;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.imo-mas:hover { border-color: var(--color-primary); color: var(--color-primary-text); }
+.imo-mas:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+@media (max-width: 560px) {
+    /* En móvil la fila se parte: carné y nombre arriba, el resto debajo. Cinco
+       columnas en 320px dejaban el nombre en cuarenta píxeles. */
+    .imo-fila {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        row-gap: var(--space-4);
+    }
+    .imo-fila__op { grid-column: 2 / -1; }
+}
