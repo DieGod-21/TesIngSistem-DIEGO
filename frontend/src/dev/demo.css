@@ -1,0 +1,32 @@
+/* Banda de datos de demostración. Solo se monta en desarrollo. */
+
+.demo-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-10);
+    padding: var(--space-6) var(--space-16);
+    background: var(--color-warning);
+    color: var(--gray-900);
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    text-align: center;
+    /* No intercepta el puntero: la banda avisa, no estorba. */
+    pointer-events: none;
+}
+
+.demo-banner strong {
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .demo-banner span { display: none; }
+}
