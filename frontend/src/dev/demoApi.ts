@@ -17,10 +17,19 @@
  * Eso es deliberado: el conjunto de partida siempre es el mismo y las pruebas
  * no arrastran estado de la sesión anterior.
  *
- * Activación (las tres cosas tienen que darse):
+ * Activación (las dos primeras cosas tienen que darse):
  *   1. compilación de desarrollo (`import.meta.env.DEV`);
- *   2. petición explícita: `?demo=1` en la URL o `VITE_DEMO_DATA=1`;
+ *   2. petición explícita, por cualquiera de estas vías:
+ *        · `npm run dev:demo`  → arranca Vite en modo `demo`;
+ *        · `?demo=1` en la URL → se recuerda durante la pestaña;
+ *        · `VITE_DEMO_DATA=1`  → variable de entorno;
  *   3. una vez activo, la interfaz lo anuncia con una banda permanente.
+ *
+ * Es VOLUNTARIO a propósito. Si el conjunto cargara por defecto, antes o
+ * después alguien capturaría veintisiete estudiantes inventados creyendo que
+ * son la cohorte. Sin activarlo, el servidor de desarrollo reenvía `/api` al
+ * servidor real (ver el proxy de vite.config.ts) y hacen falta credenciales
+ * reales: las de este conjunto solo existen aquí.
  */
 
 import {
@@ -36,12 +45,21 @@ const CLAVE_SESION = 'umg:demo-data';
 /** ¿Se pidió el conjunto de demostración? Solo tiene sentido en desarrollo. */
 export function demoDataActivo(): boolean {
     if (!import.meta.env.DEV) return false;
+
+    /*
+     * `npm run dev:demo` arranca Vite con `--mode demo`. Se comprueba el modo y
+     * no un fichero `.env.demo` porque `.gitignore` excluye `.env.*`: ese
+     * fichero no viajaría en el repositorio y el script fallaría para cualquiera
+     * que clonase el proyecto.
+     */
+    if (import.meta.env.MODE === 'demo') return true;
+    if (import.meta.env.VITE_DEMO_DATA === '1') return true;
+
     try {
         const url = new URL(window.location.href);
         const enUrl = url.searchParams.get('demo');
         if (enUrl === '1')  sessionStorage.setItem(CLAVE_SESION, '1');
         if (enUrl === '0')  sessionStorage.removeItem(CLAVE_SESION);
-        if (import.meta.env.VITE_DEMO_DATA === '1') return true;
         return sessionStorage.getItem(CLAVE_SESION) === '1';
     } catch {
         return false;
@@ -507,11 +525,27 @@ export function installDemoApi(): void {
  * más falta hace, una hora después, cuando ya se olvidó por qué se activó.
  */
 function montarBanda(): void {
+    /*
+     * Cómo se sale, según cómo se entró. Con `--mode demo` la bandera está
+     * cocida en el arranque del servidor y `?demo=0` no puede apagarla: decirlo
+     * habría mandado al usuario a probar algo que no funciona. Tampoco interesa
+     * que un parámetro de URL devuelva la sesión al servidor real a mitad de
+     * camino, porque dejaría un token inventado hablando con producción.
+     */
+    const porModo = import.meta.env.MODE === 'demo' || import.meta.env.VITE_DEMO_DATA === '1';
+    const salida = porModo
+        ? 'Para volver al servidor real, arranca con «npm run dev».'
+        : 'Añade ?demo=0 a la URL para desactivarlo.';
+
     const banda = document.createElement('div');
     banda.className = 'demo-banner';
     banda.setAttribute('role', 'status');
-    banda.innerHTML =
-        '<strong>Datos de demostración</strong>' +
-        '<span>Las respuestas del API vienen de src/dev/. Añade ?demo=0 a la URL para desactivarlo.</span>';
+
+    const titulo = document.createElement('strong');
+    titulo.textContent = 'Datos de demostración';
+    const texto = document.createElement('span');
+    texto.textContent = `Las respuestas del API vienen de src/dev/. ${salida}`;
+
+    banda.append(titulo, texto);
     document.body.appendChild(banda);
 }
