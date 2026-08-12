@@ -35,9 +35,9 @@ function validate(values: FormFields) {
     if (nombre) errors.nombreCompleto = nombre;
     else if (values.nombreCompleto.trim().length > 150) errors.nombreCompleto = 'El nombre no puede exceder 150 caracteres';
 
-    const carnet = runValidators(values.carnetId, validators.required('El carnet ID'));
+    const carnet = runValidators(values.carnetId, validators.required('El carné'));
     if (carnet) errors.carnetId = carnet;
-    else if (values.carnetId.trim().length > 50) errors.carnetId = 'El carnet no puede exceder 50 caracteres';
+    else if (values.carnetId.trim().length > 50) errors.carnetId = 'El carné no puede exceder 50 caracteres';
 
     const correo = runValidators(
         values.correoInstitucional,
@@ -115,7 +115,11 @@ const StudentManualForm: React.FC = () => {
 
                         <div className="ui-field-row">
                             <Field
-                                label="Carnet ID"
+                                /* «Carné» es el termino del producto: aparece asi en el panel de
+                                   inspeccion, en el expediente y en los buscadores. Este
+                                   formulario era el unico sitio que lo llamaba «Carnet ID»,
+                                   mezclando ademas un «ID» que no aporta nada. */
+                                label="Carné"
                                 htmlFor="sn-carnet"
                                 required
                                 error={showError('carnetId')}

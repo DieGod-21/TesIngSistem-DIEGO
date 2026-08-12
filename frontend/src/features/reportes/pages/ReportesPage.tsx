@@ -16,26 +16,20 @@ import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../
 import { matchesText } from '../../../utils/text';
 import { useCountUp } from '../../../hooks/useCountUp';
 import { Badge, Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
-import type { BadgeTone } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
+import { RESOLUCION_LABEL, RESOLUCION_TONE } from '../../../utils/ternaStatus';
 import '../styles/reportes.css';
 import '../../../styles/transitions.css';
 
-const RES_LABEL: Record<ResolucionTerna, string> = {
-    aprueba_tesis: 'Aprueba Tesis',
-    aprueba_curso: 'Aprueba Curso',
-    reprobado:     'Reprobado',
-    pendiente:     'Pendiente',
-};
 
 type Filter = 'all' | ResolucionTerna;
 
 const FILTERS: { value: Filter; label: string }[] = [
     { value: 'all',           label: 'Todos' },
-    { value: 'aprueba_tesis', label: 'Aprueba Tesis' },
-    { value: 'aprueba_curso', label: 'Aprueba Curso' },
-    { value: 'reprobado',     label: 'Reprobado' },
-    { value: 'pendiente',     label: 'Pendiente' },
+    { value: 'aprueba_tesis', label: RESOLUCION_LABEL.aprueba_tesis },
+    { value: 'aprueba_curso', label: RESOLUCION_LABEL.aprueba_curso },
+    { value: 'reprobado',     label: RESOLUCION_LABEL.reprobado },
+    { value: 'pendiente',     label: RESOLUCION_LABEL.pendiente },
 ];
 
 const ReportesPage: React.FC = () => {
@@ -255,11 +249,14 @@ const ReportesSkeleton: React.FC = () => (
     </div>
 );
 
-const HERO_CATS: { key: ResolucionTerna; label: string; variant: string }[] = [
-    { key: 'aprueba_tesis', label: 'Aprueba Tesis', variant: 'aprueba-tesis' },
-    { key: 'aprueba_curso', label: 'Aprueba Curso', variant: 'aprueba-curso' },
-    { key: 'reprobado',     label: 'Reprobado',     variant: 'reprobado' },
-    { key: 'pendiente',     label: 'Pendiente',     variant: 'pendiente' },
+/* La etiqueta la pone el mapa único; aquí solo se declara el ORDEN de la barra
+   y el modificador de color. Era la tercera copia literal de los mismos cuatro
+   textos dentro de este archivo. */
+const HERO_CATS: { key: ResolucionTerna; variant: string }[] = [
+    { key: 'aprueba_tesis', variant: 'aprueba-tesis' },
+    { key: 'aprueba_curso', variant: 'aprueba-curso' },
+    { key: 'reprobado',     variant: 'reprobado' },
+    { key: 'pendiente',     variant: 'pendiente' },
 ];
 
 /**
@@ -291,7 +288,7 @@ const ReportesHero: React.FC<{
             <div
                 className="reportes-bar"
                 role="img"
-                aria-label={HERO_CATS.map((c) => `${c.label}: ${counts[c.variant]}`).join(', ')}
+                aria-label={HERO_CATS.map((c) => `${RESOLUCION_LABEL[c.key]}: ${counts[c.variant]}`).join(', ')}
             >
                 {HERO_CATS.map((c) => {
                     const w = pct(counts[c.variant]);
@@ -309,7 +306,7 @@ const ReportesHero: React.FC<{
                 {HERO_CATS.map((c) => (
                     <li key={c.key} className="reportes-legend__item">
                         <span className={`reportes-legend__dot reportes-legend__dot--${c.variant}`} aria-hidden="true" />
-                        <span className="reportes-legend__label">{c.label}</span>
+                        <span className="reportes-legend__label">{RESOLUCION_LABEL[c.key]}</span>
                         <span className="reportes-legend__count">{counts[c.variant]}</span>
                     </li>
                 ))}
@@ -328,16 +325,10 @@ const ReportesHero: React.FC<{
  * "otra aplicación". Ahora se deriva el tono del sistema de diseño y el chrome
  * lo aporta `Badge`.
  */
-const RES_TONE: Record<ResolucionTerna, BadgeTone> = {
-    aprueba_tesis: 'success',
-    aprueba_curso: 'warning',
-    reprobado:     'danger',
-    pendiente:     'neutral',
-};
 
 export const ResolutionBadge: React.FC<{ value: ResolucionTerna }> = ({ value }) => (
-    <Badge tone={RES_TONE[value] ?? 'neutral'} dot>
-        {RES_LABEL[value] ?? value}
+    <Badge tone={RESOLUCION_TONE[value] ?? 'neutral'} dot>
+        {RESOLUCION_LABEL[value] ?? value}
     </Badge>
 );
 

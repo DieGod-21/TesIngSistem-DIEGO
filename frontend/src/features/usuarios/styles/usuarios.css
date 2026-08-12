@@ -202,3 +202,13 @@
     font-size: var(--text-base);
     color: var(--color-danger);
 }
+
+/* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
+   La hoja inferior del diálogo «Nuevo Usuario» se declara dentro de una consulta de ancho
+   MÁS ABAJO que el bloque de arriba, así que aquel no la alcanzaba: a igual
+   especificidad gana la última regla. Solo se notaba en móvil, que es donde
+   ninguna sonda de escritorio mira.
+   Toda animación nueva de este archivo va POR ENCIMA de aquí. */
+@media (prefers-reduced-motion: reduce) {
+    .nu-modal { animation: none; }
+}

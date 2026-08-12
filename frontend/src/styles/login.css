@@ -75,9 +75,8 @@
   from { transform: translate3d(-4%, -2%, 0) scale(1);   }
   to   { transform: translate3d(5%, 3%, 0)  scale(1.12); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .auth-branding::before { animation: none; }
-}
+/* El bloque de movimiento reducido vive al FINAL del archivo, no aquí: ver la
+   nota junto a él. */
 
 @media (min-width: 768px) {
   .auth-branding {
@@ -591,4 +590,29 @@ ion-content::part(scroll) {
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Movimiento reducido ─────────────────────────────────────────────
+   AL FINAL DEL ARCHIVO A PROPÓSITO.
+
+   Este bloque estaba arriba (línea ~78) y solo lograba apagar la aurora y el
+   panel de marca, porque son las dos únicas animaciones declaradas ANTES que
+   él. Las de la columna del formulario y la tarjeta se declaran más abajo y,
+   a igual especificidad, gana la última: quien pedía movimiento reducido
+   seguía recibiendo la primera pantalla del producto deslizándose, y el CSS
+   parecía correcto leyéndolo.
+
+   La pantalla de acceso tiene cuatro animaciones: la aurora infinita del
+   fondo y tres de entrada que DESPLAZAN contenido. Con la preferencia activa
+   se apagan las cuatro y todo aparece ya colocado.
+
+   Cualquier animación nueva en este archivo debe declararse por encima de
+   este bloque. */
+@media (prefers-reduced-motion: reduce) {
+  .auth-branding,
+  .auth-branding::before,
+  .auth-form-section,
+  .auth-form-container {
+    animation: none;
+  }
 }

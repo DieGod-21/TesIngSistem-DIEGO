@@ -122,6 +122,13 @@
     overflow: hidden;
 }
 
+/* Ausencia, no contenido: cursiva y apagada para que no se confunda con una
+   descripción real de una sola línea. */
+.proy-card__desc--empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 /* `.proy-card__fase` ELIMINADO: repetía en texto largo («Proyecto de
    Graduación I») lo que la píldora del pie ya dice en dos caracteres. */
 
@@ -319,3 +326,13 @@
 /* ── Dark mode ───────────────────────────────────────────────────── */
 /* El modal y las tarjetas usan tokens semánticos: el modo oscuro se resuelve
    por herencia, sin overrides por clase (mismo criterio que NuevoUsuarioModal). */
+
+/* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
+   La hoja inferior del diálogo «Nuevo Proyecto» se declara dentro de una consulta de ancho
+   MÁS ABAJO que el bloque de arriba, así que aquel no la alcanzaba: a igual
+   especificidad gana la última regla. Solo se notaba en móvil, que es donde
+   ninguna sonda de escritorio mira.
+   Toda animación nueva de este archivo va POR ENCIMA de aquí. */
+@media (prefers-reduced-motion: reduce) {
+    .np-modal { animation: none; }
+}

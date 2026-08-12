@@ -19,7 +19,7 @@
  * pantallas entre las que el coordinador navega constantemente.
  */
 
-import type { EstadoTerna, EstadoEvaluacion } from '../types/api';
+import type { EstadoTerna, EstadoEvaluacion, ResolucionTerna } from '../types/api';
 import type { BadgeTone } from '../components/ui';
 
 /** Etiqueta visible del estado de una terna. */
@@ -34,6 +34,31 @@ export const TERNA_ESTADO_TONE: Record<EstadoTerna, BadgeTone> = {
     pendiente:   'warning',
     en_progreso: 'info',
     completada:  'success',
+};
+
+/**
+ * Resolución final de una terna: etiqueta y tono, en un solo sitio.
+ *
+ * Este mismo módulo nació porque la etiqueta de ESTADO vivía en tres archivos.
+ * La de RESOLUCIÓN se quedó fuera de aquella limpieza y repitió la historia:
+ * tres copias literales en el expediente, la ficha de terna y los reportes, y
+ * la de reportes además en caja de título —«Aprueba Tesis» frente a «Aprueba
+ * tesis»—, de modo que la misma resolución del mismo alumno se escribía de dos
+ * maneras según la pantalla. Manda la caja de frase, que es la del producto.
+ */
+export const RESOLUCION_LABEL: Record<ResolucionTerna, string> = {
+    aprueba_tesis: 'Aprueba tesis',
+    aprueba_curso: 'Aprueba curso',
+    reprobado:     'Reprobado',
+    pendiente:     'Pendiente',
+};
+
+/** Tono semántico de la resolución final. */
+export const RESOLUCION_TONE: Record<ResolucionTerna, BadgeTone> = {
+    aprueba_tesis: 'success',
+    aprueba_curso: 'warning',
+    reprobado:     'danger',
+    pendiente:     'neutral',
 };
 
 /** Etiqueta visible del estado de la evaluación de UN evaluador. */

@@ -193,7 +193,12 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                         <div className="im-section__heading">
                             <Users size={16} aria-hidden="true" />
                             <h3 id="im-est-heading">Importar Estudiantes</h3>
-                            <Badge tone="success" className="im-section__badge">Excel</Badge>
+                            {/* Tono NEUTRO, no semantico. `success` y `danger` significan «salio
+                                bien» y «salio mal» en todo el producto, y aqui se estaban
+                                usando para decir «formato Excel» y «formato PDF»: en este
+                                mismo dialogo, unos centimetros mas abajo, el rojo significa
+                                fila rechazada. El formato es metadato, no estado. */}
+                            <Badge tone="neutral" className="im-section__badge">Excel</Badge>
                         </div>
                         <p className="im-section__hint">
                             Archivo <code>.xlsx</code> o <code>.csv</code> con los datos de los estudiantes.
@@ -233,7 +238,7 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                         <div className="im-section__heading">
                             <FileText size={16} aria-hidden="true" />
                             <h3 id="im-not-heading">Importar Notas</h3>
-                            <Badge tone="danger" className="im-section__badge">PDF</Badge>
+                            <Badge tone="neutral" className="im-section__badge">PDF</Badge>
                         </div>
                         <p className="im-section__hint">
                             Archivo <code>.pdf</code> con las notas del curso seleccionado.

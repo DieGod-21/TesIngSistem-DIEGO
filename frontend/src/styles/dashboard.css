@@ -1010,3 +1010,14 @@ button.kpi-card {
 @media (max-width: 860px) {
     .dash-header__search-kbd { display: none; }
 }
+
+/* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
+   El velo de la barra lateral móvil y el escalonado de sus elementos se
+   declaran dentro de una consulta de ancho más abajo que los bloques de
+   arriba, que por tanto no los alcanzaban. Solo afectaba a móvil.
+   Toda animación nueva de este archivo va POR ENCIMA de aquí. */
+@media (prefers-reduced-motion: reduce) {
+    .dash-sidebar-overlay,
+    .dash-sidebar--open ~ .dash-main .dash-sidebar-overlay,
+    .dash-sidebar--open .dash-sidebar__nav-item { animation: none; }
+}

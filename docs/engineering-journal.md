@@ -211,6 +211,9 @@ Cada regla nace de un fallo real. **No son recordatorios: son precondiciones.**
 | P22 | **Un medidor que solo imprime fallos es indistinguible de uno roto cuando calla.** Todo probe que reporte por excepcion debe imprimir tambien el recuento de lo que SI comprobo, y pasar por un par conocido-bueno y otro conocido-malo. | it. 14: `token-contrast.mjs` llevaba iteraciones diciendo «nada» sin demostrar que supiera decir «algo» |
 | P23 | **Antes de dar espacio a un campo, comprobar que discrimina.** `carrera` parecia el relleno natural para el hueco de la vista rapida: es dato real y ya venia cargado. Son 26 de 27 alumnos con el MISMO valor. Habria repetido «Ingenieria en Sistemas» en cada ficha sin informar de nada. | it. 14 |
 | P24 | **Deshabilitar un boton por formulario incompleto es esconder el motivo.** El CTA de acceso —la accion principal de la entrada al producto— salia gris y muerto, sin decir que faltaba. El guardia ya estaba en `handleSubmit`: habilitarlo convierte un control mudo en uno que explica. | it. 14 |
+| P25 | **Una sonda que mide UN elemento no ve lo que vive en su padre.** Dos veces seguidas dio falso positivo: el nombre «cortado sin elipsis» estaba bien recortado, y el campo de busqueda «sin indicador de foco» tiene el anillo en el envoltorio por `:focus-within`, que es el patron correcto. Se mide la CADENA elemento-padre-abuelo, no el nodo suelto. | it. 15 |
+| P26 | **Un bloque `prefers-reduced-motion` colocado antes de las animaciones que pretende apagar no apaga nada.** A igual especificidad manda el orden. El CSS se lee correcto, la preferencia se incumple y ninguna lectura lo revela: solo el render. El bloque va al FINAL del archivo, y hay regla de arquitectura que lo verifica. | it. 15: login.css apagaba 1 de 4; proyectos, usuarios y dashboard fallaban solo en movil |
+| P27 | **Una sonda de tiempo de ejecucion solo ve donde mira.** Los tres fallos de movimiento reducido vivian en consultas de ancho movil y en dos rutas que la lista de la sonda no visitaba; la regla estatica los encontro sin abrir el navegador. Las dos clases de instrumento son complementarias: la estatica cubre TODO el codigo, la dinamica prueba el comportamiento real. Usar solo una deja un hueco. | it. 15 |
 
 ---
 
@@ -528,3 +531,80 @@ hasta meses y años, y una regla de arquitectura impide volver a componer
 El hueco central de la vista rapida sigue siendo grande. No hay mas informacion
 real que mostrar y no se inventa contenido academico para llenarlo. La carrera
 se descarto por medicion, no por criterio (P23).
+
+---
+
+## Iteracion 15 — Superficies secundarias y accesibilidad no verificada
+
+### El fallo mas caro fue silencioso
+
+`prefers-reduced-motion` estaba escrito en cinco archivos y **no funcionaba en
+cuatro**. La causa no era una media query mal escrita: era su POSICION. El
+bloque se colocaba junto a la primera animacion del archivo, y todo lo declarado
+mas abajo —a igual especificidad— ganaba.
+
+En login apagaba 1 de 4 animaciones: quien pedia movimiento reducido recibia la
+primera pantalla del producto deslizandose en tres piezas. Leyendo el CSS
+parecia correcto. Lo delato medir la opacidad real de los elementos con la
+preferencia activa: `0.83`, `0.47`, transform aplicado.
+
+En proyectos, usuarios y dashboard el fallo solo existia en movil, dentro de
+consultas de ancho declaradas despues del bloque. La sonda de navegador no lo
+vio nunca porque medía a 1280 px y no visitaba esas dos rutas. **Lo encontro la
+regla estatica**, que no abre el navegador pero lee todo el codigo.
+
+### Tres copias de la misma resolucion
+
+`ternaStatus.ts` nacio porque la etiqueta de ESTADO de terna vivia en tres
+archivos. La de RESOLUCION repitio la historia exacta: tres copias literales, y
+la de reportes en caja de titulo —«Aprueba Tesis» frente a «Aprueba tesis»—, de
+modo que la misma resolucion del mismo alumno se escribia distinto segun la
+pantalla. Cuatro textos mas dentro del propio archivo de reportes para la
+leyenda de la barra. Ahora hay un mapa y una regla que impide el cuarto.
+
+### Mi dataset ocultaba una rama del producto
+
+Los nueve proyectos compartian descripcion, asi que la rejilla se auditaba con
+una sola forma de tarjeta. Al variar longitudes e incluir descripcion nula y
+vacia aparecio lo que nunca se habia renderizado: las tarjetas comparten alto
+por fila, y una sin descripcion dejaba un vacio entre el titulo y el divisor que
+se lee como «esto no cargo». La ausencia ahora se nombra.
+
+### Dos falsos positivos propios
+
+El nombre «cortado sin elipsis» y el buscador «sin indicador de foco» eran
+defectos de mis sondas, no del producto (P25). En ambos casos el instrumento
+media el elemento y la propiedad vivia en el padre. Corregidos los dos
+instrumentos, el producto sale limpio: 0 cortes sin elipsis, 0 textos que
+rebasan a su padre, 243 controles enfocables con indicador visible.
+
+### Tono semantico usado como etiqueta de formato
+
+En el dialogo de importacion los formatos de archivo se marcaban con
+`<Badge tone="success">Excel</Badge>` y `<Badge tone="danger">PDF</Badge>`. En
+todo el producto `success` significa «salio bien» y `danger` «salio mal», y en
+ESE MISMO dialogo, unos centimetros mas abajo, el rojo marca las filas
+rechazadas de la importacion. Dos significados para el mismo color a treinta
+lineas de distancia. El formato de archivo es metadato, no estado: pasa a tono
+neutro.
+
+Del mismo tipo: el formulario de alta llamaba «Carnet ID» a lo que el resto del
+producto llama «carne» en nueve sitios.
+
+### Estado final de las puertas
+
+```
+tsc limpio · eslint 0 errores (5 avisos previos) · build ✓
+tests             222 / 222  (28 ficheros)
+arquitectura       25 reglas
+contraste          48/48 pares AA, ambos temas (medidor calibrado)
+foco              243/243 controles con indicador visible
+zoom 200 %          0 rutas con perdida de contenido
+movimiento reducido 0 animaciones vivas a 1280 y 375 px, 7 rutas
+apuntado            0 desplazamientos ajenos · 0 fugas de puntero
+desbordamiento      0 · 320→1920
+dialogos           20/20 con rol, aria-modal, foco atrapado y tema verificado
+consola             0 errores · 0 avisos en 10 rutas
+recorrido           9/9 pasos (buscar → sugerencia → teclado → detalle → atras)
+recorte             0 textos cortados sin elipsis · 0 que rebasan a su padre
+```

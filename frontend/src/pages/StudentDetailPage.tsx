@@ -9,7 +9,7 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import type { CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante } from '../types/api';
 import { Avatar, Badge, Button, CopyField, EmptyState, Skeleton } from '../components/ui';
-import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE } from '../utils/ternaStatus';
+import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE, RESOLUCION_LABEL } from '../utils/ternaStatus';
 import { formatShortDate } from '../utils/dates';
 import { ternaHint } from '../utils/thesisStatus';
 import '../features/ternas/styles/ternas.css';
@@ -26,12 +26,6 @@ const CURSO_SHORT: Record<string, string> = {
     '049': 'PG2',
 };
 
-const RESOLUCION_LABEL: Record<string, string> = {
-    aprueba_tesis: 'Aprueba tesis',
-    aprueba_curso: 'Aprueba curso',
-    reprobado:     'Reprobado',
-    pendiente:     'Pendiente',
-};
 
 const ALL_CURSOS: Array<'043' | '049'> = ['043', '049'];
 

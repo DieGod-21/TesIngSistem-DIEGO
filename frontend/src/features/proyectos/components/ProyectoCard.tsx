@@ -20,9 +20,13 @@ const ProyectoCard: React.FC<Props> = ({ proyecto }) => (
     <article className="proy-card">
         <h3 className="proy-card__title">{proyecto.titulo}</h3>
 
-        {proyecto.descripcion && (
-            <p className="proy-card__desc">{proyecto.descripcion}</p>
-        )}
+        {/* La ausencia se NOMBRA. Las tarjetas de una fila comparten alto, así
+            que un proyecto sin descripción dejaba un vacío entre el título y el
+            divisor del pie que se lee como «esto no cargó». Decirlo cuesta una
+            línea y convierte un fallo aparente en un dato. */}
+        {proyecto.descripcion?.trim()
+            ? <p className="proy-card__desc">{proyecto.descripcion}</p>
+            : <p className="proy-card__desc proy-card__desc--empty">Sin descripción</p>}
 
         {/* Pie: la persona primero (es lo que se busca al escanear), la fase
             como etiqueta al margen. Un solo divisor en toda la tarjeta. */}

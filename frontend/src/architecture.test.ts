@@ -166,6 +166,41 @@ describe('Roles semánticos del color primario', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
+describe('Movimiento reducido', () => {
+    /**
+     * FALLO SILENCIOSO: el bloque `prefers-reduced-motion` de login.css estaba
+     * cerca del principio del archivo y solo apagaba las dos animaciones
+     * declaradas ANTES que él. Las otras dos —las que deslizan el formulario y
+     * la tarjeta— se declaran más abajo y, a igual especificidad, gana la
+     * última. El CSS se leía correcto y la preferencia no se respetaba.
+     *
+     * A igual especificidad manda el orden, así que el bloque que apaga tiene
+     * que ir DESPUÉS de todo lo que enciende.
+     */
+    it('el bloque de movimiento reducido va después de la última animación de su archivo', () => {
+        const offenders: string[] = [];
+        for (const f of cssFiles) {
+            const src = read(f);
+            const reduce = src.lastIndexOf('prefers-reduced-motion');
+            if (reduce === -1) continue;
+            // Solo cuentan las que ENCIENDEN movimiento. `animation: none` es
+            // precisamente lo que el bloque escribe para apagarlo, y contarlo
+            // marcaba como infractor a todo archivo bien escrito.
+            let last = -1;
+            for (const m of src.matchAll(/(?<![-\w])animation(?:-name)?\s*:\s*([^;}]+)/g)) {
+                if (m.index == null) continue;
+                if (/^\s*none\s*$/.test(m[1])) continue;
+                if (m.index > last) last = m.index;
+            }
+            if (last > reduce) {
+                const linea = src.slice(0, last).split('\n').length;
+                offenders.push(`${rel(f)}:${linea} → declara animación tras el bloque de movimiento reducido`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+});
+
 describe('Estabilidad al apuntar', () => {
     /**
      * Un `:hover` NUNCA puede desplazar al propio elemento apuntado.
@@ -492,6 +527,25 @@ describe('Ninguna fecha cruda en pantalla', () => {
      * abreviaturas para una idea, y la primera no pasaba nunca de días
      * («hace 314 d»). `formatAgo` es el único autorizado a componer esa frase.
      */
+    /**
+     * `ternaStatus.ts` nacio porque la etiqueta de ESTADO vivia en tres
+     * archivos. La de RESOLUCION repitio la historia: tres copias literales en
+     * expediente, ficha de terna y reportes, y la de reportes ademas en caja de
+     * titulo, de modo que la misma resolucion se escribia de dos formas segun
+     * la pantalla. El mapa es unico.
+     */
+    it('nadie redeclara las etiquetas de resolucion de terna', () => {
+        const violations: string[] = [];
+        for (const f of codeFiles) {
+            if (/utils[\\/]ternaStatus\./.test(f)) continue;
+            const src = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            if (/aprueba_tesis\s*:\s*['"]/.test(src)) {
+                violations.push(`${rel(f)} → usa RESOLUCION_LABEL/RESOLUCION_TONE`);
+            }
+        }
+        expect(violations).toEqual([]);
+    });
+
     it('nadie compone «hace …» a mano fuera de utils/dates', () => {
         const violations: string[] = [];
         for (const f of codeFiles) {

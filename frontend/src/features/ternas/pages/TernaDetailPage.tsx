@@ -15,16 +15,9 @@ import EvaluationForm from '../components/EvaluationForm';
 import { useTernaDetalle } from '../hooks/useTernaDetalle';
 import type { EvaluadorTerna } from '../../../types/api';
 import { Badge, Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
-import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE, evaluacionEstado } from '../../../utils/ternaStatus';
+import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE, RESOLUCION_LABEL, evaluacionEstado } from '../../../utils/ternaStatus';
 import { formatDateTime } from '../../../utils/dates';
 import '../styles/ternas.css';
-
-const RESOLUCION_LABEL = {
-    aprueba_tesis: 'Aprueba tesis',
-    aprueba_curso: 'Aprueba curso',
-    reprobado:     'Reprobado',
-    pendiente:     'Pendiente',
-} as const;
 
 const TernaDetailSkeleton: React.FC = () => (
     <div className="terna-detail-grid" aria-busy="true" aria-label="Cargando terna…">
