@@ -9,12 +9,13 @@
 
 import React from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { ChevronLeft, FileText, GraduationCap, AlertTriangle, RefreshCw, ClipboardList } from 'lucide-react';
+import { ChevronLeft, FileText, GraduationCap, AlertTriangle, RefreshCw, ClipboardList, FolderOpen, CalendarDays } from 'lucide-react';
 import ThesisStatusBadge from '../../../components/thesis/ThesisStatusBadge';
 import EvaluationForm from '../components/EvaluationForm';
 import { useTernaDetalle } from '../hooks/useTernaDetalle';
+import { useEntityLinks } from '../../../hooks/useEntityLinks';
 import type { EvaluadorTerna } from '../../../types/api';
-import { Badge, Button, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
+import { Badge, Button, EmptyState, Skeleton, PageHeader, RelationCard } from '../../../components/ui';
 import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE, RESOLUCION_LABEL, evaluacionEstado } from '../../../utils/ternaStatus';
 import { formatDateTime } from '../../../utils/dates';
 import '../styles/ternas.css';
@@ -42,6 +43,11 @@ const TernaDetailPage: React.FC = () => {
     const { terna, eligibility, loading, error, reload } = useTernaDetalle(
         Number.isFinite(ternaId) ? ternaId : null,
     );
+
+    // El expediente y el proyecto se resuelven cruzando por carné sobre
+    // colecciones ya cacheadas: el contrato no publica los identificadores
+    // cruzados, pero las tres entidades sí llevan el carné.
+    const enlaces = useEntityLinks(terna?.carnet, ['estudiante', 'proyecto']);
 
     return (
         <div className="ternas-page">
@@ -95,33 +101,48 @@ const TernaDetailPage: React.FC = () => {
                         <div className="terna-detail-grid">
                             {/* Columna izquierda: estudiante + evaluadores + form */}
                             <section style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                                <article className="tdetail-card">
+                                {/* Antes esto era una lista de definiciones: nombre,
+                                    carné y título como texto muerto. Los tres son
+                                    ENTIDADES del sistema y desde aquí no se podía
+                                    llegar a ninguna; había que volver al listado
+                                    correspondiente y buscar por nombre. */}
+                                <article className="tdetail-card tdetail-rel">
                                     <h2 className="tdetail-card__title">Estudiante y proyecto</h2>
-                                    <p className="tdetail-student-name">{terna.estudiante_nombre}</p>
-                                    <dl className="tdetail-meta">
-                                        <dt>Carnet</dt>
-                                        <dd style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}>
-                                            {terna.carnet}
-                                        </dd>
-                                        <dt>Proyecto</dt>
-                                        <dd>{terna.titulo || '—'}</dd>
-                                        {terna.fase && (
-                                            <>
-                                                <dt>Fase</dt>
-                                                <dd>{terna.fase}</dd>
-                                            </>
-                                        )}
-                                        {/* El valor llega crudo del API (ISO 8601). Se formatea
-                                            con el formateador del producto; si no es una fecha
-                                            válida, `formatDateTime` devuelve null y la fila
-                                            entera se omite en lugar de imprimir el ISO. */}
-                                        {formatDateTime(terna.fecha_evaluacion) && (
-                                            <>
-                                                <dt>Fecha</dt>
-                                                <dd>{formatDateTime(terna.fecha_evaluacion)}</dd>
-                                            </>
-                                        )}
-                                    </dl>
+
+                                    <RelationCard
+                                        kicker="Estudiante"
+                                        icon={<GraduationCap size={17} />}
+                                        title={terna.estudiante_nombre || null}
+                                        meta={terna.carnet}
+                                        loading={enlaces.loading && !enlaces.estudianteHref}
+                                        onOpen={enlaces.estudianteHref
+                                            ? () => history.push(enlaces.estudianteHref as string)
+                                            : undefined}
+                                        emptyText="Sin estudiante asociado"
+                                    />
+
+                                    <RelationCard
+                                        kicker="Proyecto"
+                                        icon={<FolderOpen size={17} />}
+                                        title={terna.titulo || enlaces.proyectoTitulo || null}
+                                        meta={terna.fase ?? undefined}
+                                        loading={enlaces.loading && !enlaces.proyectoHref}
+                                        onOpen={enlaces.proyectoHref
+                                            ? () => history.push(enlaces.proyectoHref as string)
+                                            : undefined}
+                                        emptyText="Sin proyecto registrado"
+                                    />
+
+                                    {/* El valor llega crudo del API (ISO 8601). Se formatea
+                                        con el formateador del producto; si no es una fecha
+                                        válida, `formatDateTime` devuelve null y la fila
+                                        entera se omite en lugar de imprimir el ISO. */}
+                                    {formatDateTime(terna.fecha_evaluacion) && (
+                                        <p className="tdetail-fecha">
+                                            <CalendarDays size={14} aria-hidden="true" />
+                                            Evaluación: {formatDateTime(terna.fecha_evaluacion)}
+                                        </p>
+                                    )}
                                 </article>
 
                                 <article className="tdetail-card">
