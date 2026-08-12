@@ -50,22 +50,23 @@ export const API_PATHS = {
     /*
      * TERNAS.
      *
-     * NOTA — Creación de ternas (paneles) NO soportada por el backend:
-     *   El API expone lectura (list, byId), asignación de evaluadores sobre una
-     *   terna YA existente (addEvaluador/removeEvaluador) y el ciclo de
-     *   evaluación (draft/submit/reopen), pero NO un endpoint para crear la
-     *   terna en sí. Falta, como mínimo:
+     * `list` sirve GET (listar) y POST (crear terna con sus evaluadores).
      *
-     *     POST /api/ternas
-     *       body sugerido: { estudiante_id | carnet, proyecto_id, numero, fase }
-     *       respuesta:     { terna: { id, ... } }
+     * CORRECCIÓN — este bloque afirmaba que el backend NO permitía crear ternas
+     * y que por eso el frontend no ofrecía el flujo. Es falso: la especificación
+     * publicada en /api-docs.json declara
      *
-     *   (Opcional para gestión completa: DELETE /api/ternas/:id.)
+     *     POST /api/ternas  ·  «Crear terna y asignar evaluadores (solo admin)»
+     *     body: { numero, proyectoId, evaluadoresIds[2..3], fechaEvaluacion? }
+     *     → 201 | 404 (proyecto inexistente) | 422 (validación)
      *
-     *   Sin `POST /api/ternas`, `addEvaluador` no basta: no hay terna padre a la
-     *   cual asignar evaluadores. Por eso el frontend NO ofrece "crear panel":
-     *   el sistema se consume como caja negra y no se inventa lógica de servidor.
-     *   Cuando el backend publique el endpoint, añadirlo aquí y crear el flujo.
+     * La nota anterior describía el estado del contrato cuando se escribió y
+     * quedó obsoleta; mientras siguió aquí, el producto se privó de la única
+     * operación que pone una terna en marcha. Todo endpoint listado en este
+     * archivo se verifica contra /api-docs.json antes de consumirse.
+     *
+     * Sigue sin existir DELETE /api/ternas/:id: una terna creada no puede
+     * eliminarse desde el frontend, y por eso el alta confirma antes de enviar.
      */
     ternas: {
         list:               '/api/ternas',

@@ -34,7 +34,11 @@ const ProyectoCard: React.FC<Props> = ({ proyecto }) => (
             {proyecto.estudiante_nombre && (
                 <span className="proy-card__student">
                     <User size={13} aria-hidden="true" />
-                    {proyecto.estudiante_nombre}
+                    {/* El nombre va en su PROPIO bloque: `text-overflow` no actúa
+                        sobre un nodo de texto suelto dentro de un contenedor
+                        flexible, así que el nombre largo se cortaba a hueso, sin
+                        puntos suspensivos que avisaran de que faltaba texto. */}
+                    <span className="proy-card__student-name">{proyecto.estudiante_nombre}</span>
                 </span>
             )}
             <Badge tone={proyecto.fase === 'PG1' ? 'primary' : 'info'}>
