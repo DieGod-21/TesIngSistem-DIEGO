@@ -836,8 +836,9 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     align-items: center;
     justify-content: center;
     padding: var(--space-16);
-    background: oklch(0.2 0.03 275 / 0.5);
-    backdrop-filter: blur(3px);
+    background: var(--glass-scrim);
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    backdrop-filter: blur(var(--glass-blur-sm));
     animation: ui-overlay-in 160ms ease both;
 }
 
@@ -1385,10 +1386,19 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     list-style: none;
     max-height: 17rem;
     overflow-y: auto;
-    background: var(--surface-raised);
-    border: 1px solid var(--border-strong);
+    /* CRISTAL (nivel 3): el desplegable tapa el formulario que lo abrio y
+       conviene seguir viendo donde estaba el campo. El material lo pone
+       `.ui-glass`; aqui se conserva la sombra, que el nivel no incluye. */
+    background: var(--glass-surface);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-lg), var(--glass-sheen);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .ui-picker__list { background: var(--surface-float); }
 }
 
 .ui-picker__option {

@@ -184,7 +184,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
     }, [loading, suggestions, activeIndex, query]);
 
     return (
-        <header className="dash-header">
+        <header className="dash-header ui-glass">
             <button
                 className="dash-header__menu-btn"
                 onClick={onMenuToggle}

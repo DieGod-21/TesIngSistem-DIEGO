@@ -629,6 +629,42 @@ describe('Ninguna fecha cruda en pantalla', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
+describe('Un solo traductor de errores', () => {
+    /**
+     * `userMessageFor` existe para convertir un fallo en algo que una persona
+     * pueda leer, y para eso filtra explícitamente los mensajes SINTÉTICOS que
+     * fabrica el cliente HTTP («Error HTTP 500»), que no dicen nada a quien
+     * coordina graduaciones.
+     *
+     * Nueve puntos del producto lo esquivaban con `err instanceof Error ?
+     * err.message : 'texto por defecto'`. Con el servidor caído —Traefik
+     * devolviendo 404 y el proxy traduciéndolo a 500— el acceso anunciaba
+     * literalmente «Error HTTP 500». La rama por defecto de esos ternarios casi
+     * nunca se alcanza: un `ApiError` ES un `Error`, así que el texto cuidado
+     * que había detrás no llegaba a verse nunca.
+     *
+     * Medido con el servidor real caído:
+     *   antes → «Error HTTP 500»
+     *   ahora → «El servidor tuvo un problema. Intenta de nuevo en unos minutos.»
+     */
+    it('nadie enseña el mensaje crudo de un error al usuario', () => {
+        const patron = /\b\w+\s+instanceof\s+Error\s*\?\s*\w+\.message/g;
+        const offenders: string[] = [];
+        for (const f of codeFiles) {
+            // La telemetría SÍ quiere el mensaje crudo: es diagnóstico, no UI.
+            if (rel(f).includes('services/telemetry')) continue;
+            if (rel(f).includes('services/errorMessages')) continue;
+            const src = read(f);
+            for (const m of src.matchAll(patron)) {
+                if (m.index == null) continue;
+                const linea = src.slice(0, m.index).split('\n').length;
+                offenders.push(`${rel(f)}:${linea} → usa userMessageFor(err)`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+});
+
 describe('Sin código muerto', () => {
     it('no quedan componentes sin ningún importador', () => {
         // Se contempla tanto `from '.../X'` como el import dinámico de las

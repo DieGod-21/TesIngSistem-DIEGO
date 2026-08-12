@@ -9,6 +9,7 @@ import React, {
 import * as authService from '../services/authService';
 import type { User } from '../services/authService';
 import { getCapabilities, isAdminRole, type Capabilities } from '../config/permissions';
+import { userMessageFor } from '../services/errorMessages';
 
 // ─── Tipos ────────────────────────────────────────────────────────────
 
@@ -81,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const u = await authService.login(email, password);
             setUser(u);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+            setError(userMessageFor(err) || 'No se pudo iniciar sesión. Inténtalo de nuevo.');
             throw err;
         } finally {
             setLoading(false);

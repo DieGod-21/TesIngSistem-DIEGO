@@ -261,9 +261,9 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: oklch(0.15 0.03 275 / 0.5);
-    -webkit-backdrop-filter: blur(3px);
-    backdrop-filter: blur(3px);
+    background: var(--glass-scrim);
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    backdrop-filter: blur(var(--glass-blur-sm));
     z-index: 199;
 }
 @keyframes overlay-fade { from { opacity: 0; } to { opacity: 1; } }
@@ -299,12 +299,19 @@
    2. HEADER
 ═══════════════════════════════════════════════════════════════════ */
 
+/* CRISTAL (nivel 3). La cabecera esta pegada arriba y la lista pasa POR DEBAJO
+   de ella al desplazarse; hasta ahora era opaca y el contenido simplemente
+   desaparecia bajo un rectangulo solido, sin ninguna senal de que seguia
+   existiendo. Es exactamente el caso para el que existe este nivel: hay algo
+   real debajo que conviene seguir intuyendo.
+
+   El material (fondo translucido, desenfoque, filo de luz) lo pone `.ui-glass`
+   del sistema de diseno; aqui solo queda la geometria. */
 .dash-header {
     display: flex;
     align-items: center;
     gap: var(--space-16);
     padding: var(--space-16) var(--space-32);
-    background: var(--surface-card);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
@@ -970,8 +977,11 @@ button.kpi-card {
    DARK MODE — overrides de colores hardcodeados
 ═══════════════════════════════════════════════════════════════════ */
 
+/* El override de fondo de la cabecera se ELIMINA: pisaba a `.ui-glass` y dejaba
+   el cristal opaco justo en modo oscuro, donde mas se nota que la lista pasa
+   por debajo. El token `--glass-surface` ya tiene su pareja oscura y el nivel
+   se resuelve por herencia. Solo queda el borde, que si es propio del tema. */
 [data-theme="dark"] .dash-header {
-    background: var(--dash-card-bg);
     border-bottom-color: var(--border);
 }
 
