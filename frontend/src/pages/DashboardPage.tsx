@@ -50,18 +50,45 @@ const KPI_LABEL: Record<string, string> = {
  * Se saca de la rejilla y pasa a ser el progreso de la propia sección.
  */
 const PROGRESS_KPI_ID = 'kpi-completion';
+const TOTAL_KPI_ID = 'kpi-total';
+
+/**
+ * Reconcilia la tarjeta «Estudiantes» con el padrón.
+ *
+ * `/api/tesis/resumen` devuelve `total_estudiantes` = aprobados + reprobados,
+ * es decir SOLO quienes ya tienen ambas notas registradas. La tarjeta lo
+ * mostraba bajo el rótulo «Estudiantes registrados en PG1/PG2» y al pulsarla
+ * llevaba al padrón completo: con el conjunto de demostración anunciaba 21 y
+ * abría una lista de 27, y contra el servidor real anuncia 31 y abre 32. El
+ * número de la puerta no coincidía con lo que hay detrás.
+ *
+ * El padrón ya está cargado en esta pantalla —lo usa la cola de trabajo—, así
+ * que corregirlo no cuesta ninguna petición. Si por lo que sea no llegó, se
+ * conserva el valor del resumen antes que dejar la tarjeta vacía.
+ */
+function conciliarTotal(kpi: KpiData, padronTotal: number | null): KpiData {
+    if (padronTotal == null) return kpi;
+    return { ...kpi, value: String(padronTotal), description: 'En el padrón de PG1–PG2' };
+}
 
 /** Deriva las cifras del widget de progreso desde los KPIs reales del resumen. */
-function extractProgress(kpis: KpiData[]) {
+function extractProgress(kpis: KpiData[], padronTotal: number | null) {
     const num = (id: string) => {
         const k = kpis.find((x) => x.id === id);
         return k ? parseInt(k.value, 10) || 0 : 0;
     };
-    const total = num('kpi-total');
+    const total = padronTotal ?? num(TOTAL_KPI_ID);
     const approved = num('kpi-approved');
     const notApproved = num('kpi-pending');
-    const completion = kpis.find((k) => k.id === 'kpi-completion');
-    const pct = completion?.progressValue ?? (total > 0 ? Math.round((approved / total) * 100) : 0);
+    /*
+     * El porcentaje se recalcula sobre el padrón en vez de usar el
+     * `porcentaje_aprobacion` del servidor, que es «de los evaluados, cuántos
+     * pasaron». Esa cifra responde otra pregunta: con seis expedientes sin
+     * notas, el anillo llegaba a declarar la cohorte al 96 % cuando aún faltaba
+     * evaluar a una cuarta parte. Aquí el anillo dice cuánto falta para
+     * terminar, que es lo que la sección promete.
+     */
+    const pct = total > 0 ? Math.round((approved / total) * 100) : 0;
     return { total, approved, notApproved, pct };
 }
 
@@ -99,7 +126,9 @@ const DashboardPage: React.FC = () => {
     const pipeline = useStudentsPipeline(capabilities.canViewReports);
 
     const firstName = (user?.nombre ?? '').trim().split(' ')[0] || 'Coordinador';
-    const progress = summary.status === 'success' ? extractProgress(summary.data.kpis) : null;
+    // Tamaño real del padrón, el mismo que cuenta la lente «Todos» del listado.
+    const padronTotal = pipeline.lensCounts?.all ?? null;
+    const progress = summary.status === 'success' ? extractProgress(summary.data.kpis, padronTotal) : null;
 
     return (
         <>
@@ -143,7 +172,8 @@ const DashboardPage: React.FC = () => {
                 {summary.status === 'success' && (() => {
                     const cards = summary.data.kpis
                         .filter((k) => k.id !== PROGRESS_KPI_ID)
-                        .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k));
+                        .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k))
+                        .map((k) => (k.id === TOTAL_KPI_ID ? conciliarTotal(k, padronTotal) : k));
 
                     return (
                         <section aria-labelledby="dash-cohort-title">

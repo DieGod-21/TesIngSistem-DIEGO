@@ -220,6 +220,41 @@ describe('Movimiento reducido', () => {
         }
         expect(offenders).toEqual([]);
     });
+
+    /**
+     * La regla anterior comprueba DÓNDE está el bloque; esta comprueba QUÉ
+     * apaga.
+     *
+     * students-list.css tenía su bloque bien colocado y aun así las veintisiete
+     * filas del padrón seguían entrando deslizándose con la preferencia activa:
+     * el bloque escribía `transition: none` y nunca `animation`. Colocación
+     * correcta, cobertura incompleta — y solo se ve midiendo el render, porque
+     * leyendo el archivo parece bien.
+     *
+     * Regla: un archivo que ENCIENDE animaciones tiene que apagarlas.
+     */
+    it('el bloque de movimiento reducido apaga las animaciones, no solo las transiciones', () => {
+        const offenders: string[] = [];
+        for (const f of cssFiles) {
+            const src = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            const inicio = src.lastIndexOf('prefers-reduced-motion');
+            if (inicio === -1) continue;
+
+            // ¿Enciende algo antes del bloque?
+            const enciende = [...src.slice(0, inicio).matchAll(/(?<![-\w])animation(?:-name)?\s*:\s*([^;}]+)/g)]
+                .some((m) => !/^\s*none\s*$/.test(m[1]));
+            if (!enciende) continue;
+
+            // El bloque apaga si menciona `animation` con un valor neutralizante.
+            const bloque = src.slice(inicio);
+            const apaga = /(?<![-\w])animation(?:-duration)?\s*:\s*(none|0m?s|0\.0*1m?s)/.test(bloque);
+            if (!apaga) {
+                const linea = src.slice(0, inicio).split('\n').length;
+                offenders.push(`${rel(f)}:${linea} → el bloque no neutraliza «animation»`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
 });
 
 describe('Estabilidad al apuntar', () => {
@@ -536,7 +571,20 @@ describe('Ninguna fecha cruda en pantalla', () => {
         const raw = /\{\s*[\w.?]*\.?(fecha\w*|created_at|updated_at|createdAt|updatedAt)\s*\}/g;
         const violations: string[] = [];
         for (const f of codeFiles.filter((f) => f.endsWith('.tsx'))) {
-            for (const m of read(f).matchAll(raw)) violations.push(`${rel(f)} → ${m[0]}`);
+            const src = read(f);
+            for (const m of src.matchAll(raw)) {
+                if (m.index == null) continue;
+                /*
+                 * La regla persigue fechas RENDERIZADAS como texto. Enlazar el
+                 * valor de un `<input type="date">` es lo contrario: ahí el
+                 * control exige el formato ISO crudo y formatearlo lo rompería.
+                 * Sin esta distinción, la única forma de pasar la regla sería
+                 * llamar `d` a la variable, que es peor código por una prueba.
+                 */
+                const antes = src.slice(Math.max(0, m.index - 24), m.index);
+                if (/\b(value|defaultValue|min|max)=$/.test(antes)) continue;
+                violations.push(`${rel(f)} → ${m[0]}`);
+            }
         }
         expect(violations).toEqual([]);
     });

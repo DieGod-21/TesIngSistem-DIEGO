@@ -265,11 +265,6 @@
     to   { opacity: 1; transform: translateX(0); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .sl-table__tr,
-    .sl-table__tr:nth-child(n),
-    .ui-avatar { transition: none; }
-}
 
 /* ═══════════════════════════════════════════════════════════════════
    DARK MODE — overrides de colores hardcodeados
@@ -340,4 +335,23 @@
 .sl-estado-activo {
     font-size: var(--text-sm);
     color: var(--text-muted);
+}
+
+/* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
+   Este bloque anulaba `transition` pero NO `animation`, y la entrada
+   escalonada de las filas (`sl-row-in`) seguía ejecutándose con la
+   preferencia activa: veintisiete filas deslizándose para quien pidió
+   explícitamente que nada se moviera. Además vivía a mitad del archivo, por
+   delante de la transición de `.sl-table__tr--clickable`, que a igual
+   especificidad ganaba por ir después.
+
+   Toda animación o transición nueva de este archivo va POR ENCIMA de aquí. */
+@media (prefers-reduced-motion: reduce) {
+    .sl-table__tr,
+    .sl-table__tr:nth-child(n),
+    .sl-table__tr--clickable,
+    .ui-avatar {
+        animation: none;
+        transition: none;
+    }
 }

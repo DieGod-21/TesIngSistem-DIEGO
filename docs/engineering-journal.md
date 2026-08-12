@@ -682,3 +682,104 @@ Primer intento de la pista: `color-mix(in oklch, var(--color-warning) 30%,
 var(--surface-raised))`. Sale MALVA: mezclar un ambar con un gris frio en OKLCH
 interpola el matiz por el camino corto. Se ve en la captura y no en el codigo.
 Los tokens `--color-warning-light` ya existian en los dos temas.
+
+---
+
+## Iteracion 17 — Evolucion funcional: lo que el API permitia y el producto no hacia
+
+### P31 — Un mapa de endpoints envejece, y su comentario mas rapido que el codigo
+
+`apiConfig.ts` llevaba un bloque de veinte lineas explicando que crear ternas
+NO estaba soportado por el backend, con la firma sugerida del endpoint que
+faltaba. La especificacion publicada en `/api-docs.json` declara
+`POST /api/ternas` — «Crear terna y asignar evaluadores (solo admin)» — con su
+cuerpo completo. El comentario describia el contrato del dia en que se escribio
+y despues nadie volvio a preguntarle al servidor.
+
+El coste no fue el comentario: fue que el producto entero se organizo alrededor
+de esa creencia. La pantalla de ternas era de solo lectura y su estado vacio le
+decia al usuario que las ternas «se generan en el sistema de Control de Notas»,
+enviandolo fuera del producto a hacer algo que el producto podia hacer.
+
+Regla: antes de dar por imposible una capacidad, descargar la especificacion.
+No leer el comentario que dice que no se puede.
+
+### P32 — Un formulario que no puede funcionar no falla: nadie lo usa
+
+`POST /api/proyectos` exige `estudianteId`. El dialogo «Nuevo Proyecto» enviaba
+`{titulo, descripcion, fase}`. Ese formulario no podia crear un proyecto en
+ninguna circunstancia, y llevaba asi el tiempo suficiente como para haber
+pasado por varias auditorias de accesibilidad, de responsive y de contraste. Un
+formulario roto supera todas esas pruebas sin despeinarse: tiene sus etiquetas,
+su foco visible, su contraste AA y su comportamiento en movil.
+
+Lo que ninguna de esas pruebas hace es PULSAR EL BOTON. Verificar un flujo de
+escritura es ejecutarlo contra el contrato y comprobar que la entidad aparece.
+
+### P33 — Un conjunto de datos de prueba se cuela en produccion por un import estatico
+
+El conjunto de demostracion vive bajo `src/dev/`, `demoDataActivo()` devuelve
+`false` fuera de desarrollo y todo colgaba de `if (import.meta.env.DEV)`. Aun
+asi, `grep` sobre `dist/` encontraba los nombres de los estudiantes ficticios en
+el bundle de produccion: `App.tsx` importaba `<DemoBanner>` de forma ESTATICA, y
+un import estatico ata el modulo al grafo aunque la bandera sea falsa en tiempo
+de ejecucion.
+
+La bandera de entorno solo elimina codigo si TODO el camino hasta el modulo es
+dinamico. La banda de aviso pasa a pintarse con DOM plano desde el propio modulo
+de desarrollo, alcanzado unicamente por `await import()` dentro del `if`.
+
+Regla: una garantia de «esto no viaja a produccion» se comprueba con `grep`
+sobre el artefacto construido, no leyendo el codigo fuente.
+
+### P34 — Colocacion correcta, cobertura incompleta
+
+La iteracion 16 dejo una regla que exige que el bloque `prefers-reduced-motion`
+vaya despues de la ultima animacion de su archivo. `students-list.css` la
+cumplia y, con la preferencia activa, sus veintisiete filas seguian entrando
+deslizandose: el bloque escribia `transition: none` y jamas mencionaba
+`animation`.
+
+Una regla sobre DONDE esta el bloque no dice nada sobre QUE apaga. La nueva
+regla exige que un archivo que enciende animaciones las neutralice, y esta
+calibrada contra el fallo concreto (se reintroduce, la regla falla; se corrige,
+pasa).
+
+### P35 — Un numero que se corrige solo es peor que un numero ausente
+
+El alta de terna proponia el siguiente numero libre. Mientras cargaba la lista
+de ternas mostraba «#1» y un instante despues lo cambiaba a «#6». Quien ya lo
+habia leido se quedaba con el numero equivocado, y el fallo es invisible salvo
+que se mire exactamente en el primer medio segundo. Ahora muestra «…» hasta
+saberlo y el envio queda bloqueado mientras tanto.
+
+### Lo que solo se ve con el producto lleno
+
+Con veintisiete expedientes, once proyectos y cinco ternas coherentes entre si
+aparecieron cuatro defectos que ninguna sonda habia encontrado en pantallas
+vacias:
+
+- El indicador «Estudiantes» del panel mostraba `total_estudiantes` de
+  `/api/tesis/resumen`, que es aprobados + reprobados: anunciaba 21 y al pulsarlo
+  abria una lista de 27 (contra el servidor real, 31 frente a 32).
+- El tercer indicador sumaba un `pending` que por definicion del endpoint vale
+  siempre cero, y su descripcion prometia incluir «con nota pendiente», gente que
+  la tarjeta nunca conto ni su destino muestra.
+- El expediente imprimia «Ciclo Ciclo 1-2025»: el catalogo ya devuelve el valor
+  con su prefijo y la plantilla lo anteponia otra vez.
+- `carrera` es un CODIGO (`"1890"` en los 32 expedientes del servidor real) y se
+  pintaba desnudo bajo el nombre del estudiante, donde un numero suelto se lee
+  como un dato roto.
+- El nombre del estudiante en la ficha de proyecto se cortaba sin puntos
+  suspensivos: `text-overflow` no actua sobre un nodo de texto suelto dentro de un
+  contenedor flexible, hace falta un bloque propio.
+- Un titulo de anteproyecto de treinta palabras estiraba TODA su fila de la
+  cuadrilla de ternas y dejaba a las vecinas con un tercio de tarjeta vacio.
+
+### Cinco armazones de dialogo para un solo dialogo
+
+`np-`, `nu-`, `im-`, `en-` y `.ui-modal` resolvian lo mismo discrepando justo en
+lo que se nota al abrir dos seguidos: relleno de cabecera 20/24 frente a 16/20,
+cuerpo 24 frente a 20, radio `xl` frente a `lg` y titulo `lg` frente a `md`.
+Ninguna diferencia respondia a una razon. Medido tras unificar: los cinco
+dialogos del producto dan radio 16px, cabecera 20/24/16 y titulo 18px.

@@ -32,3 +32,42 @@ export function initials(name: string | null | undefined): string {
         .join('')
         .toUpperCase();
 }
+
+/**
+ * Presenta el campo `carrera` del padrón.
+ *
+ * El API real devuelve un CÓDIGO, no un nombre: todos los expedientes traen
+ * `"carrera": "1890"`. El producto lo pintaba tal cual bajo el nombre del
+ * estudiante y en las sugerencias del buscador, donde un número suelto no dice
+ * nada: se lee como un dato roto, no como una carrera.
+ *
+ * No existe endpoint de catálogo de carreras, así que no se puede traducir el
+ * código a su nombre sin inventarlo. Lo que sí se puede es decir qué es.
+ *
+ * @example formatCarrera('1890')                   → 'Carrera 1890'
+ * @example formatCarrera('Ingeniería en Sistemas') → 'Ingeniería en Sistemas'
+ * @example formatCarrera('')                       → ''
+ */
+export function formatCarrera(carrera: string | null | undefined): string {
+    const v = String(carrera ?? '').trim();
+    if (!v) return '';
+    return /^\d+$/.test(v) ? `Carrera ${v}` : v;
+}
+
+/**
+ * Presenta el campo `ciclo` de una nota o de un curso.
+ *
+ * El catálogo real ya devuelve el valor con su prefijo («Ciclo 1-2025»), y el
+ * expediente lo imprimía como `Ciclo {ciclo}`: en pantalla se leía «Ciclo Ciclo
+ * 1-2025». El prefijo se añade solo si falta, para que ambas formas del dato
+ * produzcan la misma línea.
+ *
+ * @example formatCiclo('Ciclo 1-2025') → 'Ciclo 1-2025'
+ * @example formatCiclo('1-2025')       → 'Ciclo 1-2025'
+ * @example formatCiclo('')             → ''
+ */
+export function formatCiclo(ciclo: string | null | undefined): string {
+    const v = String(ciclo ?? '').trim();
+    if (!v) return '';
+    return /^ciclo\b/i.test(v) ? v : `Ciclo ${v}`;
+}

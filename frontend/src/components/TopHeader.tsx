@@ -3,6 +3,7 @@ import { Search, Menu, Sun, Moon, CornerDownLeft } from 'lucide-react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getRoleLabel } from '../config/permissions';
+import { formatCarrera } from '../utils/strings';
 import { useTheme } from '../context/ThemeContext';
 import { useStudentSearch } from '../hooks/useStudentSearch';
 import { useGlobalHotkey } from '../hooks/useGlobalHotkey';
@@ -171,7 +172,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                                 <span className="dash-search-sug__name"><Resaltado texto={s.nombre} query={query} /></span>
                                 <span className="dash-search-sug__meta">
                                     <Resaltado texto={s.carnet} query={query} />
-                                    {s.carrera ? ` · ${s.carrera}` : ''}
+                                    {s.carrera ? ` · ${formatCarrera(s.carrera)}` : ''}
                                 </span>
                             </span>
                         </button>
