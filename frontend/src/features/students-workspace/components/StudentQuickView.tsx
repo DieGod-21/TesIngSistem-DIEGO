@@ -92,7 +92,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
 
     if (!open) return null;
 
-    const { student, loading, error, grades, tesis, terna, promedio } = dossier;
+    const { student, loading, error, grades, tesis, terna, promedio, proyecto } = dossier;
     const verdict = VERDICT[tesis.estado] ?? VERDICT.PENDIENTE;
 
     return createPortal(
@@ -226,7 +226,30 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 </ul>
                             </section>
 
-                            {/* ── 3. Terna: solo si aporta. Si no, una línea ── */}
+                            {/* ── 3. Proyecto ──
+                                Se intercala entre la nota y la terna porque ese es
+                                el orden real del proceso: se aprueban los cursos, se
+                                registra el proyecto y sobre ese proyecto se forma la
+                                terna. El panel saltaba de la nota a la terna y dejaba
+                                sin respuesta la pregunta más concreta que se hace
+                                sobre alguien: sobre qué está trabajando. */}
+                            <section className="qv-section" aria-label="Proyecto">
+                                <div className="qv-section__head">
+                                    <h3 className="qv-section__title">Proyecto</h3>
+                                    {proyecto?.fase && (
+                                        <span className="qv-section__note">{proyecto.fase}</span>
+                                    )}
+                                </div>
+                                {proyecto ? (
+                                    <p className="qv-proyecto">{proyecto.titulo}</p>
+                                ) : (
+                                    <p className="qv-empty-line">
+                                        Sin registrar · es el requisito para formar {VOCAB.committee.toLowerCase()}.
+                                    </p>
+                                )}
+                            </section>
+
+                            {/* ── 4. Terna: solo si aporta. Si no, una línea ── */}
                             <section className="qv-section" aria-label={VOCAB.committee}>
                                 <div className="qv-section__head">
                                     <h3 className="qv-section__title">{VOCAB.committee}</h3>
@@ -259,7 +282,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 )}
                             </section>
 
-                            {/* ── 4. Qué sigue ──
+                            {/* ── 5. Qué sigue ──
                                 Cuarta pregunta que el panel promete responder, y la
                                 única que no respondía. No es relleno inventado: es la
                                 misma derivación que ya usa el expediente sobre el
@@ -278,7 +301,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 </p>
                             )}
 
-                            {/* ── 5. Identificadores: el dato de MENOR rango del panel ──
+                            {/* ── 6. Identificadores: el dato de MENOR rango del panel ──
                                 Estaban arriba del todo, justo bajo el nombre, ocupando
                                 el mejor sitio del cuerpo con la información menos
                                 decisiva: un carné no ayuda a decidir nada, se copia

@@ -36,6 +36,12 @@ export interface Capabilities {
     readonly canEditGrades: boolean;
     /** Reabrir evaluaciones ya enviadas por un evaluador. */
     readonly canReopenEvaluations: boolean;
+    /**
+     * Corregir los datos de identidad de un expediente (nombre, correo,
+     * carrera). El carné NO se toca: es la clave con la que notas, tesis y
+     * reportes referencian a la persona.
+     */
+    readonly canEditStudents: boolean;
 }
 
 /** Capacidades mínimas: todo denegado. Base segura para roles desconocidos. */
@@ -45,6 +51,7 @@ const NO_CAPABILITIES: Capabilities = Object.freeze({
     canImportStudents: false,
     canEditGrades: false,
     canReopenEvaluations: false,
+    canEditStudents: false,
 });
 
 /** Administrador: acceso completo a la coordinación. */
@@ -54,6 +61,7 @@ const ADMIN_CAPABILITIES: Capabilities = Object.freeze({
     canImportStudents: true,
     canEditGrades: true,
     canReopenEvaluations: true,
+    canEditStudents: true,
 });
 
 /** Evaluador: solo evalúa las ternas asignadas; sin capacidades administrativas. */

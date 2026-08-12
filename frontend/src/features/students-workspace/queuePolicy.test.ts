@@ -8,11 +8,11 @@ import type { Capabilities } from '../../config/permissions';
 
 const ADMIN: Capabilities = {
     canManageUsers: true, canViewReports: true, canImportStudents: true,
-    canEditGrades: true, canReopenEvaluations: true,
+    canEditGrades: true, canReopenEvaluations: true, canEditStudents: true,
 };
 const EVALUADOR: Capabilities = {
     canManageUsers: false, canViewReports: false, canImportStudents: false,
-    canEditGrades: false, canReopenEvaluations: false,
+    canEditGrades: false, canReopenEvaluations: false, canEditStudents: false,
 };
 
 function item(over: Partial<WorkItem>): WorkItem {
@@ -40,7 +40,7 @@ describe('queuePolicy — visibilidad (independiente de selfClearing)', () => {
 describe('queuePolicy — selección de la cola', () => {
     const ADMIN: Capabilities = {
         canManageUsers: true, canViewReports: true, canImportStudents: true,
-        canEditGrades: true, canReopenEvaluations: true,
+        canEditGrades: true, canReopenEvaluations: true, canEditStudents: true,
     };
 
     it('visibleActionableItems filtra por visibilidad y capacidad', () => {
