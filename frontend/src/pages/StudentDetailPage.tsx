@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useParams, useHistory, useLocation } from 'react-router-dom';
-import { ChevronLeft, Mail, IdCard, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, ArrowRight } from 'lucide-react';
+import { ChevronLeft, Mail, IdCard, GraduationCap, Users, Pencil, Plus, Inbox, AlertTriangle, ArrowRight, FolderOpen } from 'lucide-react';
 import ThesisStatusBadge from '../components/thesis/ThesisStatusBadge';
 import EditNotaModal from '../components/EditNotaModal';
+import EditarEstudianteModal from '../components/EditarEstudianteModal';
 import { THESIS_MIN_GRADE } from '../config/apiConfig';
 import { useStudentDossier } from '../hooks/useStudentDossier';
 import { useToast } from '../context/ToastContext';
@@ -12,6 +13,7 @@ import { Avatar, Badge, Button, CopyField, EmptyState, Skeleton } from '../compo
 import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE, RESOLUCION_LABEL } from '../utils/ternaStatus';
 import { formatShortDate } from '../utils/dates';
 import { ternaHint } from '../utils/thesisStatus';
+import { formatCarrera, formatCiclo } from '../utils/strings';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 import '../styles/student-detail.css';
@@ -59,6 +61,7 @@ const StudentDetailPage: React.FC = () => {
     const { toast } = useToast();
     const { capabilities } = useAuth();
     const [editModal, setEditModal] = useState<EditModalState>({ open: false, curso: '043', notaActual: null });
+    const [editandoExpediente, setEditandoExpediente] = useState(false);
 
     // Misma carga y mismos derivados que el panel de inspección rápida del
     // listado: una sola fuente de verdad sobre el estado de tesis.
@@ -77,6 +80,7 @@ const StudentDetailPage: React.FC = () => {
 
     // ── Valores derivados de presentación (sin lógica de negocio nueva) ──
     const terna = dossier.terna;
+    const proyecto = dossier.proyecto;
     const promedioGeneral = dossier.promedio;
     const ternaPct = terna && terna.total_evaluadores > 0
         ? Math.round((terna.evaluaciones_enviadas / terna.total_evaluadores) * 100)
@@ -153,7 +157,7 @@ const StudentDetailPage: React.FC = () => {
                                     <h1 className="sd-hero__name">{state.student.nombre}</h1>
                                     <div className="sd-hero__sub">
                                         {state.student.carrera && (
-                                            <span className="sd-hero__career">{state.student.carrera}</span>
+                                            <span className="sd-hero__career">{formatCarrera(state.student.carrera)}</span>
                                         )}
                                     </div>
                                     {/* Mismo lenguaje de copiado que la vista rápida: el
@@ -179,12 +183,23 @@ const StudentDetailPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {tesisInput && (
-                                <div className="sd-hero__verdict">
-                                    <span className="sd-hero__verdict-label">Estado de tesis</span>
-                                    <ThesisStatusBadge estado={tesisInput} variant="badge" />
-                                </div>
-                            )}
+                            <div className="sd-hero__aside">
+                                {tesisInput && (
+                                    <div className="sd-hero__verdict">
+                                        <span className="sd-hero__verdict-label">Estado de tesis</span>
+                                        <ThesisStatusBadge estado={tesisInput} variant="badge" />
+                                    </div>
+                                )}
+                                {/* Corregir un correo mal cargado era imposible desde el
+                                    producto, y ese correo es el unico canal para avisar
+                                    a la persona de lo que le falta. */}
+                                {capabilities.canEditStudents && (
+                                    <Button variant="secondary" size="sm" onClick={() => setEditandoExpediente(true)}>
+                                        <Pencil size={14} aria-hidden="true" />
+                                        Editar datos
+                                    </Button>
+                                )}
+                            </div>
                         </div>
 
                         {/* Stats integradas al encabezado (sin cajas, una sola superficie) */}
@@ -255,7 +270,7 @@ const StudentDetailPage: React.FC = () => {
                                                             <span className="sd-rec__code">{CURSO_SHORT[curso] ?? curso}</span>
                                                             <span className="sd-rec__title">{CURSO_NAMES[curso] ?? curso}</span>
                                                             <span className="sd-rec__period">
-                                                                Ciclo {g.ciclo}{updated ? ` · ${updated}` : ''}
+                                                                {formatCiclo(g.ciclo)}{updated ? ` · ${updated}` : ''}
                                                             </span>
                                                         </div>
                                                         <div
@@ -313,6 +328,42 @@ const StudentDetailPage: React.FC = () => {
                         </div>
 
                         <aside className="sd-rail">
+                            {/* El proyecto va ANTES que la terna porque es su
+                                requisito: una terna se forma sobre un proyecto,
+                                y leerlo al revés invierte la causa. */}
+                            <article className="tdetail-card sd-card sd-proyecto">
+                                <h2 className="tdetail-card__title">
+                                    <FolderOpen size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                                    Proyecto de graduación
+                                </h2>
+
+                                {proyecto ? (
+                                    <>
+                                        <p className="sd-proyecto__titulo">{proyecto.titulo}</p>
+                                        {proyecto.descripcion?.trim()
+                                            ? <p className="sd-proyecto__desc">{proyecto.descripcion}</p>
+                                            : <p className="sd-proyecto__desc sd-proyecto__desc--empty">Sin descripción registrada</p>}
+                                        {proyecto.fase && (
+                                            <Badge tone={proyecto.fase === 'PG1' ? 'primary' : 'info'}>
+                                                {proyecto.fase}
+                                            </Badge>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="sd-terna__empty">
+                                        <span className="sd-terna__empty-icon">
+                                            <FolderOpen size={20} aria-hidden="true" />
+                                        </span>
+                                        <div className="sd-terna__empty-text">
+                                            <p className="sd-terna__empty-title">Sin proyecto registrado</p>
+                                            <p className="sd-terna__empty-msg">
+                                                El proyecto es lo que después se evalúa en terna.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </article>
+
                             {terna ? (
                                 <article className="tdetail-card sd-card sd-terna">
                                     <h2 className="tdetail-card__title">
@@ -383,6 +434,19 @@ const StudentDetailPage: React.FC = () => {
                         </aside>
                     </div>
                 </div>
+            )}
+
+            {state.student && capabilities.canEditStudents && (
+                <EditarEstudianteModal
+                    open={editandoExpediente}
+                    estudiante={state.student}
+                    onClose={() => setEditandoExpediente(false)}
+                    onSaved={() => {
+                        setEditandoExpediente(false);
+                        dossier.reload();
+                        toast.success('Expediente actualizado.');
+                    }}
+                />
             )}
 
             {state.student && capabilities.canEditGrades && (

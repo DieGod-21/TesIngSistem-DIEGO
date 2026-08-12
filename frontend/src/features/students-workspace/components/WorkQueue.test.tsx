@@ -6,7 +6,7 @@ import type { Capabilities } from '../../../config/permissions';
 
 const ADMIN: Capabilities = {
     canManageUsers: true, canViewReports: true, canImportStudents: true,
-    canEditGrades: true, canReopenEvaluations: true,
+    canEditGrades: true, canReopenEvaluations: true, canEditStudents: true,
 };
 
 function wi(over: Partial<WorkItem> = {}): WorkItem {

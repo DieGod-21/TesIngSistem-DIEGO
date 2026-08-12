@@ -363,3 +363,16 @@
         .qv-panel { animation: none; }
     }
 }
+
+/* Título del proyecto. Dos líneas como techo: el panel es una vista rápida y
+   un anteproyecto puede tener un título de veinte palabras. */
+.qv-proyecto {
+    margin: 0;
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}

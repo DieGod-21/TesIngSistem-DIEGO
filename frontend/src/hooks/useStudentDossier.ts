@@ -20,6 +20,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getEstudianteById } from '../services/estudiantesService';
 import { getReporteEstudiante } from '../services/reportesService';
 import { getNotasByEstudianteId } from '../services/notasService';
+import { getProyectosByEstudiante } from '../services/proyectosService';
 import { isCancel } from '../services/apiClient';
 import { userMessageFor } from '../services/errorMessages';
 import {
@@ -31,7 +32,7 @@ import {
 } from '../utils/thesisStatus';
 import { THESIS_MIN_GRADE } from '../config/apiConfig';
 import type {
-    CursoNotaResumen, EstadoTesis, Estudiante, Nota, ReporteEstudiante,
+    CursoNotaResumen, EstadoTesis, Estudiante, Nota, Proyecto, ReporteEstudiante,
     ReporteEstudianteTerna,
 } from '../types/api';
 
@@ -39,12 +40,17 @@ interface DossierState {
     student: Estudiante | null;
     reporte: ReporteEstudiante | null;
     notas:   Nota[] | null;
+    /**
+     * Proyectos de la persona. `null` mientras no se sabe; `[]` significa
+     * «comprobado: no tiene», que es un estado del sistema y no un fallo.
+     */
+    proyectos: Proyecto[] | null;
     loading: boolean;
     error:   string | null;
 }
 
 const EMPTY: DossierState = {
-    student: null, reporte: null, notas: null, loading: false, error: null,
+    student: null, reporte: null, notas: null, proyectos: null, loading: false, error: null,
 };
 
 export function useStudentDossier(id: string | number | null) {
@@ -71,7 +77,16 @@ export function useStudentDossier(id: string | number | null) {
                 // propaga a la red para cancelar de verdad al navegar.
                 const student = await getEstudianteById(numId, { signal });
                 if (signal.aborted) return;
-                const reporte = await getReporteEstudiante(student.carnet, { signal }).catch(() => null);
+
+                // El reporte y los proyectos no dependen entre sí: van en
+                // paralelo. Encadenarlos solo sumaría una ida y vuelta a una
+                // pantalla que ya espera dos.
+                const [reporte, proyectos] = await Promise.all([
+                    getReporteEstudiante(student.carnet, { signal }).catch(() => null),
+                    // Un 404 aquí significa «no tiene proyectos», no un fallo:
+                    // se traduce a lista vacía para que la vista lo pueda decir.
+                    getProyectosByEstudiante(numId, { signal }).catch(() => [] as Proyecto[]),
+                ]);
                 if (signal.aborted) return;
 
                 const fromReporte = extractGradesFromReporte(reporte);
@@ -82,7 +97,7 @@ export function useStudentDossier(id: string | number | null) {
                     notas = notasResp?.notas ?? null;
                 }
 
-                setState({ student, reporte, notas, loading: false, error: null });
+                setState({ student, reporte, notas, proyectos, loading: false, error: null });
             } catch (e) {
                 // Cancelación: nunca es un error de UI.
                 if (signal.aborted || isCancel(e)) return;
@@ -125,5 +140,16 @@ export function useStudentDossier(id: string | number | null) {
     const terna: ReporteEstudianteTerna | null = state.reporte?.terna ?? null;
     const promedio: number | null = state.reporte?.promedio ?? null;
 
-    return { ...state, grades, tesis, tesisInput, terna, promedio, reload } as const;
+    /**
+     * El proyecto vigente. El API devuelve una colección porque un estudiante
+     * podría acumular registros de PG1 y PG2; para el expediente manda el más
+     * avanzado, que es sobre el que se está trabajando ahora.
+     */
+    const proyecto: Proyecto | null = (() => {
+        const ps = state.proyectos;
+        if (!ps || ps.length === 0) return null;
+        return ps.find((p) => p.fase === 'PG2') ?? ps[0];
+    })();
+
+    return { ...state, grades, tesis, tesisInput, terna, promedio, proyecto, reload } as const;
 }
