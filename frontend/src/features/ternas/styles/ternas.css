@@ -350,3 +350,144 @@
 .tdetail-card {
     transition: box-shadow 200ms var(--ease-out-expo), border-color 200ms var(--ease-out-expo);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ALTA DE TERNA — piezas propias del diálogo
+
+   El armazón (velo, panel, cabecera, cuerpo, pie, campos) es el del sistema
+   de diseño. Aquí solo vive lo que este formulario tiene y ningún otro: el
+   número calculado, la rejilla de dos campos y la lista de evaluadores.
+═══════════════════════════════════════════════════════════════════ */
+
+.nt-row {
+    display: grid;
+    grid-template-columns: minmax(min(7rem, 100%), auto) 1fr;
+    gap: var(--space-16);
+    align-items: start;
+}
+
+/* El número no se teclea: lo calcula el sistema. Se presenta con el peso de un
+   dato, no con la caja de un campo, para que nadie intente cambiarlo. */
+.nt-numero {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h-lg);
+    padding: 0 var(--space-14);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    border: 1px dashed var(--border-strong);
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.nt-fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.nt-hint {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.nt-evals {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    max-height: 15rem;
+    overflow-y: auto;
+}
+
+.nt-eval {
+    display: flex;
+    align-items: center;
+    gap: var(--space-10);
+    padding: var(--space-8) var(--space-10);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    min-width: 0;
+    transition: border-color var(--transition-base), background var(--transition-base);
+}
+
+.nt-eval:hover { border-color: var(--border-strong); }
+
+.nt-eval:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
+}
+
+.nt-eval.is-checked {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+
+/* Al llegar al tope de tres, el resto se apaga en vez de desaparecer: quien
+   mira necesita entender POR QUÉ ya no puede elegir a más. */
+.nt-eval.is-blocked {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.nt-eval__box { flex-shrink: 0; accent-color: var(--color-primary); }
+
+.nt-eval__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.nt-eval__name {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nt-eval__mail {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nt-aviso {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.nt-aviso svg { flex-shrink: 0; color: var(--text-muted); }
+
+@media (max-width: 480px) {
+    .nt-row { grid-template-columns: 1fr; }
+}
+
+/* Techo de tres líneas para el título del proyecto en la ficha de terna.
+   Un anteproyecto puede titularse con treinta palabras; sin techo, esa única
+   ficha estiraba TODA su fila de la cuadrícula y dejaba a las vecinas con un
+   tercio de tarjeta vacío. El título completo sigue estando en el detalle. */
+.terna-card__title {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}

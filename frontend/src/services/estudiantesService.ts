@@ -5,7 +5,7 @@
  * Reemplaza la lógica legacy de `studentsService.ts` (que asumía semestres y fases).
  */
 
-import { apiGet } from './apiClient';
+import { apiGet, apiPut } from './apiClient';
 import { API_PATHS, FETCH_ALL_LIMIT } from '../config/apiConfig';
 import { cached, invalidate } from './cache';
 import { unwrapEntity, detectTruncation, reportTruncation } from './normalize';
@@ -95,6 +95,33 @@ export async function getEstudianteById(
         API_PATHS.estudiantes.byId(id),
         { signal: opts.signal },
     );
+    return unwrapEntity<Estudiante>(data, 'estudiante', API_PATHS.estudiantes.byId(id));
+}
+
+// ─── Escrituras ─────────────────────────────────────────────────────────────
+
+export interface UpdateEstudianteDto {
+    nombre?: string;
+    email?: string;
+    carrera?: string;
+}
+
+/**
+ * Actualiza los datos de identidad de un estudiante.
+ *
+ * El contrato solo admite `nombre`, `email` y `carrera`: el carné es la clave
+ * con la que el resto del sistema (notas, tesis, reportes) referencia a la
+ * persona, y no se reasigna desde aquí.
+ */
+export async function updateEstudiante(
+    id: number | string,
+    dto: UpdateEstudianteDto,
+): Promise<Estudiante> {
+    const data = await apiPut<{ estudiante: Estudiante } | Estudiante>(
+        API_PATHS.estudiantes.byId(id),
+        dto,
+    );
+    invalidateEstudiantes();
     return unwrapEntity<Estudiante>(data, 'estudiante', API_PATHS.estudiantes.byId(id));
 }
 

@@ -8,10 +8,12 @@
 
 import React, { useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { ClipboardList, Users, AlertTriangle, RefreshCw, Inbox } from 'lucide-react';
+import { ClipboardList, Users, AlertTriangle, RefreshCw, Inbox, Plus } from 'lucide-react';
 import TernaCard from '../components/TernaCard';
+import NuevaTernaModal from '../components/NuevaTernaModal';
 import { useTernas } from '../hooks/useTernas';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
 import { PageHeader, Button, EmptyState, Skeleton } from '../../../components/ui';
 import type { EstadoTerna } from '../../../types/api';
 import '../styles/ternas.css';
@@ -41,7 +43,9 @@ const TernasSkeleton: React.FC = () => (
 const TernasListPage: React.FC = () => {
     const history = useHistory();
     const { isAdmin, user } = useAuth();
+    const { toast } = useToast();
     const [filter, setFilter] = useState<FilterValue>('all');
+    const [altaAbierta, setAltaAbierta] = useState(false);
 
     const estado = filter === 'all' ? undefined : filter;
     const { ternas, loading, error, reload } = useTernas(estado);
@@ -53,6 +57,12 @@ const TernasListPage: React.FC = () => {
         completas:  ternas.filter((t) => t.estado === 'completada').length,
     }), [ternas]);
 
+    const creada = (numero: number) => {
+        setAltaAbierta(false);
+        toast.success(`Terna #${numero} creada.`);
+        reload();
+    };
+
     return (
         <div className="ternas-page">
                 <PageHeader
@@ -63,6 +73,14 @@ const TernasListPage: React.FC = () => {
                         isAdmin
                             ? `Estás viendo todas las ternas como administrador (${counts.total}).`
                             : `Hola ${user?.nombre ?? ''}. Estas son las ternas que tienes asignadas.`
+                    }
+                    actions={
+                        isAdmin ? (
+                            <Button onClick={() => setAltaAbierta(true)}>
+                                <Plus size={16} aria-hidden="true" />
+                                Nueva terna
+                            </Button>
+                        ) : undefined
                     }
                 />
 
@@ -106,8 +124,15 @@ const TernasListPage: React.FC = () => {
                         title="No hay ternas que mostrar"
                         description={
                             isAdmin
-                                ? 'Las ternas se generan en el sistema de Control de Notas al asignar evaluadores a un proyecto. Aparecerán aquí automáticamente en cuanto existan.'
+                                ? 'Una terna se forma sobre un proyecto ya registrado y necesita entre dos y tres evaluadores.'
                                 : 'No tienes ternas asignadas en este momento.'
+                        }
+                        action={
+                            isAdmin ? (
+                                <Button onClick={() => setAltaAbierta(true)}>
+                                    <Plus size={16} aria-hidden="true" /> Crear la primera terna
+                                </Button>
+                            ) : undefined
                         }
                     />
                 )}
@@ -122,6 +147,14 @@ const TernasListPage: React.FC = () => {
                             />
                         ))}
                     </div>
+                )}
+
+                {isAdmin && (
+                    <NuevaTernaModal
+                        open={altaAbierta}
+                        onClose={() => setAltaAbierta(false)}
+                        onCreated={creada}
+                    />
                 )}
         </div>
     );

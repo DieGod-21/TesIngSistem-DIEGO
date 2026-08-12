@@ -46,6 +46,37 @@ export function invalidateTernas(): void {
     invalidate(TERNAS_CACHE_PREFIX);
 }
 
+// ─── Alta de terna ──────────────────────────────────────────────────────────
+
+/** Mínimo y máximo de evaluadores que el contrato acepta en el alta. */
+export const TERNA_MIN_EVALUADORES = 2;
+export const TERNA_MAX_EVALUADORES = 3;
+
+export interface CreateTernaDto {
+    /** Número visible de la terna. */
+    numero: number;
+    /** Proyecto sobre el que se evalúa. La terna no se crea contra el estudiante. */
+    proyectoId: number;
+    /** Entre 2 y 3 evaluadores, por contrato. */
+    evaluadoresIds: number[];
+    /** Opcional, formato `YYYY-MM-DD`. */
+    fechaEvaluacion?: string;
+}
+
+/**
+ * Crea una terna y le asigna sus evaluadores en una sola operación (solo admin).
+ *
+ * Es la operación que pone en marcha todo lo demás: sin terna no hay
+ * evaluaciones que enviar, ni resolución que reportar. Invalida el listado y el
+ * reporte global porque ambos ganan una fila.
+ */
+export async function createTerna(dto: CreateTernaDto) {
+    const res = await apiPost<unknown>(API_PATHS.ternas.list, dto);
+    invalidateTernas();
+    invalidateReportes();
+    return res;
+}
+
 /** Detalle de una terna con evaluadores y resultado ponderado. */
 export async function getTernaById(id: number, opts: { signal?: AbortSignal } = {}): Promise<TernaDetalle> {
     const data = await apiGet<{ terna: TernaDetalle } | TernaDetalle>(API_PATHS.ternas.byId(id), { signal: opts.signal });

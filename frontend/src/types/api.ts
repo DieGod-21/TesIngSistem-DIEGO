@@ -78,6 +78,17 @@ export interface Usuario {
     foto_url?: string | null;
 }
 
+/** Fila del catálogo `/api/cursos`. */
+export interface Curso {
+    id: number;
+    /** Código con el que se referencian las notas: '043' | '049'. */
+    codigo: string;
+    nombre: string;
+    ciclo: string;
+    seccion?: string;
+    anio?: number;
+}
+
 export type FaseProyecto = 'PG1' | 'PG2';
 
 export interface Proyecto {

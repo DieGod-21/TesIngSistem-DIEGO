@@ -26,3 +26,5 @@ export { default as Skeleton } from './Skeleton';
 export type { SkeletonProps } from './Skeleton';
 export { default as CopyField } from './CopyField';
 export type { CopyFieldProps } from './CopyField';
+export { default as Picker } from './Picker';
+export type { PickerProps } from './Picker';
