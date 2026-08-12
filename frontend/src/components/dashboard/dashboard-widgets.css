@@ -52,7 +52,17 @@
 }
 
 /* Anillo (ProgressRing) */
-.ring { position: relative; flex-shrink: 0; }
+.ring {
+    position: relative;
+    flex-shrink: 0;
+    /* La pista ES el dato «no cumple», no un canal vacio: lleva el ambar de su
+       punto en la leyenda, en su version clara para que el arco domine.
+       Se usa el TOKEN `--color-warning-light`, no un `color-mix` con la
+       superficie: mezclar ambar con un gris frio en OKLCH interpola el matiz por
+       el camino corto y sale malva —un color que no correspondia ni a la leyenda
+       ni a nada del producto. Ambos temas ya declaran su version del token. */
+    --ring-track: var(--color-warning-light);
+}
 .ring__arc {
     transition: stroke-dashoffset 900ms var(--ease-out-expo);
 }

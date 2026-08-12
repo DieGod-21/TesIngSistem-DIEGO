@@ -219,7 +219,6 @@ const DashboardPage: React.FC = () => {
                         {progress ? (
                             <AcademicProgressCard
                                 total={progress.total}
-                                approved={progress.approved}
                                 notApproved={progress.notApproved}
                                 pct={progress.pct}
                             />

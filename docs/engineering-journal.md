@@ -661,3 +661,24 @@ cierran con Escape y atrapan el foco: el usuario aprende la regla en todo el
 sistema y aqui dejaba de valer. `useFocusTrap` ya existia y es inerte cuando el
 cajon esta cerrado, asi que la barra fija de escritorio no se entera
 (verificado: el foco sale de la barra al tabular a 1440px).
+
+### El panel se repetia a si mismo tres veces
+
+Medido en el DOM: la tira de indicadores decia 27 / 15 / 12 y la tarjeta de
+progreso, a 300px de distancia, volvia a decir 15 / 12 / 27 en cuerpo menor,
+mas un pie que escribia el 12 por cuarta vez («12 estudiantes requieren
+atencion»). Lo unico que esa columna aporta y las tarjetas no es la PROPORCION,
+que es el anillo. Se quedan el anillo y las etiquetas de color; se van las
+cifras.
+
+Al quitarlas quedo al descubierto un defecto que las cifras tapaban: la leyenda
+mostraba un punto verde y otro ambar mientras el anillo era un degradado aurora
+indigo-cian. Dos puntos de color que no correspondian a nada en pantalla, en un
+elemento cuyo unico trabajo es representar una composicion. El anillo era
+decorativo y decia ser una leyenda. Ahora el arco lleva el verde de «cumple» y
+la pista el ambar de «no cumple», que es exactamente lo que la leyenda nombra.
+
+Primer intento de la pista: `color-mix(in oklch, var(--color-warning) 30%,
+var(--surface-raised))`. Sale MALVA: mezclar un ambar con un gris frio en OKLCH
+interpola el matiz por el camino corto. Se ve en la captura y no en el codigo.
+Los tokens `--color-warning-light` ya existian en los dos temas.

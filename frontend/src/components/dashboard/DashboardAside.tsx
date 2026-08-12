@@ -23,21 +23,25 @@ import './dashboard-widgets.css';
 
 interface AcademicProgressProps {
     total: number;
-    approved: number;
+    /** Cuantos NO cumplen: decide el texto interpretativo, no se imprime. */
     notApproved: number;
     pct: number;
 }
 
 export const AcademicProgressCard: React.FC<AcademicProgressProps> = ({
-    total, approved, notApproved, pct,
+    total, notApproved, pct,
 }) => {
+    /* El texto NO repite la cifra de pendientes: ya esta en la tarjeta KPI de al
+       lado, y con este pie llegaba a aparecer tres veces en la misma pantalla
+       (indicador, leyenda y aqui). Interpreta el anillo, que es lo unico que
+       esta columna aporta y las tarjetas no. */
     const insight =
         total === 0
             ? 'Aún no hay estudiantes registrados.'
             : pct >= 70
                 ? 'La cohorte avanza por buen camino.'
                 : notApproved > 0
-                    ? `${notApproved} estudiante${notApproved !== 1 ? 's' : ''} requiere${notApproved !== 1 ? 'n' : ''} atención.`
+                    ? 'Todavía hay estudiantes que no cumplen el requisito.'
                     : 'Progreso en desarrollo.';
 
     return (
@@ -52,20 +56,18 @@ export const AcademicProgressCard: React.FC<AcademicProgressProps> = ({
                     caption="aprobación"
                     ariaLabel={`Progreso de aprobación de tesis: ${pct}%`}
                 />
+                {/* La leyenda DESCIFRA el anillo (que color es cada cosa); no
+                    repite sus cifras. Las tres que llevaba —elegibles, pendientes
+                    y total— eran exactamente las tres tarjetas KPI de al lado,
+                    reimpresas en cuerpo menor a 300px de distancia. */}
                 <ul className="progress-legend">
                     <li className="progress-legend__row">
                         <span className="progress-legend__dot progress-legend__dot--ok" aria-hidden="true" />
                         <span className="progress-legend__label">{VOCAB.eligible}</span>
-                        <span className="progress-legend__value ui-tnum">{approved}</span>
                     </li>
                     <li className="progress-legend__row">
                         <span className="progress-legend__dot progress-legend__dot--pending" aria-hidden="true" />
                         <span className="progress-legend__label">{VOCAB.notEligible}</span>
-                        <span className="progress-legend__value ui-tnum">{notApproved}</span>
-                    </li>
-                    <li className="progress-legend__row progress-legend__row--total">
-                        <span className="progress-legend__label">Total</span>
-                        <span className="progress-legend__value ui-tnum">{total}</span>
                     </li>
                 </ul>
             </div>

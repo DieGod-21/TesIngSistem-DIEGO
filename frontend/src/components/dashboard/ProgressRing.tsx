@@ -1,7 +1,13 @@
 /**
  * ProgressRing.tsx — Anillo de progreso (data-viz).
  *
- * SVG con arco de gradiente aurora que se rellena al montar.
+ * El arco se pinta con los MISMOS colores semanticos que nombra su leyenda:
+ * relleno = cumple (verde), pista = no cumple (ambar). Antes era un degradado
+ * aurora indigo-cian mientras la leyenda de al lado mostraba puntos verde y
+ * ambar: dos puntos de color que no correspondian a nada en pantalla, en un
+ * elemento cuyo unico trabajo es representar una composicion. El anillo era
+ * decorativo y decia ser una leyenda.
+ *
  * Accesible (role=img + aria-label) y respeta prefers-reduced-motion.
  */
 
@@ -51,21 +57,15 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
             aria-label={ariaLabel ?? `${clamped}% completado`}
         >
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-                <defs>
-                    <linearGradient id="ring-aurora" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="var(--aurora-1)" />
-                        <stop offset="55%" stopColor="var(--aurora-2)" />
-                        <stop offset="100%" stopColor="var(--aurora-3)" />
-                    </linearGradient>
-                </defs>
+                {/* Pista = la porcion que NO cumple; arco = la que si. */}
                 <circle
                     cx={size / 2} cy={size / 2} r={r}
-                    fill="none" stroke="var(--border)" strokeWidth={stroke}
+                    fill="none" stroke="var(--ring-track)" strokeWidth={stroke}
                 />
                 <circle
                     className="ring__arc"
                     cx={size / 2} cy={size / 2} r={r}
-                    fill="none" stroke="url(#ring-aurora)" strokeWidth={stroke}
+                    fill="none" stroke="var(--color-success)" strokeWidth={stroke}
                     strokeLinecap="round"
                     strokeDasharray={circumference}
                     strokeDashoffset={offset}
