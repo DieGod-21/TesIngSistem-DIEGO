@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { UserPlus, X } from 'lucide-react';
 import { createUsuario } from '../../../services/usuariosService';
 import type { RolUsuario } from '../../../types/api';
-import { Button } from '../../../components/ui';
+import { Button, Alert } from '../../../components/ui';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
 
 interface Props {
@@ -89,15 +89,15 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
 
     return createPortal(
         <div
-            className="nu-overlay"
+            className="ui-modal-overlay"
             role="dialog"
             aria-modal="true"
             aria-labelledby="nu-title"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="nu-modal" ref={modalRef}>
-                <header className="nu-modal__header">
-                    <h2 id="nu-title" className="nu-modal__title">
+            <div className="ui-modal ui-modal--form" ref={modalRef}>
+                <header className="ui-modal__header">
+                    <h2 id="nu-title" className="ui-modal__title">
                         <UserPlus size={18} aria-hidden="true" />
                         Nuevo Usuario
                     </h2>
@@ -112,16 +112,16 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                     </button>
                 </header>
 
-                <form className="nu-modal__body" onSubmit={handleSubmit} noValidate>
-                    <div className="nu-field">
-                        <label htmlFor="nu-nombre" className="nu-label">
+                <form className="ui-modal__body" onSubmit={handleSubmit} noValidate>
+                    <div className="ui-modal__field">
+                        <label htmlFor="nu-nombre" className="ui-modal__label">
                             Nombre <span aria-hidden="true">*</span>
                         </label>
                         <input
                             id="nu-nombre"
                             data-autofocus
                             type="text"
-                            className={`ui-control nu-input${errors.nombre ? ' nu-input--error' : ''}`}
+                            className={`ui-control${errors.nombre ? ' ui-control--error' : ''}`}
                             value={form.nombre}
                             onChange={set('nombre')}
                             placeholder="Nombre completo"
@@ -129,18 +129,18 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                             autoComplete="off"
                         />
                         {errors.nombre && (
-                            <span className="nu-field-error" role="alert">{errors.nombre}</span>
+                            <span className="ui-modal__error" role="alert">{errors.nombre}</span>
                         )}
                     </div>
 
-                    <div className="nu-field">
-                        <label htmlFor="nu-email" className="nu-label">
+                    <div className="ui-modal__field">
+                        <label htmlFor="nu-email" className="ui-modal__label">
                             Correo <span aria-hidden="true">*</span>
                         </label>
                         <input
                             id="nu-email"
                             type="email"
-                            className={`ui-control nu-input${errors.email ? ' nu-input--error' : ''}`}
+                            className={`ui-control${errors.email ? ' ui-control--error' : ''}`}
                             value={form.email}
                             onChange={set('email')}
                             placeholder="correo@ejemplo.com"
@@ -148,15 +148,15 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                             autoComplete="off"
                         />
                         {errors.email && (
-                            <span className="nu-field-error" role="alert">{errors.email}</span>
+                            <span className="ui-modal__error" role="alert">{errors.email}</span>
                         )}
                     </div>
 
-                    <div className="nu-field">
-                        <label htmlFor="nu-rol" className="nu-label">Rol</label>
+                    <div className="ui-modal__field">
+                        <label htmlFor="nu-rol" className="ui-modal__label">Rol</label>
                         <select
                             id="nu-rol"
-                            className="ui-control nu-select"
+                            className="ui-control"
                             value={form.rol}
                             onChange={set('rol')}
                             disabled={loading}
@@ -167,10 +167,10 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                     </div>
 
                     {apiError && (
-                        <div className="nu-api-error" role="alert">{apiError}</div>
+                        <Alert tone="danger">{apiError}</Alert>
                     )}
 
-                    <footer className="nu-modal__footer">
+                    <footer className="ui-modal__footer">
                         <Button variant="secondary" onClick={handleClose} disabled={loading}>
                             Cancelar
                         </Button>

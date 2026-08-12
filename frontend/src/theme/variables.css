@@ -547,7 +547,10 @@ body {
 
 /* Sin desplazamiento del sheet cuando se reduce el movimiento. */
 @media (prefers-reduced-motion: reduce) {
-    .ui-modal, .en-modal, .im-modal, .np-modal, .nu-modal {
+    /* Antes esta lista enumeraba los cinco armazones de diálogo que existían.
+       Ahora solo hay uno; olvidar añadir el sexto a la lista era exactamente el
+       fallo que esta regla intentaba prevenir. */
+    .ui-modal {
         animation-duration: 0.01ms !important;
     }
 }

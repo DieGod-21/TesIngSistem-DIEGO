@@ -100,88 +100,11 @@
 .usr-skeleton-row:last-child { border-bottom: none; }
 
 /* ── Modal: overlay + contenedor ────────────────────────────────────── */
-.nu-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    background: oklch(0.20 0.02 275 / 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-16);
-    backdrop-filter: blur(2px);
-}
-
-.nu-modal {
-    background: var(--surface-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 440px;
-    overflow: hidden;
-    animation: modal-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Bottom-sheet en móvil (mismo patrón que el resto de diálogos del DS). */
-@media (max-width: 640px) {
-    .nu-overlay { align-items: flex-end; padding: 0; }
-    .nu-modal {
-        max-width: none;
-        max-height: 92vh;
-        overflow-y: auto;
-        border-radius: 20px 20px 0 0;
-        animation: sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-}
-
-.nu-modal__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-16) var(--space-20) var(--space-16);
-    border-bottom: 1px solid var(--border);
-}
-
-.nu-modal__title {
-    display: flex;
-    align-items: center;
-    gap: var(--space-8);
-    font-size: var(--text-md);
-    font-weight: var(--weight-bold);
-    color: var(--text-primary);
-    margin: 0;
-}
 
 /* `.nu-modal__close` ELIMINADO → `.ui-icon-btn`. Era el más divergente: sin
    width/height (26px reales), sin `:focus-visible` propio y con otra opacidad. */
 
-.nu-modal__body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-16);
-    padding: var(--space-20);
-}
-
-.nu-modal__footer {
-    display: flex;
-    gap: var(--space-10);
-    justify-content: flex-end;
-    padding-top: var(--space-4);
-}
-
 /* ── Modal: campos ──────────────────────────────────────────────────── */
-.nu-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
-}
-
-.nu-label {
-    font-size: var(--text-base);
-    font-weight: var(--weight-medium);
-    color: var(--text-secondary);
-}
 
 /* La CAJA la da `.ui-control` (altura, padding, borde, radio, foco). Aquí solo
    queda lo que es propio de este formulario. El borde era de 1.5px frente al
@@ -189,26 +112,9 @@
    apilados en el mismo formulario. */
 .nu-input--error { border-color: var(--color-danger); }
 
-.nu-field-error {
-    font-size: var(--text-xs);
-    color: var(--color-danger);
-}
-
-.nu-api-error {
-    background: var(--color-danger-light);
-    border: 1px solid color-mix(in oklch, var(--color-danger) 35%, transparent);
-    border-radius: var(--radius-md);
-    padding: var(--space-10) var(--space-12);
-    font-size: var(--text-base);
-    color: var(--color-danger);
-}
-
 /* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
    La hoja inferior del diálogo «Nuevo Usuario» se declara dentro de una consulta de ancho
    MÁS ABAJO que el bloque de arriba, así que aquel no la alcanzaba: a igual
    especificidad gana la última regla. Solo se notaba en móvil, que es donde
    ninguna sonda de escritorio mira.
    Toda animación nueva de este archivo va POR ENCIMA de aquí. */
-@media (prefers-reduced-motion: reduce) {
-    .nu-modal { animation: none; }
-}

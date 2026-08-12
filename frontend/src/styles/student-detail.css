@@ -45,83 +45,8 @@
 }
 
 /* ── Edit nota modal ─────────────────────────────────────────────────── */
-.en-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    background: oklch(0.20 0.02 275 / 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-16);
-    backdrop-filter: blur(2px);
-}
-
-.en-modal {
-    background: var(--surface-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 420px;
-    overflow: hidden;
-    animation: modal-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Bottom-sheet en móvil (mismo patrón que el resto de diálogos del DS). */
-@media (max-width: 640px) {
-    .en-overlay { align-items: flex-end; padding: 0; }
-    .en-modal {
-        max-width: none;
-        max-height: 92vh;
-        overflow-y: auto;
-        border-radius: 20px 20px 0 0;
-        animation: sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-}
-
-.en-modal__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-16) var(--space-20) var(--space-16);
-    border-bottom: 1px solid var(--border);
-}
-
-.en-modal__title {
-    font-size: var(--text-md);
-    font-weight: var(--weight-bold);
-    color: var(--text-primary);
-    margin: 0;
-}
 
 /* `.en-modal__close` ELIMINADO → `.ui-icon-btn`. */
-
-.en-modal__body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-16);
-    padding: var(--space-20);
-}
-
-.en-modal__footer {
-    display: flex;
-    gap: var(--space-10);
-    justify-content: flex-end;
-    padding-top: var(--space-4);
-}
-
-.en-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
-}
-
-.en-label {
-    font-size: var(--text-base);
-    font-weight: var(--weight-medium);
-    color: var(--text-secondary);
-}
 
 /* La CAJA la da `.ui-control`. */
 .en-input,
@@ -142,20 +67,6 @@
 .en-textarea {
     resize: vertical;
     min-height: 72px;
-}
-
-.en-field-error {
-    font-size: var(--text-xs);
-    color: var(--color-danger);
-}
-
-.en-api-error {
-    background: var(--color-danger-light);
-    border: 1px solid color-mix(in oklch, var(--color-danger) 35%, transparent);
-    border-radius: var(--radius-md);
-    padding: var(--space-10) var(--space-12);
-    font-size: var(--text-base);
-    color: var(--color-danger);
 }
 
 /* Los botones del modal usan la primitiva <Button> del sistema de diseño.
@@ -679,4 +590,49 @@
 
 @media (prefers-reduced-motion: reduce) {
     .nota-edit-btn { transition: background 0ms, color 0ms; }
+}
+
+/* ── Proyecto de graduación (carril derecho) ──────────────────────────
+   Responde «¿sobre qué trabaja esta persona?», pregunta que el expediente no
+   podía contestar: obligaba a salir, abrir el listado de proyectos y buscar a
+   mano por nombre. Va encima de la terna porque es su requisito. */
+
+.sd-proyecto__titulo {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    color: var(--text-primary);
+}
+
+.sd-proyecto__desc {
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* La ausencia se NOMBRA: un hueco entre el título y la etiqueta de fase se lee
+   como «esto no cargó», y decirlo cuesta una línea. */
+.sd-proyecto__desc--empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* La píldora de fase no debe estirarse al ancho de la tarjeta. */
+.sd-proyecto .ui-badge { align-self: flex-start; }
+
+/* Columna derecha de la cabecera: veredicto + acción sobre el expediente.
+   La acción se alinea con el veredicto porque ambas cosas hablan del
+   expediente en su conjunto, no de una nota concreta. */
+.sd-hero__aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-10);
+    flex-shrink: 0;
 }

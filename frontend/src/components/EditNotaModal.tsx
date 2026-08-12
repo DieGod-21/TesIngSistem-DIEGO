@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Save, X } from 'lucide-react';
 import { upsertNota } from '../services/notasService';
-import { Button } from './ui';
+import { Button, Alert } from './ui';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 const CURSOS = [
@@ -91,20 +91,20 @@ const EditNotaModal: React.FC<Props> = ({
 
     return createPortal(
         <div
-            className="en-overlay"
+            className="ui-modal-overlay"
             role="dialog"
             aria-modal="true"
             aria-labelledby="en-title"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="en-modal" ref={modalRef}>
-                <header className="en-modal__header">
+            <div className="ui-modal ui-modal--form" ref={modalRef}>
+                <header className="ui-modal__header">
                     {/* El mismo diálogo sirve para EDITAR una nota existente y
                         para REGISTRAR una que falta, y el título decía siempre
                         «Editar Nota»: desde el botón «Registrar» de un curso sin
                         nota se abría un modal que afirmaba estar editando algo
                         que no existe. El título lo decide el dato, no la plantilla. */}
-                    <h2 id="en-title" className="en-modal__title">
+                    <h2 id="en-title" className="ui-modal__title">
                         {initialNota != null ? 'Editar Nota' : 'Registrar Nota'}
                     </h2>
                     <button
@@ -118,13 +118,13 @@ const EditNotaModal: React.FC<Props> = ({
                     </button>
                 </header>
 
-                <form className="en-modal__body" onSubmit={handleSubmit} noValidate>
-                    <div className="en-field">
-                        <label htmlFor="en-curso" className="en-label">Curso</label>
+                <form className="ui-modal__body" onSubmit={handleSubmit} noValidate>
+                    <div className="ui-modal__field">
+                        <label htmlFor="en-curso" className="ui-modal__label">Curso</label>
                         <select
                             id="en-curso"
                             data-autofocus
-                            className="ui-control en-select"
+                            className="ui-control"
                             value={form.curso}
                             onChange={(e) => setForm((s) => ({ ...s, curso: e.target.value as '043' | '049' }))}
                             disabled={loading}
@@ -137,8 +137,8 @@ const EditNotaModal: React.FC<Props> = ({
                         </select>
                     </div>
 
-                    <div className="en-field">
-                        <label htmlFor="en-nota" className="en-label">
+                    <div className="ui-modal__field">
+                        <label htmlFor="en-nota" className="ui-modal__label">
                             Nota <span aria-hidden="true">*</span>
                         </label>
                         <input
@@ -147,7 +147,7 @@ const EditNotaModal: React.FC<Props> = ({
                             min={0}
                             max={100}
                             step={0.01}
-                            className={`ui-control en-input${notaError ? ' en-input--error' : ''}`}
+                            className={`ui-control${notaError ? ' ui-control--error' : ''}`}
                             value={form.nota}
                             onChange={(e) => {
                                 setForm((s) => ({ ...s, nota: e.target.value }));
@@ -157,15 +157,15 @@ const EditNotaModal: React.FC<Props> = ({
                             disabled={loading}
                         />
                         {notaError && (
-                            <span className="en-field-error" role="alert">{notaError}</span>
+                            <span className="ui-modal__error" role="alert">{notaError}</span>
                         )}
                     </div>
 
-                    <div className="en-field">
-                        <label htmlFor="en-obs" className="en-label">Observación (opcional)</label>
+                    <div className="ui-modal__field">
+                        <label htmlFor="en-obs" className="ui-modal__label">Observación (opcional)</label>
                         <textarea
                             id="en-obs"
-                            className="ui-control en-textarea"
+                            className="ui-control"
                             value={form.observacion}
                             onChange={(e) => setForm((s) => ({ ...s, observacion: e.target.value }))}
                             placeholder="Notas adicionales…"
@@ -175,10 +175,10 @@ const EditNotaModal: React.FC<Props> = ({
                     </div>
 
                     {apiError && (
-                        <div className="en-api-error" role="alert">{apiError}</div>
+                        <Alert tone="danger">{apiError}</Alert>
                     )}
 
-                    <footer className="en-modal__footer">
+                    <footer className="ui-modal__footer">
                         <Button variant="secondary" onClick={handleClose} disabled={loading}>
                             Cancelar
                         </Button>
