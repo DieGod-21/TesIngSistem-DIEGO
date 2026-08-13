@@ -46,6 +46,9 @@ const TernasListPage: React.FC = () => {
     const { toast } = useToast();
     const [filter, setFilter] = useState<FilterValue>('all');
     const [altaAbierta, setAltaAbierta] = useState(false);
+    /* Cuál es la recién creada. El aviso decía «Terna #6 creada» y la
+       cuadrícula se repintaba con una tarjeta más, sin señalar cuál. */
+    const [recienCreada, setRecienCreada] = useState<number | null>(null);
 
     const estado = filter === 'all' ? undefined : filter;
     const { ternas, loading, error, reload } = useTernas(estado);
@@ -60,6 +63,7 @@ const TernasListPage: React.FC = () => {
     const creada = (numero: number) => {
         setAltaAbierta(false);
         toast.success(`Terna #${numero} creada.`);
+        setRecienCreada(numero);
         reload();
     };
 
@@ -144,6 +148,7 @@ const TernasListPage: React.FC = () => {
                                 key={t.id}
                                 terna={t}
                                 onSelect={(id) => history.push(`/ternas/${id}`)}
+                                destacado={t.numero === recienCreada}
                             />
                         ))}
                     </div>

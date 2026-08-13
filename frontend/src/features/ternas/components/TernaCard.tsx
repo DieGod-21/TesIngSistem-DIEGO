@@ -7,9 +7,11 @@ import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE } from '../../../utils/ternaStatu
 interface Props {
     terna: TernaResumen;
     onSelect: (id: number) => void;
+    /** Recién creada: se señala un momento y se lleva a la vista. */
+    destacado?: boolean;
 }
 
-const TernaCard: React.FC<Props> = ({ terna, onSelect }) => {
+const TernaCard: React.FC<Props> = ({ terna, onSelect, destacado = false }) => {
     const total = terna.total_evaluadores ?? 0;
     const enviadas = terna.evaluaciones_enviadas ?? 0;
     const pct = total > 0 ? Math.round((enviadas / total) * 100) : 0;
@@ -17,7 +19,8 @@ const TernaCard: React.FC<Props> = ({ terna, onSelect }) => {
     return (
         <button
             type="button"
-            className="terna-card"
+            ref={(el) => { if (destacado && el) el.scrollIntoView({ block: 'nearest' }); }}
+            className={`terna-card${destacado ? ' terna-card--nueva' : ''}`}
             onClick={() => onSelect(terna.id)}
             aria-label={`Abrir terna ${terna.numero}: ${terna.estudiante_nombre}`}
         >

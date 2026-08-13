@@ -94,7 +94,14 @@ export async function getProyectosByEstudiante(
 }
 
 export async function createProyecto(dto: CreateProyectoDto): Promise<Proyecto> {
-    const proyecto = await apiPost<Proyecto>(API_PATHS.proyectos.list, dto);
+    /*
+     * La respuesta llega envuelta: `apiData` retira el `{ data }` del sobre
+     * genérico, pero queda la envoltura semántica `{ proyecto }`. Esta función
+     * declaraba devolver un `Proyecto` y devolvía ese objeto intermedio. Nadie
+     * lo notó porque nadie miraba el valor de retorno; en cuanto la pantalla
+     * quiso señalar el proyecto recién creado, `id` era `undefined`.
+     */
+    const raw = await apiPost<{ proyecto: Proyecto } | Proyecto>(API_PATHS.proyectos.list, dto);
     invalidateProyectos();
-    return proyecto;
+    return unwrapEntity<Proyecto>(raw, 'proyecto', API_PATHS.proyectos.list);
 }
