@@ -693,3 +693,44 @@ describe('Sin código muerto', () => {
         expect(orphans).toEqual([]);
     });
 });
+
+/**
+ * Reglas incorporadas en el ciclo de interacción/API.
+ *
+ * Las dos nacen de deriva REAL encontrada en este repositorio, no de una
+ * preferencia: la pila monoespaciada estaba escrita a mano en cinco hojas y ya
+ * había divergido (unas con Menlo, otras sin él), y las rutas de detalle se
+ * construían con plantillas sueltas en seis archivos mientras existía un
+ * registro central que nadie usaba para ellas.
+ */
+describe('Fuente única de verdad — tipografía y rutas', () => {
+    it('nadie vuelve a escribir a mano la pila monoespaciada', () => {
+        const offenders: string[] = [];
+        for (const f of cssFiles) {
+            if (themeFile(f)) continue;   // aquí es donde se DEFINE
+            for (const m of read(f).matchAll(/font-family:\s*([^;}]+)/g)) {
+                if (/mono/i.test(m[1]) && !m[1].includes('var(--font-mono)')) {
+                    offenders.push(`${rel(f)} → ${m[1].trim()}`);
+                }
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+
+    it('las rutas de detalle salen del registro central, no de plantillas sueltas', () => {
+        /*
+         * Se persiguen las PLANTILLAS (`/students/${id}`), que son las que se
+         * desincronizan al renombrar una ruta sin que el compilador avise. Las
+         * rutas literales sin interpolación (`'/students'`) las usan el menú y
+         * el enrutador, y son legítimas ahí.
+         */
+        const offenders: string[] = [];
+        const patron = /`\/(students|proyectos|ternas|reports)\/\$\{/g;
+        for (const f of codeFiles) {
+            const r = rel(f);
+            if (r === 'config/routes.ts' || r.endsWith('AppRouter.tsx')) continue;
+            for (const m of read(f).matchAll(patron)) offenders.push(`${r} → ${m[0]}`);
+        }
+        expect(offenders).toEqual([]);
+    });
+});

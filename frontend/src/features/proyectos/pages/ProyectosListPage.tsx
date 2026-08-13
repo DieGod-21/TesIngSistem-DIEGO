@@ -10,6 +10,7 @@ import ProyectoCard from '../components/ProyectoCard';
 import NuevoProyectoModal from '../components/NuevoProyectoModal';
 import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
+import { routes } from '../../../config/routes';
 import '../styles/proyectos.css';
 
 type FaseFilter = 'all' | FaseProyecto;
@@ -82,7 +83,7 @@ const ProyectosListPage: React.FC = () => {
     // Al abrir un detalle se lleva la URL actual, para que «volver» devuelva la
     // vista tal y como estaba.
     const abrirProyecto = useCallback((id: number) => {
-        history.push(`/proyectos/${id}`, { desde: `${location.pathname}${location.search}` });
+        history.push(routes.proyectoDetail(id), { desde: `${location.pathname}${location.search}` });
     }, [history, location.pathname, location.search]);
 
     const fetchProyectos = useCallback(async (signal?: AbortSignal) => {

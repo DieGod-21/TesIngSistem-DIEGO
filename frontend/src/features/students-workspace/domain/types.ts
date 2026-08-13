@@ -32,6 +32,15 @@ export interface WorkspaceDatasets {
     tesisAprobados: TesisEstudiante[];
     /** Listado oficial de quienes NO aprueban tesis (/api/tesis/reprobados). */
     tesisReprobados: TesisEstudiante[];
+    /**
+     * Nota mínima que el servidor publica JUNTO a las listas de tesis.
+     *
+     * Llegaba en la misma respuesta y se descartaba al quedarse solo con
+     * `estudiantes`. Es la regla con la que el propio backend dice haber
+     * decidido el veredicto, y sin ella `auditarElegibilidad` no tiene contra
+     * qué contrastar las notas. 0 = el servidor no la publicó.
+     */
+    notaMinimaTesis: number;
     /** Ternas visibles para el usuario (backend filtra por rol). */
     ternas: TernaResumen[];
     /**

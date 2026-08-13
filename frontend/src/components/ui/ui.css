@@ -572,10 +572,18 @@
     font-weight: var(--weight-semibold);
 }
 
+/* El enlace de la miga medía 31×17: por debajo del mínimo de 24×24 que exige
+   WCAG 2.5.8 (AA). Se gana altura con relleno vertical —no con `height`, que
+   desalinearía el texto respecto al separador— y el relleno horizontal negativo
+   evita que la miga se desplace respecto a donde estaba. */
 .ui-breadcrumb__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
     border: 0;
     background: none;
-    padding: 0;
+    padding: var(--space-4) var(--space-6);
+    margin-inline: calc(var(--space-6) * -1);
     font: inherit;
     cursor: pointer;
     border-radius: var(--radius-sm);

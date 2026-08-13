@@ -26,6 +26,7 @@ import { listProyectosCached } from '../services/proyectosService';
 import { listTernasCached } from '../services/ternasService';
 import { isCancel } from '../services/apiClient';
 import type { Estudiante, Proyecto, TernaResumen } from '../types/api';
+import { routes } from '../config/routes';
 
 export type Vinculo = 'estudiante' | 'proyecto' | 'terna';
 
@@ -103,11 +104,11 @@ export function useEntityLinks(
             (quiere.includes('terna')      && ternas === null);
 
         return {
-            estudianteHref:   e ? `/students/${e.id}` : null,
+            estudianteHref:   e ? routes.studentDetail(e.id) : null,
             estudianteNombre: e?.nombre ?? null,
-            proyectoHref:     p ? `/proyectos/${p.id}` : null,
+            proyectoHref:     p ? routes.proyectoDetail(p.id) : null,
             proyectoTitulo:   p?.titulo ?? null,
-            ternaHref:        t ? `/ternas/${t.id}` : null,
+            ternaHref:        t ? routes.ternaDetail(t.id) : null,
             ternaNumero:      t?.numero ?? null,
             loading: pendiente,
         };

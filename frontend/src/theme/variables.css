@@ -162,6 +162,27 @@
        opacidad. */
     --glass-sheen: inset 0 1px 0 oklch(1 0 0 / 0.30);
 
+    /* ── Cristal SOBRE LA PORTADA ────────────────────────────────────────
+       La portada del panel es oscura en los DOS temas (aurora índigo + textura),
+       así que una lámina que flote sobre ella no puede vestirse con
+       `--glass-surface`, que está calibrado para cristal claro sobre el papel
+       de la aplicación: allí saldría una tarjeta casi blanca tapando la aurora
+       en vez de dejarla ver.
+
+       Aquí el cristal es AHUMADO, no un velo de luz. Empezó siendo blanco al
+       10 % y se midió: sobre la zona más clara de la aurora el compuesto subía
+       lo justo para dejar el texto de apoyo en 4.31:1, por debajo de AA. Aclarar
+       el texto tile a tile era perseguir el degradado; oscurecer el velo arregla
+       las tres fichas de una vez y además las separa mejor del fondo.
+
+       Sigue siendo cristal y no una tarjeta opaca: el 22 % deja pasar la aurora
+       y la textura de puntos, el desenfoque las difumina y el filo superior de
+       luz le da canto. Lo que cambia es el signo del velo, no el material. */
+    --hero-glass-surface:       oklch(0.26 0.045 275 / 0.22);
+    --hero-glass-surface-hover: oklch(0.26 0.045 275 / 0.34);
+    --hero-glass-border:        oklch(1 0 0 / 0.22);
+    --hero-glass-sheen:         inset 0 1px 0 oklch(1 0 0 / 0.28);
+
     /* ── LOS CUATRO NIVELES DE SUPERFICIE ────────────────────────────────
        Todo lo que se dibuja pertenece a uno de estos cuatro, y el nivel
        comunica la RELACIÓN con el contenido, no una preferencia estética:
@@ -265,6 +286,12 @@
        Ningún componente debe escribir un font-size literal.                 */
     --text-3xs:  0.625rem;   /* 10px — SOLO micro-etiqueta en versalita con
                                        letter-spacing; ilegible sin tracking */
+    /* Pila monoespaciada del producto. Estaba escrita a mano en cinco hojas
+       distintas y ya había divergido (unas incluían Menlo, otras no). Se usa
+       para lo que debe alinearse en columna y compararse dígito a dígito:
+       carnés, códigos de curso e identificadores. */
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
     --text-2xs:  0.6875rem;  /* 11px — kickers, badges, monograma sm, teclas */
     --text-xs:   0.75rem;    /* 12px — metadatos, etiquetas de campo, ayudas */
     --text-sm:   0.8125rem;  /* 13px — UI densa: chips, migas, botones sm    */

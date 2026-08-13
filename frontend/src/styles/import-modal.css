@@ -44,7 +44,7 @@
     background: var(--surface-raised);
     padding: var(--space-1) var(--space-4);
     border-radius: var(--radius-sm);
-    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-family: var(--font-mono);
     font-size: 0.8em;
     color: var(--text-primary);
 }
@@ -317,4 +317,18 @@
         row-gap: var(--space-4);
     }
     .imo-fila__op { grid-column: 2 / -1; }
+}
+
+/* Periodo real del curso elegido (ciclo y sección). Es una confirmación de
+   destino antes de sobrescribir un acta, no un adorno: se apoya en el borde
+   izquierdo del campo al que describe. */
+.im-periodo {
+    margin: var(--space-6) 0 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    color: var(--text-secondary);
+}
+.im-periodo strong {
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
 }

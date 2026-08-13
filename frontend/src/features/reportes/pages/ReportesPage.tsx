@@ -20,6 +20,7 @@ import AccessRestricted from '../../../components/AccessRestricted';
 import { RESOLUCION_LABEL, RESOLUCION_TONE } from '../../../utils/ternaStatus';
 import '../styles/reportes.css';
 import '../../../styles/transitions.css';
+import { routes } from '../../../config/routes';
 
 
 type Filter = 'all' | ResolucionTerna;
@@ -185,11 +186,11 @@ const ReportesPage: React.FC = () => {
                                     <tr
                                         key={t.terna_id}
                                         tabIndex={0}
-                                        onClick={() => history.push(`/reports/${t.terna_id}`)}
+                                        onClick={() => history.push(routes.reportDetail(t.terna_id))}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
-                                                history.push(`/reports/${t.terna_id}`);
+                                                history.push(routes.reportDetail(t.terna_id));
                                             }
                                         }}
                                     >
