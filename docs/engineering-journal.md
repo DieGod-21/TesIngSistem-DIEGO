@@ -783,3 +783,82 @@ lo que se nota al abrir dos seguidos: relleno de cabecera 20/24 frente a 16/20,
 cuerpo 24 frente a 20, radio `xl` frente a `lg` y titulo `lg` frente a `md`.
 Ninguna diferencia respondia a una razon. Medido tras unificar: los cinco
 dialogos del producto dan radio 16px, cabecera 20/24/16 y titulo 18px.
+
+---
+
+## Iteracion 18 — Interaccion, navegacion contextual y cristal
+
+### P36 — El servidor puede estar caido mientras trabajas, y eso es informacion
+
+`notas.digicom.com.gt` empezo la sesion sirviendo el certificado por defecto de
+Traefik y 404 a todas las rutas. No era un problema de certificado que se
+pudiera rodear: el servicio no estaba enrutado. La consecuencia inmediata fue no
+poder re-auditar la especificacion en vivo (se trabajo con la captura de la
+vispera, y asi consta).
+
+La consecuencia util fue otra: obligo a mirar el producto en el estado en el que
+el usuario lo iba a encontrar ese dia, y ahi aparecio el defecto de la sesion.
+Un entorno roto no es solo un estorbo; es un caso de prueba que no se puede
+fabricar.
+
+### P37 — Una sonda que mide despues de tiempo no mide nada
+
+Primera lectura del acceso con el API caido: «no pasa nada al pulsar Ingresar,
+ni error ni aviso». Falso. El aviso salia a los 500 ms y duraba cuatro segundos;
+la sonda miraba a los seis. Lo que de verdad ocurria era peor de explicar y mas
+facil de arreglar: el aviso decia «Error HTTP 500».
+
+Antes de dar por bueno un diagnostico sobre algo EFIMERO —un toast, un estado de
+carga, un realce— hay que muestrear en el tiempo, no una sola vez al final. Y
+antes de afirmar «esto lo he arreglado», medir el comportamiento ANTERIOR:
+aqui se reintrodujo el codigo viejo a proposito para poder escribir el antes y
+el despues sin inventarlos.
+
+### P38 — La rama por defecto de `instanceof Error` casi nunca se ejecuta
+
+Nueve sitios escribian `err instanceof Error ? err.message : 'texto cuidado'`.
+Un `ApiError` ES un `Error`, de modo que el texto cuidado del `else` no se
+mostraba jamas y lo que llegaba al usuario era el mensaje sintetico del cliente
+HTTP. El patron parece defensivo y en realidad desactiva la defensa.
+
+Si existe un traductor central de errores, la unica forma correcta de usarlo es
+que NADIE lo esquive. Convertido en regla de arquitectura.
+
+### P39 — Un override de tema por clase apaga en silencio un cambio de sistema
+
+Se aplico cristal (nivel 3) a la cabecera pegajosa. En claro funciono; en oscuro
+la cabecera seguia opaca. Causa: un `[data-theme="dark"] .dash-header {
+background: ... }` heredado que ganaba por especificidad. El cambio de sistema
+estaba bien hecho y un override antiguo lo anulaba justo en el tema donde mas se
+nota.
+
+Se detecto midiendo el `backgroundColor` computado en AMBOS temas, no mirando la
+captura. En oscuro, un fondo opaco y uno al 90 % se parecen demasiado.
+
+### P40 — Cuatro niveles de superficie, y el tercero necesita una regla dura
+
+El sistema tenia desenfoques escritos a mano en cuatro archivos (3px, 6px, 12px)
+y ninguna regla sobre cuando usarlos. Ahora hay cuatro niveles declarados, y el
+nivel «cristal» solo se aplica donde hay contenido REAL debajo que conviene
+seguir viendo: la cabecera por la que pasa la lista al desplazarse y el
+desplegable que tapa su propio formulario. Una tarjeta dentro de una cuadricula
+no tapa nada; ponerle cristal es decoracion y cuesta una capa de composicion por
+tarjeta.
+
+La translucidez se mantiene alta (88 % en claro, 90 % en oscuro) a proposito: el
+compuesto se queda entre dos superficies que el medidor de contraste ya evalua,
+de modo que el nivel no puede degradar el texto.
+
+### Lo que el servidor contaba y el producto tiraba
+
+`POST /api/importar/notas/{curso}` declara curso, ciclo, fecha del acta, cuantos
+registros traia el PDF, cuantos casaron, cuales no, el reparto por estado, las
+operaciones y el detalle POR ESTUDIANTE con nombre y nota. La interfaz enseñaba
+«Importacion completada».
+
+La causa no era pereza sino una forma inventada: el codigo modelaba `{ total,
+creados, duplicados, errores }`, campos que no existen en ninguna parte del
+contrato. No llegaban nunca, el resumen caia siempre en su texto por defecto y
+el detalle se descartaba entero. El mismo error estaba repetido en las DOS
+superficies de importacion, que es justo por lo que nadie lo noto: las dos
+mentian igual.
