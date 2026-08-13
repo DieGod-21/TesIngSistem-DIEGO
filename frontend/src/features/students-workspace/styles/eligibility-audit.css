@@ -88,11 +88,40 @@
     min-height: 32px;
 }
 
-.elig-audit__mas:hover {
-    background: color-mix(in oklch, currentColor 10%, transparent);
-}
-
 .elig-audit__mas:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 1px;
 }
+
+/* Pie del aviso: «ver más» (si hay) y la acción principal. La acción es
+   REVISAR y no REINTENTAR — ver la nota de EligibilityAudit.tsx sobre por qué
+   esto no es un error del sistema. */
+.elig-audit__pie {
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    flex-wrap: wrap;
+    margin-top: var(--space-12);
+}
+
+.elig-audit__cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: var(--space-4) var(--space-12);
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklch, currentColor 14%, transparent);
+    color: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-decoration: none;
+}
+.elig-audit__cta:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
+
+/* En pantallas táctiles el estado de apuntar se QUEDA pegado tras el toque
+   hasta que se toca otra cosa. Da igual en los enlaces —navegan y el elemento
+   desaparece— pero este botón permanece en pantalla, así que su realce se
+   reserva a los punteros que de verdad pueden apuntar. */
+@media (hover: hover) {
+    .elig-audit__mas:hover { background: color-mix(in oklch, currentColor 10%, transparent); }
+    }
