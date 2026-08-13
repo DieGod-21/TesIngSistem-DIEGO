@@ -256,6 +256,20 @@
 .pd-nota--fail .pd-nota__valor { color: var(--color-danger); }
 .pd-nota--empty .pd-nota__valor { color: var(--text-muted); }
 
+/* ── Recién creado ────────────────────────────────────────────────────
+   Cierra el ciclo de la acción: el aviso dice QUE se creó y esto dice CUÁL.
+   Un anillo que se apaga en dos segundos y medio, no un color permanente:
+   pasado el momento deja de ser información y se convierte en ruido. */
+@keyframes proy-nueva {
+    from { box-shadow: 0 0 0 3px var(--color-primary-soft), var(--shadow-lg); }
+    to   { box-shadow: 0 0 0 0   transparent,               var(--shadow-sm); }
+}
+
+.proy-card--nueva {
+    border-color: var(--color-primary);
+    animation: proy-nueva 2400ms var(--ease-out-expo) both;
+}
+
 /* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
    La hoja inferior del diálogo «Nuevo Proyecto» se declara dentro de una consulta de ancho
    MÁS ABAJO que el bloque de arriba, así que aquel no la alcanzaba: a igual
@@ -468,9 +482,12 @@
    Toda animación o transición nueva de este archivo va POR ENCIMA de aquí. */
 @media (prefers-reduced-motion: reduce) {
     .proy-card,
+    .proy-card--nueva,
     .proy-card__go {
         animation: none;
         transition: none;
     }
+    /* Sin animación, el realce se comunica igual pero quieto: el borde
+       primario del `.proy-card--nueva` se queda, que ya distingue la tarjeta. */
     .proy-card:hover .proy-card__go { transform: none; }
 }

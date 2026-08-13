@@ -11,8 +11,8 @@ import { userMessageFor } from '../../../services/errorMessages';
 interface Props {
     open: boolean;
     onClose: () => void;
-    /** Recibe el título del proyecto creado para el mensaje de confirmación. */
-    onCreated: (titulo: string) => void;
+    /** Título para el mensaje y el id para poder señalarlo en la cuadrícula. */
+    onCreated: (titulo: string, id: number) => void;
     /** Carnés que ya tienen proyecto: no se ofrecen para evitar el 409 del API. */
     carnetsConProyecto?: ReadonlySet<string>;
 }
@@ -77,7 +77,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated, carnets
         const titulo = form.titulo.trim();
         const descripcion = form.descripcion.trim();
         try {
-            await createProyecto({
+            const creado = await createProyecto({
                 estudianteId: estudiante.id,
                 titulo,
                 // La descripción es opcional por contrato. Vacía se envía como
@@ -89,7 +89,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated, carnets
             setForm(INITIAL);
             setEstudiante(null);
             setErrors({});
-            onCreated(titulo);
+            onCreated(titulo, creado.id);
         } catch (err) {
             setApiError(userMessageFor(err) || 'No se pudo crear el proyecto. Inténtalo de nuevo.');
         } finally {

@@ -20,12 +20,19 @@ import type { Proyecto } from '../../../types/api';
 interface Props {
     proyecto: Proyecto;
     onOpen: (id: number) => void;
+    /** Recién creado: se señala un momento y se lleva a la vista. */
+    destacado?: boolean;
 }
 
-const ProyectoCard: React.FC<Props> = ({ proyecto, onOpen }) => (
+const ProyectoCard: React.FC<Props> = ({ proyecto, onOpen, destacado = false }) => (
     <button
         type="button"
-        className="proy-card ui-surface--interactive"
+        ref={(el) => {
+            // Traerla a la vista si la cuadrícula es larga. `nearest` evita el
+            // salto brusco cuando ya estaba visible, que es el caso normal.
+            if (destacado && el) el.scrollIntoView({ block: 'nearest' });
+        }}
+        className={`proy-card ui-surface--interactive${destacado ? ' proy-card--nueva' : ''}`}
         onClick={() => onOpen(proyecto.id)}
         aria-label={`Abrir el proyecto «${proyecto.titulo}»`}
     >

@@ -509,3 +509,29 @@
 }
 
 .tdetail-fecha svg { flex-shrink: 0; color: var(--text-muted); }
+
+/* Recién creada: mismo lenguaje que la cuadrícula de proyectos. Un anillo que
+   se apaga en dos segundos y medio; pasado el momento deja de ser información
+   y se convierte en ruido. */
+@keyframes terna-nueva {
+    from { box-shadow: 0 0 0 3px var(--color-primary-soft), var(--shadow-lg); }
+    to   { box-shadow: 0 0 0 0   transparent,               var(--shadow-sm); }
+}
+
+.terna-card--nueva {
+    border-color: var(--color-primary);
+    animation: terna-nueva 2400ms var(--ease-out-expo) both;
+}
+
+/* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
+   Toda animación o transición nueva de este archivo va POR ENCIMA de aquí.
+   Sin animación el realce se comunica igual pero quieto: el borde primario
+   se queda, y eso ya distingue la tarjeta. */
+@media (prefers-reduced-motion: reduce) {
+    .terna-card,
+    .terna-card--nueva,
+    .tdetail-card {
+        animation: none;
+        transition: none;
+    }
+}

@@ -45,6 +45,16 @@ const ProyectosListPage: React.FC = () => {
     const [error, setError]         = useState<string | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
 
+    /**
+     * El proyecto recién creado.
+     *
+     * El aviso decía «creado» y la cuadrícula se repintaba con una tarjeta más:
+     * entre doce, ninguna pista de cuál era. Se resalta un momento y se lleva a
+     * la vista, que es lo que cierra el ciclo de la acción — intención,
+     * interacción, proceso y RESULTADO localizable.
+     */
+    const [recienCreado, setRecienCreado] = useState<number | null>(null);
+
     /*
      * Los filtros viven en la URL, no en el estado del componente.
      *
@@ -226,7 +236,12 @@ const ProyectosListPage: React.FC = () => {
                     )}
                     <div className="proy-grid">
                         {visibles.map((p) => (
-                            <ProyectoCard key={p.id} proyecto={p} onOpen={abrirProyecto} />
+                            <ProyectoCard
+                                key={p.id}
+                                proyecto={p}
+                                onOpen={abrirProyecto}
+                                destacado={p.id === recienCreado}
+                            />
                         ))}
                     </div>
                 </>
@@ -236,9 +251,10 @@ const ProyectosListPage: React.FC = () => {
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
                 carnetsConProyecto={carnetsConProyecto}
-                onCreated={(titulo) => {
+                onCreated={(titulo, id) => {
                     setModalOpen(false);
                     toast.success(`Proyecto «${titulo}» creado.`);
+                    setRecienCreado(id);
                     fetchProyectos();
                 }}
             />
