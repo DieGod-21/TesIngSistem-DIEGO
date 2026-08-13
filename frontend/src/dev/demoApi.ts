@@ -34,7 +34,7 @@
 
 import {
     CURSOS, ESTUDIANTES, PROYECTOS, TERNAS, USUARIOS, NOTA_MINIMA,
-    PERFIL_POR_CARNET, apruebaTesis, faltanNotas, notasDe, promedioDe, razonDe,
+    PERFIL_POR_CARNET, apruebaTesis, enListaAprobados, enListaReprobados, notasDe, promedioDe, razonDe,
     resumenTerna,
 } from './demoDataset';
 import type { Estudiante, Proyecto, TernaDetalle } from '../types/api';
@@ -93,11 +93,18 @@ const num = (v: string | null, alt: number) => {
 
 // ─── Derivados académicos (siempre desde los perfiles) ──────────────────────
 
+/*
+ * Las listas oficiales replican la pertenencia REAL del servidor, que no es la
+ * regla estricta: incluye a quien no tiene ninguna nota reprobada aunque le
+ * falte alguna por registrar. Ver `enListaAprobados` en demoDataset.ts para la
+ * comprobación contra el servidor de producción. Quien no tiene ninguna nota
+ * no aparece en ninguna de las dos listas, igual que en el servidor real.
+ */
 function listaTesis(quiere: 'aprobados' | 'reprobados') {
     const filas = estudiantes
         .map((e) => ({ e, p: PERFIL_POR_CARNET.get(e.carnet) }))
-        .filter((x) => x.p && !faltanNotas(x.p))
-        .filter((x) => (quiere === 'aprobados' ? apruebaTesis(x.p!) : !apruebaTesis(x.p!)))
+        .filter((x) => Boolean(x.p))
+        .filter((x) => (quiere === 'aprobados' ? enListaAprobados(x.p!) : enListaReprobados(x.p!)))
         .map(({ e, p }) => ({
             carnet: e.carnet,
             nombre: e.nombre,

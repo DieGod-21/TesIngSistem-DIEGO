@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import {
@@ -11,6 +11,8 @@ import ImportOutcome from './ImportOutcome';
 import { ApiError } from '../services/apiClient';
 import { userMessageFor } from '../services/errorMessages';
 import { COURSE_CODES } from '../config/apiConfig';
+import { listCursosCached } from '../services/cursosService';
+import type { Curso } from '../types/api';
 import { Alert, Badge, Button } from './ui';
 import '../styles/import-modal.css';
 
@@ -100,6 +102,22 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
     const [curso, setCurso] = useState<string>(COURSE_CODES.PG1);
     const estRef = useRef<HTMLInputElement>(null);
     const notRef = useRef<HTMLInputElement>(null);
+
+    /*
+     * Catálogo real de cursos. Es una tabla maestra cacheada: si aún no ha
+     * llegado —o si el servidor no responde— el diálogo sigue funcionando y
+     * simplemente no anuncia el periodo. Nunca bloquea la importación.
+     */
+    const [cursos, setCursos] = useState<Curso[]>([]);
+    useEffect(() => {
+        if (!open) return;
+        let vivo = true;
+        listCursosCached()
+            .then((c) => { if (vivo) setCursos(c); })
+            .catch(() => { /* el periodo es enriquecimiento, no requisito */ });
+        return () => { vivo = false; };
+    }, [open]);
+    const cursoElegido = cursos.find((c) => c.codigo === curso) ?? null;
 
     const busy = est.loading || not.loading;
 
@@ -292,12 +310,31 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
                                 value={curso}
                                 onChange={(e) => setCurso(e.target.value)}
                                 disabled={not.loading}
+                                aria-describedby={cursoElegido ? 'im-curso-periodo' : undefined}
                             >
                                 {CURSOS.map((c) => (
                                     <option key={c.value} value={c.value}>{c.label}</option>
                                 ))}
                             </select>
                         </div>
+
+                        {/*
+                          * QUÉ PERIODO se va a escribir.
+                          *
+                          * Importar un acta sobrescribe las notas del curso, y hasta
+                          * aquí el diálogo solo decía «PG1» — un código que se repite
+                          * cada ciclo. El catálogo (`GET /api/cursos`) publica `ciclo`,
+                          * `seccion` y `anio` desde siempre; el producto los pedía y
+                          * se quedaba únicamente con el código y el nombre. Sin
+                          * peticiones nuevas: la tabla ya está en caché.
+                          */}
+                        {cursoElegido && (
+                            <p className="im-periodo" id="im-curso-periodo">
+                                Se registrarán en <strong>{cursoElegido.nombre}</strong>
+                                {cursoElegido.ciclo   ? <> · {cursoElegido.ciclo}</> : null}
+                                {cursoElegido.seccion ? <> · Sección {cursoElegido.seccion}</> : null}
+                            </p>
+                        )}
                         <div className="im-file-row">
                             <input
                                 ref={notRef}

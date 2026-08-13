@@ -9,6 +9,7 @@ import { useStudentSearch } from '../hooks/useStudentSearch';
 import { useGlobalHotkey } from '../hooks/useGlobalHotkey';
 import { highlightRanges } from '../utils/text';
 import { Avatar } from './ui';
+import { routes } from '../config/routes';
 
 interface TopHeaderProps {
     onMenuToggle?: () => void;
@@ -102,7 +103,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
     const goToStudent = (id: number) => {
         setInputValue('');
         inputRef.current?.blur();
-        history.push(`/students/${id}`);
+        history.push(routes.studentDetail(id));
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

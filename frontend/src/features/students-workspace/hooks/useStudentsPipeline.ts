@@ -18,6 +18,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getWorkspaceDatasets } from '../data/workspaceData';
 import { deriveWorkQueue } from '../domain/workQueue';
+import { auditarElegibilidad } from '../domain/eligibility';
+import type { AuditoriaElegibilidad } from '../domain/eligibility';
 import type { WorkQueueResult } from '../domain/types';
 import { userMessageFor } from '../../../services/errorMessages';
 
@@ -45,6 +47,12 @@ export interface StudentsPipeline {
      * mismo criterio que usa el resto del producto.
      */
     verdictByCarnet: VerdictByCarnet | null;
+    /**
+     * Contraste entre el veredicto de `/api/tesis/aprobados` y la evidencia que
+     * viaja en esa MISMA respuesta. No cambia ningún conteo: solo señala los
+     * expedientes que el servidor declara elegibles sin respaldarlo.
+     */
+    auditoria: AuditoriaElegibilidad | null;
     loading: boolean;
     error: string | null;
 }
@@ -53,6 +61,7 @@ export function useStudentsPipeline(enabled: boolean): StudentsPipeline {
     const [result, setResult] = useState<WorkQueueResult | null>(null);
     const [lensCounts, setLensCounts] = useState<LensCounts | null>(null);
     const [verdictByCarnet, setVerdictByCarnet] = useState<VerdictByCarnet | null>(null);
+    const [auditoria, setAuditoria] = useState<AuditoriaElegibilidad | null>(null);
     const [loading, setLoading] = useState<boolean>(enabled);
     const [error, setError] = useState<string | null>(null);
 
@@ -80,9 +89,18 @@ export function useStudentsPipeline(enabled: boolean): StudentsPipeline {
                 // resto del producto).
                 for (const t of datasets.tesisAprobados) veredictos.set(t.carnet, 'APROBADO');
                 setVerdictByCarnet(veredictos);
+                setAuditoria(auditarElegibilidad({
+                    total: datasets.tesisAprobados.length,
+                    nota_minima: datasets.notaMinimaTesis,
+                    estudiantes: datasets.tesisAprobados,
+                }));
             })
             .catch((e) => {
-                if (mountedRef.current) { setError(userMessageFor(e)); setVerdictByCarnet(null); }
+                if (mountedRef.current) {
+                    setError(userMessageFor(e));
+                    setVerdictByCarnet(null);
+                    setAuditoria(null);
+                }
             })
             .finally(() => {
                 if (mountedRef.current) setLoading(false);
@@ -99,5 +117,5 @@ export function useStudentsPipeline(enabled: boolean): StudentsPipeline {
         return () => { mountedRef.current = false; };
     }, [enabled, load]);
 
-    return { result, lensCounts, verdictByCarnet, loading, error };
+    return { result, lensCounts, verdictByCarnet, auditoria, loading, error };
 }

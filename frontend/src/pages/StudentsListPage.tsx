@@ -32,6 +32,8 @@ import {
     getAprobadosTesis, getReprobadosTesis, type TesisEstudiante,
 } from '../services/tesisService';
 import { isCancel } from '../services/apiClient';
+import { getEstudiantesRegistry } from '../services/estudiantesService';
+import { auditarElegibilidad } from '../features/students-workspace/domain/eligibility';
 import { userMessageFor } from '../services/errorMessages';
 import ImportModal from '../components/ImportModal';
 import { useAuth } from '../context/AuthContext';
@@ -451,9 +453,33 @@ const TesisFilteredView: React.FC<{
     filter: TesisFilter;
     initialSearch: string;
 }> = ({ filter, initialSearch }) => {
+    const history = useHistory();
     const [all, setAll]         = useState<TesisEstudiante[]>([]);
+    const [notaMinima, setNotaMinima] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError]     = useState<string | null>(null);
+
+    /*
+     * Carné → id del padrón.
+     *
+     * Las listas de tesis identifican por CARNÉ y la ruta del expediente va por
+     * id, así que sin este puente las filas no podían abrirse: se llegaba desde
+     * el indicador «Elegibles» del panel a una tabla donde no se podía pulsar a
+     * nadie, justo al final del camino que el panel invita a recorrer.
+     *
+     * El padrón es la misma tabla cacheada que ya usan el panel y el listado
+     * completo; aquí no cuesta ninguna petición nueva.
+     */
+    const [idPorCarnet, setIdPorCarnet] = useState<Map<string, number>>(new Map());
+    useEffect(() => {
+        let vivo = true;
+        getEstudiantesRegistry()
+            .then((r) => {
+                if (vivo) setIdPorCarnet(new Map(r.estudiantes.map((e) => [e.carnet, e.id])));
+            })
+            .catch(() => { /* sin padrón las filas no navegan, pero la tabla sirve */ });
+        return () => { vivo = false; };
+    }, []);
 
     // Cancelación real: al cambiar de filtro rápidamente, la petición anterior
     // se aborta y su respuesta (potencialmente obsoleta) se ignora. Reutiliza
@@ -467,6 +493,7 @@ const TesisFilteredView: React.FC<{
                 : await getReprobadosTesis({ signal });
             if (signal?.aborted) return;
             setAll(resp.estudiantes);
+            setNotaMinima(resp.nota_minima);
         } catch (e) {
             if (signal?.aborted || isCancel(e)) return;
             setError(userMessageFor(e));
@@ -486,6 +513,22 @@ const TesisFilteredView: React.FC<{
         () => all.filter((s) => matchesText(`${s.nombre ?? ''} ${s.carnet ?? ''}`, initialSearch)),
         [all, initialSearch],
     );
+
+    /*
+     * Qué expedientes de esta lista NO están respaldados por la evidencia que
+     * viaja con ellos. Solo aplica al listado de aprobados: es ahí donde el
+     * veredicto afirma algo que las notas adjuntas pueden desmentir.
+     */
+    const sinRespaldo = useMemo(() => {
+        if (filter !== 'aprobados') return new Set<string>();
+        const a = auditarElegibilidad({ total: all.length, nota_minima: notaMinima, estudiantes: all });
+        return new Set(a.observados.map((o) => o.carnet));
+    }, [filter, all, notaMinima]);
+
+    const abrir = useCallback((carnet: string) => {
+        const id = idPorCarnet.get(carnet);
+        if (id != null) history.push(routes.studentDetail(id));
+    }, [idPorCarnet, history]);
 
     return (
         <>
@@ -560,26 +603,53 @@ const TesisFilteredView: React.FC<{
                             </tr>
                         )}
 
-                        {!loading && !error && filtered.map((s) => (
-                            <tr key={s.carnet} className="sl-table__tr">
-                                <td className="sl-table__td">
-                                    <div className="sl-student-cell">
-                                        <Avatar name={s.nombre} />
-                                        <div>
-                                            <p className="sl-student-name">{s.nombre}</p>
-                                            <p className="sl-student-carnet">{s.carnet}</p>
+                        {!loading && !error && filtered.map((s) => {
+                            const navegable = idPorCarnet.has(s.carnet);
+                            const observado = sinRespaldo.has(s.carnet);
+                            return (
+                                <tr
+                                    key={s.carnet}
+                                    className={`sl-table__tr${navegable ? ' sl-table__tr--clickable' : ''}`}
+                                    {...(navegable ? {
+                                        tabIndex: 0,
+                                        role: 'button',
+                                        'aria-label': `Abrir el expediente de ${s.nombre}`,
+                                        onClick: () => abrir(s.carnet),
+                                        onKeyDown: (e: React.KeyboardEvent) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                abrir(s.carnet);
+                                            }
+                                        },
+                                    } : {})}
+                                >
+                                    <td className="sl-table__td">
+                                        <div className="sl-student-cell">
+                                            <Avatar name={s.nombre} />
+                                            <div>
+                                                <p className="sl-student-name">{s.nombre}</p>
+                                                <p className="sl-student-carnet">{s.carnet}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td className="sl-table__td">{s.nota_grad1 ?? '—'}</td>
-                                <td className="sl-table__td">{s.nota_grad2 ?? '—'}</td>
-                                <td className="sl-table__td">
-                                    <Badge tone={filter === 'aprobados' ? 'success' : 'danger'} dot>
-                                        {filter === 'aprobados' ? 'Aprueba tesis' : 'No cumple'}
-                                    </Badge>
-                                </td>
-                            </tr>
-                        ))}
+                                    </td>
+                                    <td className="sl-table__td">{s.nota_grad1 ?? '—'}</td>
+                                    <td className="sl-table__td">{s.nota_grad2 ?? '—'}</td>
+                                    <td className="sl-table__td">
+                                        {/* La fila no puede afirmar «Aprueba tesis» cuando las
+                                            notas que la acompañan no lo sostienen: es el mismo
+                                            expediente que el panel señala arriba, y decir aquí
+                                            lo contrario rompería el único hilo que los une. */}
+                                        {observado ? (
+                                            <Badge tone="warning" dot>Sin respaldo</Badge>
+                                        ) : (
+                                            <Badge tone={filter === 'aprobados' ? 'success' : 'danger'} dot>
+                                                {filter === 'aprobados' ? 'Aprueba tesis' : 'No cumple'}
+                                            </Badge>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

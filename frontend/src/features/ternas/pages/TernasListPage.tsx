@@ -16,6 +16,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { PageHeader, Button, EmptyState, Skeleton } from '../../../components/ui';
 import type { EstadoTerna } from '../../../types/api';
+import { routes } from '../../../config/routes';
 import '../styles/ternas.css';
 
 type FilterValue = 'all' | EstadoTerna;
@@ -147,7 +148,7 @@ const TernasListPage: React.FC = () => {
                             <TernaCard
                                 key={t.id}
                                 terna={t}
-                                onSelect={(id) => history.push(`/ternas/${id}`)}
+                                onSelect={(id) => history.push(routes.ternaDetail(id))}
                                 destacado={t.numero === recienCreada}
                             />
                         ))}

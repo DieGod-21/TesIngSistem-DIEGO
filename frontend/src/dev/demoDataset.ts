@@ -150,12 +150,54 @@ export function notasDe(carnet: string): Nota[] {
     return out;
 }
 
-/** `true` solo si AMBAS notas existen y alcanzan el mínimo. */
+/**
+ * `true` solo si AMBAS notas existen y alcanzan el mínimo.
+ *
+ * Es la regla ESTRICTA, la que aplica el servidor real en
+ * `GET /api/tesis/estado/{carnet}` y la que el producto muestra en el
+ * expediente individual.
+ */
 export const apruebaTesis = (p: Semilla): boolean =>
     p.pg1 != null && p.pg2 != null && p.pg1 >= NOTA_MINIMA && p.pg2 >= NOTA_MINIMA;
 
 /** Le faltan notas: ni aprueba ni reprueba todavía. */
 export const faltanNotas = (p: Semilla): boolean => p.pg1 == null || p.pg2 == null;
+
+/**
+ * Pertenencia a la LISTA de aprobados, que en el servidor real NO coincide con
+ * la regla estricta de arriba.
+ *
+ * Comprobado el 13/08/2026 contra https://notas.digicom.com.gt:
+ *
+ *   GET /api/tesis/aprobados        → 30 estudiantes, 5 de ellos con
+ *                                     "nota_grad1": null y "aprueba_tesis": true
+ *   GET /api/tesis/estado/1890-18-20913
+ *                                   → "aprueba_tesis": false,
+ *                                     "razon": "No tiene nota en Proyecto de
+ *                                              Graduación I (043)"
+ *
+ * El mismo servidor da veredictos opuestos sobre la misma persona según a qué
+ * endpoint se le pregunte. La lista, en la práctica, incluye a quien no tiene
+ * NINGUNA nota por debajo del mínimo, aunque le falte alguna por registrar.
+ *
+ * Esto se REPRODUCE aquí a propósito, no se inventa: el conjunto de desarrollo
+ * existe para mirar el producto en las condiciones reales, y una de esas
+ * condiciones es que el backend se contradice. Sin esto, `auditarElegibilidad`
+ * no tendría nada que detectar en demo y el aviso del panel sería imposible de
+ * ver salvo contra el servidor de producción.
+ *
+ * Sigue habiendo UNA sola fuente de verdad: ambas reglas se derivan de
+ * `PERFILES`. Lo que hay son dos lecturas distintas del mismo dato, que es
+ * exactamente lo que ocurre en el servidor.
+ */
+export const enListaAprobados = (p: Semilla): boolean => {
+    const notas = [p.pg1, p.pg2].filter((n): n is number => n != null);
+    return notas.length > 0 && notas.every((n) => n >= NOTA_MINIMA);
+};
+
+/** Pertenencia a la LISTA de reprobados: alguna nota registrada no alcanza. */
+export const enListaReprobados = (p: Semilla): boolean =>
+    [p.pg1, p.pg2].some((n) => n != null && n < NOTA_MINIMA);
 
 export function razonDe(p: Semilla): string {
     if (faltanNotas(p)) return 'Faltan notas de PG1 y/o PG2.';

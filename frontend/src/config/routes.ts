@@ -20,6 +20,7 @@ export const routes = {
     studentDetail: (id: number | string) => `/students/${id}`,
 
     proyectos: () => '/proyectos',
+    proyectoDetail: (id: number | string) => `/proyectos/${id}`,
 
     ternas: () => '/ternas',
     ternaDetail: (id: number | string) => `/ternas/${id}`,

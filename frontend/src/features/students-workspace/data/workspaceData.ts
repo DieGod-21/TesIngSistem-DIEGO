@@ -46,8 +46,8 @@ function degradeTo<T>(source: string, fallback: T): (e: unknown) => T {
 export async function getWorkspaceDatasets(): Promise<WorkspaceDatasets> {
     const [registry, aprobados, reprobados, ternas, reporte] = await Promise.all([
         getEstudiantesRegistry(),
-        getAprobadosTesisCached().catch(degradeTo('tesis-aprobados', { estudiantes: [] as TesisEstudiante[] })),
-        getReprobadosTesisCached().catch(degradeTo('tesis-reprobados', { estudiantes: [] as TesisEstudiante[] })),
+        getAprobadosTesisCached().catch(degradeTo('tesis-aprobados', { estudiantes: [] as TesisEstudiante[], nota_minima: 0 })),
+        getReprobadosTesisCached().catch(degradeTo('tesis-reprobados', { estudiantes: [] as TesisEstudiante[], nota_minima: 0 })),
         listTernasCached().catch(degradeTo('ternas', [] as TernaResumen[])),
         getGlobalTernasReportCached().catch(degradeTo('reportes', { ternas: [] as ReporteTernaItem[] })),
     ]);
@@ -55,6 +55,9 @@ export async function getWorkspaceDatasets(): Promise<WorkspaceDatasets> {
         students: registry.estudiantes,
         tesisAprobados: aprobados.estudiantes,
         tesisReprobados: reprobados.estudiantes,
+        // Las dos listas publican el MISMO umbral; se toma el de aprobados y se
+        // usa el de reprobados solo si aquella fuente degradó a vacío.
+        notaMinimaTesis: aprobados.nota_minima || reprobados.nota_minima || 0,
         ternas,
         reporteTernas: reporte.ternas,
     };

@@ -16,6 +16,7 @@ import { useForm } from '../../hooks/useForm';
 import { runValidators, validators } from '../../utils/validators';
 import { Avatar, Button, Card, Field } from '../ui';
 import { userMessageFor } from '../../services/errorMessages';
+import { routes } from '../../config/routes';
 
 type FormFields = {
     nombreCompleto:      string;
@@ -188,7 +189,7 @@ const StudentManualForm: React.FC = () => {
                                         <button
                                             type="button"
                                             className="sn-log__item"
-                                            onClick={() => history.push(`/students/${s.id}`)}
+                                            onClick={() => history.push(routes.studentDetail(s.id))}
                                             aria-label={`Abrir expediente de ${s.nombreCompleto} (${s.carnetId})`}
                                         >
                                             <Avatar name={s.nombreCompleto} size="sm" />

@@ -1,0 +1,98 @@
+/**
+ * eligibility-audit.css — Aviso de elegibilidad sin respaldo.
+ *
+ * Hereda color, fondo y borde de `.ui-alert--warning`: aquí solo se resuelve la
+ * disposición de la lista. El tono NO se redefine, para que el aviso siga
+ * cambiando con los tokens del sistema en claro y en oscuro.
+ */
+
+.elig-audit {
+    /* El aviso comenta la cifra que tiene justo encima; se pega a la rejilla de
+       indicadores en lugar de flotar como un bloque independiente. */
+    margin-top: var(--space-12);
+}
+
+.elig-audit__lead {
+    margin: 0;
+    line-height: var(--leading-relaxed);
+}
+
+.elig-audit__list {
+    list-style: none;
+    margin: var(--space-12) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+}
+
+.elig-audit__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-4) var(--space-8);
+}
+
+/* El enlace ocupa nombre + carné y nada más: el objetivo táctil coincide con lo
+   que se lee como "esta persona", no con la fila entera (que incluye el motivo,
+   texto informativo que no navega a ninguna parte). */
+.elig-audit__link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-8);
+    /* 44px de alto son excesivos dentro de un aviso; se garantiza el mínimo
+       cómodo con padding vertical y se mantiene la fila legible. */
+    padding: var(--space-4) var(--space-6);
+    margin-left: calc(var(--space-6) * -1);
+    border-radius: var(--radius-sm);
+    color: inherit;
+    text-decoration: none;
+    min-height: 32px;
+}
+
+.elig-audit__link:hover {
+    background: color-mix(in oklch, currentColor 10%, transparent);
+}
+
+.elig-audit__link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}
+
+.elig-audit__nombre {
+    font-weight: var(--weight-semibold);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.elig-audit__carnet {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    opacity: 0.85;
+}
+
+.elig-audit__motivo {
+    font-size: var(--text-xs);
+    opacity: 0.9;
+}
+
+.elig-audit__mas {
+    margin-top: var(--space-8);
+    padding: var(--space-4) var(--space-8);
+    background: none;
+    border: 1px solid color-mix(in oklch, currentColor 35%, transparent);
+    border-radius: var(--radius-sm);
+    color: inherit;
+    font: inherit;
+    font-size: var(--text-xs);
+    cursor: pointer;
+    min-height: 32px;
+}
+
+.elig-audit__mas:hover {
+    background: color-mix(in oklch, currentColor 10%, transparent);
+}
+
+.elig-audit__mas:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}

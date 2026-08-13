@@ -21,7 +21,7 @@ function reporteItem(carnet: string, over: Partial<ReporteTernaItem> = {}): Repo
     return { terna_id: 100, numero: 1, carnet, estudiante: `N-${carnet}`, titulo: 'T', promedio: null, resolucion: 'pendiente', ...over };
 }
 function datasets(over: Partial<WorkspaceDatasets> = {}): WorkspaceDatasets {
-    return { students: [], tesisAprobados: [], tesisReprobados: [], ternas: [], reporteTernas: [], ...over };
+    return { students: [], tesisAprobados: [], tesisReprobados: [], notaMinimaTesis: 70, ternas: [], reporteTernas: [], ...over };
 }
 
 describe('deriveWorkQueue — derivación e integración', () => {

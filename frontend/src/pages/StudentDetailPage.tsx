@@ -17,6 +17,7 @@ import { formatCarrera, formatCiclo } from '../utils/strings';
 import '../features/ternas/styles/ternas.css';
 import '../styles/transitions.css';
 import '../styles/student-detail.css';
+import { routes } from '../config/routes';
 
 const CURSO_NAMES: Record<string, string> = {
     '043': 'Proyecto de Graduación I',
@@ -337,13 +338,13 @@ const StudentDetailPage: React.FC = () => {
                                     role: 'button',
                                     tabIndex: 0,
                                     'aria-label': `Abrir el proyecto «${proyecto.titulo}»`,
-                                    onClick: () => history.push(`/proyectos/${proyecto.id}`),
+                                    onClick: () => history.push(routes.proyectoDetail(proyecto.id)),
                                     onKeyDown: (e: React.KeyboardEvent) => {
                                         // Un div con rol de boton NO recibe gratis el
                                         // teclado: Enter y Espacio hay que atarlos a mano.
                                         if (e.key === 'Enter' || e.key === ' ') {
                                             e.preventDefault();
-                                            history.push(`/proyectos/${proyecto.id}`);
+                                            history.push(routes.proyectoDetail(proyecto.id));
                                         }
                                     },
                                 } : {})}
@@ -387,11 +388,11 @@ const StudentDetailPage: React.FC = () => {
                                     role="button"
                                     tabIndex={0}
                                     aria-label={`Abrir la terna ${terna.numero}`}
-                                    onClick={() => history.push(`/ternas/${terna.id}`)}
+                                    onClick={() => history.push(routes.ternaDetail(terna.id))}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' || e.key === ' ') {
                                             e.preventDefault();
-                                            history.push(`/ternas/${terna.id}`);
+                                            history.push(routes.ternaDetail(terna.id));
                                         }
                                     }}
                                 >

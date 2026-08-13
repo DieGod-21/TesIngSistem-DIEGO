@@ -227,7 +227,7 @@
 }
 
 .rep-carnet {
-  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
   color: var(--text-secondary);
 }

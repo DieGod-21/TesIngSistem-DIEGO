@@ -11,11 +11,12 @@ import { useHistory } from 'react-router-dom';
 import { Plus, AlertCircle, RefreshCw, Users } from 'lucide-react';
 
 import AppFooter from '../components/AppFooter';
-import KpiCard from '../components/KpiCard';
+import CohortTiles from '../components/dashboard/CohortTiles';
 import { Button, Card, Skeleton, EmptyState } from '../components/ui';
 import { formatLongDate } from '../utils/dates';
 import { AcademicProgressCard } from '../components/dashboard/DashboardAside';
 import WorkQueue from '../features/students-workspace/components/WorkQueue';
+import EligibilityAudit from '../features/students-workspace/components/EligibilityAudit';
 import { useStudentsPipeline } from '../features/students-workspace/hooks/useStudentsPipeline';
 import { resolveWorkItemHref } from '../features/students-workspace/navigation';
 
@@ -23,6 +24,7 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../context/AuthContext';
 
 import { VOCAB } from '../config/vocabulary';
+import { routes } from '../config/routes';
 import type { KpiData } from '../services/dashboardService';
 
 import '../styles/dashboard.css';
@@ -104,12 +106,11 @@ function getGreeting(): string {
 /* Tres esqueletos, tres tarjetas: el placeholder debe medir lo mismo que el
    contenido real para que la carga no provoque un salto de layout. */
 const KpiSkeleton: React.FC = () => (
-    <div className="dash-kpi-grid" aria-busy="true" aria-label="Cargando indicadores…">
+    <div className="cohort-tiles" aria-busy="true" aria-label="Cargando indicadores…">
         {[0, 1, 2].map((i) => (
-            <div key={i} className="kpi-card kpi-skeleton">
+            <div key={i} className="cohort-tile">
                 <Skeleton size="short" />
                 <Skeleton size="large" />
-                <Skeleton size="medium" />
             </div>
         ))}
     </div>
@@ -133,29 +134,45 @@ const DashboardPage: React.FC = () => {
     return (
         <>
         <div className="dash-body">
-                <section className="ui-hero dash-hero" aria-label="Bienvenida">
-                    <div>
-                        <p className="dash-hero__kicker">Panel de Control · PG1–PG2</p>
-                        <h1 className="dash-hero__title">
-                            {getGreeting()}, <strong>{firstName}</strong>
-                        </h1>
-                        <p className="dash-hero__subtitle">
-                            {formatLongDate(new Date())} · Facultad de Ingeniería · Ciclo {currentYear}
-                        </p>
+                {/* La portada carga los indicadores: el panel abre siendo un
+                    centro de trabajo y no una bienvenida con las cifras debajo.
+                    Es además el único lugar del producto con contenido REAL
+                    detrás de una lámina —la aurora y su textura—, y por eso el
+                    único donde el nivel «cristal» describe lo que ocurre. */}
+                <section className="ui-hero dash-hero dash-hero--work" aria-label="Estado de la cohorte">
+                    <div className="dash-hero__band">
+                        <div>
+                            <p className="dash-hero__kicker">Panel de Control · PG1–PG2</p>
+                            <h1 className="dash-hero__title">
+                                {getGreeting()}, <strong>{firstName}</strong>
+                            </h1>
+                            <p className="dash-hero__subtitle">
+                                {formatLongDate(new Date())} · Facultad de Ingeniería · Ciclo {currentYear}
+                            </p>
+                        </div>
+                        <div className="dash-hero__actions">
+                            <Button
+                                variant="contrast"
+                                onClick={() => history.push(routes.studentNew())}
+                                aria-label="Registrar nuevo estudiante"
+                            >
+                                <Plus size={18} aria-hidden="true" />
+                                Registrar Estudiante
+                            </Button>
+                        </div>
                     </div>
-                    <div className="dash-hero__actions">
-                        <Button
-                            variant="contrast"
-                            onClick={() => history.push('/students/new')}
-                            aria-label="Registrar nuevo estudiante"
-                        >
-                            <Plus size={18} aria-hidden="true" />
-                            Registrar Estudiante
-                        </Button>
-                    </div>
+
+                    {(summary.status === 'loading' || summary.status === 'idle') && <KpiSkeleton />}
+                    {summary.status === 'success' && (
+                        <CohortTiles
+                            kpis={summary.data.kpis
+                                .filter((k) => k.id !== PROGRESS_KPI_ID)
+                                .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k))
+                                .map((k) => (k.id === TOTAL_KPI_ID ? conciliarTotal(k, padronTotal) : k))}
+                        />
+                    )}
                 </section>
 
-                {(summary.status === 'loading' || summary.status === 'idle') && <KpiSkeleton />}
                 {summary.status === 'error' && (
                     <EmptyState
                         tone="danger"
@@ -169,39 +186,10 @@ const DashboardPage: React.FC = () => {
                         }
                     />
                 )}
-                {summary.status === 'success' && (() => {
-                    const cards = summary.data.kpis
-                        .filter((k) => k.id !== PROGRESS_KPI_ID)
-                        .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k))
-                        .map((k) => (k.id === TOTAL_KPI_ID ? conciliarTotal(k, padronTotal) : k));
 
-                    return (
-                        <section aria-labelledby="dash-cohort-title">
-                            {/* El porcentaje de la cohorte se mostraba AQUÍ y otra vez
-                                en el anillo de «Progreso académico»: el mismo 52 % dos
-                                veces en cuerpo grande, en la misma pantalla. Se queda
-                                en el anillo, que es donde va acompañado de su
-                                composición (elegibles / pendientes / total). De paso,
-                                este era el único `ui-section-head` del producto que
-                                cargaba una métrica; el resto son título + subtítulo. */}
-                            <div className="ui-section-head">
-                                <div className="ui-section-head__text">
-                                    <h2 id="dash-cohort-title" className="ui-section-head__title">
-                                        Estado de la cohorte
-                                    </h2>
-                                    <p className="ui-section-head__subtitle">
-                                        Avance de PG1–PG2 este ciclo. Toca un indicador para ver el detalle.
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="dash-kpi-grid">
-                                {cards.map((kpi) => (
-                                    <KpiCard key={kpi.id} data={kpi} />
-                                ))}
-                            </div>
-                        </section>
-                    );
-                })()}
+                {/* Comenta la cifra de elegibles que acaba de leerse arriba, y
+                    solo aparece cuando el servidor se contradice a sí mismo. */}
+                <EligibilityAudit auditoria={pipeline.auditoria} />
 
                 <div className="dash-flagship-grid">
                     <div className="dash-flagship-main">
