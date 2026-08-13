@@ -638,9 +638,12 @@ const TesisFilteredView: React.FC<{
                                         {/* La fila no puede afirmar «Aprueba tesis» cuando las
                                             notas que la acompañan no lo sostienen: es el mismo
                                             expediente que el panel señala arriba, y decir aquí
-                                            lo contrario rompería el único hilo que los une. */}
+                                            lo contrario rompería el único hilo que los une.
+                                            La palabra es la MISMA que usa el aviso del panel
+                                            («revisión»), para que se reconozcan como una sola
+                                            cosa al saltar de una pantalla a otra. */}
                                         {observado ? (
-                                            <Badge tone="warning" dot>Sin respaldo</Badge>
+                                            <Badge tone="warning" dot>Revisar</Badge>
                                         ) : (
                                             <Badge tone={filter === 'aprobados' ? 'success' : 'danger'} dot>
                                                 {filter === 'aprobados' ? 'Aprueba tesis' : 'No cumple'}

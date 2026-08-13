@@ -532,19 +532,86 @@
     flex-wrap: wrap;
 }
 
-/* Saludo + acción, arriba; indicadores debajo. La portada dejó de ser solo una
-   bienvenida y ahora carga la cifra de la cohorte, así que necesita dos filas. */
+/* ── Portada de trabajo: DOS ZONAS separadas ─────────────────────────────
+   Bienvenida arriba, indicadores abajo, con una regla entre ambas. Comparten
+   la aurora (que es lo que justifica el cristal de las fichas) pero no se
+   leen como una sola cosa: ver el comentario de DashboardPage. */
 .dash-hero--work {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-24);
+    gap: 0;
+    padding-bottom: clamp(1.25rem, 2.4vw, 1.75rem);
 }
-.dash-hero__band {
+
+/* ZONA 1 — bienvenida. Sin borde, sin fondo, sin caja: es texto sobre la
+   aurora. Esa ausencia de chrome es lo que impide que se lea como una ficha
+   más, aunque comparta superficie con ellas. */
+.dash-welcome {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--space-24);
     flex-wrap: wrap;
+    /* Respiro propio: la bienvenida necesita aire para ser una zona y no una
+       fila. Antes eran 24px y el saludo quedaba pegado a las cifras. */
+    padding-bottom: clamp(1.25rem, 2.6vw, 1.9rem);
+}
+.dash-welcome__text { min-width: 0; }
+
+/* ZONA 2 — indicadores. La regla superior es el corte entre las dos zonas:
+   una hairline de luz, del mismo material que el filo del cristal. */
+.dash-cohorte {
+    border-top: 1px solid oklch(1 0 0 / 0.16);
+    padding-top: clamp(1.1rem, 2.2vw, 1.5rem);
+}
+
+.dash-cohorte__tit {
+    margin: 0 0 var(--space-12);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    /* Medido sobre el compuesto de la aurora: 8.9:1 en el peor punto. */
+    color: oklch(0.90 0.02 275);
+}
+/* La pista de que se puede pulsar acompaña al título, en minúscula y sin
+   peso: informa sin competir con el rótulo de la zona. */
+.dash-cohorte__hint {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-weight: var(--weight-normal);
+    color: oklch(0.86 0.02 275);
+}
+@media (max-width: 560px) {
+    /* A un dedo de ancho la pista parte el rótulo en tres líneas. La
+       interacción sigue siendo evidente: las fichas son botones con foco. */
+    .dash-cohorte__hint { display: none; }
+}
+
+/* Fallo de los indicadores, resuelto dentro de su zona y sobre la aurora. */
+.dash-cohorte__error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    flex-wrap: wrap;
+    padding: var(--space-14) var(--space-16);
+    border-radius: var(--radius-lg);
+    border: 1px solid oklch(0.75 0.15 25 / 0.55);
+    background: color-mix(in oklch, oklch(0.62 0.20 25) 20%, var(--hero-glass-surface));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
+    color: #fff;
+}
+.dash-cohorte__error > div { flex: 1; min-width: 12rem; }
+.dash-cohorte__error-tit {
+    margin: 0;
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-sm);
+}
+.dash-cohorte__error-msg {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-xs);
+    color: oklch(0.93 0.02 275);
 }
 
 /* ── Indicadores de cohorte, en cristal sobre la aurora ──────────────────

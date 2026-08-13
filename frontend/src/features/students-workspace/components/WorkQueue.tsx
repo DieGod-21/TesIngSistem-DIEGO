@@ -39,6 +39,20 @@ import '../styles/work-queue.css';
 const CAP = 8;
 const CAP_FILTERED = 50;
 
+/**
+ * Filas del esqueleto mientras carga.
+ *
+ * MEDIDO: con 3 filas el hueco valía 269px y la cola llena ocupa 629px, así que
+ * al llegar los datos la página crecía 360px de golpe —cinco filas exactas—.
+ *
+ * No puede quedar a cero: cuántos ítems habrá es justo lo que no se sabe hasta
+ * que llegan. Se reserva el alto del caso HABITUAL (la cola llena, que es su
+ * estado normal al empezar un ciclo) en vez del mínimo, porque equivocarse por
+ * exceso encoge la página —y lo que hay debajo es el pie— mientras que
+ * equivocarse por defecto la empuja hacia abajo bajo el cursor del usuario.
+ */
+const SKELETON_ROWS = CAP;
+
 /** Texto de la acción por tipo. */
 const KIND_CTA: Record<WorkItemKind, string> = {
     registrar_nota_pg1: 'Registrar nota',
@@ -133,7 +147,7 @@ const WorkQueue: React.FC<WorkQueueProps> = ({
 
             {loading && (
                 <ul className="wq__list" aria-hidden="true">
-                    {Array.from({ length: 3 }).map((_, i) => (
+                    {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
                         <li key={i} className="wq__item wq__item--skeleton">
                             <Skeleton variant="circle" />
                             <div style={{ flex: 1 }}>

@@ -118,16 +118,19 @@ export function auditarElegibilidad(lista: ListaTesis): AuditoriaElegibilidad {
 /**
  * Motivo en una línea, para la fila de la observación.
  *
- * Nombra el curso concreto porque es lo que decide la acción siguiente: quien
- * lee esto tiene que ir a registrar UNA nota, no a investigar cuál.
+ * LENGUAJE DE USUARIO, no de ingeniería. Quien lee esto coordina graduaciones:
+ * no le sirve saber que dos endpoints discrepan, le sirve saber qué nota falta
+ * y en qué curso, porque eso es exactamente lo que tiene que ir a resolver.
+ * Nombrar el curso concreto convierte el aviso en una tarea.
  */
 export function describirObservacion(o: ObservacionElegibilidad): string {
     const partes: string[] = [];
     if (o.faltan.length > 0) {
-        partes.push(`sin nota de ${o.faltan.join(' ni ')}`);
+        const cursos = o.faltan.join(' y ');
+        partes.push(`Falta ${o.faltan.length > 1 ? 'la nota de' : 'la nota de'} ${cursos}`);
     }
     if (o.bajoMinimo.length > 0) {
-        partes.push(`${o.bajoMinimo.join(' y ')} bajo el mínimo`);
+        partes.push(`${o.bajoMinimo.join(' y ')} por debajo del mínimo`);
     }
     return partes.join(' · ');
 }

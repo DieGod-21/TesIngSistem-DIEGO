@@ -102,15 +102,24 @@ function getGreeting(): string {
     return 'Buenas noches';
 }
 
-/** Fecha larga capitalizada (es-ES). */
-/* Tres esqueletos, tres tarjetas: el placeholder debe medir lo mismo que el
-   contenido real para que la carga no provoque un salto de layout. */
+/*
+ * Esqueleto de los indicadores.
+ *
+ * MEDIDO: con dos líneas medía 94px frente a los 101px de la ficha real, y al
+ * llegar los datos toda la página daba un salto de 7px. Son tres filas —rótulo,
+ * cifra y descripción—, las mismas que tiene la ficha, con los mismos tamaños;
+ * así el hueco reservado es exactamente el que se va a ocupar.
+ */
 const KpiSkeleton: React.FC = () => (
     <div className="cohort-tiles" aria-busy="true" aria-label="Cargando indicadores…">
         {[0, 1, 2].map((i) => (
             <div key={i} className="cohort-tile">
-                <Skeleton size="short" />
-                <Skeleton size="large" />
+                {/* Alturas explícitas = las de las tres líneas reales (rótulo
+                    11px, cifra ~28px, descripción 12px). Con las alturas por
+                    defecto del esqueleto la ficha se pasaba 13px. */}
+                <Skeleton height={16} width="55%" />
+                <Skeleton height={28} width="40%" />
+                <Skeleton height={16} width="80%" />
             </div>
         ))}
     </div>
@@ -134,16 +143,27 @@ const DashboardPage: React.FC = () => {
     return (
         <>
         <div className="dash-body">
-                {/* La portada carga los indicadores: el panel abre siendo un
-                    centro de trabajo y no una bienvenida con las cifras debajo.
-                    Es además el único lugar del producto con contenido REAL
-                    detrás de una lámina —la aurora y su textura—, y por eso el
-                    único donde el nivel «cristal» describe lo que ocurre. */}
-                <section className="ui-hero dash-hero dash-hero--work" aria-label="Estado de la cohorte">
-                    <div className="dash-hero__band">
-                        <div>
+                {/*
+                  * DOS ZONAS, no una.
+                  *
+                  * El ciclo anterior metió los indicadores en la portada para que
+                  * el trabajo pendiente subiera, y se pasó de frenada: el saludo
+                  * y las cifras quedaron pegados y la bienvenida acabó pareciendo
+                  * una ficha más. Aquí siguen compartiendo la aurora —que es lo
+                  * que permite que las fichas sean de cristal de verdad— pero son
+                  * zonas separadas y jerarquizadas:
+                  *
+                  *     bienvenida  →  (regla)  →  indicadores
+                  *
+                  * La bienvenida no lleva chrome de tarjeta: no hay borde, ni
+                  * fondo, ni caja. Por eso no puede confundirse con un indicador,
+                  * aunque compartan superficie.
+                  */}
+                <section className="ui-hero dash-hero dash-hero--work" aria-labelledby="dash-saludo">
+                    <div className="dash-welcome">
+                        <div className="dash-welcome__text">
                             <p className="dash-hero__kicker">Panel de Control · PG1–PG2</p>
-                            <h1 className="dash-hero__title">
+                            <h1 id="dash-saludo" className="dash-hero__title">
                                 {getGreeting()}, <strong>{firstName}</strong>
                             </h1>
                             <p className="dash-hero__subtitle">
@@ -162,30 +182,38 @@ const DashboardPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {(summary.status === 'loading' || summary.status === 'idle') && <KpiSkeleton />}
-                    {summary.status === 'success' && (
-                        <CohortTiles
-                            kpis={summary.data.kpis
-                                .filter((k) => k.id !== PROGRESS_KPI_ID)
-                                .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k))
-                                .map((k) => (k.id === TOTAL_KPI_ID ? conciliarTotal(k, padronTotal) : k))}
-                        />
-                    )}
-                </section>
+                    <div className="dash-cohorte" aria-labelledby="dash-cohorte-tit">
+                        <p className="dash-cohorte__tit" id="dash-cohorte-tit">
+                            Estado de la cohorte
+                            <span className="dash-cohorte__hint"> · toca un indicador para ver el detalle</span>
+                        </p>
 
-                {summary.status === 'error' && (
-                    <EmptyState
-                        tone="danger"
-                        icon={<AlertCircle size={26} />}
-                        title="No se pudieron cargar los indicadores"
-                        description={summary.message}
-                        action={
-                            <Button variant="secondary" onClick={() => loadSummary()}>
-                                <RefreshCw size={16} aria-hidden="true" /> Reintentar
-                            </Button>
-                        }
-                    />
-                )}
+                        {(summary.status === 'loading' || summary.status === 'idle') && <KpiSkeleton />}
+                        {summary.status === 'success' && (
+                            <CohortTiles
+                                kpis={summary.data.kpis
+                                    .filter((k) => k.id !== PROGRESS_KPI_ID)
+                                    .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k))
+                                    .map((k) => (k.id === TOTAL_KPI_ID ? conciliarTotal(k, padronTotal) : k))}
+                            />
+                        )}
+                        {/* El error de los indicadores se resuelve DENTRO de su
+                            zona: sacarlo fuera dejaba la portada anunciando una
+                            sección vacía y el aviso huérfano más abajo. */}
+                        {summary.status === 'error' && (
+                            <div className="dash-cohorte__error" role="alert">
+                                <AlertCircle size={18} aria-hidden="true" />
+                                <div>
+                                    <p className="dash-cohorte__error-tit">No se pudieron cargar los indicadores</p>
+                                    <p className="dash-cohorte__error-msg">{summary.message}</p>
+                                </div>
+                                <Button variant="contrast" onClick={() => loadSummary()}>
+                                    <RefreshCw size={15} aria-hidden="true" /> Reintentar
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </section>
 
                 {/* Comenta la cifra de elegibles que acaba de leerse arriba, y
                     solo aparece cuando el servidor se contradice a sí mismo. */}
@@ -241,10 +269,28 @@ const DashboardPage: React.FC = () => {
                                 pct={progress.pct}
                             />
                         ) : (
-                            <Card padded className="dash-widget" aria-busy="true">
+                            /*
+                             * MEDIDO: este hueco valía 163px y la tarjeta real
+                             * ocupa 267px, así que al llegar los datos la
+                             * columna crecía 104px de golpe. La tarjeta es un
+                             * anillo con dos filas de leyenda y un pie: el
+                             * esqueleto reserva esa misma forma —círculo,
+                             * leyenda, pie— en vez de dos rayas sueltas.
+                             */
+                            <Card padded className="dash-widget" aria-busy="true" aria-label="Cargando progreso académico…">
                                 <span className="ui-kicker">Progreso académico</span>
-                                <Skeleton size="large" />
-                                <Skeleton size="medium" />
+                                {/* La tarjeta real pone el anillo y la leyenda EN FILA
+                                    (.progress-widget es flex). Apilarlos aquí hacía el
+                                    hueco 76px más alto que el contenido. */}
+                                <div className="progress-widget">
+                                    {/* 140px: el diámetro que dibuja ProgressRing. */}
+                                    <Skeleton variant="circle" width={140} height={140} />
+                                    <div className="dash-widget__skel-legend">
+                                        <Skeleton height={14} width="70%" />
+                                        <Skeleton height={14} width="60%" />
+                                    </div>
+                                </div>
+                                <Skeleton height={14} width="85%" />
                             </Card>
                         )}
                     </aside>

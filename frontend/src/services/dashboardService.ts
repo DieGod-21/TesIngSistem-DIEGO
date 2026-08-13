@@ -11,6 +11,7 @@
 
 import { apiGet } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
+import { cached } from './cache';
 
 // Tipos provenientes de los endpoints REALES (Swagger):
 //   GET /api/tesis/resumen         → resumen de aprobación global
@@ -54,7 +55,30 @@ export interface DashboardSummary {
  * No existe un endpoint /dashboard/summary en el backend; aquí derivamos
  * los KPIs a partir de las estadísticas oficiales de tesis.
  */
-export async function getDashboardSummary(opts: { signal?: AbortSignal } = {}): Promise<DashboardSummary> {
+export function getDashboardSummary(opts: { signal?: AbortSignal } = {}): Promise<DashboardSummary> {
+    /*
+     * MEDIDO antes de tocar nada: al volver al panel desde otra pantalla, esta
+     * era la ÚNICA petición que se repetía —y lo hacía dos veces—, mientras el
+     * padrón, las listas de tesis, las ternas y el reporte se servían de caché
+     * sin tocar la red. Este servicio era el único del producto sin el contrato
+     * de caché compartido; el resto lo tiene desde hace ciclos.
+     *
+     *     volver al panel, antes  → 2 peticiones (ambas /api/tesis/resumen)
+     *     volver al panel, ahora  → 0
+     *
+     * La clave es `tesis:resumen` a propósito: `invalidate('tesis')` limpia
+     * `tesis:*`, así que las invalidaciones que YA existen tras registrar una
+     * nota o importar un acta alcanzan también a este resumen. No hace falta
+     * ningún punto de invalidación nuevo, y es imposible que el resumen quede
+     * rancio mientras las listas se refrescan.
+     */
+    return cached(TESIS_RESUMEN_KEY, () => fetchDashboardSummary(opts));
+}
+
+/** Clave de caché; vive bajo el recurso `tesis` para heredar su invalidación. */
+export const TESIS_RESUMEN_KEY = 'tesis:resumen';
+
+async function fetchDashboardSummary(opts: { signal?: AbortSignal } = {}): Promise<DashboardSummary> {
     const { resumen } = await apiGet<TesisResumenResponse>(API_PATHS.tesis.resumen, { signal: opts.signal });
 
     const { total_estudiantes, aprobados, reprobados, porcentaje_aprobacion } = resumen;
