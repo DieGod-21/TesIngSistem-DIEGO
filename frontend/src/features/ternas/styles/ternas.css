@@ -535,3 +535,16 @@
         transition: none;
     }
 }
+
+/* Aviso de cambios sin guardar en el formulario de evaluación.
+   El borrador del servidor NO se guarda solo: sin este aviso, «escrito» y
+   «guardado» se veían exactamente igual. */
+.eval-form__sin-guardar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin: 0 0 var(--space-10);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-warning);
+}

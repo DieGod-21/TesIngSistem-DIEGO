@@ -9,15 +9,36 @@
  *   - Acciones: Guardar borrador, Enviar definitiva (con ConfirmModal).
  *   - Admin puede reabrir la evaluación de un evaluador (con ConfirmModal).
  *   - Feedback vía ToastContext.
+ *
+ * ── DÓNDE VIVE LO QUE SE ESCRIBE ────────────────────────────────────────────
+ *
+ * Antes, en `useState` de este componente. Con eso, quien escribía media
+ * página de observaciones, salía a comprobar un dato del proyecto y volvía, se
+ * encontraba el formulario vacío: el componente se había desmontado y con él lo
+ * tecleado. El borrador del SERVIDOR solo existe si se pulsa «Guardar
+ * borrador» a propósito.
+ *
+ * Ahora vive en `evaluationStore` (Zustand), indexado por terna. Es estado de
+ * un PROCESO —empieza en una pantalla, sigue en otra— y no pertenece a un
+ * componente que se monta y se desmonta al navegar.
+ *
+ * Lo que NO se movió: `scoreError`, `busy` y `pending` siguen en `useState`.
+ * Son estado efímero de esta pantalla, mueren con ella y nadie más los mira;
+ * subirlos a un store global no arreglaría nada y añadiría ruido.
+ *
+ * Lo que se ve = lo tecleado, si hay algo tecleado; si no, lo que dice el
+ * servidor. Al guardar o enviar se descarta lo local: a partir de ahí la
+ * verdad la tiene el servidor y conservar una copia solo puede divergir.
  */
 
-import React, { useEffect, useState } from 'react';
-import { Save, Send, Lock, RotateCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Save, Send, Lock, RotateCw, PencilLine } from 'lucide-react';
 import { saveDraft, submitEvaluation, reopenEvaluation } from '../../../services/ternasService';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import ConfirmModal from '../../../components/ConfirmModal';
 import { Button } from '../../../components/ui';
+import { useEvaluationStore, hayCambiosSinGuardar } from '../../../stores/evaluationStore';
 import type { TernaDetalle, EvaluadorTerna } from '../../../types/api';
 import { userMessageFor } from '../../../services/errorMessages';
 
@@ -55,17 +76,31 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
     const isLocked = mine?.eval_estado === 'enviada';
     const isParticipant = mine !== null;
 
-    const [score, setScore] = useState<string>(mine?.calificacion?.toString() ?? '');
-    const [comments, setComments] = useState<string>(mine?.comentarios ?? '');
+    // Lo tecleado y sin guardar, si existe. Sobrevive a la navegación.
+    const local = useEvaluationStore((s) => s.borradores[terna.id]);
+    const escribir = useEvaluationStore((s) => s.escribir);
+    const descartar = useEvaluationStore((s) => s.descartar);
+
+    // Lo que se ve: lo tecleado manda sobre lo del servidor.
+    const score = local?.calificacion ?? (mine?.calificacion?.toString() ?? '');
+    const comments = local?.comentarios ?? (mine?.comentarios ?? '');
+    const sinGuardar = hayCambiosSinGuardar(local, {
+        calificacion: mine?.calificacion ?? null,
+        comentarios: mine?.comentarios ?? null,
+    });
+
+    /*
+     * Se escriben SIEMPRE los dos campos, no solo el que cambió. Si se
+     * guardara únicamente el modificado, el otro entraría en el store como
+     * cadena vacía y borraría de la vista un valor del servidor que nadie tocó:
+     * escribir una observación habría hecho desaparecer la calificación.
+     */
+    const cambiar = (patch: { calificacion?: string; comentarios?: string }) =>
+        escribir(terna.id, { calificacion: score, comentarios: comments, ...patch });
+
     const [busy, setBusy] = useState<'draft' | 'submit' | 'reopen' | null>(null);
     const [pending, setPending] = useState<PendingAction>(null);
     const [scoreError, setScoreError] = useState<string | null>(null);
-
-    useEffect(() => {
-        setScore(mine?.calificacion?.toString() ?? '');
-        setComments(mine?.comentarios ?? '');
-        setScoreError(null);
-    }, [mine?.calificacion, mine?.comentarios, mine?.eval_estado, terna.id]);
 
     const parseScore = (): number | null => {
         if (score.trim() === '') return null;
@@ -89,6 +124,8 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                 comentarios: comments.trim() || null,
             });
             toast.success('Borrador guardado.');
+            // Ya está en el servidor: la copia local sobra y solo podría divergir.
+            descartar(terna.id);
             await onChanged();
         } catch (e) {
             toast.error(userMessageFor(e) || 'Error al guardar borrador.');
@@ -115,6 +152,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
         try {
             await submitEvaluation(terna.id, { calificacion: n, comentarios: comments.trim() || null });
             toast.success('Evaluación enviada exitosamente.');
+            descartar(terna.id);
             setPending(null);
             await onChanged();
         } catch (e) {
@@ -174,7 +212,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                             max={100}
                             step={0.01}
                             value={score}
-                            onChange={(e) => { setScore(e.target.value); if (scoreError) setScoreError(null); }}
+                            onChange={(e) => { cambiar({ calificacion: e.target.value }); if (scoreError) setScoreError(null); }}
                             className="ui-control eval-form__input"
                             placeholder="Ej. 85"
                             disabled={busy !== null}
@@ -199,12 +237,22 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                         <textarea
                             id="ev-comments"
                             value={comments}
-                            onChange={(e) => setComments(e.target.value)}
+                            onChange={(e) => cambiar({ comentarios: e.target.value })}
                             className="ui-control eval-form__textarea"
                             placeholder="Comentarios para el estudiante…"
                             disabled={busy !== null}
                         />
                     </div>
+
+                    {/* Que haya cambios sin guardar tiene que VERSE. El
+                        borrador del servidor no se guarda solo, y el aviso es
+                        lo que separa «lo tengo escrito» de «lo tengo guardado». */}
+                    {sinGuardar && (
+                        <p className="eval-form__sin-guardar" role="status">
+                            <PencilLine size={14} aria-hidden="true" />
+                            Tienes cambios sin guardar.
+                        </p>
+                    )}
 
                     <div className="eval-form__actions">
                         <Button

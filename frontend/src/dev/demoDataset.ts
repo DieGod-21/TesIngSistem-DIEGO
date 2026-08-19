@@ -271,6 +271,15 @@ export const USUARIOS: Usuario[] = [
     { id: 4, nombre: 'Ing. Marco Tulio Guzmán',      email: 'mguzman@miumg.edu.gt',    rol: 'evaluador' },
     { id: 5, nombre: 'Inga. Sandra López Rivera',    email: 'slopez@miumg.edu.gt',    rol: 'evaluador' },
     { id: 6, nombre: 'Ing. Julio César Batres Paz',  email: 'jbatres@miumg.edu.gt',    rol: 'evaluador' },
+    /*
+     * SIN NINGUNA TERNA ASIGNADA, a propósito.
+     *
+     * Los cinco evaluadores anteriores participan en algún panel, así que el
+     * estado vacío del workspace —«no tienes ternas asignadas»— no se podía
+     * ver sin tocar el conjunto. Un evaluador recién dado de alta está
+     * exactamente así, y es la primera pantalla que verá en su vida.
+     */
+    { id: 7, nombre: 'Inga. Claudia Herrera Solís',  email: 'cherrera@miumg.edu.gt',   rol: 'evaluador' },
 ];
 
 // ─── Ternas ─────────────────────────────────────────────────────────────────
@@ -328,7 +337,7 @@ const TERNAS_SEMILLA: SemillaTerna[] = [
 
 const nombreUsuario = (id: number) => USUARIOS.find((u) => u.id === id)?.nombre ?? 'Evaluador';
 
-function resolucionDe(promedio: number | null, todasEnviadas: boolean) {
+export function resolucionDe(promedio: number | null, todasEnviadas: boolean) {
     if (!todasEnviadas || promedio == null) return 'pendiente' as const;
     if (promedio >= 80) return 'aprueba_tesis' as const;
     if (promedio >= NOTA_MINIMA) return 'aprueba_curso' as const;

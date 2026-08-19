@@ -30,3 +30,67 @@
 @media (max-width: 640px) {
     .demo-banner span { display: none; }
 }
+
+/* Selector de cuentas: permite entrar como admin o como cada evaluador. */
+.demo-cuentas {
+    margin-left: auto;
+    font-size: var(--text-2xs);
+}
+
+.demo-cuentas > summary {
+    cursor: pointer;
+    /* 24x24 minimo: la herramienta de desarrollo no tiene por que incumplir
+       el mismo umbral tactil que se le exige al producto. */
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: var(--space-4) var(--space-10);
+    border-radius: var(--radius-pill);
+    background: oklch(1 0 0 / 0.16);
+    list-style: none;
+    user-select: none;
+}
+
+.demo-cuentas > summary::-webkit-details-marker { display: none; }
+
+.demo-cuentas__lista {
+    position: absolute;
+    /* Ancho propio: a 320px la lista se estrujaba a 20px de ancho. */
+    min-width: min(260px, calc(100vw - 20px));
+    right: 10px;
+    bottom: 100%;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px;
+    max-height: 60vh;
+    overflow-y: auto;
+    border-radius: var(--radius-lg);
+    background: var(--surface-float);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 32px oklch(0 0 0 / 0.35);
+}
+
+.demo-cuentas__item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 6px 10px;
+    min-height: 34px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+}
+
+.demo-cuentas__item:hover,
+.demo-cuentas__item:focus-visible {
+    background: oklch(1 0 0 / 0.10);
+}
+
+.demo-cuentas__nombre { font-weight: var(--weight-semibold); }
+.demo-cuentas__meta { opacity: 0.7; font-size: var(--text-3xs); }

@@ -42,6 +42,16 @@ export interface Capabilities {
      * reportes referencian a la persona.
      */
     readonly canEditStudents: boolean;
+    /**
+     * Coordinar la cohorte: padrón de estudiantes, alta de expedientes,
+     * catálogo global de proyectos y creación de ternas.
+     *
+     * Es la capacidad que separa los dos workspaces. Un evaluador no coordina
+     * a nadie: entra a evaluar lo que le asignaron. Sin esto, la navegación
+     * tenía que enumerar rutas administrativas una por una y el evaluador
+     * llegaba igualmente al padrón escribiendo la URL.
+     */
+    readonly canCoordinate: boolean;
 }
 
 /** Capacidades mínimas: todo denegado. Base segura para roles desconocidos. */
@@ -52,6 +62,7 @@ const NO_CAPABILITIES: Capabilities = Object.freeze({
     canEditGrades: false,
     canReopenEvaluations: false,
     canEditStudents: false,
+    canCoordinate: false,
 });
 
 /** Administrador: acceso completo a la coordinación. */
@@ -62,6 +73,7 @@ const ADMIN_CAPABILITIES: Capabilities = Object.freeze({
     canEditGrades: true,
     canReopenEvaluations: true,
     canEditStudents: true,
+    canCoordinate: true,
 });
 
 /** Evaluador: solo evalúa las ternas asignadas; sin capacidades administrativas. */
@@ -84,6 +96,26 @@ export function getCapabilities(role: Role | null | undefined): Capabilities {
         return CAPABILITIES_BY_ROLE[role];
     }
     return NO_CAPABILITIES;
+}
+
+/**
+ * ─── WORKSPACE ──────────────────────────────────────────────────────────────
+ *
+ * El producto no es una sola aplicación con botones ocultos: son DOS espacios
+ * de trabajo con propósitos distintos.
+ *
+ *   admin      → coordina la cohorte completa (padrón, proyectos, ternas,
+ *                notas, importaciones, usuarios y reportes).
+ *   evaluator  → evalúa lo que le asignaron, y nada más.
+ *
+ * Se deriva del rol en un solo sitio para que ninguna pantalla tenga que
+ * preguntar «¿es admin?» por su cuenta. Un rol desconocido cae en el workspace
+ * RESTRINGIDO: el que menos enseña.
+ */
+export type Workspace = 'admin' | 'evaluator';
+
+export function getWorkspace(role: Role | null | undefined): Workspace {
+    return role === 'admin' ? 'admin' : 'evaluator';
 }
 
 /**

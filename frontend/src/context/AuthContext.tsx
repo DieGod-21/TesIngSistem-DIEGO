@@ -8,8 +8,10 @@ import React, {
 } from 'react';
 import * as authService from '../services/authService';
 import type { User } from '../services/authService';
-import { getCapabilities, isAdminRole, type Capabilities } from '../config/permissions';
+import { getCapabilities, getWorkspace, isAdminRole, type Capabilities, type Workspace } from '../config/permissions';
 import { userMessageFor } from '../services/errorMessages';
+import { useEvaluationStore } from '../stores/evaluationStore';
+import { SESSION_MSG_KEY } from '../services/apiClient';
 
 // ─── Tipos ────────────────────────────────────────────────────────────
 
@@ -18,6 +20,8 @@ interface AuthContextValue {
     isAuthenticated: boolean;
     /** Capacidades de autorización derivadas del rol (fuente única de verdad). */
     capabilities: Capabilities;
+    /** Espacio de trabajo del usuario: decide navegación, inicio y contenidos. */
+    workspace: Workspace;
     /** Compatibilidad: derivado del módulo de permisos, no de comparación directa. */
     isAdmin: boolean;
     /** Numérico — mantenido para compatibilidad con componentes existentes. */
@@ -61,6 +65,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     } else if (result.status === 'unauthenticated') {
                         // Rechazo explícito de autenticación → cerrar sesión.
                         await authService.logout();
+                        /*
+                         * Y DECIR POR QUÉ.
+                         *
+                         * Comprobado en el navegador: con la sesión caducada, el
+                         * usuario aparecía de golpe en la pantalla de acceso sin
+                         * ninguna explicación —había estado trabajando hace un
+                         * segundo—. El aviso ya existía y el formulario de acceso
+                         * ya sabe mostrarlo; simplemente esta rama, la de la
+                         * verificación al arrancar, no lo dejaba escrito. La otra
+                         * ruta de expiración (el interceptor 401 de apiClient) sí
+                         * lo hacía, así que el mensaje aparecía o no según por
+                         * dónde se hubiera caído la sesión.
+                         */
+                        try {
+                            sessionStorage.setItem(
+                                SESSION_MSG_KEY,
+                                'Tu sesión expiró. Por favor inicia sesión nuevamente.',
+                            );
+                        } catch { /* sin almacenamiento: se pierde el aviso, no la sesión */ }
                         setUser(null);
                     }
                     // 'unknown' (red/timeout): se conserva la sesión optimista.
@@ -93,6 +116,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await authService.logout();
+            /*
+             * Lo que una persona dejó escrito sin guardar no es de la siguiente
+             * que entre en esta pestaña. `authService.logout` ya purga la cache
+             * compartida de servidor; esto purga el estado de proceso, que vive
+             * en memoria y no pasa por ahi.
+             */
+            useEvaluationStore.getState().limpiar();
             setUser(null);
             setError(null);
         } finally {
@@ -109,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isAuthenticated: user !== null,
         capabilities: getCapabilities(user?.role),
+        workspace: getWorkspace(user?.role),
         isAdmin: isAdminRole(user?.role),
         usuarioId: user ? user.usuarioId : null,
         isAuthLoading,

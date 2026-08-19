@@ -83,6 +83,28 @@ export async function getTernaById(id: number, opts: { signal?: AbortSignal } = 
     return unwrapEntity<TernaDetalle>(data, 'terna', API_PATHS.ternas.byId(id));
 }
 
+/** Clave de caché del detalle. Bajo el prefijo `ternas:` a propósito. */
+export const ternaDetalleKey = (id: number) => `${TERNAS_CACHE_PREFIX}:detalle:${id}`;
+
+/**
+ * Detalle cacheado y deduplicado.
+ *
+ * Existe porque el workspace del evaluador necesita el detalle de CADA una de
+ * sus ternas para saber cuáles esperan su evaluación: el listado solo trae el
+ * progreso del panel («2 de 3 enviadas»), que no dice si el que falta soy yo.
+ *
+ * La clave cuelga de `ternas:` para que `invalidateTernas()` —que ya se llama
+ * al enviar una evaluación o al reabrirla— limpie también los detalles. Sin
+ * eso, el evaluador enviaba su nota y su panel seguía diciéndole que la debía.
+ *
+ * El coste es una petición por terna asignada. Es asumible porque el servidor
+ * ya acota la lista al evaluador (son unas pocas), y desaparecería con un
+ * endpoint de «mis evaluaciones»: queda anotado como bloqueo del backend.
+ */
+export function getTernaByIdCached(id: number): Promise<TernaDetalle> {
+    return cached(ternaDetalleKey(id), () => getTernaById(id));
+}
+
 export interface EvaluacionPayload {
     calificacion: number;
     comentarios?: string | null;

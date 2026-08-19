@@ -27,7 +27,29 @@ export function useTernaDetalle(id: number | null) {
     });
 
     const reload = useCallback(async (signal?: AbortSignal) => {
-        if (id == null || Number.isNaN(id)) return;
+        /*
+         * DEFECTO CORREGIDO: EL ESQUELETO ETERNO.
+         *
+         * Antes esto era `if (id == null || Number.isNaN(id)) return;` —una
+         * salida silenciosa sin tocar el estado—, y el estado inicial es
+         * `loading: true`. Con una URL como `/ternas/abc`, `Number('abc')` es
+         * NaN, el hook se iba por aquí y la pantalla se quedaba con el
+         * esqueleto puesto y `aria-busy="true"` INDEFINIDAMENTE: nadie iba a
+         * resolver esa carga jamás. Comprobado en el navegador con
+         * `/ternas/abc` y `/ternas/1;drop`.
+         *
+         * Una dirección inválida no es una espera: es un final. Se resuelve
+         * como error, que es lo que de verdad es.
+         */
+        if (id == null || Number.isNaN(id)) {
+            setState({
+                terna: null,
+                eligibility: null,
+                loading: false,
+                error: 'La dirección no corresponde a ninguna terna.',
+            });
+            return;
+        }
         setState((s) => ({ ...s, loading: true, error: null }));
         try {
             // Cadena por dependencia: la terna aporta el carné; el estado de tesis
