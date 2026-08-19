@@ -35,9 +35,9 @@
 import {
     CURSOS, ESTUDIANTES, PROYECTOS, TERNAS, USUARIOS, NOTA_MINIMA,
     PERFIL_POR_CARNET, apruebaTesis, enListaAprobados, enListaReprobados, notasDe, promedioDe, razonDe,
-    resumenTerna,
+    resolucionDe, resumenTerna,
 } from './demoDataset';
-import type { Estudiante, Proyecto, TernaDetalle } from '../types/api';
+import type { Estudiante, Proyecto, TernaDetalle, Usuario } from '../types/api';
 import './demo.css';
 
 const CLAVE_SESION = 'umg:demo-data';
@@ -72,6 +72,68 @@ const estudiantes: Estudiante[] = ESTUDIANTES.map((e) => ({ ...e }));
 const proyectos:   Proyecto[]   = PROYECTOS.map((p) => ({ ...p }));
 const ternas:      TernaDetalle[] = TERNAS.map((t) => ({ ...t, evaluadores: t.evaluadores.map((x) => ({ ...x })) }));
 
+/*
+ * ─── SESIÓN DEL DOBLE ───────────────────────────────────────────────────────
+ *
+ * El doble tenía una sola sesión fija —siempre `USUARIOS[0]`, que es admin— y
+ * `/api/ternas` devolvía TODAS las ternas a cualquiera. Con eso, la mitad del
+ * producto que depende del rol era imposible de ver: no había forma de entrar
+ * como evaluador ni de comprobar que un evaluador solo ve lo suyo.
+ *
+ * Ahora el doble replica el acotamiento que /api-docs.json DECLARA para el
+ * servidor real:
+ *
+ *   GET  /api/ternas            → «Admin: todas · Evaluador: solo las asignadas»
+ *   GET  /api/ternas/{id}       → 403 «Evaluador no pertenece a esta terna»
+ *   GET  /api/reportes/ternas   → solo admin
+ *   GET  /api/usuarios          → solo admin
+ *
+ * No se inventa nada: cada regla de aquí está escrita en la especificación. El
+ * doble EMULA al servidor, no lo sustituye —la autoridad sigue siendo el
+ * backend—, pero permite verificar en el navegador que el producto se comporta
+ * correctamente cuando el servidor acota.
+ */
+const CLAVE_SESION_ROL = 'umg:demo-sesion';
+
+/*
+ * La sesión SOBREVIVE a la recarga.
+ *
+ * Al principio era una variable suelta en memoria, y eso rompía justo la
+ * comprobación más importante: al escribir una URL directa el navegador
+ * recarga, el módulo se reinicia, la sesión volvía a ser la del admin y
+ * `/api/usuarios/yo` devolvía admin. Resultado: un evaluador que escribía
+ * `/students` acababa entrando de verdad, no por un fallo del producto sino
+ * porque el doble le había cambiado el rol por debajo.
+ *
+ * Se guarda solo el id en `sessionStorage` (por pestaña, se va al cerrarla),
+ * que es lo que hace un servidor con una sesión de verdad.
+ */
+function leerSesion(): Usuario {
+    try {
+        const id = Number(sessionStorage.getItem(CLAVE_SESION_ROL));
+        return USUARIOS.find((u) => u.id === id) ?? USUARIOS[0];
+    } catch {
+        return USUARIOS[0];
+    }
+}
+
+function guardarSesion(u: Usuario): void {
+    try {
+        sessionStorage.setItem(CLAVE_SESION_ROL, String(u.id));
+    } catch { /* almacenamiento no disponible: la sesión durará lo que la página */ }
+}
+
+let sesion: Usuario = leerSesion();
+
+const esAdmin = () => sesion.rol === 'admin';
+
+/** ¿La terna tiene asignado a este usuario? Identidad por id, nunca por nombre. */
+const asignadoA = (t: TernaDetalle, uid: number) =>
+    t.evaluadores.some((e) => (e.usuario_id ?? e.id) === uid);
+
+/** Ternas que la sesión actual tiene derecho a ver. */
+const ternasVisibles = () => (esAdmin() ? ternas : ternas.filter((t) => asignadoA(t, sesion.id)));
+
 // ─── Utilidades de respuesta ────────────────────────────────────────────────
 
 const ok = (data: unknown, status = 200) =>
@@ -85,6 +147,30 @@ const fail = (status: number, message: string) =>
         status,
         headers: { 'Content-Type': 'application/json' },
     });
+
+const soloAdmin = () => fail(403, 'Esta operación requiere privilegios de administrador.');
+const noPerteneces = () => fail(403, 'No formas parte de esta terna.');
+
+/**
+ * Recalcula los campos DERIVADOS de una terna tras una escritura de evaluación.
+ * Usa la misma función de resolución con la que se construyó el conjunto, para
+ * que una terna evaluada en vivo y una del conjunto inicial sean indistinguibles.
+ */
+function recalcularTerna(t: TernaDetalle): void {
+    const enviadas = t.evaluadores.filter((e) => e.eval_estado === 'enviada');
+    const todas = enviadas.length === t.evaluadores.length;
+    const promedio = enviadas.length
+        ? Number((enviadas.reduce((a, e) => a + (e.calificacion ?? 0), 0) / enviadas.length).toFixed(2))
+        : null;
+    t.estado = enviadas.length === 0 ? 'pendiente' : todas ? 'completada' : 'en_progreso';
+    t.evaluaciones_enviadas = enviadas.length;
+    t.resultado = {
+        promedio,
+        resolucion: resolucionDe(promedio, todas),
+        evaluaciones_enviadas: enviadas.length,
+        total_evaluadores: t.evaluadores.length,
+    };
+}
 
 const num = (v: string | null, alt: number) => {
     const n = Number(v);
@@ -173,25 +259,48 @@ async function responder(metodo: string, url: URL, cuerpo: unknown): Promise<Res
 
     // ── Sesión ──
     if (ruta === '/api/auth/login' && metodo === 'POST') {
+        /*
+         * El correo decide QUIÉN entra. Antes se ignoraba y siempre entraba el
+         * admin, así que el workspace de evaluador no se podía ni abrir.
+         *
+         * La contraseña no se comprueba, y es deliberado: esto es un doble de
+         * desarrollo, no un mecanismo de seguridad. Fingir una verificación
+         * aquí daría la impresión de que hay autenticación real donde no la hay.
+         */
+        const dto = cuerpo as { email?: string };
+        const correo = (dto?.email ?? '').trim().toLowerCase();
+        const encontrado = USUARIOS.find((u) => u.email.toLowerCase() === correo);
+        if (!encontrado) {
+            return fail(401, 'Ese correo no pertenece al conjunto de demostración.');
+        }
+        sesion = encontrado;
+        guardarSesion(sesion);
         return ok({
             accessToken: 'demo.access.token',
             refreshToken: 'demo.refresh.token',
             expiresIn: 3600,
-            usuario: USUARIOS[0],
+            usuario: sesion,
         });
     }
     if (ruta === '/api/auth/refresh' && metodo === 'POST') {
         return ok({ accessToken: 'demo.access.token', expiresIn: 3600 });
     }
-    if (ruta === '/api/auth/logout') return ok({ mensaje: 'Sesión cerrada.' });
-    if (ruta === '/api/usuarios/yo') return ok({ usuario: USUARIOS[0] });
+    if (ruta === '/api/auth/logout') {
+        // Cerrar sesión en el doble también olvida quién era, como haría el servidor.
+        try { sessionStorage.removeItem(CLAVE_SESION_ROL); } catch { /* nada que limpiar */ }
+        sesion = USUARIOS[0];
+        return ok({ mensaje: 'Sesión cerrada.' });
+    }
+    if (ruta === '/api/usuarios/yo') return ok({ usuario: sesion });
 
     // ── Usuarios ──
     if (ruta === '/api/usuarios' && metodo === 'GET') {
+        if (!esAdmin()) return soloAdmin();   // el contrato lo marca «solo admin»
         const rol = q.get('rol');
         return ok({ usuarios: rol ? USUARIOS.filter((u) => u.rol === rol) : USUARIOS });
     }
     if (ruta === '/api/usuarios' && metodo === 'POST') {
+        if (!esAdmin()) return soloAdmin();
         const dto = cuerpo as { nombre: string; email: string; rol?: 'admin' | 'evaluador' };
         if (USUARIOS.some((u) => u.email === dto.email)) return fail(409, 'Ese correo ya está registrado.');
         const nuevo = { id: USUARIOS.length + 1, nombre: dto.nombre, email: dto.email, rol: dto.rol ?? 'evaluador' };
@@ -370,10 +479,12 @@ async function responder(metodo: string, url: URL, cuerpo: unknown): Promise<Res
     // ── Ternas ──
     if (ruta === '/api/ternas' && metodo === 'GET') {
         const estado = q.get('estado');
-        const filas = ternas.map(resumenTerna);
+        // Acotado por rol EN EL SERVIDOR (aquí, el doble), no filtrando en React.
+        const filas = ternasVisibles().map(resumenTerna);
         return ok({ ternas: estado ? filas.filter((t) => t.estado === estado) : filas });
     }
     if (ruta === '/api/ternas' && metodo === 'POST') {
+        if (!esAdmin()) return soloAdmin();
         const dto = cuerpo as { numero?: number; proyectoId?: number; evaluadoresIds?: number[]; fechaEvaluacion?: string };
         const proyecto = proyectos.find((p) => p.id === Number(dto.proyectoId));
         if (!proyecto) return fail(404, 'El proyecto indicado no existe.');
@@ -406,7 +517,10 @@ async function responder(metodo: string, url: URL, cuerpo: unknown): Promise<Res
         const m = M(/^\/api\/ternas\/(\d+)$/);
         if (m) {
             const t = ternas.find((x) => x.id === Number(m[1]));
-            return t ? ok({ terna: t }) : fail(404, 'Terna no encontrada.');
+            if (!t) return fail(404, 'Terna no encontrada.');
+            // 403 declarado por el contrato: «Evaluador no pertenece a esta terna».
+            if (!esAdmin() && !asignadoA(t, sesion.id)) return noPerteneces();
+            return ok({ terna: t });
         }
     }
     {
@@ -414,12 +528,49 @@ async function responder(metodo: string, url: URL, cuerpo: unknown): Promise<Res
         if (m) {
             const t = ternas.find((x) => x.id === Number(m[1]));
             if (!t) return fail(404, 'Terna no encontrada.');
-            return ok({ mensaje: 'Evaluación registrada (conjunto de demostración: no persiste).' });
+            const accion = m[2];
+
+            /*
+             * Antes esto respondía «ok» sin tocar nada: se podía enviar una
+             * evaluación y la terna seguía exactamente igual, así que el flujo
+             * completo —evaluar y ver el resultado— no se podía comprobar.
+             *
+             * Ahora la escritura se APLICA sobre la copia en memoria, como el
+             * resto de escrituras del doble, y los campos derivados se
+             * recalculan con la misma función que construyó el conjunto.
+             */
+            if (accion === 'reabrir') {
+                if (!esAdmin()) return soloAdmin();
+                const dto = cuerpo as { evaluadorId?: number };
+                const fila = t.evaluadores.find((e) => (e.usuario_id ?? e.id) === Number(dto?.evaluadorId));
+                if (!fila) return fail(404, 'Esa evaluación no existe en la terna.');
+                fila.eval_estado = 'borrador';
+            } else {
+                if (!esAdmin() && !asignadoA(t, sesion.id)) return noPerteneces();
+                const dto = cuerpo as { calificacion?: number; comentarios?: string | null };
+                const fila = t.evaluadores.find((e) => (e.usuario_id ?? e.id) === sesion.id);
+                if (!fila) return noPerteneces();
+                if (dto?.calificacion != null) fila.calificacion = Number(dto.calificacion);
+                if (dto?.comentarios !== undefined) fila.comentarios = dto.comentarios ?? null;
+                if (accion === 'enviar') {
+                    if (fila.calificacion == null) return fail(422, 'La calificación es obligatoria para enviar.');
+                    fila.eval_estado = 'enviada';
+                } else {
+                    fila.eval_estado = 'borrador';
+                }
+            }
+
+            recalcularTerna(t);
+            return ok({ terna: t, mensaje: 'Evaluación registrada (conjunto de demostración: se pierde al recargar).' });
         }
     }
 
     // ── Reportes ──
-    if (ruta === '/api/reportes/ternas') return ok({ reporte: reporteGlobal() });
+    // «Reporte global de todas las ternas (solo admin)», según el contrato.
+    if (ruta === '/api/reportes/ternas') {
+        if (!esAdmin()) return soloAdmin();
+        return ok({ reporte: reporteGlobal() });
+    }
     {
         const m = M(/^\/api\/reportes\/ternas\/(\d+)$/);
         if (m) {
@@ -613,6 +764,76 @@ function montarBanda(): void {
     const texto = document.createElement('span');
     texto.textContent = `Las respuestas del API vienen de src/dev/. ${salida}`;
 
-    banda.append(titulo, texto);
+    banda.append(titulo, texto, cuentasDemo());
     document.body.appendChild(banda);
+}
+
+/**
+ * Selector de cuentas del conjunto.
+ *
+ * Ahora que el correo decide el rol de la sesión, hace falta saber qué correos
+ * existen: sin esto habría que abrir `demoDataset.ts` para poder entrar como
+ * evaluador, y comprobar «evaluador A ≠ evaluador B» sería incomodísimo.
+ *
+ * Al pulsar una cuenta rellena el formulario de acceso. Los campos son inputs
+ * controlados por React, así que no basta con asignar `.value`: hay que usar el
+ * setter nativo del prototipo y despachar un evento `input` para que React se
+ * entere del cambio. Es la técnica estándar para gobernar un input controlado
+ * desde fuera de React, y aquí es aceptable porque esto es una herramienta de
+ * desarrollo que nunca viaja a producción.
+ */
+function cuentasDemo(): HTMLElement {
+    const caja = document.createElement('details');
+    caja.className = 'demo-cuentas';
+
+    const resumen = document.createElement('summary');
+    resumen.textContent = 'Cuentas';
+    caja.appendChild(resumen);
+
+    const lista = document.createElement('div');
+    lista.className = 'demo-cuentas__lista';
+
+    for (const u of USUARIOS) {
+        const fila = document.createElement('button');
+        fila.type = 'button';
+        fila.className = 'demo-cuentas__item';
+        fila.innerHTML = '';
+
+        const nombre = document.createElement('span');
+        nombre.className = 'demo-cuentas__nombre';
+        nombre.textContent = u.nombre;
+
+        const meta = document.createElement('span');
+        meta.className = 'demo-cuentas__meta';
+        meta.textContent = `${u.rol} · ${u.email}`;
+
+        fila.append(nombre, meta);
+        fila.addEventListener('click', () => rellenarAcceso(u.email));
+        lista.appendChild(fila);
+    }
+
+    caja.appendChild(lista);
+    return caja;
+}
+
+/** Escribe el correo en el formulario de acceso respetando el estado de React. */
+function rellenarAcceso(email: string): void {
+    const asignar = (sel: string, valor: string) => {
+        /*
+         * El campo es un `<ion-input>`: el id vive en el componente y el
+         * `<input>` de verdad está dentro (en el DOM claro, sin shadow root).
+         * Asignar sobre el componente no habría hecho nada.
+         */
+        const host = document.querySelector(sel);
+        const el = host instanceof HTMLInputElement ? host : host?.querySelector('input');
+        if (!el) return;
+        const setter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype, 'value',
+        )?.set;
+        setter?.call(el, valor);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    asignar('#email', email);
+    // La contraseña no se comprueba en el doble; se rellena para poder enviar.
+    asignar('#password', 'demo');
 }

@@ -15,9 +15,50 @@
 /** Configuración regional del producto (universidad guatemalteca). */
 const LOCALE = 'es-GT';
 
-/** Convierte a Date solo si el resultado es una fecha real. */
+/**
+ * Convierte a Date solo si el resultado es una fecha real.
+ *
+ * ── DEFECTO CORREGIDO: EL DÍA ANTERIOR ──────────────────────────────────────
+ *
+ * `new Date('2025-11-14')` NO devuelve el 14 de noviembre local: el estándar
+ * obliga a interpretar una cadena de solo fecha como UTC, así que devuelve la
+ * medianoche UTC del 14. Guatemala está en UTC−6, de modo que al formatear
+ * salía **jueves, 13 de noviembre** — un día antes— y, con `formatDateTime`,
+ * además una hora inventada («18:00») que el dato nunca tuvo.
+ *
+ * Se comprobó sobre el producto: la fecha de evaluación de las ternas
+ * (`fecha_evaluacion`, declarada en el contrato como `format: date`) se estaba
+ * enseñando corrida un día en el detalle de terna.
+ *
+ * Una fecha de solo día es un DÍA DEL CALENDARIO, no un instante: el 14 de
+ * noviembre es el 14 en cualquier huso. Por eso se construye con el
+ * constructor por componentes, que es local por definición. Las marcas de
+ * tiempo completas (`created_at`, con hora y zona) siguen su camino normal:
+ * ahí el instante sí importa y la conversión a hora local es la correcta.
+ */
+const SOLO_FECHA = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 function parse(value: string | number | Date | null | undefined): Date | null {
     if (value == null || value === '') return null;
+
+    if (typeof value === 'string') {
+        const m = SOLO_FECHA.exec(value.trim());
+        if (m) {
+            const [anio, mes, dia] = [Number(m[1]), Number(m[2]), Number(m[3])];
+            const d = new Date(anio, mes - 1, dia);
+            /*
+             * El constructor por componentes DESBORDA en silencio: `new Date(2025,
+             * 12, 45)` no falla, devuelve el 14 de febrero de 2026. Sin esta
+             * comprobación, `'2025-13-45'` —que antes daba `null` correctamente—
+             * habría pasado a imprimirse como una fecha perfectamente creíble.
+             * Se verifica que lo construido sea lo pedido.
+             */
+            return d.getFullYear() === anio && d.getMonth() === mes - 1 && d.getDate() === dia
+                ? d
+                : null;
+        }
+    }
+
     const d = value instanceof Date ? value : new Date(value);
     return Number.isNaN(d.getTime()) ? null : d;
 }

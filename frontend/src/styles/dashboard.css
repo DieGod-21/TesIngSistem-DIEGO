@@ -973,3 +973,24 @@
     .dash-sidebar--open ~ .dash-main .dash-sidebar-overlay,
     .dash-sidebar--open .dash-sidebar__nav-item { animation: none; }
 }
+/* Marca del espacio de trabajo en la cabecera del evaluador, donde el
+   coordinador tiene el buscador del padrón. Ocupa el mismo hueco flexible
+   para que los controles de la derecha no se desplacen entre roles. */
+.dash-header__ws {
+    flex: 1;
+    margin: 0;
+    /* MEDIDO: sin esto la cabecera del evaluador quedaba 4px más baja que la
+       del coordinador, porque su altura la marcaba el buscador. La misma barra
+       tiene que medir lo mismo en los dos espacios de trabajo. */
+    display: flex;
+    align-items: center;
+    min-height: var(--control-h-lg);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 560px) {
+    .dash-header__ws { display: none; }
+}

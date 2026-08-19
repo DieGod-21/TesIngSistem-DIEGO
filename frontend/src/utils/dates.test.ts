@@ -94,3 +94,32 @@ describe('formatAgo', () => {
         expect(rangos).toEqual([...rangos].sort((a, b) => a - b));
     });
 });
+
+/*
+ * Una fecha de SOLO DÍA es un día del calendario, no un instante.
+ *
+ * `new Date('2025-11-14')` se interpreta como medianoche UTC, así que en
+ * Guatemala (UTC−6) se formateaba como el 13 de noviembre. Estaba ocurriendo
+ * de verdad: el detalle de terna enseñaba `fecha_evaluacion` corrida un día.
+ */
+describe('fechas de solo dia (YYYY-MM-DD)', () => {
+    it('no se corre al dia anterior por la zona horaria', () => {
+        expect(formatShortDate('2025-11-14')).toContain('14');
+        expect(formatLongDate('2025-01-01')).toContain('1 de enero');
+    });
+
+    it('conserva el mes y el anio pedidos', () => {
+        expect(formatShortDate('2025-12-31')).toContain('31');
+        expect(formatShortDate('2025-12-31')).toContain('2025');
+    });
+
+    it('sigue rechazando una fecha imposible en vez de desbordarla', () => {
+        // `new Date(2025, 12, 45)` NO falla: rueda hasta febrero de 2026.
+        expect(formatShortDate('2025-13-45')).toBeNull();
+        expect(formatShortDate('2025-02-30')).toBeNull();
+    });
+
+    it('las marcas de tiempo completas siguen su camino normal', () => {
+        expect(formatDateTime('2025-10-01T15:30:00.000Z')).not.toBeNull();
+    });
+});

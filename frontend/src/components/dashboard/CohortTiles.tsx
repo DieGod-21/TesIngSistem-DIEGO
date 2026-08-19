@@ -31,6 +31,14 @@ import type { KpiData } from '../../services/dashboardService';
 
 interface Props {
     kpis: KpiData[];
+    /**
+     * Nombre del grupo para lectores de pantalla. Las fichas son el mismo
+     * material en los dos workspaces, pero no dicen lo mismo: al coordinador le
+     * describen la cohorte y al evaluador su propia carga.
+     */
+    groupLabel?: string;
+    /** Qué hay al otro lado de la ficha. Va en el nombre accesible del botón. */
+    destinoHint?: string;
 }
 
 function toNumeric(val: string | number): number | null {
@@ -40,7 +48,7 @@ function toNumeric(val: string | number): number | null {
 
 const AnimatedValue: React.FC<{ value: number }> = ({ value }) => <>{useCountUp(value)}</>;
 
-const CohortTile: React.FC<{ data: KpiData }> = ({ data }) => {
+const CohortTile: React.FC<{ data: KpiData; destinoHint: string }> = ({ data, destinoHint }) => {
     const history = useHistory();
     const Icon = resolveIcon(data.iconName);
     const numeric = toNumeric(data.value);
@@ -80,17 +88,21 @@ const CohortTile: React.FC<{ data: KpiData }> = ({ data }) => {
             onClick={() => history.push(destino)}
             /* El nombre accesible dice el número Y a dónde lleva: pulsar un
                indicador es navegar, y eso no puede deducirse del estilo. */
-            aria-label={`${data.label}: ${data.value}. Ver el detalle en el padrón.`}
+            aria-label={`${data.label}: ${data.value}. ${destinoHint}`}
         >
             {contenido}
         </button>
     );
 };
 
-const CohortTiles: React.FC<Props> = ({ kpis }) => (
-    <div className="cohort-tiles" role="group" aria-label="Estado de la cohorte">
+const CohortTiles: React.FC<Props> = ({
+    kpis,
+    groupLabel = 'Estado de la cohorte',
+    destinoHint = 'Ver el detalle en el padrón.',
+}) => (
+    <div className="cohort-tiles" role="group" aria-label={groupLabel}>
         {kpis.map((k) => (
-            <CohortTile key={k.id} data={k} />
+            <CohortTile key={k.id} data={k} destinoHint={destinoHint} />
         ))}
     </div>
 );

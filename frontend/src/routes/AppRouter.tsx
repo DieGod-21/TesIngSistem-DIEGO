@@ -41,6 +41,8 @@ const TernaDetailPage   = lazy(() => import('../features/ternas/pages/TernaDetai
 const ReportesPage      = lazy(() => import('../features/reportes/pages/ReportesPage'));
 const ReportDetailPage  = lazy(() => import('../features/reportes/pages/ReportDetailPage'));
 const ProyectosListPage  = lazy(() => import('../features/proyectos/pages/ProyectosListPage'));
+const MisProyectosPage   = lazy(() => import('../features/evaluator/pages/MisProyectosPage'));
+const MisTernasPage      = lazy(() => import('../features/evaluator/pages/MisTernasPage'));
 const ProyectoDetailPage = lazy(() => import('../features/proyectos/pages/ProyectoDetailPage'));
 const UsuariosPage      = lazy(() => import('../features/usuarios/pages/UsuariosPage'));
 
@@ -126,7 +128,7 @@ const PublicRoute: React.FC<RouteGuardProps> = ({ children, path, exact }) => {
 // Single persistent AppShell for all authenticated routes.
 // Auth check here avoids each page duplicating the guard logic.
 const AuthenticatedLayout: React.FC = () => {
-    const { isAuthenticated, isAuthLoading } = useAuth();
+    const { isAuthenticated, isAuthLoading, workspace } = useAuth();
     const location = useLocation();
 
     if (isAuthLoading) return <AuthLoadingScreen />;
@@ -140,15 +142,48 @@ const AuthenticatedLayout: React.FC = () => {
                 muestran el fallback aquí mientras el sidebar/header persisten. */}
             <Suspense fallback={<ContentFallback />}>
                 <Switch>
+                    {/* Inicio: el propio DashboardPage reparte según el workspace. */}
                     <Route path="/dashboard" exact><DashboardPage /></Route>
+
+                    {/*
+                     * COORDINACIÓN. El padrón, el alta de expedientes y el
+                     * catálogo de proyectos son trabajo de coordinación: un
+                     * evaluador que escriba la URL a mano recibe «Acceso
+                     * restringido», no la página.
+                     *
+                     * Esto NO es el mecanismo de seguridad —lo es el backend—,
+                     * pero evita pedir datos que no corresponden y explica por
+                     * qué no hay acceso en lugar de fallar de forma opaca.
+                     */}
                     {/* /students/new must precede /students/:id to avoid partial match */}
-                    <Route path="/students/new" exact><StudentNewPage /></Route>
-                    <Route path="/students/:id" exact><StudentDetailPage /></Route>
-                    <Route path="/students" exact><StudentsListPage /></Route>
-                    <Route path="/proyectos/:id" exact><ProyectoDetailPage /></Route>
-                    <Route path="/proyectos" exact><ProyectosListPage /></Route>
+                    <RoleRoute path="/students/new" exact require="canCoordinate"><StudentNewPage /></RoleRoute>
+                    <RoleRoute path="/students/:id" exact require="canCoordinate"><StudentDetailPage /></RoleRoute>
+                    <RoleRoute path="/students" exact require="canCoordinate"><StudentsListPage /></RoleRoute>
+                    <RoleRoute path="/proyectos/:id" exact require="canCoordinate"><ProyectoDetailPage /></RoleRoute>
+
+                    {/*
+                     * PROYECTOS: misma ruta, dos orígenes de datos distintos.
+                     *
+                     * El coordinador lee el catálogo (`GET /api/proyectos`). El
+                     * evaluador NO: sus proyectos se derivan de sus propias
+                     * ternas, porque ese endpoint no acepta ningún filtro por
+                     * asignación y pedirlo entero para esconder lo ajeno en
+                     * React sería descargar trabajo de otros.
+                     */}
+                    <Route path="/proyectos" exact>
+                        {workspace === 'admin' ? <ProyectosListPage /> : <MisProyectosPage />}
+                    </Route>
+                    {/* El DETALLE es compartido: los dos roles evalúan o
+                        supervisan desde la misma pantalla, y el servidor
+                        responde 403 si la terna no es del evaluador. */}
                     <Route path="/ternas/:id" exact><TernaDetailPage /></Route>
-                    <Route path="/ternas" exact><TernasListPage /></Route>
+
+                    {/* El LISTADO no: el coordinador administra todas las
+                        ternas y el evaluador consulta las suyas con un filtro
+                        que no existe para el otro («te tocan» / «enviadas»). */}
+                    <Route path="/ternas" exact>
+                        {workspace === 'admin' ? <TernasListPage /> : <MisTernasPage />}
+                    </Route>
                     <RoleRoute path="/reports/:id" exact require="canViewReports"><ReportDetailPage /></RoleRoute>
                     <RoleRoute path="/reports" exact require="canViewReports"><ReportesPage /></RoleRoute>
                     <RoleRoute path="/usuarios" exact require="canManageUsers"><UsuariosPage /></RoleRoute>

@@ -46,7 +46,7 @@ const Resaltado: React.FC<{ texto: string; query: string }> = ({ texto, query })
 };
 
 const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
-    const { user } = useAuth();
+    const { user, capabilities } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const history  = useHistory();
     const location = useLocation();
@@ -194,6 +194,14 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                 <Menu size={24} />
             </button>
 
+            {/*
+              * El buscador es del PADRÓN: escribe en `/students?search=` y
+              * consulta el registro de estudiantes. Un evaluador no coordina a
+              * nadie —no tiene acceso a esa ruta ni a esos datos—, así que el
+              * campo le ofrecía un atajo a una pantalla que le responde «acceso
+              * restringido». Se oculta donde no aplica en vez de dejarlo roto.
+              */}
+            {capabilities.canCoordinate ? (
             <div
                 className="dash-header__search-wrapper"
                 role="search"
@@ -240,6 +248,11 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                     </div>
                 )}
             </div>
+            ) : (
+                /* Sin buscador, el hueco lo ocupa la marca del espacio de
+                   trabajo: la cabecera no queda coja y además dice dónde está. */
+                <p className="dash-header__ws" aria-hidden="true">Panel de evaluación</p>
+            )}
 
             <div className="dash-header__actions">
                 <button

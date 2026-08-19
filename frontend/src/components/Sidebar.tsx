@@ -35,6 +35,15 @@ interface SidebarProps {
 
 interface NavItem {
     label: string;
+    /**
+     * Rótulo alternativo para el workspace del evaluador.
+     *
+     * La misma ruta no significa lo mismo según quién entre: el coordinador ve
+     * «Ternas» (todas, las administra) y el evaluador ve «Mis ternas» (las
+     * suyas, las evalúa). Cambiar la palabra es barato y evita que el evaluador
+     * crea que está mirando el sistema entero.
+     */
+    labelEvaluador?: string;
     to: string;
     icon: React.ReactNode;
     exact?: boolean;
@@ -50,15 +59,17 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
     { label: 'Inicio',         to: '/dashboard',    icon: <Home size={20} />,           exact: true },
-    { label: 'Nuevo Registro', to: '/students/new', icon: <UserPlus size={20} />,        exact: true },
+    { label: 'Nuevo Registro', to: '/students/new', icon: <UserPlus size={20} />,        exact: true,
+        capability: 'canCoordinate' },
     {
         label: 'Estudiantes', to: '/students', icon: <Users size={20} />,
+        capability: 'canCoordinate',
         // Activo en /students y /students/:id, pero NO en /students/new (ítem propio).
         matchSection: (p) => p === '/students' || (p.startsWith('/students/') && p !== '/students/new'),
     },
-    { label: 'Proyectos',       to: '/proyectos',    icon: <FolderOpen size={20} />,
+    { label: 'Proyectos', labelEvaluador: 'Mis proyectos', to: '/proyectos', icon: <FolderOpen size={20} />,
         matchSection: (p) => p === '/proyectos' || p.startsWith('/proyectos/') },
-    { label: 'Ternas',         to: '/ternas',       icon: <ClipboardList size={20} />,
+    { label: 'Ternas', labelEvaluador: 'Mis ternas', to: '/ternas', icon: <ClipboardList size={20} />,
         matchSection: (p) => p === '/ternas' || p.startsWith('/ternas/') },
     { label: 'Reportes',       to: '/reports',      icon: <BarChart3 size={20} />,       capability: 'canViewReports',
         matchSection: (p) => p === '/reports' || p.startsWith('/reports/') },
@@ -69,11 +80,17 @@ const NAV_ITEMS: NavItem[] = [
 // ─── Componente ──────────────────────────────────────────────────────
 
 const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
-    const { capabilities, logout } = useAuth();
+    const { capabilities, workspace, logout } = useAuth();
     const history = useHistory();
     const location = useLocation();
 
-    const items = NAV_ITEMS.filter((item) => !item.capability || capabilities[item.capability]);
+    const items = NAV_ITEMS
+        .filter((item) => !item.capability || capabilities[item.capability])
+        .map((item) => (
+            workspace === 'evaluator' && item.labelEvaluador
+                ? { ...item, label: item.labelEvaluador }
+                : item
+        ));
 
     // ── Indicador activo que "viaja": mide el ítem activo y lo desplaza. ──
     const navRef = useRef<HTMLElement>(null);

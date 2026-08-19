@@ -17,7 +17,7 @@ import { useEntityLinks } from '../../../hooks/useEntityLinks';
 import type { EvaluadorTerna } from '../../../types/api';
 import { Badge, Button, EmptyState, Skeleton, PageHeader, RelationCard } from '../../../components/ui';
 import { TERNA_ESTADO_LABEL, TERNA_ESTADO_TONE, RESOLUCION_LABEL, evaluacionEstado } from '../../../utils/ternaStatus';
-import { formatDateTime } from '../../../utils/dates';
+import { formatShortDate } from '../../../utils/dates';
 import '../styles/ternas.css';
 
 const TernaDetailSkeleton: React.FC = () => (
@@ -137,10 +137,10 @@ const TernaDetailPage: React.FC = () => {
                                         con el formateador del producto; si no es una fecha
                                         válida, `formatDateTime` devuelve null y la fila
                                         entera se omite en lugar de imprimir el ISO. */}
-                                    {formatDateTime(terna.fecha_evaluacion) && (
+                                    {formatShortDate(terna.fecha_evaluacion) && (
                                         <p className="tdetail-fecha">
                                             <CalendarDays size={14} aria-hidden="true" />
-                                            Evaluación: {formatDateTime(terna.fecha_evaluacion)}
+                                            Evaluación: {formatShortDate(terna.fecha_evaluacion)}
                                         </p>
                                     )}
                                 </article>

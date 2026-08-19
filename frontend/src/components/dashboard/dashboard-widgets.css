@@ -197,3 +197,12 @@
     flex: 1;
     min-width: 0;
 }
+
+/* Estado NO DISPONIBLE del rail lateral.
+   Cierra el ciclo de carga cuando la fuente falla: antes el hueco se quedaba
+   con el esqueleto y `aria-busy` puestos indefinidamente. */
+.dash-widget__unavailable {
+    margin: var(--space-12) 0 0;
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+}
