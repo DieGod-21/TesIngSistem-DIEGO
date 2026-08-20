@@ -4,6 +4,28 @@ Todas las entradas notables de este proyecto se documentan aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y versionado según [SemVer](https://semver.org/lang/es/).
 
+## [Unreleased]
+
+### Fixed
+- **Panel del coordinador en `loading` eterno (regresión de e5895e5):** el
+  resumen de tesis pasaba la señal de aborto del consumidor al loader de la
+  caché compartida, violando el contrato de `cache.ts`. Con StrictMode
+  (montar→abortar→remontar) el segundo montaje se enganchaba a la promesa ya
+  abortada, recibía la cancelación ajena y las tarjetas nunca salían del
+  esqueleto. El loader compartido ya no recibe señales de consumidores; la
+  regresión queda fijada con tests a nivel de servicio y de hook (StrictMode).
+- **Cuentas de usuario que nacían inutilizables:** el alta de usuarios no
+  enviaba contraseña (el contrato la acepta) y el API no expone ningún
+  restablecimiento (`/api/usuarios/{id}` solo admite GET), de modo que un
+  evaluador recién creado aparecía en el listado pero el login respondía 401.
+  El formulario ahora exige una contraseña inicial (≥8 caracteres) y advierte
+  que no puede recuperarse.
+- **Renovación de sesión defensiva:** si el refresh no trae un `refreshToken`
+  nuevo, se conserva el vigente en lugar de sobrescribirlo con `undefined`
+  (que mataba la sesión en la renovación siguiente, no en la actual).
+- **Doble demo fiel al contrato:** `/api/auth/refresh` del doble ahora rota
+  también el `refreshToken`, como declara la especificación.
+
 ## [1.0.0-rc.1] - 2026-07-22
 
 Primer Release Candidate. Consolida el endurecimiento de arquitectura,

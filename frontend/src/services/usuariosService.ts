@@ -13,6 +13,15 @@ export interface CreateUsuarioDto {
     nombre: string;
     email: string;
     rol: RolUsuario;
+    /*
+     * El contrato (POST /api/usuarios en /api-docs.json) lo declara opcional,
+     * pero aquí es obligatorio a propósito: una cuenta creada sin contraseña
+     * queda inutilizable —aparece en el listado, el login responde 401
+     * «Credenciales inválidas»— y el API no expone ningún endpoint para
+     * restablecerla (/api/usuarios/{id} solo admite GET). Ya ocurrió con una
+     * cuenta real de evaluador.
+     */
+    password: string;
 }
 
 export async function getMe(opts: { signal?: AbortSignal } = {}): Promise<Usuario> {

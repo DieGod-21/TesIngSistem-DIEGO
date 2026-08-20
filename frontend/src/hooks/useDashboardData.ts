@@ -26,10 +26,17 @@ export function useDashboardData() {
 
     // ── Carga de resumen ─────────────────────────────────────────────
 
+    /*
+     * La señal es SOLO para descartar renders obsoletos tras desmontar: no se
+     * pasa al servicio. La carga vive en la caché compartida (cache.ts) y no
+     * debe abortarla ningún consumidor individual; cuando se le pasaba, el
+     * remonte de StrictMode se enganchaba a la promesa ya abortada del primer
+     * montaje, recibía su cancelación y el panel quedaba en `loading` eterno.
+     */
     const loadSummary = useCallback(async (signal?: AbortSignal) => {
         setSummary({ status: 'loading' });
         try {
-            const data = await getDashboardSummary({ signal });
+            const data = await getDashboardSummary();
             if (signal?.aborted) return;
             setSummary({ status: 'success', data });
         } catch (err) {
@@ -42,7 +49,7 @@ export function useDashboardData() {
     }, []);
 
     // ── Carga inicial ────────────────────────────────────────────────
-    // Se cancela por su cuenta al navegar.
+    // Al desmontar solo se descartan los renders; la petición compartida sigue.
 
     useEffect(() => {
         const controller = new AbortController();

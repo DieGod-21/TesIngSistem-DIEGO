@@ -18,14 +18,24 @@ interface FormState {
     nombre: string;
     email: string;
     rol: RolUsuario;
+    password: string;
 }
 
 interface FormErrors {
     nombre?: string;
     email?: string;
+    password?: string;
 }
 
-const INITIAL: FormState = { nombre: '', email: '', rol: 'evaluador' };
+/*
+ * Mínimo de la contraseña inicial. El contrato no declara restricciones; este
+ * umbral es política del cliente: la cuenta no tiene vía de recuperación
+ * (no existe endpoint de restablecimiento), así que la contraseña con la que
+ * nace es la que la persona usará. Ocho caracteres es el mínimo defendible.
+ */
+const PASSWORD_MIN = 8;
+
+const INITIAL: FormState = { nombre: '', email: '', rol: 'evaluador', password: '' };
 
 const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
     const [form, setForm] = useState<FormState>(INITIAL);
@@ -62,6 +72,17 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
             e.email = 'Ingresa un correo válido.';
         }
+        /*
+         * SIN contraseña la cuenta nace muerta: el usuario aparece en el
+         * listado pero el login responde «Credenciales inválidas» y no hay
+         * endpoint para restablecerla. Por eso aquí es obligatoria aunque el
+         * contrato la declare opcional.
+         */
+        if (!form.password) {
+            e.password = 'La contraseña inicial es requerida.';
+        } else if (form.password.length < PASSWORD_MIN) {
+            e.password = `Debe tener al menos ${PASSWORD_MIN} caracteres.`;
+        }
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -77,6 +98,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                 nombre,
                 email: form.email.trim(),
                 rol: form.rol,
+                password: form.password,
             });
             setForm(INITIAL);
             setErrors({});
@@ -154,6 +176,30 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                     </div>
 
                     <div className="ui-modal__field">
+                        <label htmlFor="nu-password" className="ui-modal__label">
+                            Contraseña inicial <span aria-hidden="true">*</span>
+                        </label>
+                        <input
+                            id="nu-password"
+                            type="password"
+                            className={`ui-control${errors.password ? ' ui-control--error' : ''}`}
+                            value={form.password}
+                            onChange={set('password')}
+                            placeholder={`Mínimo ${PASSWORD_MIN} caracteres`}
+                            disabled={loading}
+                            autoComplete="new-password"
+                            aria-describedby="nu-password-ayuda"
+                        />
+                        {errors.password && (
+                            <span className="ui-modal__error" role="alert">{errors.password}</span>
+                        )}
+                        <span id="nu-password-ayuda" className="ui-modal__hint">
+                            Compártela con la persona por un medio seguro. No puede
+                            recuperarse después: si se pierde, la cuenta queda inutilizable.
+                        </span>
+                    </div>
+
+                    <div className="ui-modal__field">
                         <label htmlFor="nu-rol" className="ui-modal__label">Rol</label>
                         <select
                             id="nu-rol"
@@ -178,7 +224,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         <Button
                             type="submit"
                             loading={loading}
-                            disabled={loading || !form.nombre.trim() || !form.email.trim()}
+                            disabled={loading || !form.nombre.trim() || !form.email.trim() || !form.password}
                         >
                             {loading ? 'Creando…' : 'Crear Usuario'}
                         </Button>
