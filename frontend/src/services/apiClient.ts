@@ -223,7 +223,12 @@ async function doRefresh(): Promise<string> {
     const payload = (json && typeof json === 'object' && 'data' in json) ? json.data : json;
 
     sessionStorage.setItem(ACCESS_TOKEN_KEY, payload.accessToken);
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, payload.refreshToken);
+    // El contrato rota el refresh token en cada renovación. Si un día dejara
+    // de venir, conservar el vigente: sobrescribirlo con `undefined` mataría
+    // la sesión en la SIGUIENTE renovación, no en esta, y sería indepurable.
+    if (typeof payload.refreshToken === 'string' && payload.refreshToken) {
+        sessionStorage.setItem(REFRESH_TOKEN_KEY, payload.refreshToken);
+    }
     sessionStorage.setItem(EXPIRES_AT_KEY, String(Date.now() + (payload.expiresIn ?? 900) * 1000));
 
     return payload.accessToken as string;

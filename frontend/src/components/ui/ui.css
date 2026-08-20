@@ -990,6 +990,13 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     font-weight: var(--weight-medium);
 }
 
+/* Ayuda contextual de un campo: informa, no alarma. */
+.ui-modal__hint {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    line-height: var(--leading-relaxed);
+}
+
 @keyframes ui-overlay-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ui-modal-in {
     from { opacity: 0; transform: scale(0.96) translateY(8px); }

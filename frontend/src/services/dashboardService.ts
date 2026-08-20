@@ -55,7 +55,7 @@ export interface DashboardSummary {
  * No existe un endpoint /dashboard/summary en el backend; aquí derivamos
  * los KPIs a partir de las estadísticas oficiales de tesis.
  */
-export function getDashboardSummary(opts: { signal?: AbortSignal } = {}): Promise<DashboardSummary> {
+export function getDashboardSummary(): Promise<DashboardSummary> {
     /*
      * MEDIDO antes de tocar nada: al volver al panel desde otra pantalla, esta
      * era la ÚNICA petición que se repetía —y lo hacía dos veces—, mientras el
@@ -71,15 +71,22 @@ export function getDashboardSummary(opts: { signal?: AbortSignal } = {}): Promis
      * nota o importar un acta alcanzan también a este resumen. No hace falta
      * ningún punto de invalidación nuevo, y es imposible que el resumen quede
      * rancio mientras las listas se refrescan.
+     *
+     * El loader NO recibe la señal de ningún consumidor (contrato de cache.ts):
+     * la carga es compartida y no puede abortarla quien se desmonte. Cuando se
+     * le pasaba, el remonte de StrictMode se enganchaba a una promesa ya
+     * abortada, recibía la cancelación ajena y el panel quedaba en `loading`
+     * para siempre. Cada consumidor descarta renders obsoletos con su propia
+     * señal (useDashboardData comprueba `signal.aborted` tras el await).
      */
-    return cached(TESIS_RESUMEN_KEY, () => fetchDashboardSummary(opts));
+    return cached(TESIS_RESUMEN_KEY, () => fetchDashboardSummary());
 }
 
 /** Clave de caché; vive bajo el recurso `tesis` para heredar su invalidación. */
 export const TESIS_RESUMEN_KEY = 'tesis:resumen';
 
-async function fetchDashboardSummary(opts: { signal?: AbortSignal } = {}): Promise<DashboardSummary> {
-    const { resumen } = await apiGet<TesisResumenResponse>(API_PATHS.tesis.resumen, { signal: opts.signal });
+async function fetchDashboardSummary(): Promise<DashboardSummary> {
+    const { resumen } = await apiGet<TesisResumenResponse>(API_PATHS.tesis.resumen);
 
     const { total_estudiantes, aprobados, reprobados, porcentaje_aprobacion } = resumen;
     const completionPct = Math.round(porcentaje_aprobacion);

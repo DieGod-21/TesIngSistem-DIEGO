@@ -283,7 +283,9 @@ async function responder(metodo: string, url: URL, cuerpo: unknown): Promise<Res
         });
     }
     if (ruta === '/api/auth/refresh' && metodo === 'POST') {
-        return ok({ accessToken: 'demo.access.token', expiresIn: 3600 });
+        // El contrato declara ROTACIÓN: el refresh devuelve también un nuevo
+        // refreshToken. Sin él, apiClient guardaba la cadena "undefined".
+        return ok({ accessToken: 'demo.access.token', refreshToken: 'demo.refresh.token', expiresIn: 3600 });
     }
     if (ruta === '/api/auth/logout') {
         // Cerrar sesión en el doble también olvida quién era, como haría el servidor.
