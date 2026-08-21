@@ -672,8 +672,11 @@
    el texto claro pierde contraste justo donde se añadió la lámina. Medido
    sobre el compuesto real (aurora + cristal + desenfoque) en toda la anchura
    de la ficha, que es un degradado y por tanto tiene un peor caso. */
+/* Un escalón arriba (12 → 13px): es la línea que dice QUÉ cuenta la cifra de
+   arriba, y sin ella el número no significa nada. El color no se toca, así
+   que el contraste medido sigue siendo el mismo. */
 .cohort-tile__desc {
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     line-height: var(--leading-snug);
     color: oklch(0.93 0.02 275);
 }

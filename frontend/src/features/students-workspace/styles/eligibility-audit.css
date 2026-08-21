@@ -12,8 +12,33 @@
     margin-top: var(--space-12);
 }
 
+/* ── Jerarquía: cuántos → qué significa → quiénes → qué hago ──────────
+   La cifra es lo primero que se ve; el rótulo la nombra; el cuerpo explica en
+   una línea. Antes los cuatro escalones tenían el mismo tamaño y peso. */
+.elig-audit__titulo {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-8);
+    margin: 0 0 var(--space-4);
+}
+
+.elig-audit__cifra {
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-none);
+    /* Cifras de ancho fijo: al desplegar y plegar la lista el número puede
+       cambiar de 4 a 12 y el rótulo no debe bailar. */
+    font-variant-numeric: tabular-nums;
+}
+
+.elig-audit__rotulo {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+}
+
 .elig-audit__lead {
     margin: 0;
+    font-size: var(--text-base);
     line-height: var(--leading-relaxed);
 }
 
@@ -59,6 +84,7 @@
 }
 
 .elig-audit__nombre {
+    font-size: var(--text-base);
     font-weight: var(--weight-semibold);
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -66,13 +92,15 @@
 
 .elig-audit__carnet {
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     opacity: 0.85;
 }
 
+/* El motivo es la mitad útil de la fila —«falta la nota de PG2» es la tarea—,
+   y estaba a 12px con opacidad: se leía como una nota al pie de sí mismo. */
 .elig-audit__motivo {
-    font-size: var(--text-xs);
-    opacity: 0.9;
+    font-size: var(--text-sm);
+    opacity: 0.92;
 }
 
 .elig-audit__mas {
@@ -83,9 +111,9 @@
     border-radius: var(--radius-sm);
     color: inherit;
     font: inherit;
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     cursor: pointer;
-    min-height: 32px;
+    min-height: var(--control-h-sm);
 }
 
 .elig-audit__mas:focus-visible {
@@ -104,19 +132,28 @@
     margin-top: var(--space-12);
 }
 
+/* Relleno SÓLIDO con el propio par de tokens del aviso (texto sobre fondo,
+   invertido). El contraste es el mismo que ya garantiza el tono en claro y en
+   oscuro, y no hace falta un color nuevo: el botón principal deja de parecer
+   deshabilitado sin salirse del sistema. */
 .elig-audit__cta {
     display: inline-flex;
     align-items: center;
-    min-height: 32px;
-    padding: var(--space-4) var(--space-12);
+    gap: var(--space-6);
+    min-height: var(--control-h-sm);
+    padding: var(--space-6) var(--space-14);
     border-radius: var(--radius-sm);
-    background: color-mix(in oklch, currentColor 14%, transparent);
-    color: inherit;
-    font-size: var(--text-xs);
+    background: var(--toast-warning-text);
+    color: var(--toast-warning-bg);
+    font-size: var(--text-sm);
     font-weight: var(--weight-semibold);
     text-decoration: none;
+    transition: filter var(--transition-base);
 }
-.elig-audit__cta:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
+.elig-audit__cta:focus-visible {
+    outline: 2px solid var(--toast-warning-text);
+    outline-offset: 2px;
+}
 
 /* En pantallas táctiles el estado de apuntar se QUEDA pegado tras el toque
    hasta que se toca otra cosa. Da igual en los enlaces —navegan y el elemento
@@ -124,4 +161,25 @@
    reserva a los punteros que de verdad pueden apuntar. */
 @media (hover: hover) {
     .elig-audit__mas:hover { background: color-mix(in oklch, currentColor 10%, transparent); }
+    .elig-audit__cta:hover { filter: brightness(1.08); }
+    }
+
+/* ── Peso visual del relleno ──────────────────────────────────────────
+   `--toast-warning-bg` está calibrado para un toast de dos líneas. Este bloque
+   ocupa media columna y a ese tamaño el mismo ámbar pesa como una alarma: en
+   oscuro se lee rojizo y la gente lo trata como «algo se rompió» cuando lo que
+   dice es «hay trabajo».
+
+   Se rebaja dejando pasar la superficie de debajo, NO con un override por
+   tema: en claro el fondo aclara y en oscuro oscurece, con los tokens de cada
+   tema, así que sigue funcionando por herencia.
+
+   MEDIDO: la primera versión mezclaba contra `--surface-base`, que lleva su
+   propia croma azulada. Interpolar en oklch entre matiz 80 (ámbar) y 275
+   (azul) recorre el arco CORTO, que pasa por el rojo: el panel salía en matiz
+   40 y quedaba MÁS parecido al error (matiz 25) que antes, justo lo contrario
+   de lo que se buscaba. Mezclar con `transparent` solo toca la opacidad y deja
+   el matiz donde estaba. */
+.elig-audit {
+    background: color-mix(in oklch, var(--toast-warning-bg) 72%, transparent);
     }

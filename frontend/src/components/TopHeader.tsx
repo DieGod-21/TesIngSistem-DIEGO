@@ -200,6 +200,13 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
               * nadie —no tiene acceso a esa ruta ni a esos datos—, así que el
               * campo le ofrecía un atajo a una pantalla que le responde «acceso
               * restringido». Se oculta donde no aplica en vez de dejarlo roto.
+              *
+              * EN EL PADRÓN CONVIVE CON OTRO CAMPO, y eso está bien: hacen
+              * cosas distintas. Este SALTA a una persona (sugiere y abre su
+              * expediente); el de la página FILTRA la lista. Lo que sí
+              * confundía era que los dos dijeran «buscar estudiantes» a diez
+              * centímetros de distancia, como si uno sobrara. Se nombra por lo
+              * que hace, que es lo que los separa.
               */}
             {capabilities.canCoordinate ? (
             <div
@@ -211,8 +218,8 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                     ref={inputRef}
                     type="text"
                     className="dash-header__search"
-                    placeholder="Buscar estudiantes..."
-                    aria-label="Buscar estudiantes"
+                    placeholder="Ir a un estudiante…"
+                    aria-label="Ir a un estudiante"
                     role="combobox"
                     aria-expanded={panelOpen}
                     aria-controls={listboxId}

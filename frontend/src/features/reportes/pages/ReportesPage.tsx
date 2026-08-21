@@ -65,7 +65,10 @@ const ReportesPage: React.FC = () => {
 
     }, []);
 
-    const ternas: ReporteTernaItem[] = data?.ternas ?? [];
+    /* `data?.ternas ?? []` fabricaba un array nuevo en cada render, así que el
+       filtro de abajo se recalculaba entero cada vez aunque no cambiara nada:
+       el `useMemo` estaba escrito pero no memorizaba. */
+    const ternas: ReporteTernaItem[] = useMemo(() => data?.ternas ?? [], [data]);
 
     const filtered = useMemo(() => {
         return ternas.filter((t) => {

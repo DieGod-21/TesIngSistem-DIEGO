@@ -94,4 +94,52 @@ describe('auditarElegibilidad — el veredicto contra la evidencia del propio se
         const a = auditarElegibilidad({ total: 99, nota_minima: 70, estudiantes: [alumno('A1')] });
         expect(a.declarados).toBe(1);
     });
+
+    /* ── Identificación: de quién habla cada observación ───────────────
+       La lista de tesis identifica a la gente solo por carné, y con un carné
+       no se abre a nadie. Sin el cruce contra el padrón, el aviso solo podía
+       dejar al usuario en una búsqueda a medio hacer. */
+
+    it('cruza cada observación con el padrón para darle id y posición', () => {
+        const a = auditarElegibilidad(
+            { total: 2, nota_minima: 70, estudiantes: [alumno('B', { nota_grad1: null })] },
+            [{ id: 91, carnet: 'A' }, { id: 92, carnet: 'B' }],
+        );
+        expect(a.observados[0].estudianteId).toBe(92);
+        expect(a.observados[0].posicionPadron).toBe(1);
+    });
+
+    it('sin padrón, la observación existe igual pero sin identificar', () => {
+        // No es un fallo: es el caso de siempre, y quien enruta se repliega al
+        // carné. Lo que no puede pasar es que la observación desaparezca.
+        const a = auditarElegibilidad({ total: 1, nota_minima: 70, estudiantes: [alumno('B', { nota_grad1: null })] });
+        expect(a.hayObservaciones).toBe(true);
+        expect(a.observados[0].estudianteId).toBeNull();
+        expect(a.observados[0].posicionPadron).toBeNull();
+    });
+
+    it('un carné que está en tesis pero no en el padrón queda sin id', () => {
+        const a = auditarElegibilidad(
+            { total: 1, nota_minima: 70, estudiantes: [alumno('FANTASMA', { nota_grad1: null })] },
+            [{ id: 1, carnet: 'OTRO' }],
+        );
+        expect(a.observados[0].estudianteId).toBeNull();
+    });
+
+    it('ante carnés repetidos en el padrón manda el primero', () => {
+        // Un duplicado no puede hacer que el enlace apunte tan pronto a uno
+        // como a otro segun el orden de recorrido: la regla es explícita.
+        const a = auditarElegibilidad(
+            { total: 1, nota_minima: 70, estudiantes: [alumno('B', { nota_grad1: null })] },
+            [{ id: 5, carnet: 'B' }, { id: 6, carnet: 'B' }],
+        );
+        expect(a.observados[0].estudianteId).toBe(5);
+    });
+
+    it('sigue siendo pura con el padrón delante', () => {
+        const padron = [{ id: 1, carnet: 'B' }];
+        const copia = JSON.parse(JSON.stringify(padron));
+        auditarElegibilidad({ total: 1, nota_minima: 70, estudiantes: [alumno('B', { nota_grad1: null })] }, padron);
+        expect(padron).toEqual(copia);
+    });
 });

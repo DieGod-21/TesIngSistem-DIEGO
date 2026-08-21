@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
     parseLens, parseSearchTerm, lensToTesisFilter, buildLensUrl,
     parsePage, parsePerPage, buildListUrl, DEFAULT_PER_PAGE,
-    parsePreview, buildPreviewUrl, parseStage, buildStageUrl,
+    parsePreview, buildPreviewUrl, parseStage, buildStageUrl, buildFocusUrl,
 } from './lens';
 
 describe('lens — parseo con compatibilidad hacia atrás', () => {
@@ -147,5 +147,47 @@ describe('lens — acotamiento de la cola por etapa (?stage=)', () => {
     it('el acotamiento convive con la inspección rápida', () => {
         expect(buildPreviewUrl('?stage=pg2_pendiente', '42'))
             .toBe('/students?stage=pg2_pendiente&preview=42');
+    });
+});
+
+describe('lens — señalar a una persona concreta (buildFocusUrl)', () => {
+
+    it('abre la inspección de esa persona, sin filtrar el padrón', () => {
+        // Filtrar por su carné la «encontraría», pero dejaría fuera a los demás
+        // expedientes del mismo aviso y obligaría a volver atrás por cada uno.
+        expect(buildFocusUrl({ estudianteId: 26, carnet: '1890-18-21775', posicionPadron: 3 }))
+            .toBe('/students?preview=26');
+    });
+
+    it('lleva a la página donde de verdad está la fila', () => {
+        // Posición 25 con 20 por página → segunda página. Sin esto el panel se
+        // abre sobre un listado que no contiene a quien muestra.
+        expect(buildFocusUrl({ estudianteId: 26, carnet: 'C', posicionPadron: 25 }))
+            .toBe('/students?page=2&preview=26');
+    });
+
+    it('respeta un tamaño de página distinto', () => {
+        expect(buildFocusUrl({ estudianteId: 9, carnet: 'C', posicionPadron: 25, perPage: 10 }))
+            .toBe('/students?page=3&preview=9');
+    });
+
+    it('la primera página no se serializa: la URL limpia sigue siendo la canónica', () => {
+        expect(buildFocusUrl({ estudianteId: 2, carnet: 'C', posicionPadron: 0 }))
+            .toBe('/students?preview=2');
+    });
+
+    it('sin id se repliega a la búsqueda por carné, nunca a un enlace muerto', () => {
+        expect(buildFocusUrl({ estudianteId: null, carnet: '1890-18-21775' }))
+            .toBe('/students?search=1890-18-21775');
+    });
+
+    it('el carné del repliegue se escapa para la URL', () => {
+        expect(buildFocusUrl({ estudianteId: null, carnet: 'A B&C' }))
+            .toBe('/students?search=A%20B%26C');
+    });
+
+    it('una posición desconocida no inventa página', () => {
+        expect(buildFocusUrl({ estudianteId: 7, carnet: 'C', posicionPadron: null }))
+            .toBe('/students?preview=7');
     });
 });

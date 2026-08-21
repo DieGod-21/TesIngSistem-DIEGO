@@ -7,6 +7,11 @@
 
 # testing
 /coverage
+# Artefactos de las pruebas de navegador: se regeneran en cada ejecución y
+# solo existen cuando algo falla.
+cypress/screenshots
+cypress/videos
+cypress/downloads
 
 # production
 /dist

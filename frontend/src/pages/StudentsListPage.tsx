@@ -74,6 +74,15 @@ const VERDICT_TONE: Record<'APROBADO' | 'REPROBADO' | 'PENDIENTE', BadgeTone> = 
     PENDIENTE: 'warning',
 };
 
+/**
+ * ¿El sistema pide menos movimiento? Un desplazamiento suave es justo el tipo
+ * de animación que esa preferencia existe para desactivar.
+ */
+const PREFIERE_MENOS_MOVIMIENTO = (): boolean =>
+    typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 const StudentsListPage: React.FC = () => {
     const history  = useHistory();
     const location = useLocation();
@@ -258,6 +267,29 @@ const DefaultStudentsView: React.FC<{
         ? estudiantes.findIndex((e) => String(e.id) === previewId)
         : -1;
 
+    /*
+     * Cuando se llega SEÑALANDO a alguien —desde el aviso de expedientes por
+     * revisar, o por un enlace compartido— la fila puede estar por debajo del
+     * pliegue: la página abre su inspección pero el listado de detrás sigue
+     * mostrando el principio, y al cerrar el panel no queda ni rastro de a
+     * quién se estaba mirando.
+     *
+     * Se desplaza UNA sola vez por fila y solo si de verdad hace falta
+     * (`nearest` no mueve nada cuando ya se ve). Si el panel se recorre con
+     * ↑/↓ no se vuelve a intervenir sobre la misma fila, para no pelear con el
+     * desplazamiento del usuario.
+     */
+    const filaLlevadaAVista = useRef<string | null>(null);
+    useEffect(() => {
+        if (!previewId || loading) return;
+        if (filaLlevadaAVista.current === previewId) return;
+        if (previewIndex < 0) return;
+        const fila = document.querySelector<HTMLElement>(`[data-student-row="${previewId}"]`);
+        if (!fila) return;
+        filaLlevadaAVista.current = previewId;
+        fila.scrollIntoView({ block: 'nearest', behavior: PREFIERE_MENOS_MOVIMIENTO() ? 'auto' : 'smooth' });
+    }, [previewId, previewIndex, loading]);
+
     const openPreview = (est: Estudiante) =>
         history.push(buildPreviewUrl(locationSearch, String(est.id)));
     const closePreview = () => history.replace(buildPreviewUrl(locationSearch, null));
@@ -366,6 +398,7 @@ const DefaultStudentsView: React.FC<{
                             <tr
                                 key={s.id}
                                 className={`sl-table__tr sl-table__tr--clickable${previewId === String(s.id) ? ' sl-table__tr--previewing' : ''}`}
+                                data-student-row={s.id}
                                 // La fila inspecciona; Enter/clic abren el panel.
                                 // El expediente completo es la acción secundaria,
                                 // disponible desde el propio panel.

@@ -122,6 +122,56 @@ export function buildPreviewUrl(currentSearch: string, studentId: string | null)
     return q ? `${routes.students()}?${q}` : routes.students();
 }
 
+/**
+ * URL que lleva al padrón Y ABRE a una persona concreta.
+ *
+ * ── EL PROBLEMA QUE RESUELVE ────────────────────────────────────────────
+ *
+ * Los avisos del panel nombran gente: «a Nancy le falta la nota de PG2».
+ * Pulsar ese nombre llevaba al padrón filtrado por su carné y ahí terminaba el
+ * favor: la lista quedaba reducida a una fila, sin abrir, y el coordinador
+ * tenía que pulsar otra vez. Y con la lista filtrada perdía a los otros tres
+ * expedientes del mismo aviso, así que para cada uno había que volver al
+ * panel. Un aviso accionable que obliga a repetir la búsqueda a mano no es
+ * accionable.
+ *
+ * Aquí el contexto viaja ENTERO en la URL, con los parámetros que el listado
+ * ya entiende: `page` lo sitúa en la página donde de verdad está esa fila y
+ * `preview` abre su inspección. Nada nuevo que aprender ni un segundo
+ * mecanismo de estado; el enlace además se puede compartir y el botón Atrás
+ * devuelve al panel.
+ *
+ * ── POR QUÉ EL ID Y NO EL NOMBRE NI EL CARNÉ ────────────────────────────
+ *
+ * Buscar por nombre confundiría a dos homónimos y dejaría al coordinador
+ * mirando el expediente equivocado sin saberlo. El carné es estable, pero el
+ * listado y su panel abren por id numérico. Cuando el id no se conoce —un
+ * carné que aparece en tesis pero no en el padrón— se repliega a la búsqueda
+ * por carné, que es exactamente lo que se hacía antes: peor, pero nunca un
+ * enlace muerto ni una persona equivocada.
+ */
+export function buildFocusUrl(opts: {
+    estudianteId: number | null;
+    carnet: string;
+    posicionPadron?: number | null;
+    perPage?: number;
+}): string {
+    const { estudianteId, carnet, posicionPadron = null, perPage = DEFAULT_PER_PAGE } = opts;
+
+    if (estudianteId == null) return routes.studentsSearch(carnet);
+
+    const qp = new URLSearchParams();
+    // La página se deduce de la posición en el padrón, que llega del mismo
+    // lote que alimenta el aviso: sin esto la fila existe pero está en otra
+    // página y el panel se abriría sobre una lista que no la contiene.
+    if (posicionPadron != null && posicionPadron >= 0 && perPage > 0) {
+        const pagina = Math.floor(posicionPadron / perPage) + 1;
+        if (pagina > 1) qp.set('page', String(pagina));
+    }
+    qp.set('preview', String(estudianteId));
+    return `${routes.students()}?${qp.toString()}`;
+}
+
 /** Lee la página actual (1 si falta o es inválida). */
 export function parsePage(search: string): number {
     const raw = Number(new URLSearchParams(search).get('page'));

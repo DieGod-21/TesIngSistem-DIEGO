@@ -174,8 +174,11 @@
     text-overflow: ellipsis;
 }
 
+/* El motivo es la mitad ÚTIL de la fila: el nombre dice a quién y el motivo
+   dice qué hacer y por qué está aquí. Estaba un escalón por debajo de todo lo
+   demás de la cola, a 12px, leyéndose como una nota al pie de sí mismo. */
 .wq__reason {
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     color: var(--text-secondary);
 }
 
