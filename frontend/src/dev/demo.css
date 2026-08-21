@@ -1,5 +1,23 @@
 /* Banda de datos de demostración. Solo se monta en desarrollo. */
 
+/*
+ * El hueco que la banda se cobra a sí misma.
+ *
+ * `--demo-banner-h` la publica `installDemoApi` con la altura REAL (el texto se
+ * pliega en pantallas estrechas y la banda crece). Sin esto, la banda tapaba
+ * «Cerrar Sesión» en la barra lateral y se comía el pie de página.
+ *
+ * Vive aquí, en `src/dev/`, y no en el CSS del producto: es la herramienta la
+ * que estorba, así que es la herramienta la que aparta.
+ */
+.demo-activo .dash-sidebar {
+    padding-bottom: var(--demo-banner-h, 0px);
+}
+
+.demo-activo ion-content {
+    --padding-bottom: var(--demo-banner-h, 0px);
+}
+
 .demo-banner {
     position: fixed;
     bottom: 0;

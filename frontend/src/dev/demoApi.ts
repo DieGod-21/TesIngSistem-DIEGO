@@ -252,7 +252,16 @@ function reporteGlobal() {
 
 // ─── Enrutado ───────────────────────────────────────────────────────────────
 
-async function responder(metodo: string, url: URL, cuerpo: unknown): Promise<Response | null> {
+/**
+ * Devuelve la respuesta del doble, o `null` si la ruta no está atendida (en
+ * cuyo caso la petición sigue hacia el servidor real).
+ *
+ * Se EXPORTA para que `demoParity.test.ts` pueda preguntarle, ruta por ruta,
+ * si sabe responderla. Sin eso, la única forma de descubrir que una función
+ * nueva del producto no tiene cobertura en la demo era abrir la demo, llegar
+ * hasta esa pantalla y ver un error del servidor real.
+ */
+export async function responder(metodo: string, url: URL, cuerpo: unknown): Promise<Response | null> {
     const ruta = url.pathname;
     const q = url.searchParams;
     const M = (patron: RegExp) => patron.exec(ruta);
@@ -768,6 +777,24 @@ function montarBanda(): void {
 
     banda.append(titulo, texto, cuentasDemo());
     document.body.appendChild(banda);
+
+    /*
+     * La banda es fija y va abajo, así que se sienta encima de lo que haya en
+     * el borde inferior. MEDIDO: tapaba 24 de los 40px de «Cerrar Sesión» —el
+     * 60% del control— en TODAS las alturas de ventana, no solo en las cortas.
+     * `pointer-events: none` lo dejaba pulsable, que es justo lo que hacía el
+     * defecto difícil de notar: el botón respondía aunque no se viera.
+     *
+     * La herramienta de desarrollo tiene que pagar su propio sitio. Publica su
+     * altura real —cambia al plegarse el texto en pantallas estrechas— y
+     * `demo.css` reserva ese hueco.
+     */
+    const publicarAlto = () => {
+        document.documentElement.style.setProperty('--demo-banner-h', `${banda.offsetHeight}px`);
+    };
+    publicarAlto();
+    document.documentElement.classList.add('demo-activo');
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(publicarAlto).observe(banda);
 }
 
 /**

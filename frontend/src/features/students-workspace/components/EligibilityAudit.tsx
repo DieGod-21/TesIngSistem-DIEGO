@@ -24,9 +24,10 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck, ArrowRight } from 'lucide-react';
 import { Alert } from '../../../components/ui';
 import { routes } from '../../../config/routes';
+import { buildFocusUrl } from '../lens/lens';
 import { describirObservacion } from '../domain/eligibility';
 import type { AuditoriaElegibilidad } from '../domain/eligibility';
 import '../styles/eligibility-audit.css';
@@ -53,25 +54,49 @@ const EligibilityAudit: React.FC<Props> = ({ auditoria }) => {
             tone="warning"
             className="elig-audit"
             icon={<ClipboardCheck size={18} />}
-            title={
-                uno
-                    ? 'Un expediente necesita revisión'
-                    : `${observados.length} expedientes necesitan revisión`
-            }
         >
-            <p className="elig-audit__lead">
-                {uno ? 'Este expediente aparece' : 'Estos expedientes aparecen'} como
-                elegible{uno ? '' : 's'} para tesis, pero {uno ? 'le' : 'les'} falta alguna de las
-                notas obligatorias. Conviene confirmar{uno ? 'lo' : 'los'} antes de convocar
-                una terna.
+            {/*
+             * LA CIFRA PRIMERO, y no dentro del título.
+             *
+             * Antes el número vivía enterrado en una frase («4 expedientes
+             * necesitan revisión») del mismo tamaño y peso que el resto del
+             * aviso, así que el dato que decide si esto se atiende hoy o la
+             * semana que viene había que leerlo, no verlo. Sacarlo a la
+             * jerarquía de una cifra responde «cuántos» de un vistazo y deja
+             * el resto del bloque para «qué significa» y «qué hago».
+             *
+             * Sigue leyéndose como una sola frase de corrido para quien usa
+             * lector de pantalla: «4 expedientes por revisar».
+             */}
+            <p className="elig-audit__titulo">
+                <span className="elig-audit__cifra">{observados.length}</span>
+                <span className="elig-audit__rotulo">
+                    {uno ? 'expediente por revisar' : 'expedientes por revisar'}
+                </span>
             </p>
 
+            <p className="elig-audit__lead">
+                {uno ? 'Consta' : 'Constan'} como elegible{uno ? '' : 's'} para tesis, pero
+                {uno ? ' le' : ' les'} falta alguna de las notas obligatorias.
+            </p>
+
+            {/*
+             * La lista NO se pliega por defecto, aunque un aviso más compacto
+             * lo agradecería: los nombres son la parte accionable —cada uno
+             * abre a esa persona en el padrón— y esconderlos dejaría el aviso
+             * informando de trabajo sin ofrecer forma de empezarlo. Lo que se
+             * pliega es la cola, a partir de los primeros seis.
+             */}
             <ul className="elig-audit__list">
                 {mostrados.map((o) => (
                     <li key={o.carnet} className="elig-audit__row">
                         <Link
                             className="elig-audit__link"
-                            to={routes.studentsSearch(o.carnet)}
+                            to={buildFocusUrl({
+                                estudianteId: o.estudianteId,
+                                carnet: o.carnet,
+                                posicionPadron: o.posicionPadron,
+                            })}
                             /* El nombre accesible incluye el motivo: quien navega
                                por lector de pantalla no debería tener que abrir el
                                expediente para saber por qué está en esta lista. */
@@ -86,6 +111,16 @@ const EligibilityAudit: React.FC<Props> = ({ auditoria }) => {
             </ul>
 
             <div className="elig-audit__pie">
+                {/* La acción es REVISAR, no reintentar: los datos llegaron bien.
+                    Lleva al padrón acotado a los elegibles, que es donde estos
+                    expedientes se comparan con el resto y se marcan.
+                    Va PRIMERA y con relleno sólido: antes era un rectángulo
+                    translúcido al 14% detrás del enlace de «ver más», y un
+                    botón principal que parece apagado se lee como deshabilitado. */}
+                <Link className="elig-audit__cta" to={`${routes.students()}?status=approved`}>
+                    Revisar en el padrón
+                    <ArrowRight size={15} aria-hidden="true" />
+                </Link>
                 {observados.length > VISIBLES && (
                     /*
                      * Alterna, no despliega y desaparece.
@@ -106,12 +141,6 @@ const EligibilityAudit: React.FC<Props> = ({ auditoria }) => {
                         {desplegado ? 'Ver menos' : `Ver ${restantes} más`}
                     </button>
                 )}
-                {/* La acción es REVISAR, no reintentar: los datos llegaron bien.
-                    Lleva al padrón acotado a los elegibles, que es donde estos
-                    expedientes se comparan con el resto y se marcan. */}
-                <Link className="elig-audit__cta" to={`${routes.students()}?status=approved`}>
-                    Revisar en el padrón
-                </Link>
             </div>
         </Alert>
     );

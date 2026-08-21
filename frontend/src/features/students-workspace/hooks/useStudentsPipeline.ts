@@ -89,11 +89,14 @@ export function useStudentsPipeline(enabled: boolean): StudentsPipeline {
                 // resto del producto).
                 for (const t of datasets.tesisAprobados) veredictos.set(t.carnet, 'APROBADO');
                 setVerdictByCarnet(veredictos);
+                // El padrón se pasa para que cada observación quede identificada
+                // por id (y sepa dónde está), no solo por carné: es lo que
+                // convierte el aviso en un enlace que abre a esa persona.
                 setAuditoria(auditarElegibilidad({
                     total: datasets.tesisAprobados.length,
                     nota_minima: datasets.notaMinimaTesis,
                     estudiantes: datasets.tesisAprobados,
-                }));
+                }, datasets.students));
             })
             .catch((e) => {
                 if (mountedRef.current) {

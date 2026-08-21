@@ -92,35 +92,95 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                 : item
         ));
 
-    // ── Indicador activo que "viaja": mide el ítem activo y lo desplaza. ──
+    /* ── Indicador activo que "viaja" ──────────────────────────────────
+     *
+     * MIDE el ítem activo para colocarse encima. Y medir es justo lo que no se
+     * podía hacer al montar.
+     *
+     * MEDIDO (carga en frío, login→Inicio, recarga y URL directa): el ítem
+     * activo devolvía `offsetHeight = 0` y `offsetTop = 0`, así que el
+     * indicador se dibujaba con `opacity: 1` —porque la medición se dio por
+     * buena— en forma de raya de altura cero, 16px por encima del ítem que
+     * decía señalar. No era «invisible»: era una pieza rota a la vista, y se
+     * quedaba así hasta que algo forzara otra medición. Navegar a otro módulo
+     * y volver la arreglaba, que es por qué el defecto parecía intermitente.
+     *
+     * Dos cosas lo causaban y las dos hay que resolver:
+     *
+     *   1. NADIE VOLVÍA A MEDIR. El único disparador tras el montaje era el
+     *      cambio de ruta o `window.resize`. Cuando el menú recibe su caja
+     *      —hojas de estilo aplicadas, tipografía cargada, primer layout de
+     *      Ionic ya resuelto— no ocurre ninguna de las dos cosas.
+     *
+     *   2. UNA MEDICIÓN DE CERO SE ACEPTABA COMO VÁLIDA. Un elemento sin caja
+     *      todavía no tiene nada que decir; tratarlo como respuesta es lo que
+     *      convierte «aún no sé» en «mide cero».
+     *
+     * `ResizeObserver` resuelve (1) de raíz porque observa exactamente el
+     * suceso que importa —que el menú pase a tener tamaño— en vez de adivinar
+     * cuándo habrá ocurrido con un temporizador. Además dispara una primera
+     * vez al empezar a observar, así que también cubre el caso en que la caja
+     * ya estuviera lista. El guardia de altura resuelve (2).
+     */
     const navRef = useRef<HTMLElement>(null);
     const [indicator, setIndicator] = useState<{ y: number; h: number; ready: boolean }>({ y: 0, h: 0, ready: false });
     const [travel, setTravel] = useState(false);
+    /** ¿Ya hubo una colocación válida? Gobierna cuándo empieza a animarse. */
+    const colocado = useRef(false);
 
     const measure = useCallback(() => {
         const nav = navRef.current;
         if (!nav) return;
         const active = nav.querySelector<HTMLElement>('.dash-sidebar__nav-item--active');
-        if (!active) { setIndicator((s) => ({ ...s, ready: false })); return; }
-        setIndicator({ y: active.offsetTop, h: active.offsetHeight, ready: true });
+        const h = active?.offsetHeight ?? 0;
+
+        // Sin ítem activo, o con el ítem aún sin caja (estilos por aplicar, o
+        // el cajón móvil cerrado): no se señala nada. Ocultar es la respuesta
+        // correcta a «todavía no sé dónde», y evita la raya rota.
+        if (!active || h === 0) {
+            setIndicator((s) => (s.ready ? { ...s, ready: false } : s));
+            return;
+        }
+
+        const y = active.offsetTop;
+        // Igualdad antes de escribir: `ResizeObserver` puede disparar en cada
+        // cuadro durante un arrastre del borde de la ventana, y repintar con
+        // los mismos números no ayuda a nadie.
+        setIndicator((s) => (s.ready && s.y === y && s.h === h ? s : { y, h, ready: true }));
     }, []);
 
     // Reposiciona al cambiar de ruta o el conjunto de ítems (capacidades).
     useLayoutEffect(() => { measure(); }, [location.pathname, items.length, measure]);
 
-    // Habilita la transición de desplazamiento tras la primera colocación
-    // (evita un "salto" desde el origen al montar).
+    // Observa el menú: primera medición al observar y una más cada vez que su
+    // caja cambie (estilos, tipografía, padding responsive, cajón móvil).
+    useLayoutEffect(() => {
+        const nav = navRef.current;
+        if (!nav) return;
+
+        // jsdom y navegadores antiguos no traen `ResizeObserver`; ahí se
+        // conserva el disparador anterior en vez de quedarse sin ninguno.
+        if (typeof ResizeObserver === 'undefined') {
+            const onResize = () => measure();
+            window.addEventListener('resize', onResize);
+            return () => window.removeEventListener('resize', onResize);
+        }
+
+        const ro = new ResizeObserver(() => measure());
+        ro.observe(nav);
+        return () => ro.disconnect();
+    }, [measure]);
+
+    // La transición de desplazamiento se habilita tras la PRIMERA colocación
+    // válida, no tras el primer cuadro: si se habilita antes, el indicador
+    // anima desde la posición de origen hasta el ítem activo la primera vez
+    // que aparece, que es justo el salto que se quería evitar.
     useEffect(() => {
+        if (!indicator.ready || colocado.current) return;
+        colocado.current = true;
         const id = requestAnimationFrame(() => setTravel(true));
         return () => cancelAnimationFrame(id);
-    }, []);
-
-    // Recalcula ante cambios de tamaño (padding responsive del menú).
-    useEffect(() => {
-        const onResize = () => measure();
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-    }, [measure]);
+    }, [indicator.ready]);
 
     // El cajon solo es modal cuando `open` es true (movil): en escritorio la
     // barra es navegacion permanente y el hook no debe hacer nada.

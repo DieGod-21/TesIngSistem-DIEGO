@@ -54,6 +54,35 @@ export interface ObservacionElegibilidad {
     faltan: CursoTesis[];
     /** Cursos con nota por debajo del mínimo que publica el servidor. */
     bajoMinimo: CursoTesis[];
+    /**
+     * Id numérico en el padrón, o null si este carné no está en él.
+     *
+     * `GET /api/tesis/aprobados` identifica a la gente SOLO por carné: no
+     * publica el id. Y el carné, aun siendo estable, no sirve para abrir a
+     * nadie —las rutas y el panel de inspección del padrón trabajan con el id
+     * numérico—, así que sin esto lo único que podía hacer un enlace de esta
+     * lista era dejar al usuario en una búsqueda y que él terminara el trabajo.
+     *
+     * El cruce se hace contra el mismo padrón que ya viaja en el lote del
+     * workspace: ni una petición más. Mismo criterio y misma tolerancia que
+     * `WorkItem.studentId`: null cuando el carné aparece en tesis pero no en el
+     * padrón, y quien enruta hace su propio repliegue.
+     */
+    estudianteId: number | null;
+    /**
+     * Posición (base 0) dentro del padrón, o null si no está en él.
+     *
+     * Es un hecho sobre los datos, no sobre la pantalla: «este expediente es el
+     * número 26 de los que devuelve el servidor». Cuántos caben por página es
+     * decisión de presentación y se resuelve en `lens.ts`, no aquí.
+     */
+    posicionPadron: number | null;
+}
+
+/** Lo mínimo del padrón que la auditoría necesita para identificar a alguien. */
+export interface EntradaPadron {
+    id: number;
+    carnet: string;
 }
 
 export interface AuditoriaElegibilidad {
@@ -81,10 +110,21 @@ interface ListaTesis {
  * cuando alguna está por debajo del mínimo. Ambas causas se acumulan en una
  * sola observación: es un expediente, no dos incidencias.
  */
-export function auditarElegibilidad(lista: ListaTesis): AuditoriaElegibilidad {
+export function auditarElegibilidad(
+    lista: ListaTesis,
+    padron: readonly EntradaPadron[] = [],
+): AuditoriaElegibilidad {
     const minimo = lista.nota_minima;
     const auditable = Number.isFinite(minimo) && minimo > NOTA_MINIMA_DESCONOCIDA;
     const observados: ObservacionElegibilidad[] = [];
+
+    // Índice carné → (id, posición). Se construye una vez: recorrer el padrón
+    // por cada observación convertiría esto en cuadrático sobre dos listas que
+    // en producción rondan los cientos de filas.
+    const enPadron = new Map<string, { id: number; posicion: number }>();
+    padron.forEach((e, posicion) => {
+        if (!enPadron.has(e.carnet)) enPadron.set(e.carnet, { id: e.id, posicion });
+    });
 
     for (const e of lista.estudiantes) {
         const faltan: CursoTesis[] = [];
@@ -101,7 +141,15 @@ export function auditarElegibilidad(lista: ListaTesis): AuditoriaElegibilidad {
         }
 
         if (faltan.length > 0 || bajoMinimo.length > 0) {
-            observados.push({ carnet: e.carnet, nombre: e.nombre, faltan, bajoMinimo });
+            const ubicacion = enPadron.get(e.carnet);
+            observados.push({
+                carnet: e.carnet,
+                nombre: e.nombre,
+                faltan,
+                bajoMinimo,
+                estudianteId: ubicacion?.id ?? null,
+                posicionPadron: ubicacion?.posicion ?? null,
+            });
         }
     }
 

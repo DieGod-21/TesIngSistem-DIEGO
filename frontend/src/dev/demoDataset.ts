@@ -37,11 +37,46 @@ import type {
 export const NOTA_MINIMA = 70;
 export const CARRERA = '1890';
 
+/* ── Fechas RELATIVAS a hoy ──────────────────────────────────────────────
+ *
+ * Estaban escritas a mano («2025-11-14»). Un conjunto de pruebas con fechas
+ * fijas envejece: a los pocos meses todas las ternas aparecen convocadas hace
+ * un año, todo el trabajo sale marcado como estancado y el producto se mira
+ * en un estado que nunca tendrá en uso real. Peor aún, deja de poder
+ * enseñarse: quien abre la demo ve un sistema abandonado.
+ *
+ * Lo que cada fecha representa NO es un día del calendario, es una DISTANCIA:
+ * «convocada hace tres semanas», «convocada anteayer», «lleva mes y pico sin
+ * que nadie evalúe». Eso es lo que se escribe aquí, y así los escenarios
+ * —incluida la antigüedad que dispara el aviso de terna estancada— siguen
+ * significando lo mismo dentro de dos años.
+ */
+
+const DIA_MS = 86_400_000;
+
+/** Fecha de calendario (YYYY-MM-DD) a N días de hoy hacia atrás. */
+function haceDias(n: number): string {
+    const d = new Date(Date.now() - n * DIA_MS);
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
+/** Instante ISO a N días de hoy hacia atrás, a una hora concreta del día. */
+function instanteHace(n: number, hora = 9): string {
+    const d = new Date(Date.now() - n * DIA_MS);
+    d.setHours(hora, 0, 0, 0);
+    return d.toISOString();
+}
+
+/** Año del ciclo lectivo que se está mostrando. */
+const ANIO = new Date().getFullYear();
+
 // ─── Cursos (copiados del catálogo real) ────────────────────────────────────
 
 export const CURSOS: Curso[] = [
-    { id: 1, codigo: '043', nombre: 'PROYECTO DE GRADUACIÓN I',  ciclo: 'Ciclo 1-2025', seccion: 'A', anio: 2025 },
-    { id: 2, codigo: '049', nombre: 'PROYECTO DE GRADUACIÓN II', ciclo: 'Ciclo 2-2025', seccion: 'A', anio: 2025 },
+    { id: 1, codigo: '043', nombre: 'PROYECTO DE GRADUACIÓN I',  ciclo: `Ciclo 1-${ANIO}`, seccion: 'A', anio: ANIO },
+    { id: 2, codigo: '049', nombre: 'PROYECTO DE GRADUACIÓN II', ciclo: `Ciclo 2-${ANIO}`, seccion: 'A', anio: ANIO },
 ];
 
 // ─── Personas ───────────────────────────────────────────────────────────────
@@ -102,7 +137,8 @@ export const ESTUDIANTES: Estudiante[] = PERFILES.map((p, i) => ({
     email: p.sinEmail ? '' : correo(p.nombre, i + 1),
     carrera: CARRERA,
     activo: p.activo !== false,
-    created_at: `2025-0${(i % 8) + 1}-1${i % 9}T09:00:00.000Z`,
+    // Altas repartidas a lo largo del último curso, la más reciente hace un mes.
+    created_at: instanteHace(30 + i * 11),
 }));
 
 const perfilDe = (carnet: string): Semilla | undefined => {
@@ -130,7 +166,8 @@ export function notasDe(carnet: string): Nota[] {
             ciclo: CURSOS[0].ciclo,
             seccion: 'A',
             anio: 2025,
-            updated_at: `2025-06-${String(10 + (idx % 18)).padStart(2, '0')}T15:20:00.000Z`,
+            // PG1 se cursa y se califica ANTES que PG2: ~5 meses atrás.
+            updated_at: instanteHace(150 - (idx % 18), 15),
         });
     }
     if (p.pg2 != null) {
@@ -144,7 +181,7 @@ export function notasDe(carnet: string): Nota[] {
             ciclo: CURSOS[1].ciclo,
             seccion: 'A',
             anio: 2025,
-            updated_at: `2025-11-${String(3 + (idx % 22)).padStart(2, '0')}T11:05:00.000Z`,
+            updated_at: instanteHace(45 - (idx % 22), 11),
         });
     }
     return out;
@@ -294,7 +331,7 @@ interface SemillaTerna {
 
 const TERNAS_SEMILLA: SemillaTerna[] = [
     {
-        numero: 1, proyectoIdx: 1, fecha: '2025-11-14',
+        numero: 1, proyectoIdx: 1, fecha: haceDias(21),   // cerrada hace tres semanas
         evaluadores: [
             { usuarioId: 2, nota: 88, enviada: true, comentario: 'Trabajo sólido; la validación de campo está bien documentada.' },
             { usuarioId: 3, nota: 91, enviada: true, comentario: 'Excelente presentación de resultados.' },
@@ -302,7 +339,7 @@ const TERNAS_SEMILLA: SemillaTerna[] = [
         ],
     },
     {
-        numero: 2, proyectoIdx: 2, fecha: '2025-11-21',
+        numero: 2, proyectoIdx: 2, fecha: haceDias(9),    // en curso, una evaluación por enviar
         evaluadores: [
             { usuarioId: 2, nota: 79, enviada: true },
             { usuarioId: 5, nota: null, enviada: false },
@@ -310,7 +347,7 @@ const TERNAS_SEMILLA: SemillaTerna[] = [
         ],
     },
     {
-        numero: 3, proyectoIdx: 7, fecha: '2025-12-03',
+        numero: 3, proyectoIdx: 7, fecha: haceDias(34),   // ESTANCADA: convocada hace más de un mes y nadie ha evaluado
         evaluadores: [
             { usuarioId: 3, nota: null, enviada: false },
             { usuarioId: 4, nota: null, enviada: false },
@@ -326,7 +363,7 @@ const TERNAS_SEMILLA: SemillaTerna[] = [
         ],
     },
     {
-        numero: 5, proyectoIdx: 0, fecha: '2025-11-28',
+        numero: 5, proyectoIdx: 0, fecha: haceDias(4),    // recién convocada
         evaluadores: [
             { usuarioId: 4, nota: 84, enviada: true },
             { usuarioId: 5, nota: 82, enviada: true },
