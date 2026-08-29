@@ -4,6 +4,7 @@ import { Save, X } from 'lucide-react';
 import { upsertNota } from '../services/notasService';
 import { Button, Alert } from './ui';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useOverlayTransition } from '../hooks/useOverlayTransition';
 import { userMessageFor } from '../services/errorMessages';
 
 const CURSOS = [
@@ -52,9 +53,20 @@ const EditNotaModal: React.FC<Props> = ({
     }, [open, initialCurso, initialNota]);
 
     const handleClose = () => { if (!loading) onClose(); };
+
+    /*
+     * El diálogo sobrevive a `open === false` el tiempo que dura su salida.
+     *
+     * El atrapador de foco NO espera: se le pasa `open`, que ya es false en
+     * cuanto se pide cerrar, así que devuelve el foco a quien abrió el diálogo
+     * de inmediato. Quien navega con teclado recupera el control mientras la
+     * capa termina de irse; hacerle esperar 140ms para poder seguir tecleando
+     * sería cambiar accesibilidad por decoración.
+     */
+    const { montado, saliendo, overlayRef } = useOverlayTransition(open);
     const modalRef = useFocusTrap<HTMLDivElement>(open, handleClose);
 
-    if (!open) return null;
+    if (!montado) return null;
 
     const validate = (): boolean => {
         const val = Number(form.nota);
@@ -92,13 +104,18 @@ const EditNotaModal: React.FC<Props> = ({
 
     return createPortal(
         <div
-            className="ui-modal-overlay"
+            ref={overlayRef}
+            className={`ui-modal-overlay${saliendo ? ' ui-modal-overlay--saliendo' : ''}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="en-title"
+            /* Mientras se va ya no es un diálogo con el que se pueda hablar: el
+               foco salió, no acepta clics y no debe volver a anunciarse a un
+               lector de pantalla como si acabara de abrirse. */
+            aria-hidden={saliendo || undefined}
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="ui-modal ui-modal--form" ref={modalRef}>
+            <div className={`ui-modal ui-modal--form${saliendo ? ' ui-modal--saliendo' : ''}`} ref={modalRef}>
                 <header className="ui-modal__header">
                     {/* El mismo diálogo sirve para EDITAR una nota existente y
                         para REGISTRAR una que falta, y el título decía siempre

@@ -166,25 +166,39 @@
   background: color-mix(in oklch, var(--text-muted) 16%, transparent);
   overflow: hidden;
 }
-/* Animate bar from 0 → --bar-fill on mount (keyframe reads CSS var at run time) */
+/*
+ * La barra crece con `transform`, no con `width`.
+ *
+ * Animar `width` obliga al navegador a rehacer el LAYOUT en cada uno de los
+ * ~33 cuadros de la animación, y el layout no se puede delegar al compositor:
+ * el trabajo cae en el hilo principal, justo mientras la ficha del expediente
+ * termina de montarse. `scaleX` se compone en la GPU y no toca el layout.
+ *
+ * El ancho final pasa a declararse en la regla, porque antes lo sostenía el
+ * `both` del fotograma final: al sacar `width` del keyframe había que darle
+ * un sitio propio. De paso, el bloque de movimiento reducido se queda solo con
+ * `animation: none`, que es lo único que tenía que decir.
+ *
+ * Es además la misma técnica que ya usa `.terna-card__progress-fill`: una
+ * sola forma de rellenar una barra en todo el producto.
+ */
 @keyframes tsb-bar-fill {
-  from { width: 0; }
-  to   { width: var(--bar-fill, 0%); }
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 .tsb-grade__fill {
   position: relative;
   height: 100%;
+  width: var(--bar-fill, 0%);
   border-radius: var(--radius-pill);
   z-index: 1;
   background: var(--text-muted);
+  transform-origin: left center;
   /* 260ms delay lets the card fade-in complete before the bar sweeps */
   animation: tsb-bar-fill 550ms cubic-bezier(0.4, 0, 0.2, 1) 260ms both;
 }
 @media (prefers-reduced-motion: reduce) {
-  .tsb-grade__fill {
-    animation: none;
-    width: var(--bar-fill, 0%);
-  }
+  .tsb-grade__fill { animation: none; }
 }
 .tsb-grade--pass .tsb-grade__fill { background: var(--tsb-eligible); }
 .tsb-grade--fail .tsb-grade__fill { background: var(--tsb-not); }

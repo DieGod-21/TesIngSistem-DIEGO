@@ -257,6 +257,148 @@ describe('Movimiento reducido', () => {
     });
 });
 
+/**
+ * Cuerpo de cada `@keyframes` del archivo, con las llaves equilibradas.
+ *
+ * Se cuentan las llaves en vez de usar una expresión regular porque el cuerpo
+ * de un keyframe contiene a su vez bloques (`from { … }`), y cualquier patrón
+ * perezoso corta en el primer `}` interior o depende de cómo esté formateado
+ * el archivo.
+ */
+function cuerposDeKeyframes(src: string): string[] {
+    const out: string[] = [];
+    const re = /@keyframes[^{]*\{/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(src)) !== null) {
+        let nivel = 1;
+        let i = m.index + m[0].length;
+        const desde = i;
+        while (i < src.length && nivel > 0) {
+            if (src[i] === '{') nivel += 1;
+            else if (src[i] === '}') nivel -= 1;
+            i += 1;
+        }
+        out.push(src.slice(desde, Math.max(desde, i - 1)));
+        re.lastIndex = i;
+    }
+    return out;
+}
+
+describe('Movimiento compositable', () => {
+    /**
+     * MOVER NO ES REMAQUETAR.
+     *
+     * Animar `width`, `height`, `top` o `left` obliga al navegador a rehacer
+     * el LAYOUT en cada cuadro, y el layout no se puede delegar al compositor:
+     * el trabajo cae entero en el hilo principal, compitiendo con React justo
+     * cuando la pantalla se está montando. `transform` y `opacity` se componen
+     * en la GPU y no tocan el layout.
+     *
+     * La diferencia no se ve en un portátil de desarrollo con una sola barra
+     * en pantalla; se ve en un móvil con una lista llena, que es donde este
+     * producto se usa.
+     *
+     * LÍNEA BASE: quedan tres, y las tres están examinadas.
+     *
+     *   · dashboard.css — el indicador de la barra lateral transiciona
+     *     `height`. Se dejó A PROPÓSITO: su altura la mide JavaScript y pasar
+     *     a `scaleY` obligaría a tocar esa medición, que ya costó varios
+     *     arreglos (primer pintado, altura cero, ResizeObserver). Además los
+     *     ítems del menú miden todos igual, así que esa transición no llega a
+     *     dispararse en la práctica. Riesgo alto, beneficio nulo.
+     *
+     *   · ternas.css y student-detail.css — barras de progreso cuyo ancho
+     *     llega desde el componente. Convertirlas exige cambiar también el
+     *     TSX, no solo el CSS, y ninguna estaba en el alcance de esta fase.
+     *
+     * La deuda solo puede encoger. Para añadir una entrada nueva hay que
+     * justificar por qué `transform` no servía.
+     */
+    it('no crecen las animaciones de propiedades de maquetación', () => {
+        const LAYOUT = /(?<![-\w])(width|height|top|left|right|bottom)(?![-\w])/g;
+        const actual: Record<string, number> = {};
+
+        for (const f of cssFiles) {
+            if (themeFile(f)) continue;
+            const src = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            let n = 0;
+
+            // 1. Transiciones que nombran una propiedad de maquetación.
+            for (const m of src.matchAll(/transition(?:-property)?\s*:\s*([^;}]+)/g)) {
+                n += [...m[1].matchAll(LAYOUT)].length;
+            }
+            // 2. Fotogramas que la escriben (una vez por propiedad, no por paso).
+            for (const cuerpo of cuerposDeKeyframes(src)) {
+                const props = new Set(
+                    [...cuerpo.matchAll(/(?<![-\w])(width|height|top|left|right|bottom)\s*:/g)]
+                        .map((x) => x[1]),
+                );
+                n += props.size;
+            }
+
+            if (n > 0) actual[rel(f)] = n;
+        }
+
+        expectNoRegression(actual, {
+            'styles/dashboard.css': 1,
+            'features/ternas/styles/ternas.css': 1,
+            'styles/student-detail.css': 1,
+        }, 'Anima con transform/opacity; ver la nota de esta regla.');
+    });
+
+    /**
+     * UNA CASCADA TIENE QUE DECIR QUÉ HACEN LAS FILAS QUE NO ALCANZA.
+     *
+     * MEDIDO en el padrón con la página llena: las ocho primeras filas
+     * escalonaban de 0,02s a 0,23s y las doce restantes se quedaban con
+     * retardo CERO, así que entraban ANTES que ellas. La cascada se leía al
+     * revés —el grueso de la tabla de golpe y luego las primeras cayendo por
+     * detrás— y el resultado era peor que no escalonar nada.
+     *
+     * El fallo es silencioso por construcción: en desarrollo se mira una lista
+     * corta, donde no hay filas más allá del tope y todo parece correcto. Solo
+     * aparece con datos de verdad.
+     *
+     * Regla: si un selector reparte `animation-delay` por `:nth-child(N)`,
+     * el mismo selector tiene que cubrir el resto con `:nth-child(n+M)`.
+     *
+     * LÍNEA BASE: grupos de longitud FIJA, donde no existe «el resto».
+     *   · dashboard.css — los 7 ítems del menú, y 7 es su máximo.
+     *   · dashboard-widgets.css — la columna lateral del panel, con 3 huecos.
+     *   · reportes.css y ternas.css — rejillas de detalle de DOS columnas
+     *     (`grid-template-columns` con dos pistas), donde el segundo hijo es
+     *     también el último.
+     * Una lista con longitud fija no puede tener el defecto; una alimentada
+     * por datos, sí.
+     */
+    it('toda cascada por nth-child cubre las filas que quedan fuera', () => {
+        const actual: Record<string, number> = {};
+
+        for (const f of cssFiles) {
+            const src = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+            const sinCubrir = new Set<string>();
+
+            // Selectores que reparten retardo por posición numérica.
+            for (const m of src.matchAll(/([^{}\n]*?):nth-child\(\s*\d+\s*\)\s*\{[^}]*animation-delay/g)) {
+                const base = m[1].trim();
+                if (!base) continue;
+                // ¿Existe la regla que recoge al resto para ESE mismo selector?
+                const cubre = src.includes(`${base}:nth-child(n+`);
+                if (!cubre) sinCubrir.add(base);
+            }
+
+            if (sinCubrir.size > 0) actual[rel(f)] = sinCubrir.size;
+        }
+
+        expectNoRegression(actual, {
+            'styles/dashboard.css': 1,
+            'components/dashboard/dashboard-widgets.css': 1,
+            'features/reportes/styles/reportes.css': 1,
+            'features/ternas/styles/ternas.css': 1,
+        }, 'Añade una regla :nth-child(n+M) que diga cuándo entran las demás.');
+    });
+});
+
 describe('Estabilidad al apuntar', () => {
     /**
      * Un `:hover` NUNCA puede desplazar al propio elemento apuntado.

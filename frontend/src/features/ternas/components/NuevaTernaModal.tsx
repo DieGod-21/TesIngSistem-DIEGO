@@ -34,6 +34,7 @@ import { userMessageFor } from '../../../services/errorMessages';
 import { matchesText } from '../../../utils/text';
 import { Avatar, Button, Picker, Alert } from '../../../components/ui';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
+import { useOverlayTransition } from '../../../hooks/useOverlayTransition';
 import type { Proyecto, TernaResumen, Usuario } from '../../../types/api';
 
 interface Props {
@@ -96,6 +97,11 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         onClose();
     }, [enviando, reset, onClose]);
 
+    /* Misma ventana de salida que el resto de diálogos del producto: la capa
+       sobrevive a `open === false` lo que dure su animación. El atrapador de
+       foco NO espera —recibe `open`— así que el foco vuelve a quien abrió en
+       cuanto se pide cerrar. Ver useOverlayTransition. */
+    const { montado, saliendo, overlayRef } = useOverlayTransition(open);
     const modalRef = useFocusTrap<HTMLDivElement>(open, cerrar);
 
     // Los evaluadores se cargan al abrir: son la lista corta y hay que enseñarla
@@ -150,7 +156,7 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         return proyectos.filter((p) => !p.carnet || !ocupados.has(p.carnet));
     }, [proyectos, ternasExistentes]);
 
-    if (!open) return null;
+    if (!montado) return null;
 
     const alternar = (id: number) => {
         setErrores((p) => ({ ...p, evaluadores: undefined }));
@@ -196,13 +202,15 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
 
     return createPortal(
         <div
-            className="ui-modal-overlay"
+            ref={overlayRef}
+            className={`ui-modal-overlay${saliendo ? ' ui-modal-overlay--saliendo' : ''}`}
+            aria-hidden={saliendo || undefined}
             role="dialog"
             aria-modal="true"
             aria-labelledby="nt-title"
             onClick={(e) => { if (e.target === e.currentTarget) cerrar(); }}
         >
-            <div className="ui-modal ui-modal--form ui-modal--wide" ref={modalRef}>
+            <div className={`ui-modal ui-modal--form ui-modal--wide${saliendo ? ' ui-modal--saliendo' : ''}`} ref={modalRef}>
                 <header className="ui-modal__header">
                     <h2 id="nt-title" className="ui-modal__title">
                         <ClipboardList size={18} aria-hidden="true" />
