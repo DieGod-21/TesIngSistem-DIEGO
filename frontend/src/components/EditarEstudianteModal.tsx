@@ -20,6 +20,7 @@ import { updateEstudiante } from '../services/estudiantesService';
 import { userMessageFor } from '../services/errorMessages';
 import { Alert, Button } from './ui';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useOverlayTransition } from '../hooks/useOverlayTransition';
 import type { Estudiante } from '../types/api';
 
 interface Props {
@@ -54,9 +55,14 @@ const EditarEstudianteModal: React.FC<Props> = ({ open, estudiante, onClose, onS
     }, [open, estudiante]);
 
     const cerrar = () => { if (!guardando) onClose(); };
+    /* Misma ventana de salida que el resto de diálogos del producto: la capa
+       sobrevive a `open === false` lo que dure su animación. El atrapador de
+       foco NO espera —recibe `open`— así que el foco vuelve a quien abrió en
+       cuanto se pide cerrar. Ver useOverlayTransition. */
+    const { montado, saliendo, overlayRef } = useOverlayTransition(open);
     const modalRef = useFocusTrap<HTMLDivElement>(open, cerrar);
 
-    if (!open) return null;
+    if (!montado) return null;
 
     const enviar = async (ev: React.FormEvent) => {
         ev.preventDefault();
@@ -94,13 +100,15 @@ const EditarEstudianteModal: React.FC<Props> = ({ open, estudiante, onClose, onS
 
     return createPortal(
         <div
-            className="ui-modal-overlay"
+            ref={overlayRef}
+            className={`ui-modal-overlay${saliendo ? ' ui-modal-overlay--saliendo' : ''}`}
+            aria-hidden={saliendo || undefined}
             role="dialog"
             aria-modal="true"
             aria-labelledby="ee-title"
             onClick={(e) => { if (e.target === e.currentTarget) cerrar(); }}
         >
-            <div className="ui-modal ui-modal--form" ref={modalRef}>
+            <div className={`ui-modal ui-modal--form${saliendo ? ' ui-modal--saliendo' : ''}`} ref={modalRef}>
                 <header className="ui-modal__header">
                     <h2 id="ee-title" className="ui-modal__title">
                         <UserCog size={18} aria-hidden="true" />

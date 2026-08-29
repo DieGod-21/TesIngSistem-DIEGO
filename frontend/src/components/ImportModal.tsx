@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useOverlayTransition } from '../hooks/useOverlayTransition';
 import {
     X, Upload, CheckCircle2, AlertTriangle,
     FileText, Users,
@@ -128,9 +129,14 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
         onClose();
     };
 
+    /* Misma ventana de salida que el resto de diálogos del producto: la capa
+       sobrevive a `open === false` lo que dure su animación. El atrapador de
+       foco NO espera —recibe `open`— así que el foco vuelve a quien abrió en
+       cuanto se pide cerrar. Ver useOverlayTransition. */
+    const { montado, saliendo, overlayRef } = useOverlayTransition(open);
     const modalRef = useFocusTrap<HTMLDivElement>(open, handleClose);
 
-    if (!open) return null;
+    if (!montado) return null;
 
     const pickEstFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] ?? null;
@@ -198,13 +204,15 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
 
     return createPortal(
         <div
-            className="ui-modal-overlay"
+            ref={overlayRef}
+            className={`ui-modal-overlay${saliendo ? ' ui-modal-overlay--saliendo' : ''}`}
+            aria-hidden={saliendo || undefined}
             role="dialog"
             aria-modal="true"
             aria-label="Importación masiva"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="ui-modal ui-modal--form ui-modal--wide" ref={modalRef}>
+            <div className={`ui-modal ui-modal--form ui-modal--wide${saliendo ? ' ui-modal--saliendo' : ''}`} ref={modalRef}>
                 <header className="ui-modal__header">
                     <h2 className="ui-modal__title">Importación masiva</h2>
                     <button

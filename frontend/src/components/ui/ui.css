@@ -1002,8 +1002,43 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     from { opacity: 0; transform: scale(0.96) translateY(8px); }
     to   { opacity: 1; transform: scale(1) translateY(0); }
 }
+
+/* ── Salida ───────────────────────────────────────────────────────────
+   Los diálogos entraban animados y se iban de golpe. Cerrar es una acción
+   del usuario y merece la misma cortesía que abrir: si la capa desaparece
+   entre dos cuadros, el contexto de debajo reaparece sin que nadie lo haya
+   anunciado.
+
+   IRSE ES MÁS RÁPIDO Y MÁS DISCRETO QUE LLEGAR. 140ms frente a 160/200, con
+   curva de ACELERACIÓN —al revés que la entrada, que desacelera al posarse—
+   y con la mitad de recorrido (0.98 y 4px frente a 0.96 y 8px). Llegar se
+   presenta; irse solo confirma. Una salida tan aparatosa como la entrada se
+   siente como si el diálogo se resistiera a marcharse.
+
+   `pointer-events: none` porque durante esos 140ms la capa sigue en el DOM:
+   sin esto, un clic rápido sobre un velo que ya se está desvaneciendo
+   seguiría alcanzando lo que hay debajo de él.
+
+   El desmontaje lo gobierna `useOverlayTransition`, que DEDUCE de aquí cuánto
+   durar. Cambiar estas duraciones no requiere tocar el hook. */
+.ui-modal-overlay--saliendo {
+    animation: ui-overlay-out 140ms cubic-bezier(0.4, 0, 1, 1) both;
+    pointer-events: none;
+}
+.ui-modal--saliendo {
+    animation: ui-modal-out 140ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes ui-overlay-out { to { opacity: 0; } }
+@keyframes ui-modal-out {
+    to { opacity: 0; transform: scale(0.98) translateY(4px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .ui-modal-overlay, .ui-modal { animation: none; }
+    /* Con la animación en `none`, `useOverlayTransition` lee duración cero y
+       retira la capa en el acto: la preferencia no deja un diálogo colgado
+       esperando un evento que no va a llegar. */
+    .ui-modal-overlay, .ui-modal,
+    .ui-modal-overlay--saliendo, .ui-modal--saliendo { animation: none; }
 }
 
 /* Bottom-sheet en móvil: anclado a la base, ancho completo, ergonomía táctil. */

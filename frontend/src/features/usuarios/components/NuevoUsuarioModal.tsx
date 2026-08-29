@@ -5,6 +5,7 @@ import { createUsuario } from '../../../services/usuariosService';
 import type { RolUsuario } from '../../../types/api';
 import { Button, Alert } from '../../../components/ui';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
+import { useOverlayTransition } from '../../../hooks/useOverlayTransition';
 import { userMessageFor } from '../../../services/errorMessages';
 
 interface Props {
@@ -51,9 +52,14 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         onClose();
     };
 
+    /* Misma ventana de salida que el resto de diálogos del producto: la capa
+       sobrevive a `open === false` lo que dure su animación. El atrapador de
+       foco NO espera —recibe `open`— así que el foco vuelve a quien abrió en
+       cuanto se pide cerrar. Ver useOverlayTransition. */
+    const { montado, saliendo, overlayRef } = useOverlayTransition(open);
     const modalRef = useFocusTrap<HTMLDivElement>(open, handleClose);
 
-    if (!open) return null;
+    if (!montado) return null;
 
     const set =
         (field: keyof FormState) =>
@@ -112,13 +118,15 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
 
     return createPortal(
         <div
-            className="ui-modal-overlay"
+            ref={overlayRef}
+            className={`ui-modal-overlay${saliendo ? ' ui-modal-overlay--saliendo' : ''}`}
+            aria-hidden={saliendo || undefined}
             role="dialog"
             aria-modal="true"
             aria-labelledby="nu-title"
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-            <div className="ui-modal ui-modal--form" ref={modalRef}>
+            <div className={`ui-modal ui-modal--form${saliendo ? ' ui-modal--saliendo' : ''}`} ref={modalRef}>
                 <header className="ui-modal__header">
                     <h2 id="nu-title" className="ui-modal__title">
                         <UserPlus size={18} aria-hidden="true" />

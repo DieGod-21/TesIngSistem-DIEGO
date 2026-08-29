@@ -157,6 +157,19 @@
 .sl-table__tr:nth-child(7)  { animation-delay: 0.20s; }
 .sl-table__tr:nth-child(8)  { animation-delay: 0.23s; }
 
+/*
+ * MEDIDO: con la página llena (20 filas) las nueve en adelante tenían retardo
+ * CERO, así que aparecían ANTES que las ocho escalonadas. La cascada se leía
+ * al revés —el grueso de la tabla de golpe y luego las primeras cayendo por
+ * detrás— y quedaba peor que no escalonar nada.
+ *
+ * El escalonado nunca quiso llegar a la fila cien: pasadas ocho deja de
+ * ordenar la mirada y empieza a retrasar contenido. Lo que faltaba era decir
+ * qué hacen las demás. Entran juntas, en una segunda tanda, cuando la cascada
+ * ya terminó: llegan DESPUÉS, que es lo único que importaba.
+ */
+.sl-table__tr:nth-child(n+9) { animation-delay: 0.26s; }
+
 .sl-table__tr:last-child {
     border-bottom: none;
 }
