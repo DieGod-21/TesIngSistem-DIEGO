@@ -32,7 +32,9 @@ const ProyectoCard: React.FC<Props> = ({ proyecto, onOpen, destacado = false }) 
             // salto brusco cuando ya estaba visible, que es el caso normal.
             if (destacado && el) el.scrollIntoView({ block: 'nearest' });
         }}
-        className={`proy-card ui-surface--interactive${destacado ? ' proy-card--nueva' : ''}`}
+        /* `ui-scroll-anchor`: reserva el hueco de la cabecera pegajosa para que
+           el desplazamiento de arriba no deje la tarjeta debajo de ella. */
+        className={`proy-card ui-surface--interactive ui-scroll-anchor${destacado ? ' proy-card--nueva' : ''}`}
         onClick={() => onOpen(proyecto.id)}
         aria-label={`Abrir el proyecto «${proyecto.titulo}»`}
     >

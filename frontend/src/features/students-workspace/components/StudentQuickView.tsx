@@ -95,6 +95,27 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
     const { student, loading, error, grades, tesis, terna, promedio, proyecto } = dossier;
     const verdict = VERDICT[tesis.estado] ?? VERDICT.PENDIENTE;
 
+    /*
+     * ── DOS ESPERAS QUE NO SE PARECEN EN NADA ───────────────────────────
+     *
+     * Abrir el panel por primera vez es esperar a que aparezca algo: no hay
+     * nada que enseñar y el esqueleto es la respuesta correcta.
+     *
+     * Pasar al siguiente expediente NO es eso. Ahí ya hay un panel abierto y
+     * lleno, y sustituirlo por cuatro barras grises mientras llega el siguiente
+     * hacía que el panel entero —identidad, cuerpo y pie— se desmontara y se
+     * volviera a montar en cada pulsación de flecha. Recorrer veinte
+     * expedientes se sentía como abrir veinte paneles, no como hojear uno.
+     *
+     * Mientras llega el siguiente se conserva EN PANTALLA el anterior. El hook
+     * ya lo hace posible: al cambiar de identificador mantiene los datos
+     * previos y solo levanta `loading`, y cuando el nuevo expediente llega lo
+     * asienta de una vez (nunca hay mezcla de dos personas). Aquí solo se
+     * decide qué significa esa espera.
+     */
+    const primeraCarga = loading && student == null;
+    const cambiandoDeExpediente = loading && student != null;
+
     return createPortal(
         <div className="qv-scrim" onMouseDown={onClose}>
             <aside
@@ -105,7 +126,13 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                 aria-label={student ? `Vista rápida de ${student.nombre}` : 'Vista rápida del estudiante'}
                 onMouseDown={(e) => e.stopPropagation()}
             >
-                {/* ── Barra de control: cerrar + recorrer el padrón ── */}
+                {/* ── Barra de control: cerrar + recorrer el padrón ──
+                    El recorrido es UNA sola pieza: anterior, posición y
+                    siguiente viven dentro del mismo marco. Estaban sueltos —la
+                    posición pegada al aspa, en 12px apagados, y las flechas al
+                    otro extremo—, así que el dato que dice «voy por el 19 de
+                    20» no se relacionaba con los controles que lo mueven y
+                    apenas se leía. */}
                 <div className="qv-bar">
                     <button
                         type="button"
@@ -117,37 +144,47 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                         <X size={16} aria-hidden="true" />
                     </button>
 
-                    {position && (
-                        <span className="qv-bar__pos" aria-live="polite">
-                            {position.index} de {position.total}
-                        </span>
-                    )}
-
-                    <div className="qv-bar__nav">
+                    <div className="qv-pager">
                         <button
                             type="button"
-                            className="ui-icon-btn"
+                            className="qv-pager__btn"
                             onClick={onPrev}
                             disabled={!onPrev}
                             aria-label="Estudiante anterior (flecha arriba)"
                             title="Anterior · ↑"
                         >
-                            <ChevronUp size={16} aria-hidden="true" />
+                            <ChevronUp size={18} aria-hidden="true" />
                         </button>
+
+                        {position && (
+                            /* El nombre accesible se enuncia entero («Expediente
+                               19 de 20»): la barra oblicua se lee bien con los
+                               ojos y fatal en voz alta. */
+                            <span
+                                className="qv-pager__pos"
+                                aria-live="polite"
+                                aria-label={`Expediente ${position.index} de ${position.total}`}
+                            >
+                                <span className="qv-pager__now">{position.index}</span>
+                                <span className="qv-pager__sep" aria-hidden="true">/</span>
+                                <span className="qv-pager__total">{position.total}</span>
+                            </span>
+                        )}
+
                         <button
                             type="button"
-                            className="ui-icon-btn"
+                            className="qv-pager__btn"
                             onClick={onNext}
                             disabled={!onNext}
                             aria-label="Estudiante siguiente (flecha abajo)"
                             title="Siguiente · ↓"
                         >
-                            <ChevronDown size={16} aria-hidden="true" />
+                            <ChevronDown size={18} aria-hidden="true" />
                         </button>
                     </div>
                 </div>
 
-                {loading && (
+                {primeraCarga && (
                     <div className="qv-body" aria-busy="true" aria-label="Cargando expediente…">
                         <Skeleton size="large" />
                         <Skeleton size="medium" />
@@ -162,8 +199,20 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                     </div>
                 )}
 
-                {!loading && !error && student && (
-                    <>
+                {student && !error && (
+                    /*
+                     * La `key` es lo que hace el relevo: mientras se espera al
+                     * siguiente sigue siendo la misma y nada se remonta; en
+                     * cuanto llega, React sustituye este subárbol y el contenido
+                     * entra con su propia animación. El marco del panel, el velo
+                     * y la barra de recorrido quedan fuera y no se enteran.
+                     */
+                    <div
+                        className="qv-content"
+                        key={student.id}
+                        data-cambiando={cambiandoDeExpediente ? 'true' : undefined}
+                        aria-busy={cambiandoDeExpediente || undefined}
+                    >
                         {/* ── 1. Identidad: bloque anclado, no una fila más ──
                             El lavado de marca solo vive aquí. Da al panel un
                             «arriba» reconocible y evita que el contenido flote
@@ -348,7 +397,7 @@ const StudentQuickView: React.FC<StudentQuickViewProps> = ({
                                 <kbd className="ui-kbd">↑</kbd><kbd className="ui-kbd">↓</kbd> recorrer · <kbd className="ui-kbd">Esc</kbd> cerrar
                             </p>
                         </footer>
-                    </>
+                    </div>
                 )}
             </aside>
         </div>,

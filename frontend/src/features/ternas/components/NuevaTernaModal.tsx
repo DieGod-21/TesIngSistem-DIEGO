@@ -91,11 +91,25 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         setApiError(null);
     }, []);
 
+    /*
+     * El formulario se vacía al ABRIR, no al cerrar.
+     *
+     * Cerrar ya no desmonta en el acto: la capa sobrevive lo que dura su
+     * salida. Vaciar aquí el estado dejaba el formulario en blanco A LA VISTA
+     * durante el fundido —proyecto elegido, evaluadores marcados y fecha
+     * desaparecían antes que el diálogo—, que se lee como pérdida de datos.
+     *
+     * Al abrir, el resultado es el mismo (el diálogo siempre nace limpio) y
+     * nadie llega a ver el paso intermedio.
+     */
+    useEffect(() => {
+        if (open) reset();
+    }, [open, reset]);
+
     const cerrar = useCallback(() => {
         if (enviando) return;
-        reset();
         onClose();
-    }, [enviando, reset, onClose]);
+    }, [enviando, onClose]);
 
     /* Misma ventana de salida que el resto de diálogos del producto: la capa
        sobrevive a `open === false` lo que dure su animación. El atrapador de
@@ -186,7 +200,9 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                 evaluadoresIds: elegidos,
                 ...(fecha ? { fechaEvaluacion: fecha } : {}),
             });
-            reset();
+            // No se vacía aquí: `onCreated` cierra el diálogo y el formulario
+            // se quedaría en blanco durante la salida. Lo limpia el efecto de
+            // apertura.
             onCreated(numero);
         } catch (e) {
             setApiError(userMessageFor(e));

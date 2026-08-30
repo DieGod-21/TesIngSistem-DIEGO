@@ -397,7 +397,7 @@ const DefaultStudentsView: React.FC<{
                         {!loading && !error && estudiantes.map((s) => (
                             <tr
                                 key={s.id}
-                                className={`sl-table__tr sl-table__tr--clickable${previewId === String(s.id) ? ' sl-table__tr--previewing' : ''}`}
+                                className={`sl-table__tr sl-table__tr--clickable ui-scroll-anchor${previewId === String(s.id) ? ' sl-table__tr--previewing' : ''}`}
                                 data-student-row={s.id}
                                 // La fila inspecciona; Enter/clic abren el panel.
                                 // El expediente completo es la acción secundaria,

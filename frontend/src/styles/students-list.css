@@ -139,13 +139,10 @@
     border-bottom: 1px solid var(--dash-border);
     transition: background var(--transition-fast), box-shadow var(--transition-fast);
     animation: sl-row-in 0.2s ease both;
-    /* La cabecera es PEGAJOSA y ocupa los primeros ~77px del área de scroll.
-       Cualquier desplazamiento que alinee una fila con el borde superior
-       —el que hace la página al llegar señalando a alguien, un ancla, o el
-       propio navegador— la dejaría justo debajo y por tanto tapada. Este
-       margen de desplazamiento reserva ese hueco; no ocupa espacio en el
-       diseño, solo le dice al scroll dónde parar. */
-    scroll-margin-top: var(--space-96);
+    /* El hueco bajo la cabecera pegajosa lo reserva `.ui-scroll-anchor`, que
+       la fila ya lleva puesta (ver la nota de esa clase en ui.css). Estaba
+       declarado aquí a mano y los otros dos sitios del producto que desplazan
+       por su cuenta se habían quedado sin él. */
 }
 
 .sl-table__tr:nth-child(1)  { animation-delay: 0.02s; }

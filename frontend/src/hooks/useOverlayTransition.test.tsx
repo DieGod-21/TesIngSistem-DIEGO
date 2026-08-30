@@ -160,9 +160,23 @@ describe('useOverlayTransition', () => {
     });
 
     it('desmontar el componente durante la salida no deja temporizadores sueltos', () => {
+        /*
+         * Antes esta prueba solo comprobaba `not.toThrow()`, que no probaba
+         * NADA: desde React 18 un setState sobre un componente desmontado es
+         * un no-op silencioso —el aviso se retiró— así que pasaba igual con
+         * la limpieza del efecto entera borrada.
+         *
+         * Se cuenta el temporizador: tiene que existir mientras la capa se va
+         * y no puede sobrevivir al desmontaje.
+         */
         const { rerender, unmount } = render(<Capa abierto />);
         rerender(<Capa abierto={false} />);
+        expect(vi.getTimerCount(), 'el techo de la salida quedó armado').toBe(1);
+
         unmount();
+        expect(vi.getTimerCount(), 'el desmontaje canceló el techo').toBe(0);
+
+        // Y avanzar el reloj después no revive nada.
         expect(() => { act(() => { vi.advanceTimersByTime(1000); }); }).not.toThrow();
     });
 

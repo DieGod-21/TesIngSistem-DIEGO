@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, FolderPlus } from 'lucide-react';
 import { createProyecto } from '../../../services/proyectosService';
@@ -38,12 +38,27 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated, carnets
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
 
-    const handleClose = () => {
-        if (loading) return;
+    /*
+     * El formulario se vacía al ABRIR, no al cerrar.
+     *
+     * Cerrar ya no desmonta en el acto: la capa sobrevive lo que dura su
+     * salida. Vaciar aquí el estado dejaba el formulario en blanco A LA VISTA
+     * durante el fundido, y lo que el usuario veía era su propio texto —y el
+     * estudiante que acababa de elegir— desapareciendo antes que el diálogo.
+     *
+     * Al abrir, el resultado es el mismo (el diálogo siempre nace limpio) y
+     * nadie llega a ver el paso intermedio.
+     */
+    useEffect(() => {
+        if (!open) return;
         setForm(INITIAL);
         setEstudiante(null);
         setErrors({});
         setApiError(null);
+    }, [open]);
+
+    const handleClose = () => {
+        if (loading) return;
         onClose();
     };
 
@@ -92,9 +107,9 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated, carnets
                 descripcion: descripcion || null,
                 fase: form.fase,
             });
-            setForm(INITIAL);
-            setEstudiante(null);
-            setErrors({});
+            // No se vacía aquí: `onCreated` cierra el diálogo y el formulario
+            // se quedaría en blanco durante la salida. Lo limpia el efecto de
+            // apertura.
             onCreated(titulo, creado.id);
         } catch (err) {
             setApiError(userMessageFor(err) || 'No se pudo crear el proyecto. Inténtalo de nuevo.');

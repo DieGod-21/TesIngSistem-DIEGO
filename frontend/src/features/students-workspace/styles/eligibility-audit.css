@@ -1,31 +1,98 @@
 /**
- * eligibility-audit.css — Aviso de elegibilidad sin respaldo.
+ * eligibility-audit.css — Expedientes por revisar.
  *
- * Hereda color, fondo y borde de `.ui-alert--warning`: aquí solo se resuelve la
- * disposición de la lista. El tono NO se redefine, para que el aviso siga
- * cambiando con los tokens del sistema en claro y en oscuro.
+ * Solo tokens del sistema de diseño: el modo oscuro se resuelve por herencia,
+ * sin overrides [data-theme].
+ *
+ * ── POR QUÉ ESTA TARJETA ES NEUTRA ───────────────────────────────────
+ *
+ * Este bloque heredaba el vestido completo de `.ui-alert--warning`: fondo
+ * ámbar, borde ámbar, texto ámbar. A tamaño de toast eso es un aviso; a media
+ * columna es una alarma, y quien lo probó contra el servidor real lo leyó como
+ * «algo se rompió» aunque el texto hablara de trabajo pendiente.
+ *
+ * El color no era el problema: era la superficie. Ahora la tarjeta es la misma
+ * que usa la cola de trabajo justo debajo —que dice lo mismo y nadie confunde
+ * con una avería— y el ámbar queda reducido al distintivo y a la cifra, que
+ * juntos no llegan a la décima parte del bloque. El aviso sigue siendo ámbar;
+ * lo que ya no es ámbar es la pared.
  */
 
+@import url('../../../theme/variables.css');
+
 .elig-audit {
-    /* El aviso comenta la cifra que tiene justo encima; se pega a la rejilla de
+    /* Comenta la cifra que tiene justo encima: se pega a la rejilla de
        indicadores en lugar de flotar como un bloque independiente. */
     margin-top: var(--space-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    padding: var(--space-16);
+    background: var(--surface-card-grad), var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sm), var(--hairline);
 }
 
-/* ── Jerarquía: cuántos → qué significa → quiénes → qué hago ──────────
-   La cifra es lo primero que se ve; el rótulo la nombra; el cuerpo explica en
-   una línea. Antes los cuatro escalones tenían el mismo tamaño y peso. */
+/* ── Encabezado: distintivo · cifra · rótulo · una línea de contexto ── */
+
+/* Distintivo · (cifra + contexto) · acción, en una sola banda. La acción se va
+   al extremo opuesto con `margin-left:auto` y baja de línea sola en cuanto no
+   cabe, sin necesidad de un punto de ruptura propio. */
+.elig-audit__head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-12);
+    flex-wrap: wrap;
+}
+
+/* El único color pleno del bloque. Mismo tinte que el icono con el que la cola
+   de trabajo marca esta misma tarea (`.wq__icon--revisar_no_elegible`): quien
+   conoce la cola reconoce el asunto sin leer.
+   El diámetro sale de la escala de controles, no del 34px literal de la cola:
+   son dos píxeles que nadie distingue entre dos tarjetas distintas, y una
+   medida suelta en este rango es justo lo que desancla la escala. */
+.elig-audit__chip {
+    display: grid;
+    place-items: center;
+    width: var(--control-h-md);
+    height: var(--control-h-md);
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: var(--color-warning);
+    background: color-mix(in oklch, var(--color-warning) 14%, transparent);
+}
+
+.elig-audit__heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    /* Se queda con el espacio sobrante para que la acción quede al otro
+       extremo y el texto no la empuje fuera.
+       El ANCHO MÍNIMO es lo que decide quién cede cuando no caben los dos:
+       sin él, el texto se encogía hasta servir el párrafo a dos palabras por
+       línea con tal de dejarle sitio al botón (visto a 390px). Con el mínimo
+       puesto, es el botón el que baja de línea, que es lo correcto: la frase
+       explica y el botón solo hace falta después de leerla.
+       `min()` evita que ese mínimo desborde en pantallas muy estrechas. */
+    flex: 1;
+    min-width: min(15rem, 100%);
+}
+
+/* Jerarquía: cuántos → qué significa → quiénes → qué hago. */
 .elig-audit__titulo {
     display: flex;
     align-items: baseline;
     gap: var(--space-8);
-    margin: 0 0 var(--space-4);
+    margin: 0;
 }
 
 .elig-audit__cifra {
     font-size: var(--text-3xl);
     font-weight: var(--weight-bold);
     line-height: var(--leading-none);
+    /* El ámbar carga aquí el peso semántico que ya no lleva el fondo. */
+    color: var(--color-warning);
     /* Cifras de ancho fijo: al desplegar y plegar la lista el número puede
        cambiar de 4 a 12 y el rótulo no debe bailar. */
     font-variant-numeric: tabular-nums;
@@ -34,82 +101,119 @@
 .elig-audit__rotulo {
     font-size: var(--text-md);
     font-weight: var(--weight-semibold);
+    color: var(--text-primary);
 }
 
 .elig-audit__lead {
     margin: 0;
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     line-height: var(--leading-relaxed);
+    color: var(--text-secondary);
 }
+
+/* ── Filas: destinos, no notas ───────────────────────────────────────
+   Mismo comportamiento que las de la cola de trabajo: la fila entera es el
+   objetivo, se realza al apuntar y anilla al enfocar. */
 
 .elig-audit__list {
     list-style: none;
-    margin: var(--space-12) 0 0;
+    margin: 0;
     padding: 0;
-    display: grid;
-    gap: var(--space-2);
-}
-
-.elig-audit__row {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-4) var(--space-8);
+    flex-direction: column;
+    gap: var(--space-4);
 }
 
-/* El enlace ocupa nombre + carné y nada más: el objetivo táctil coincide con lo
-   que se lee como "esta persona", no con la fila entera (que incluye el motivo,
-   texto informativo que no navega a ninguna parte). */
 .elig-audit__link {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--space-8);
-    /* 44px de alto son excesivos dentro de un aviso; se garantiza el mínimo
-       cómodo con padding vertical y se mantiene la fila legible. */
-    padding: var(--space-4) var(--space-6);
-    margin-left: calc(var(--space-6) * -1);
-    border-radius: var(--radius-sm);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--space-12);
+    padding: var(--space-8) var(--space-12);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface-card);
     color: inherit;
     text-decoration: none;
-    min-height: 32px;
+    transition:
+        background var(--transition-fast),
+        border-color var(--transition-fast);
 }
 
 .elig-audit__link:hover {
-    background: color-mix(in oklch, currentColor 10%, transparent);
+    background: var(--color-primary-soft);
+    border-color: var(--border-strong);
 }
 
 .elig-audit__link:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 1px;
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
 }
 
+.elig-audit__ident {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-8);
+    min-width: 0;
+}
+
+/* Sin subrayado: la fila ya se anuncia como destino con su superficie, su
+   realce y su galón. Subrayar además convertía la lista en un bloque de
+   enlaces azules dentro de una tarjeta. */
 .elig-audit__nombre {
     font-size: var(--text-base);
     font-weight: var(--weight-semibold);
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .elig-audit__carnet {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    opacity: 0.85;
+    color: var(--text-muted);
+    flex-shrink: 0;
 }
 
-/* El motivo es la mitad útil de la fila —«falta la nota de PG2» es la tarea—,
-   y estaba a 12px con opacidad: se leía como una nota al pie de sí mismo. */
+/* El motivo es la mitad útil de la fila: «falta la nota de PG2» es la tarea. */
 .elig-audit__motivo {
     font-size: var(--text-sm);
-    opacity: 0.92;
+    color: var(--text-secondary);
+    white-space: nowrap;
 }
 
+.elig-audit__chevron {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.elig-audit__link:hover .elig-audit__chevron { color: var(--color-primary-text); }
+
+/* ── Acción y desplegable ─────────────────────────────────────────────
+   Viste `.ui-btn--primary` —el mismo botón que «Registrar Estudiante»: la
+   acción de este bloque no es de otra especie que las demás del panel—; aquí
+   solo se quita el subrayado que trae el enlace y se declara el gesto de la
+   flecha. */
+.elig-audit__cta {
+    text-decoration: none;
+    /* Al extremo opuesto de la cifra, y alineado con ella y no con el bloque
+       entero: el botón acompaña al titular, no al párrafo de debajo. */
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* La flecha avanza al apuntar: dice «esto continúa en otra pantalla». Mismo
+   gesto que el pie de la vista rápida. */
+.elig-audit__cta-arrow { transition: transform var(--transition-base); }
+
 .elig-audit__mas {
-    margin-top: var(--space-8);
+    align-self: flex-start;
     padding: var(--space-4) var(--space-8);
     background: none;
-    border: 1px solid color-mix(in oklch, currentColor 35%, transparent);
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius-sm);
-    color: inherit;
+    color: var(--text-secondary);
     font: inherit;
     font-size: var(--text-sm);
     cursor: pointer;
@@ -117,69 +221,51 @@
 }
 
 .elig-audit__mas:focus-visible {
-    outline: 2px solid currentColor;
+    outline: 2px solid var(--color-primary);
     outline-offset: 1px;
 }
 
-/* Pie del aviso: «ver más» (si hay) y la acción principal. La acción es
-   REVISAR y no REINTENTAR — ver la nota de EligibilityAudit.tsx sobre por qué
-   esto no es un error del sistema. */
-.elig-audit__pie {
-    display: flex;
-    align-items: center;
-    gap: var(--space-12);
-    flex-wrap: wrap;
-    margin-top: var(--space-12);
-}
-
-/* Relleno SÓLIDO con el propio par de tokens del aviso (texto sobre fondo,
-   invertido). El contraste es el mismo que ya garantiza el tono en claro y en
-   oscuro, y no hace falta un color nuevo: el botón principal deja de parecer
-   deshabilitado sin salirse del sistema. */
-.elig-audit__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-6);
-    min-height: var(--control-h-sm);
-    padding: var(--space-6) var(--space-14);
-    border-radius: var(--radius-sm);
-    background: var(--toast-warning-text);
-    color: var(--toast-warning-bg);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-    text-decoration: none;
-    transition: filter var(--transition-base);
-}
-.elig-audit__cta:focus-visible {
-    outline: 2px solid var(--toast-warning-text);
-    outline-offset: 2px;
-}
-
 /* En pantallas táctiles el estado de apuntar se QUEDA pegado tras el toque
-   hasta que se toca otra cosa. Da igual en los enlaces —navegan y el elemento
-   desaparece— pero este botón permanece en pantalla, así que su realce se
-   reserva a los punteros que de verdad pueden apuntar. */
+   hasta que se toca otra cosa. Da igual en las filas —navegan y desaparecen—
+   pero estos controles permanecen, así que su realce se reserva a los punteros
+   que de verdad pueden apuntar. */
 @media (hover: hover) {
-    .elig-audit__mas:hover { background: color-mix(in oklch, currentColor 10%, transparent); }
-    .elig-audit__cta:hover { filter: brightness(1.08); }
+    .elig-audit__mas:hover {
+        background: var(--surface-raised);
+        color: var(--text-primary);
     }
+    .elig-audit__cta:hover .elig-audit__cta-arrow { transform: translateX(3px); }
+}
 
-/* ── Peso visual del relleno ──────────────────────────────────────────
-   `--toast-warning-bg` está calibrado para un toast de dos líneas. Este bloque
-   ocupa media columna y a ese tamaño el mismo ámbar pesa como una alarma: en
-   oscuro se lee rojizo y la gente lo trata como «algo se rompió» cuando lo que
-   dice es «hay trabajo».
+@media (prefers-reduced-motion: reduce) {
+    .elig-audit__link,
+    .elig-audit__cta-arrow { transition: none; }
+    .elig-audit__cta:hover .elig-audit__cta-arrow { transform: none; }
+}
 
-   Se rebaja dejando pasar la superficie de debajo, NO con un override por
-   tema: en claro el fondo aclara y en oscuro oscurece, con los tokens de cada
-   tema, así que sigue funcionando por herencia.
+/* ── Estrecho: el motivo baja bajo el nombre ─────────────────────────
+   A partir de aquí caben mal tres columnas en una fila. El galón se mantiene
+   —es lo que dice que la fila lleva a algún sitio— y el motivo pasa a segunda
+   línea, que es donde lo pone la cola de trabajo. */
+@media (max-width: 720px) {
+    /* Cuando la acción baja de línea deja de tener un extremo al que irse: se
+       alinea con el texto que acaba de leerse, no con el borde derecho. */
+    .elig-audit__cta { margin-left: 0; }
 
-   MEDIDO: la primera versión mezclaba contra `--surface-base`, que lleva su
-   propia croma azulada. Interpolar en oklch entre matiz 80 (ámbar) y 275
-   (azul) recorre el arco CORTO, que pasa por el rojo: el panel salía en matiz
-   40 y quedaba MÁS parecido al error (matiz 25) que antes, justo lo contrario
-   de lo que se buscaba. Mezclar con `transparent` solo toca la opacidad y deja
-   el matiz donde estaba. */
-.elig-audit {
-    background: color-mix(in oklch, var(--toast-warning-bg) 72%, transparent);
+    .elig-audit__link {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--space-4) var(--space-10);
+        /* Objetivo táctil cómodo: la fila se opera con el dedo. */
+        min-height: var(--control-h-lg);
     }
+    .elig-audit__ident { grid-column: 1; }
+    .elig-audit__motivo {
+        grid-column: 1;
+        grid-row: 2;
+        white-space: normal;
+    }
+    .elig-audit__chevron {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
+}

@@ -25,7 +25,23 @@ const OPCIONES_CLIC = { scrollBehavior: 'center' } as const;
 describe('del panel al expediente concreto', () => {
     beforeEach(() => {
         cy.entrar();
-        cy.get('.elig-audit', { timeout: 20000 }).should('be.visible');
+        /*
+         * Se espera al TITULAR del panel, no al panel entero.
+         *
+         * `be.visible` sobre un contenedor dentro de un ancestro `position:
+         * fixed` se decide por su punto CENTRAL, y este panel mide más que el
+         * hueco que queda bajo el pliegue. MEDIDO en el viewport de Cypress
+         * (1000x660), con el panel arrancando en y=550:
+         *
+         *     centro del panel  →  y=685   (fuera de los 660 de alto)
+         *
+         * Es decir: la aserción no hablaba de si el panel está en pantalla
+         * sino de si CABE ENTERO en ella, que no es lo que esta prueba
+         * necesita ni lo que promete su nombre. El titular sí está a la vista
+         * —es lo primero que se lee del bloque— y es la señal correcta de que
+         * el panel ya está dibujado y se puede interactuar con él.
+         */
+        cy.get('.elig-audit__titulo', { timeout: 20000 }).should('be.visible');
         // El panel se alimenta de varias fuentes y vuelve a dibujarse cuando
         // termina la última. Si se pulsa un enlace en ese hueco, el elemento
         // ya está desprendido del documento cuando llega el clic. Esperar a la
@@ -88,7 +104,10 @@ describe('del panel al expediente concreto', () => {
         cy.location('pathname', { timeout: 20000 }).should('eq', '/students');
         cy.go('back');
         cy.location('pathname').should('eq', '/dashboard');
-        cy.get('.elig-audit').should('be.visible');
+        // El titular, por el mismo motivo que en el `beforeEach`: el panel mide
+        // más que el hueco bajo el pliegue y `be.visible` se decide por su
+        // punto central.
+        cy.get('.elig-audit__titulo').should('be.visible');
     });
 
     it('recargar sobre el enlace deja el mismo estado, no uno roto', () => {

@@ -148,7 +148,22 @@
        fondo se vuelve papilla y el efecto delata «plantilla». */
     --glass-scrim:   oklch(0.22 0.035 275 / 0.42);
     --glass-blur:    12px;
-    --glass-surface: color-mix(in oklch, var(--surface-card) 88%, transparent);
+    /*
+     * MEDIDO: estaba al 88 %, es decir con un 12 % de transparencia. A ese
+     * nivel el desenfoque no tiene casi nada que enseñar y el material se leía
+     * como una tarjeta opaca cualquiera: se pagaba la capa de composición del
+     * `backdrop-filter` sin obtener el efecto que la justifica. Probado contra
+     * el producto real, quien lo usa lo describió como «está, pero no se nota».
+     *
+     * Al 78 % la lámina deja pasar lo que tapa —se sigue intuyendo la tabla o
+     * el formulario que hay debajo— sin comprometer el texto que va encima: el
+     * desenfoque destruye el detalle fino del fondo, así que lo que queda
+     * detrás de las letras es un promedio suave, no bordes en competencia.
+     *
+     * No se toca el desenfoque: 12px es el techo por encima del cual el fondo
+     * se vuelve papilla. Lo que faltaba era transparencia, no difuminado.
+     */
+    --glass-surface: color-mix(in oklch, var(--surface-card) 78%, transparent);
     --glass-border:  color-mix(in oklch, oklch(1 0 0) 60%, var(--border));
 
     /* Desenfoque corto para velos: oscurecen más de lo que difuminan, así que
@@ -447,7 +462,9 @@ body {
        separarlo igual) y el borde deja de ser un brillo blanco —que en oscuro
        se lee como un arañazo— para volverse una luz muy tenue. */
     --glass-scrim:   oklch(0.12 0.030 275 / 0.58);
-    --glass-surface: color-mix(in oklch, var(--surface-card) 90%, transparent);
+    /* Dos puntos por encima del claro (80 frente a 78): sobre papel oscuro, lo
+       que se transparenta son luces y no sombras, y pesan más. */
+    --glass-surface: color-mix(in oklch, var(--surface-card) 80%, transparent);
     --glass-border:  color-mix(in oklch, oklch(1 0 0) 12%, var(--border));
     /* El filo de luz baja de 0.30 a 0.08: sobre una superficie oscura, un brillo
        blanco al canto no se lee como grosor sino como un arañazo. */

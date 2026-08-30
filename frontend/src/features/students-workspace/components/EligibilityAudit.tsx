@@ -1,5 +1,5 @@
 /**
- * EligibilityAudit.tsx — «Expedientes que necesitan revisión».
+ * EligibilityAudit.tsx — «Expedientes por revisar».
  *
  * Aparece SOLO cuando el estado de elegibilidad de alguien no cuadra con las
  * notas que tiene registradas. En una cohorte sana este componente no se dibuja.
@@ -13,19 +13,30 @@
  * les falta. La causa técnica queda en el código —aquí y en `eligibility.ts`—,
  * donde sirve a quien puede arreglarla.
  *
- * ── NO ES UN ERROR DEL SISTEMA ──────────────────────────────────────────
+ * ── TRABAJO PENDIENTE, NO AVERÍA ────────────────────────────────────────
  *
- * Y la diferencia se nota en la interacción, no solo en el tono: un error
- * ofrece «Reintentar», porque la hipótesis es que algo falló al cargar. Esto
- * ofrece «Revisar»: los datos llegaron bien y son ellos los que no cuadran.
- * Reintentar aquí no arreglaría nada, así que no se ofrece. Por eso tampoco usa
- * el tono `danger` ni `role="alert"`: no interrumpe, informa de trabajo.
+ * Probado con el producto contra el servidor real: esto se seguía leyendo como
+ * «algo se rompió». La causa no era el tono ámbar sino la CANTIDAD de ámbar. El
+ * bloque entero iba relleno de color de aviso, y una superficie de media columna
+ * teñida de ámbar es el lenguaje de un fallo, por mucho que el texto hable de
+ * trabajo. En el mismo panel, justo debajo, la cola de trabajo dice exactamente
+ * lo mismo —«esto te toca»— sobre una tarjeta neutra, y nadie la confunde con
+ * una avería.
+ *
+ * Así que el ámbar deja de ser la SUPERFICIE y pasa a ser el ACENTO: vive en el
+ * distintivo y en la cifra, que juntos ocupan una fracción del bloque. El resto
+ * es la misma tarjeta que usa el resto del panel. La semántica de aviso no se
+ * toca —sigue sin `role="alert"`, sigue ofreciendo «Revisar» y no «Reintentar»,
+ * porque los datos llegaron bien y son ellos los que no cuadran—, pero ahora la
+ * forma dice lo mismo que las palabras.
+ *
+ * Cada fila es un destino, no una nota: se recorre y se pulsa como las de la
+ * cola de trabajo, con el mismo realce al apuntar y el mismo anillo de foco.
  */
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardCheck, ArrowRight } from 'lucide-react';
-import { Alert } from '../../../components/ui';
+import { ClipboardCheck, ArrowRight, ChevronRight } from 'lucide-react';
 import { routes } from '../../../config/routes';
 import { buildFocusUrl } from '../lens/lens';
 import { describirObservacion } from '../domain/eligibility';
@@ -50,38 +61,60 @@ const EligibilityAudit: React.FC<Props> = ({ auditoria }) => {
     const uno = observados.length === 1;
 
     return (
-        <Alert
-            tone="warning"
-            className="elig-audit"
-            icon={<ClipboardCheck size={18} />}
-        >
-            {/*
-             * LA CIFRA PRIMERO, y no dentro del título.
-             *
-             * Antes el número vivía enterrado en una frase («4 expedientes
-             * necesitan revisión») del mismo tamaño y peso que el resto del
-             * aviso, así que el dato que decide si esto se atiende hoy o la
-             * semana que viene había que leerlo, no verlo. Sacarlo a la
-             * jerarquía de una cifra responde «cuántos» de un vistazo y deja
-             * el resto del bloque para «qué significa» y «qué hago».
-             *
-             * Sigue leyéndose como una sola frase de corrido para quien usa
-             * lector de pantalla: «4 expedientes por revisar».
-             */}
-            <p className="elig-audit__titulo">
-                <span className="elig-audit__cifra">{observados.length}</span>
-                <span className="elig-audit__rotulo">
-                    {uno ? 'expediente por revisar' : 'expedientes por revisar'}
+        <section className="elig-audit" aria-labelledby="elig-audit-tit">
+            <header className="elig-audit__head">
+                {/*
+                 * El distintivo es la ÚNICA pieza de color pleno del bloque, y
+                 * repite el mismo tinte que la cola de trabajo usa para este
+                 * tipo de tarea. Quien ya conoce la cola reconoce el asunto
+                 * antes de leer la cifra.
+                 */}
+                <span className="elig-audit__chip" aria-hidden="true">
+                    <ClipboardCheck size={18} />
                 </span>
-            </p>
 
-            <p className="elig-audit__lead">
-                {uno ? 'Consta' : 'Constan'} como elegible{uno ? '' : 's'} para tesis, pero
-                {uno ? ' le' : ' les'} falta alguna de las notas obligatorias.
-            </p>
+                <div className="elig-audit__heading">
+                    {/*
+                     * LA CIFRA PRIMERO, y no dentro del título.
+                     *
+                     * El dato que decide si esto se atiende hoy o la semana que
+                     * viene se ve, no se lee. Sigue leyéndose como una sola
+                     * frase de corrido para quien usa lector de pantalla:
+                     * «4 expedientes por revisar».
+                     */}
+                    <p className="elig-audit__titulo" id="elig-audit-tit">
+                        <span className="elig-audit__cifra">{observados.length}</span>
+                        <span className="elig-audit__rotulo">
+                            {uno ? 'expediente por revisar' : 'expedientes por revisar'}
+                        </span>
+                    </p>
+
+                    <p className="elig-audit__lead">
+                        {uno ? 'Consta' : 'Constan'} como elegible{uno ? '' : 's'} para tesis, pero
+                        {uno ? ' le' : ' les'} falta alguna de las notas obligatorias.
+                    </p>
+                </div>
+
+                {/* La acción vive JUNTO A LA CIFRA, no al final del bloque.
+                    Al pie ocupaba una banda entera para sí sola y alargaba el
+                    panel lo suficiente como para empujar la cola de trabajo
+                    —lo demás que hay que hacer hoy— fuera de la pantalla. Aquí
+                    responde «qué hago» en el mismo golpe de vista que «cuántos
+                    son», que es la pregunta que la precede.
+                    Es REVISAR, no reintentar: los datos llegaron bien. Lleva al
+                    padrón acotado a los elegibles, que es donde estos
+                    expedientes se comparan con el resto y se marcan. */}
+                <Link
+                    className="elig-audit__cta ui-btn ui-btn--primary ui-btn--sm"
+                    to={`${routes.students()}?status=approved`}
+                >
+                    Revisar en el padrón
+                    <ArrowRight size={15} aria-hidden="true" className="elig-audit__cta-arrow" />
+                </Link>
+            </header>
 
             {/*
-             * La lista NO se pliega por defecto, aunque un aviso más compacto
+             * La lista NO se pliega por defecto, aunque un bloque más compacto
              * lo agradecería: los nombres son la parte accionable —cada uno
              * abre a esa persona en el padrón— y esconderlos dejaría el aviso
              * informando de trabajo sin ofrecer forma de empezarlo. Lo que se
@@ -102,47 +135,38 @@ const EligibilityAudit: React.FC<Props> = ({ auditoria }) => {
                                expediente para saber por qué está en esta lista. */
                             aria-label={`${o.nombre}, carné ${o.carnet}: ${describirObservacion(o)}. Abrir en el padrón.`}
                         >
-                            <span className="elig-audit__nombre">{o.nombre}</span>
-                            <span className="elig-audit__carnet">{o.carnet}</span>
+                            <span className="elig-audit__ident">
+                                <span className="elig-audit__nombre">{o.nombre}</span>
+                                <span className="elig-audit__carnet">{o.carnet}</span>
+                            </span>
+                            <span className="elig-audit__motivo">{describirObservacion(o)}</span>
+                            <ChevronRight size={16} className="elig-audit__chevron" aria-hidden="true" />
                         </Link>
-                        <span className="elig-audit__motivo">{describirObservacion(o)}</span>
                     </li>
                 ))}
             </ul>
 
-            <div className="elig-audit__pie">
-                {/* La acción es REVISAR, no reintentar: los datos llegaron bien.
-                    Lleva al padrón acotado a los elegibles, que es donde estos
-                    expedientes se comparan con el resto y se marcan.
-                    Va PRIMERA y con relleno sólido: antes era un rectángulo
-                    translúcido al 14% detrás del enlace de «ver más», y un
-                    botón principal que parece apagado se lee como deshabilitado. */}
-                <Link className="elig-audit__cta" to={`${routes.students()}?status=approved`}>
-                    Revisar en el padrón
-                    <ArrowRight size={15} aria-hidden="true" />
-                </Link>
-                {observados.length > VISIBLES && (
-                    /*
-                     * Alterna, no despliega y desaparece.
-                     *
-                     * Antes el botón se desmontaba al pulsarlo —`restantes`
-                     * pasaba a 0— y con el teclado eso deja el foco en el
-                     * <body>: quien había llegado tabulando perdía el sitio y
-                     * tenía que recorrer la página otra vez. Al conservarlo, el
-                     * foco permanece sobre el control que se acaba de usar, y
-                     * de paso la lista se puede volver a plegar.
-                     */
-                    <button
-                        type="button"
-                        className="elig-audit__mas"
-                        aria-expanded={desplegado}
-                        onClick={() => setDesplegado((v) => !v)}
-                    >
-                        {desplegado ? 'Ver menos' : `Ver ${restantes} más`}
-                    </button>
-                )}
-            </div>
-        </Alert>
+            {observados.length > VISIBLES && (
+                /*
+                 * Alterna, no despliega y desaparece.
+                 *
+                 * Antes el botón se desmontaba al pulsarlo —`restantes` pasaba
+                 * a 0— y con el teclado eso deja el foco en el <body>: quien
+                 * había llegado tabulando perdía el sitio y tenía que recorrer
+                 * la página otra vez. Al conservarlo, el foco permanece sobre
+                 * el control que se acaba de usar, y de paso la lista se puede
+                 * volver a plegar.
+                 */
+                <button
+                    type="button"
+                    className="elig-audit__mas"
+                    aria-expanded={desplegado}
+                    onClick={() => setDesplegado((v) => !v)}
+                >
+                    {desplegado ? 'Ver menos' : `Ver ${restantes} más`}
+                </button>
+            )}
+        </section>
     );
 };
 

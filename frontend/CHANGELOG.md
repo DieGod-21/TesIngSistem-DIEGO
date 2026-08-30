@@ -6,7 +6,39 @@ y versionado según [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+- **«Expedientes por revisar» deja de parecer una avería.** Probado contra el
+  servidor real, el bloque se seguía leyendo como «algo se rompió»: la causa no
+  era el tono ámbar sino la superficie entera teñida de él. Ahora la tarjeta es
+  neutra —la misma que usa la cola de trabajo, que dice lo mismo y nadie
+  confunde con un fallo— y el ámbar queda como ACENTO en el distintivo y la
+  cifra. La semántica de aviso no cambia: sigue sin `role="alert"` y sigue
+  ofreciendo «Revisar», nunca «Reintentar». Cada fila pasa a ser un destino
+  pulsable con realce y anillo de foco, y la acción principal viaja junto a la
+  cifra en vez de al pie, lo que además devuelve altura a la cola de trabajo.
+- **Recorrido de la vista rápida como una sola pieza.** Anterior, posición y
+  siguiente comparten marco: el contador separa la posición actual (destacada)
+  del total (apagado) y se enuncia entero para lectores de pantalla
+  («Expediente 19 de 20»), en lugar de un «19 de 20» en el tamaño más pequeño
+  de la escala junto al aspa de cerrar. Los controles suben a 36px, con estado
+  inerte legible en los extremos.
+- **Cristal más presente sin cristal nuevo.** `--glass-surface` estaba al 88 %
+  de opacidad: se pagaba la capa de composición del desenfoque sin obtener el
+  efecto. Baja a 78 % (80 % en oscuro) y la saturación del material sube de
+  1.06 a 1.25. No se añade cristal a ninguna superficie nueva.
+
 ### Fixed
+- **Recorrer expedientes reconstruía el panel entero.** La vista rápida
+  dependía de `loading` a secas, así que cada pulsación de flecha desmontaba
+  identidad, cuerpo y pie, mostraba cuatro barras grises y lo volvía a montar:
+  hojear veinte expedientes se sentía como abrir veinte paneles. Ahora el
+  expediente anterior se conserva en pantalla hasta que llega el siguiente, y
+  solo transiciona el contenido; el atenuado de la espera lleva 120 ms de
+  retardo, de modo que una carga de caché no llega a parpadear.
+- **Desplazamiento automático bajo la cabecera pegajosa.** El hueco que
+  reservaba la fila del padrón existía solo ahí; la terna y el proyecto recién
+  creados se llevaban a la vista y quedaban tapados. Se unifica en la utilidad
+  `.ui-scroll-anchor`, aplicada en los tres sitios que desplazan por su cuenta.
 - **Panel del coordinador en `loading` eterno (regresión de e5895e5):** el
   resumen de tesis pasaba la señal de aborto del consumidor al loader de la
   caché compartida, violando el contrato de `cache.ts`. Con StrictMode
@@ -25,6 +57,12 @@ y versionado según [SemVer](https://semver.org/lang/es/).
   (que mataba la sesión en la renovación siguiente, no en la actual).
 - **Doble demo fiel al contrato:** `/api/auth/refresh` del doble ahora rota
   también el `refreshToken`, como declara la especificación.
+
+### Added
+- Pruebas de regresión del recorrido: `StudentQuickView.test.tsx` (el relevo no
+  remonta el panel ni cae al esqueleto) y `EligibilityAudit.test.tsx` (informa
+  de trabajo, no de avería; singular, plegado y enlace por identificador), más
+  el recorrido en navegador `cypress/e2e/vista-rapida.cy.ts`.
 
 ## [1.0.0-rc.1] - 2026-07-22
 

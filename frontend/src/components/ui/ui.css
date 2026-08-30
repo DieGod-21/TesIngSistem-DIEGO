@@ -1003,6 +1003,19 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* Bottom-sheet en móvil: anclado a la base, ancho completo, ergonomía táctil. */
+@media (max-width: 640px) {
+    .ui-modal-overlay { align-items: flex-end; padding: 0; }
+    .ui-modal {
+        max-width: none;
+        width: 100%;
+        max-height: 92vh;
+        overflow-y: auto;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        animation: sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+}
+
 /* ── Salida ───────────────────────────────────────────────────────────
    Los diálogos entraban animados y se iban de golpe. Cerrar es una acción
    del usuario y merece la misma cortesía que abrir: si la capa desaparece
@@ -1015,9 +1028,27 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
    presenta; irse solo confirma. Una salida tan aparatosa como la entrada se
    siente como si el diálogo se resistiera a marcharse.
 
-   `pointer-events: none` porque durante esos 140ms la capa sigue en el DOM:
-   sin esto, un clic rápido sobre un velo que ya se está desvaneciendo
-   seguiría alcanzando lo que hay debajo de él.
+   ─ POR QUÉ ESTE BLOQUE VA DESPUÉS DEL BOTTOM-SHEET ─
+
+   Va aquí A PROPÓSITO, y el orden es la única cosa que lo hace funcionar.
+   `.ui-modal--saliendo` y el `.ui-modal` de la consulta de móvil pesan lo
+   mismo (una clase, 0-1-0) y una consulta de medios NO añade especificidad,
+   así que decide quién va después. Estando la salida ANTES, en pantallas de
+   640px o menos ganaba `sheet-up` y el panel simplemente NO se despedía: solo
+   se desvanecía el velo y la hoja desaparecía de golpe. Justo el defecto que
+   este bloque venía a corregir, intacto en el móvil, que es donde más se usa
+   el producto.
+
+   Si alguna vez hay que mover algo de aquí, que sea hacia ABAJO.
+
+   ─ `pointer-events: none` ─
+
+   Durante esos 140ms la capa sigue en el DOM pero ya no es un diálogo: el
+   foco salió y cerrar está decidido. Sin esto, el velo moribundo seguiría
+   interceptando el puntero y se COMERÍA el primer clic del usuario, que ya
+   está mirando la pantalla de debajo. A cambio, ese clic puede alcanzar lo
+   que hay bajo el velo antes de que termine de irse; con 140ms y el foco ya
+   devuelto, se prefiere no bloquear a quien sigue trabajando.
 
    El desmontaje lo gobierna `useOverlayTransition`, que DEDUCE de aquí cuánto
    durar. Cambiar estas duraciones no requiere tocar el hook. */
@@ -1036,22 +1067,15 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 @media (prefers-reduced-motion: reduce) {
     /* Con la animación en `none`, `useOverlayTransition` lee duración cero y
        retira la capa en el acto: la preferencia no deja un diálogo colgado
-       esperando un evento que no va a llegar. */
+       esperando un evento que no va a llegar.
+
+       Este bloque también tiene que ir DESPUÉS del bottom-sheet: mientras
+       estuvo antes, en un móvil con la preferencia activa el `sheet-up` de la
+       consulta de 640px pisaba este `animation: none` y la hoja seguía
+       deslizándose. La preferencia se respetaba en escritorio y se perdía en
+       el teléfono, en silencio. */
     .ui-modal-overlay, .ui-modal,
     .ui-modal-overlay--saliendo, .ui-modal--saliendo { animation: none; }
-}
-
-/* Bottom-sheet en móvil: anclado a la base, ancho completo, ergonomía táctil. */
-@media (max-width: 640px) {
-    .ui-modal-overlay { align-items: flex-end; padding: 0; }
-    .ui-modal {
-        max-width: none;
-        width: 100%;
-        max-height: 92vh;
-        overflow-y: auto;
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-        animation: sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1269,6 +1293,31 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 .ui-tnum { font-variant-numeric: tabular-nums; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   DESTINO DE UN DESPLAZAMIENTO AUTOMÁTICO
+
+   La cabecera del producto es PEGAJOSA y ocupa los primeros ~77px del área de
+   scroll en TODAS las pantallas autenticadas (vive en AppShell). Cualquier
+   desplazamiento que alinee un elemento con el borde superior lo deja
+   justo debajo de ella, es decir, tapado.
+
+   Ocurre con `scrollIntoView`, con los saltos de ancla y con el
+   desplazamiento que hace el propio navegador al enfocar. Y ocurre también
+   con `block: 'nearest'`: cuando el elemento está POR ENCIMA de la ventana,
+   «lo más cercano» es precisamente el borde de arriba.
+
+   Esta clase reserva ese hueco. No ocupa espacio en el diseño: solo le dice
+   al desplazamiento dónde debe parar. Se aplica al elemento que se lleva a la
+   vista, no a su contenedor.
+
+   Se marcan así los tres sitios del producto que desplazan por su cuenta: la
+   fila señalada del padrón, la terna recién creada y el proyecto recién
+   creado. Era una declaración suelta en la hoja del padrón, y los otros dos
+   no la tenían.
+═══════════════════════════════════════════════════════════════════ */
+
+.ui-scroll-anchor { scroll-margin-top: var(--space-96); }
+
+/* ═══════════════════════════════════════════════════════════════════
    EMPTY STATE
 ═══════════════════════════════════════════════════════════════════ */
 
@@ -1440,8 +1489,8 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
        conviene seguir viendo donde estaba el campo. El material lo pone
        `.ui-glass`; aqui se conserva la sombra, que el nivel no incluye. */
     background: var(--glass-surface);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
-    backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg), var(--glass-sheen);
@@ -1553,8 +1602,12 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 
 .ui-glass {
     background: var(--glass-surface);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
-    backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
+    /* La saturación es la mitad del material, no un adorno: al desenfocar, el
+       fondo pierde detalle Y viveza, y sin recuperarla la lámina parece un
+       plástico gris sobre el contenido. Subida de 1.06 a 1.25 junto con la
+       transparencia del token, que es lo que le da algo que saturar. */
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
     /* El filo superior es lo que da GROSOR: sin él, una superficie translúcida
        se lee como un fallo de opacidad, no como una lámina. */
     box-shadow: var(--glass-sheen);

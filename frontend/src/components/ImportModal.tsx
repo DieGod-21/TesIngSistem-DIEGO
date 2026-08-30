@@ -122,10 +122,25 @@ const ImportModal: React.FC<Props> = ({ open, onClose }) => {
 
     const busy = est.loading || not.loading;
 
-    const handleClose = () => {
-        if (busy) return;
+    /*
+     * Las secciones se vacían al ABRIR, no al cerrar.
+     *
+     * Cerrar ya no desmonta en el acto: la capa sobrevive lo que dura su
+     * salida. Vaciar aquí el estado borraba el RESUMEN de la importación
+     * —«120 filas · 118 nuevos»— justo cuando el usuario acababa de cerrarlo,
+     * dejando el diálogo vacío a la vista durante el fundido.
+     *
+     * Al abrir, el resultado es el mismo (el diálogo siempre nace limpio) y
+     * nadie llega a ver el paso intermedio.
+     */
+    useEffect(() => {
+        if (!open) return;
         setEst(blank());
         setNot(blank());
+    }, [open]);
+
+    const handleClose = () => {
+        if (busy) return;
         onClose();
     };
 
