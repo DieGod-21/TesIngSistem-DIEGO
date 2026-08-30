@@ -20,7 +20,10 @@ const TernaCard: React.FC<Props> = ({ terna, onSelect, destacado = false }) => {
         <button
             type="button"
             ref={(el) => { if (destacado && el) el.scrollIntoView({ block: 'nearest' }); }}
-            className={`terna-card${destacado ? ' terna-card--nueva' : ''}`}
+            /* `ui-scroll-anchor`: la cabecera es pegajosa y, si la terna recién
+               creada queda por encima de la ventana, «lo más cercano» es el
+               borde de arriba, o sea debajo de la cabecera. */
+            className={`terna-card ui-scroll-anchor${destacado ? ' terna-card--nueva' : ''}`}
             onClick={() => onSelect(terna.id)}
             aria-label={`Abrir terna ${terna.numero}: ${terna.estudiante_nombre}`}
         >

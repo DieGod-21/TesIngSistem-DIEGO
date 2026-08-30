@@ -17,6 +17,52 @@
  * animaciones ni geometría: por eso viven aquí.
  */
 
+/*
+ * Los clics se CENTRAN al desplazar: la cabecera del producto es pegajosa y
+ * Cypress, al alinear un elemento con el borde superior del área de scroll, lo
+ * deja justo debajo de ella y se niega a pulsar «algo tapado».
+ */
+const CENTRADO = { scrollBehavior: 'center' } as const;
+
+/** Nombre de la animación que la CASCADA le da de verdad a este elemento. */
+function nombreDeAnimacion(el: Element): string {
+    const win = el.ownerDocument.defaultView;
+    if (!win) throw new Error('el elemento no está en una ventana');
+    return win.getComputedStyle(el).animationName;
+}
+
+/**
+ * Alarga la salida SOLO para poder observarla.
+ *
+ * 140ms es más corto que el ciclo de comandos de Cypress en una máquina
+ * cargada, y estas pruebas miden QUÉ animación gana la cascada y QUÉ hay en
+ * pantalla mientras dura, no cuánto dura. Alargarla no puede enmascarar
+ * ningún defecto: si ganara la regla equivocada, el nombre de la animación
+ * seguiría delatándola.
+ *
+ * La duración se alarga también en el VELO porque es de ahí de donde
+ * `useOverlayTransition` deduce cuánto mantener la capa montada.
+ */
+function alargarLaSalida(ms = 600) {
+    cy.document().then((doc) => {
+        const estilo = doc.createElement('style');
+        estilo.textContent =
+            `.ui-modal-overlay--saliendo, .ui-modal--saliendo { animation-duration: ${ms}ms !important; }`;
+        doc.head.appendChild(estilo);
+    });
+}
+
+/** Emula `prefers-reduced-motion` en el navegador real (protocolo de Chrome). */
+function emularMovimientoReducido(valor: 'reduce' | 'no-preference') {
+    cy.wrap(
+        Cypress.automation('remote:debugger:protocol', {
+            command: 'Emulation.setEmulatedMedia',
+            params: { features: [{ name: 'prefers-reduced-motion', value: valor }] },
+        }),
+        { log: false },
+    );
+}
+
 /** Abre el diálogo de nota desde el expediente del primer estudiante. */
 function abrirDialogoDeNota() {
     cy.entrar();
@@ -29,6 +75,52 @@ function abrirDialogoDeNota() {
 }
 
 describe('salida del diálogo', () => {
+    afterEach(() => {
+        // La emulación de medios sobrevive a la prueba y contaminaría la
+        // siguiente; se devuelve el navegador a su estado normal siempre.
+        emularMovimientoReducido('no-preference');
+    });
+
+    it('el contenido no se borra mientras el diálogo se va', () => {
+        /*
+         * ── EL DEFECTO QUE PROTEGE ──────────────────────────────────────
+         *
+         * Cuatro diálogos vaciaban su formulario DENTRO del manejador de
+         * cierre, antes de avisar al padre. Con el desmontaje ya diferido,
+         * el vaciado y el inicio de la salida caían en el mismo lote de
+         * React y el usuario veía su propio texto desaparecer ANTES que el
+         * diálogo. La curva de salida acelera: a mitad de camino la capa
+         * sigue al ~68 % de opacidad, así que el formulario en blanco se lee
+         * perfectamente. Se percibe como pérdida de datos.
+         *
+         * Se comprueba en el navegador y no solo en jsdom porque el defecto
+         * solo existe DURANTE la animación, que jsdom no tiene.
+         */
+        cy.entrar();
+        cy.visitaDemo('/usuarios');
+        cy.contains('button', /Nuevo Usuario/i, { timeout: 20000 }).click(CENTRADO);
+        cy.get('.ui-modal-overlay').should('be.visible');
+
+        cy.get('#nu-nombre').type('Ana Pérez');
+        cy.get('#nu-email').type('ana.perez@miumg.edu.gt');
+
+        alargarLaSalida();
+        // Se cierra por donde cierra el usuario: el defecto vive en el
+        // manejador de cierre, así que forzar `open=false` no lo reproduce.
+        cy.get('.ui-modal__header .ui-icon-btn').click();
+
+        cy.get('.ui-modal').should('have.class', 'ui-modal--saliendo');
+        cy.get('#nu-nombre').should('have.value', 'Ana Pérez');
+        cy.get('#nu-email').should('have.value', 'ana.perez@miumg.edu.gt');
+
+        // Y termina de irse del todo.
+        cy.get('.ui-modal-overlay', { timeout: 4000 }).should('not.exist');
+
+        // Al volver a abrir nace limpio: el vaciado se movió, no se perdió.
+        cy.contains('button', /Nuevo Usuario/i).click(CENTRADO);
+        cy.get('#nu-nombre').should('have.value', '');
+    });
+
     it('al cerrar, la capa se marca como saliendo antes de irse', () => {
         abrirDialogoDeNota();
         cy.get('body').type('{esc}');
@@ -158,7 +250,6 @@ describe('salida del diálogo', () => {
      * y Cypress, al alinear un elemento con el borde superior del área de
      * scroll, lo deja justo debajo de ella y se niega a pulsar «algo tapado».
      */
-    const CENTRADO = { scrollBehavior: 'center' } as const;
     const OTROS = [
         { nombre: 'importar al padrón', ruta: '/students', abrir: () => cy.contains('button', /^Importar$/).click(CENTRADO) },
         { nombre: 'nueva terna',        ruta: '/ternas',   abrir: () => cy.contains('button', /Nueva terna/i).click(CENTRADO) },
@@ -203,9 +294,65 @@ describe('salida del diálogo', () => {
             });
         });
 
+        // La entrada del móvil es la hoja que sube, no la tarjeta que escala.
+        cy.get('.ui-modal').then(($m) => {
+            expect(nombreDeAnimacion($m[0]), 'en móvil entra deslizándose').to.eq('sheet-up');
+        });
+
+        alargarLaSalida();
         cy.get('body').type('{esc}');
-        cy.get('.ui-modal-overlay').should('have.class', 'ui-modal-overlay--saliendo');
+
+        /*
+         * LA ASERCIÓN QUE FALTABA.
+         *
+         * Antes esta prueba solo miraba que la clase `--saliendo` estuviera
+         * puesta, y la clase SIEMPRE está puesta: la pone React, no la
+         * cascada. Con ella pasaba en verde mientras el panel no se movía.
+         *
+         * `.ui-modal--saliendo` y el `.ui-modal` de la consulta de 640px pesan
+         * lo mismo, así que gana el que va DESPUÉS en el archivo. Estando la
+         * salida antes, en móvil ganaba `sheet-up` y la hoja no se despedía:
+         * se desvanecía el velo y ella desaparecía de golpe. Solo el nombre de
+         * la animación calculada distingue un caso del otro.
+         */
+        cy.get('.ui-modal').should('have.class', 'ui-modal--saliendo').then(($m) => {
+            expect(
+                nombreDeAnimacion($m[0]),
+                'la hoja se va con ui-modal-out; si aquí aparece «sheet-up», la consulta de 640px está pisando la salida',
+            ).to.eq('ui-modal-out');
+        });
+
         cy.get('.ui-modal-overlay', { timeout: 4000 }).should('not.exist');
         cy.focused().should('match', '.nota-add-btn, .nota-edit-btn');
+    });
+
+    it('en móvil con movimiento reducido la hoja no se desliza', () => {
+        /*
+         * El bloque de movimiento reducido también tiene que ir DESPUÉS del
+         * bottom-sheet. Mientras estuvo antes, en un teléfono con la
+         * preferencia activa el `sheet-up` de la consulta de 640px pisaba el
+         * `animation: none` y la hoja seguía deslizándose: la preferencia se
+         * respetaba en escritorio y se perdía justo donde más se usa.
+         *
+         * Aquí se emula la preferencia DE VERDAD en el navegador. Inyectar la
+         * regla que se quiere comprobar —como hace la prueba de escritorio de
+         * más arriba, por falta de alternativa entonces— habría probado la
+         * inyección y no el CSS que se publica.
+         */
+        cy.viewport(390, 844);
+        emularMovimientoReducido('reduce');
+        abrirDialogoDeNota();
+
+        cy.get('.ui-modal').then(($m) => {
+            expect(
+                nombreDeAnimacion($m[0]),
+                'con la preferencia activa la hoja no se desliza; «sheet-up» aquí significa que la consulta de 640px pisa el bloque de movimiento reducido',
+            ).to.eq('none');
+        });
+
+        // Y la salida sigue siendo instantánea, sin esperar un evento que no
+        // va a llegar: es el camino por el que una capa se quedaría colgada.
+        cy.get('body').type('{esc}');
+        cy.get('.ui-modal-overlay').should('not.exist');
     });
 });

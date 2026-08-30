@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { UserPlus, X } from 'lucide-react';
 import { createUsuario } from '../../../services/usuariosService';
@@ -44,11 +44,28 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
 
-    const handleClose = () => {
-        if (loading) return;
+    /*
+     * El formulario se vacía al ABRIR, no al cerrar.
+     *
+     * Cerrar ya no desmonta en el acto: la capa sobrevive lo que dura su
+     * salida. Vaciar aquí el estado dejaba ese formulario en blanco A LA
+     * VISTA durante el fundido —la curva de salida es de aceleración, así que
+     * a mitad de camino sigue al ~68 % de opacidad— y lo que el usuario veía
+     * era su propio texto desapareciendo antes que el diálogo. Se leía como
+     * pérdida de datos, no como pulido.
+     *
+     * Al abrir, el resultado es el mismo (el diálogo siempre nace limpio) y
+     * nadie llega a ver el paso intermedio.
+     */
+    useEffect(() => {
+        if (!open) return;
         setForm(INITIAL);
         setErrors({});
         setApiError(null);
+    }, [open]);
+
+    const handleClose = () => {
+        if (loading) return;
         onClose();
     };
 
@@ -106,8 +123,9 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                 rol: form.rol,
                 password: form.password,
             });
-            setForm(INITIAL);
-            setErrors({});
+            // No se vacía aquí: `onCreated` cierra el diálogo y el formulario
+            // se quedaría en blanco durante la salida. Lo limpia el efecto de
+            // apertura.
             onCreated(nombre);
         } catch (err) {
             setApiError(userMessageFor(err) || 'No se pudo crear el usuario. Inténtalo de nuevo.');

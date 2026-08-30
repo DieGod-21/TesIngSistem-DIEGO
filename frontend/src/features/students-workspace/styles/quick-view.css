@@ -50,16 +50,92 @@
     flex-shrink: 0;
 }
 
-.qv-bar__pos {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-}
-
-.qv-bar__nav {
+/* ── Recorrido: una sola pieza ────────────────────────────────────────
+   Anterior · posición · siguiente comparten marco. Antes eran tres elementos
+   sueltos en extremos opuestos de la barra: la posición («19 de 20») quedaba
+   pegada al aspa de cerrar, en el tamaño más pequeño de la escala y en el gris
+   más apagado, de modo que el dato que orienta el recorrido era lo menos
+   legible del panel y no se relacionaba con las flechas que lo mueven. */
+.qv-pager {
     margin-left: auto;
     display: flex;
-    gap: var(--space-4);
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+}
+
+/* Los controles más pulsados del panel: 36px en vez de los 32px del botón de
+   icono genérico, y con superficie propia al apuntar para que se lean como
+   controles y no como dos galones sueltos. */
+.qv-pager__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--control-h-md);
+    height: var(--control-h-md);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.qv-pager__btn:hover:not(:disabled) {
+    background: var(--surface-card);
+    color: var(--text-primary);
+}
+
+.qv-pager__btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+}
+
+/* Deshabilitado = «no hay nadie más por ahí», no «esto está roto». Se apaga sin
+   desaparecer: quien llega al primero o al último debe seguir viendo que el
+   control existe, y por eso conserva sitio y forma. */
+.qv-pager__btn:disabled {
+    color: var(--text-muted);
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* La posición manda dentro del grupo: es un dato, no una etiqueta. */
+.qv-pager__pos {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.15em;
+    padding: 0 var(--space-6);
+    font-variant-numeric: tabular-nums;
+    /* Ancho estable: al pasar de 9 a 10 el grupo no debe cambiar de tamaño. */
+    min-width: 3.25rem;
+    justify-content: center;
+}
+
+.qv-pager__now {
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+}
+
+.qv-pager__sep,
+.qv-pager__total {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+/* Con puntero grueso, los dos controles suben al objetivo táctil como hace el
+   resto del producto (misma regla y mismo token que `.ui-icon-btn`). */
+@media (pointer: coarse) {
+    .qv-pager__btn {
+        width: var(--control-h-lg);
+        height: var(--control-h-lg);
+    }
 }
 
 /* `.qv-icon-btn` ELIMINADO → `.ui-icon-btn`.
@@ -67,6 +143,41 @@
    pequeña (30px frente a 32px). La medición con puntero grueso la delató: es
    el único control del panel que no llegaba al mínimo cómodo, y además el
    panel es la superficie donde más se pulsa en móvil. */
+
+/* ── Contenido: lo único que cambia al recorrer ───────────────────────
+   Envuelve identidad + cuerpo + pie para que el relevo de expediente ocurra
+   AQUÍ DENTRO. El marco del panel, el velo y la barra de recorrido quedan
+   fuera y no se remontan: por eso hojear ya no se siente como abrir un panel
+   nuevo cada vez. Hereda la columna del panel para no alterar el reparto de
+   alturas (el cuerpo sigue siendo lo único que crece y desplaza). */
+.qv-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    animation: qv-content-in 200ms var(--ease-out-expo) backwards;
+    transition: opacity var(--transition-base);
+}
+
+/*
+ * `backwards` y no `both`: con `both`, el valor final de la animación se
+ * queda fijado y GANA a la transición de opacidad de abajo, así que el
+ * atenuado durante la espera no llegaría a verse nunca.
+ */
+
+/* Mientras llega el siguiente expediente, el actual se atenúa en lugar de
+   desaparecer. El RETARDO es lo que hace esto usable: si el siguiente llega
+   antes de 120ms —lo normal, porque el expediente suele venir de caché— el
+   atenuado no se llega a mostrar y el relevo se ve limpio, sin parpadeo. */
+.qv-content[data-cambiando='true'] {
+    opacity: 0.55;
+    transition-delay: 120ms;
+}
+
+@keyframes qv-content-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
 
 /* ── Cuerpo ───────────────────────────────────────────────────────── */
 
@@ -342,6 +453,10 @@
     /* Se conserva el cambio de estado del CTA; se elimina el desplazamiento. */
     .qv-cta__arrow { transition: none; }
     .qv-cta:hover .qv-cta__arrow { transform: none; }
+    /* El relevo de expediente pierde el desplazamiento y el fundido: el
+       contenido aparece ya puesto. Se conserva el atenuado de la espera, que
+       no es decoración sino el aviso de que hay algo en camino. */
+    .qv-content { animation: none; }
 }
 
 /* ── Móvil: hoja inferior, mismo patrón que el resto de diálogos ──── */
