@@ -470,7 +470,7 @@
     font-weight: var(--weight-semibold);
     white-space: nowrap;
     cursor: pointer;
-    transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+    transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base), transform var(--transition-fast);
 }
 
 .ui-chip:hover:not(:disabled) {
@@ -483,6 +483,14 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
+
+/* Acuse de pulsación, el mismo que el de `.ui-btn`.
+   El chip es el control MÁS pulsado de Proyectos, Usuarios, Ternas y Reportes
+   —cada filtro pasa por él— y era el único de su familia sin estado de
+   pulsación: tenía apuntar, foco, deshabilitado y seleccionado, pero entre el
+   clic y el resultado no devolvía nada. Se nota justo cuando la respuesta
+   tarda, que es cuando más falta hace. */
+.ui-chip:active:not(:disabled) { transform: scale(0.98); }
 
 .ui-chip:disabled { opacity: 0.55; cursor: not-allowed; }
 
@@ -501,6 +509,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .ui-chip { transition: none; }
+    .ui-chip:active:not(:disabled) { transform: none; }
 }
 
 @media (max-width: 640px) {
@@ -1062,6 +1071,30 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 @keyframes ui-overlay-out { to { opacity: 0; } }
 @keyframes ui-modal-out {
     to { opacity: 0; transform: scale(0.98) translateY(4px); }
+}
+
+/* ── Salida de la hoja en móvil ───────────────────────────────────────
+   La hoja ENTRA subiendo desde el borde inferior y se iba encogiendo en el
+   sitio: llegaba por un camino y se marchaba por otro. En una tarjeta
+   centrada el encogimiento se lee bien, pero sobre una hoja anclada abajo y
+   a todo el ancho un `scale(0.98)` con 4px de recorrido casi no se ve, y
+   contradice de dónde vino. Vuelve por donde llegó.
+
+   DURACIÓN COORDINADA CON EL VELO. `useOverlayTransition` deduce del VELO
+   cuánto mantener montada la capa: si la hoja durase más que él, el
+   desmontaje la cortaría a media salida. Los 200ms se declaran en los dos
+   sitios y por eso están juntos, en el mismo bloque, donde se ven a la vez.
+
+   Sigue siendo más rápida que la entrada (200 frente a 260) y con curva de
+   aceleración en vez de frenado: irse solo confirma. */
+@media (max-width: 640px) {
+    .ui-modal-overlay--saliendo { animation-duration: 200ms; }
+    .ui-modal--saliendo {
+        animation: sheet-down 200ms cubic-bezier(0.4, 0, 1, 1) both;
+    }
+}
+@keyframes sheet-down {
+    to { opacity: 0; transform: translateY(100%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1767,6 +1800,28 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     transition: transform var(--transition-base), color var(--transition-base);
 }
 
+/* ── Refrescando: los datos se están recargando, pero YA HAY datos ─────
+ *
+ * Recargar ponía la bandera de carga y el esqueleto sustituía al contenido.
+ * MEDIDO: al crear un usuario la lista entera desaparecía (`esqueleto=true`,
+ * la zona se quedaba sin filas) y volvía con las nueve reanimándose — justo
+ * cuando había que mirar UNA. Al filtrar ternas pasaba lo mismo sin que
+ * cambiara nada de fondo: cuatro cajas grises y vuelta a empezar.
+ *
+ * Un esqueleto responde «¿hay algo?». Refrescar ya tiene la respuesta, y la
+ * pregunta es otra: «¿esto está al día?». Se conserva lo que hay y se atenúa.
+ *
+ * EL RETARDO ES EL DETALLE QUE IMPORTA. Las recargas que vuelven enseguida
+ * —casi todas— nunca llegan a atenuarse: el retardo se come la espera entera y
+ * el usuario no ve ni un parpadeo. Solo se atenúa lo que de verdad tarda. Al
+ * quitar la clase desaparece también la transición, así que el contenido
+ * vuelve a plena opacidad al instante, sin devolver el fundido.
+ */
+.ui-refrescando {
+    opacity: 0.55;
+    transition: opacity 160ms ease 220ms;
+}
+
 /* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
    Toda animación o transición nueva de este archivo va POR ENCIMA de aquí. */
 @media (prefers-reduced-motion: reduce) {
@@ -1779,4 +1834,10 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     .ui-surface--interactive:active,
     .ui-relation--interactive:active { transform: none; }
     .ui-relation--interactive:hover .ui-relation__chevron { transform: none; }
+
+    /* Sin el retardo, cada recarga —incluidas las instantáneas— daría un
+       destello de atenuado, que es peor que no señalar nada. La respuesta a
+       «¿esto está al día?» la sigue dando `aria-busy`, que es además lo que
+       lee un lector de pantalla. */
+    .ui-refrescando { opacity: 1; transition: none; }
 }

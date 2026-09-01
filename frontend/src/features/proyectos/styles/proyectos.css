@@ -110,6 +110,21 @@
  */
 .proy-card:nth-child(n+9) { animation-delay: 0.27s; }
 
+/*
+ * La cascada es para LLEGAR, no para cada filtro.
+ *
+ * MEDIDO en el navegador: al volver de «PG1» a «Todas», las ocho tarjetas que
+ * el filtro había desmontado arrancaban de cero otra vez (`recien-arrancadas=8`,
+ * reloj propio en 50ms). Filtrar no es llegar: es la misma cuadrícula
+ * enseñando otra cosa, y ahí el escalonado solo retrasa lo que se acaba de
+ * pedir. Quién decide es `usePrimeraLlegada`.
+ *
+ * La recién creada queda FUERA a propósito: su anillo no es entrada, es la
+ * respuesta a «¿cuál de todas?». Sin el `:not()` esta regla —más específica—
+ * se lo llevaría por delante.
+ */
+.proy-grid--sin-cascada .proy-card:not(.proy-card--nueva) { animation: none; }
+
 @keyframes proy-card-in {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }

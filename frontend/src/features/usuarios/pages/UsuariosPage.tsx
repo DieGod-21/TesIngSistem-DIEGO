@@ -9,6 +9,7 @@ import { Avatar, Button, Badge, PageHeader, EmptyState, Skeleton } from '../../.
 import { useToast } from '../../../context/ToastContext';
 
 import { matchesText } from '../../../utils/text';
+import { usePrimeraLlegada } from '../../../hooks/usePrimeraLlegada';
 import '../styles/usuarios.css';
 
 const ROL_LABEL: Record<string, string> = {
@@ -47,6 +48,13 @@ const UsuariosPage: React.FC = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [search, setSearch]       = useState('');
     const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+    /*
+     * El usuario recién creado. Crear cerraba el diálogo, mostraba un aviso y
+     * recargaba la lista: el nuevo aparecía en algún sitio sin decir cuál.
+     * Proyectos y ternas ya señalaban el suyo; este era el único alta de los
+     * tres que no lo hacía.
+     */
+    const [recienCreado, setRecienCreado] = useState<number | null>(null);
 
     const fetchUsuarios = useCallback(async (signal?: AbortSignal) => {
         setLoading(true);
@@ -82,6 +90,24 @@ const UsuariosPage: React.FC = () => {
         [usuarios, roleFilter, search],
     );
 
+    /*
+     * Cargar por primera vez y refrescar no son lo mismo.
+     *
+     * Los dos ponían `loading`, así que los dos enseñaban el esqueleto. MEDIDO
+     * al crear un usuario: la lista desaparecía entera y volvía a montarse.
+     * Un esqueleto contesta «¿hay algo?»; cuando ya hay algo en pantalla la
+     * pregunta es «¿está al día?», y esa se contesta sin quitar nada.
+     */
+    const cargaInicial = loading && usuarios.length === 0;
+    const refrescando  = loading && usuarios.length > 0;
+
+    /*
+     * La entrada escalonada, solo la primera vez. MEDIDO: al volver a «Todos»
+     * rearrancaban seis filas, y tras un alta las nueve. Ver
+     * `usePrimeraLlegada`.
+     */
+    const primeraLlegada = usePrimeraLlegada(filtered.map((u) => u.id));
+
     const clearFilters = () => { setSearch(''); setRoleFilter('all'); };
 
     return (
@@ -99,7 +125,7 @@ const UsuariosPage: React.FC = () => {
                 }
             />
 
-            {loading && <UsuariosSkeleton />}
+            {cargaInicial && <UsuariosSkeleton />}
 
             {!loading && error && (
                 <EmptyState
@@ -115,7 +141,7 @@ const UsuariosPage: React.FC = () => {
                 />
             )}
 
-            {!loading && !error && usuarios.length === 0 && (
+            {!cargaInicial && !error && usuarios.length === 0 && (
                 <EmptyState
                     icon={<UserPlus size={26} />}
                     title="Aún no hay usuarios"
@@ -128,7 +154,7 @@ const UsuariosPage: React.FC = () => {
                 />
             )}
 
-            {!loading && !error && usuarios.length > 0 && (
+            {!cargaInicial && !error && usuarios.length > 0 && (
                 <>
                     <div className="ui-stat-grid">
                         <div className="ui-stat">
@@ -187,9 +213,20 @@ const UsuariosPage: React.FC = () => {
                             }
                         />
                     ) : (
-                        <div className="usr-list">
+                        <div
+                            className={`usr-list${primeraLlegada ? '' : ' usr-list--sin-cascada'}${refrescando ? ' ui-refrescando' : ''}`}
+                            aria-busy={refrescando || undefined}
+                        >
                             {filtered.map((u) => (
-                                <div key={u.id} className="usr-list-item">
+                                <div
+                                    key={u.id}
+                                    className={`usr-list-item ui-scroll-anchor${u.id === recienCreado ? ' usr-list-item--nuevo' : ''}`}
+                                    ref={(el) => {
+                                        // `nearest`: si ya está a la vista no se
+                                        // mueve nada, que es el caso normal.
+                                        if (u.id === recienCreado && el) el.scrollIntoView({ block: 'nearest' });
+                                    }}
+                                >
                                     <Avatar
                                         name={u.nombre}
                                         size="lg"
@@ -212,8 +249,9 @@ const UsuariosPage: React.FC = () => {
             <NuevoUsuarioModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                onCreated={(nombre) => {
+                onCreated={(nombre, id) => {
                     setModalOpen(false);
+                    setRecienCreado(id);
                     toast.success(`${nombre} ya tiene acceso al sistema.`);
                     fetchUsuarios();
                 }}

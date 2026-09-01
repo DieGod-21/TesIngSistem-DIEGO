@@ -54,6 +54,24 @@ const TernasListPage: React.FC = () => {
     const estado = filter === 'all' ? undefined : filter;
     const { ternas, loading, error, reload } = useTernas(estado);
 
+    /*
+     * Cargar por primera vez y refrescar no son lo mismo.
+     *
+     * El filtro de ternas se resuelve en el servidor, así que cada chip volvía
+     * a poner `loading` y el esqueleto BORRABA lo que se estaba mirando.
+     * MEDIDO: pulsar un chip hacía desaparecer la cuadrícula entera y
+     * aparecer cuatro cajas grises, para una acción que ocurre dentro de la
+     * misma pantalla y que casi siempre vuelve en un suspiro.
+     *
+     * Se conserva lo que hay y se atenúa. El atenuado llega con retardo (ver
+     * `.ui-refrescando`), de modo que una respuesta rápida —la norma— no
+     * produce ni un parpadeo. A cambio, durante ese instante lo que se ve
+     * pertenece al filtro anterior; por eso la zona se marca `aria-busy` y no
+     * se presenta como resultado definitivo.
+     */
+    const cargaInicial = loading && ternas.length === 0;
+    const refrescando  = loading && ternas.length > 0;
+
     const counts = useMemo(() => ({
         total:      ternas.length,
         pendientes: ternas.filter((t) => t.estado === 'pendiente').length,
@@ -107,7 +125,7 @@ const TernasListPage: React.FC = () => {
                     </span>
                 </div>
 
-                {loading && <TernasSkeleton />}
+                {cargaInicial && <TernasSkeleton />}
 
                 {!loading && error && (
                     <EmptyState
@@ -123,7 +141,7 @@ const TernasListPage: React.FC = () => {
                     />
                 )}
 
-                {!loading && !error && ternas.length === 0 && (
+                {!cargaInicial && !error && ternas.length === 0 && (
                     <EmptyState
                         icon={<Inbox size={26} />}
                         title="No hay ternas que mostrar"
@@ -142,8 +160,11 @@ const TernasListPage: React.FC = () => {
                     />
                 )}
 
-                {!loading && !error && ternas.length > 0 && (
-                    <div className="ternas-grid">
+                {!cargaInicial && !error && ternas.length > 0 && (
+                    <div
+                        className={`ternas-grid${refrescando ? ' ui-refrescando' : ''}`}
+                        aria-busy={refrescando || undefined}
+                    >
                         {ternas.map((t) => (
                             <TernaCard
                                 key={t.id}

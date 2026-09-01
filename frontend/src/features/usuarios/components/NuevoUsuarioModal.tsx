@@ -11,8 +11,11 @@ import { userMessageFor } from '../../../services/errorMessages';
 interface Props {
     open: boolean;
     onClose: () => void;
-    /** Recibe el nombre del usuario creado para el mensaje de confirmación. */
-    onCreated: (nombre: string) => void;
+    /**
+     * Nombre para el mensaje de confirmación e ID para poder SEÑALAR la fila
+     * recién creada en el listado, igual que hacen proyectos y ternas.
+     */
+    onCreated: (nombre: string, id: number) => void;
 }
 
 interface FormState {
@@ -117,7 +120,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         setApiError(null);
         const nombre = form.nombre.trim();
         try {
-            await createUsuario({
+            const creado = await createUsuario({
                 nombre,
                 email: form.email.trim(),
                 rol: form.rol,
@@ -126,7 +129,7 @@ const NuevoUsuarioModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
             // No se vacía aquí: `onCreated` cierra el diálogo y el formulario
             // se quedaría en blanco durante la salida. Lo limpia el efecto de
             // apertura.
-            onCreated(nombre);
+            onCreated(nombre, creado.id);
         } catch (err) {
             setApiError(userMessageFor(err) || 'No se pudo crear el usuario. Inténtalo de nuevo.');
         } finally {

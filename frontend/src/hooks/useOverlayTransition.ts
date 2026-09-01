@@ -61,32 +61,10 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { duracionDeSalida } from '../utils/animacion';
 
 /** Margen sobre la duración declarada antes de retirar la capa por las malas. */
 const HOLGURA_MS = 150;
-
-/** Milisegundos de una lista de tiempos CSS («140ms, 0.2s»): el mayor. */
-function mayorDuracion(valor: string): number {
-    return valor
-        .split(',')
-        .map((t) => {
-            const v = t.trim();
-            if (v.endsWith('ms')) return parseFloat(v);
-            if (v.endsWith('s')) return parseFloat(v) * 1000;
-            return 0;
-        })
-        .reduce((a, b) => (Number.isFinite(b) && b > a ? b : a), 0);
-}
-
-/**
- * Cuánto tarda de verdad en irse este elemento, según el CSS que ya tiene
- * aplicado. Cero significa «no hay salida que esperar».
- */
-function duracionDeSalida(el: HTMLElement): number {
-    const cs = getComputedStyle(el);
-    if (cs.animationName === 'none') return 0;
-    return mayorDuracion(cs.animationDuration) + mayorDuracion(cs.animationDelay);
-}
 
 export interface OverlayTransition {
     /** ¿Hay que renderizar la capa? Incluye el tramo de salida. */

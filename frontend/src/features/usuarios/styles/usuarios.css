@@ -64,12 +64,49 @@
  */
 .usr-list-item:nth-child(n+9) { animation-delay: 0.27s; }
 
+/*
+ * La cascada es para LLEGAR, no para cada filtro ni para cada alta.
+ *
+ * MEDIDO: al volver a «Todos» rearrancaban seis filas, y tras crear un usuario
+ * las NUEVE, con el reloj en cero — justo en el instante en que había que
+ * mirar UNA. El anillo de la recién creada competía con ocho entradas.
+ *
+ * Se excluye `--nuevo`: ese anillo no es entrada, es la respuesta a «¿cuál?».
+ */
+.usr-list--sin-cascada .usr-list-item:not(.usr-list-item--nuevo) { animation: none; }
+
 @keyframes usr-row-in {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Recién creado ────────────────────────────────────────────────────
+   Crear un usuario cerraba el diálogo, mostraba un aviso y volvía a cargar la
+   lista: el usuario nuevo aparecía en algún sitio de ella sin decir cuál. Los
+   proyectos y las ternas SÍ señalaban el suyo desde hace tiempo; este era el
+   único de los tres altas que no lo hacía, y esa inconsistencia es peor que
+   no señalar en ninguno.
+
+   Se reutiliza el lenguaje que ya existe en `.terna-card--nueva` y
+   `.proy-card--nueva`, no uno nuevo: un anillo primario que se desvanece en
+   2,4s. Lo que confirma «es este» es el ANILLO; el borde se queda después,
+   cuando el anillo ya se fue, para que la fila siga localizable sin quedarse
+   parpadeando. */
+@keyframes usr-nuevo {
+    from { box-shadow: inset 0 0 0 2px var(--color-primary-soft); }
+    to   { box-shadow: inset 0 0 0 0   transparent; }
+}
+.usr-list-item--nuevo {
+    animation: usr-row-in 0.22s var(--ease-out-expo) backwards,
+               usr-nuevo 2400ms var(--ease-out-expo) both;
+    background: var(--surface-raised);
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .usr-list-item { animation: none; }
+    /* Sin movimiento el realce se comunica igual pero quieto: el fondo
+       elevado se queda y eso ya distingue la fila. */
+    .usr-list-item,
+    .usr-list-item--nuevo { animation: none; }
 }
 
 .usr-info {

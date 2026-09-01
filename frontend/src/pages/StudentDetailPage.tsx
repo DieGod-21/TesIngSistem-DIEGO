@@ -119,7 +119,24 @@ const StudentDetailPage: React.FC = () => {
     const openEdit = (curso: '043' | '049', notaActual: number | null) =>
         setEditModal({ open: true, curso, notaActual });
 
+    /*
+     * ── LO QUE CAMBIÓ TIENE QUE VERSE DONDE CAMBIÓ ─────────────────────
+     *
+     * Guardar una nota cerraba el diálogo, recargaba el expediente y sacaba un
+     * aviso en la esquina opuesta de la pantalla. El aviso confirma que la
+     * operación salió bien, pero no dice DÓNDE: la fila que acaba de cambiar
+     * quedaba igual que las demás y había que buscarla para comprobar el
+     * número. MEDIDO tras guardar: cero filas señaladas.
+     *
+     * Se señala el curso guardado con el mismo lenguaje que ya usan la terna,
+     * el proyecto y el usuario recién creados: un realce que se desvanece.
+     * Aquí no es «nuevo» sino «actualizado», pero la pregunta del usuario es
+     * la misma —«¿cuál es?»— y merece la misma respuesta.
+     */
+    const [cursoGuardado, setCursoGuardado] = useState<string | null>(null);
+
     const handleSaved = () => {
+        setCursoGuardado(editModal.curso);
         setEditModal((m) => ({ ...m, open: false }));
         dossier.reload();
         toast.success('Nota guardada correctamente.');
@@ -264,7 +281,10 @@ const StudentDetailPage: React.FC = () => {
                                             const updated = notaUpdatedByCurso(curso);
                                             const pct = Math.max(0, Math.min(100, Number(g.nota_final) || 0));
                                             return (
-                                                <li key={curso} className={`sd-rec sd-rec--${tone}`}>
+                                                <li
+                                                    key={curso}
+                                                    className={`sd-rec sd-rec--${tone}${curso === cursoGuardado ? ' sd-rec--guardado' : ''}`}
+                                                >
                                                     <span className="sd-rec__node" aria-hidden="true" />
                                                     <div className="sd-rec__main">
                                                         <div className="sd-rec__line">

@@ -269,10 +269,30 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                     title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
                     type="button"
                 >
-                    {theme === 'dark'
-                        ? <Sun size={20} aria-hidden="true" />
-                        : <Moon size={20} aria-hidden="true" />
-                    }
+                    {/*
+                        Los DOS iconos se pintan siempre y la cascada decide
+                        cuál se ve, a partir del `data-theme` que ya vive en
+                        <html>. Alternarlos en React los desmontaba y montaba,
+                        que es un cambio instantáneo: no hay nada entre un
+                        icono y el otro que se pueda animar.
+
+                        Con ambos presentes el relevo es un cruce —uno se va
+                        girando y encogiendo mientras el otro llega— y no
+                        cuesta ni un render extra: el atributo cambia en el
+                        elemento raíz y el CSS hace el resto.
+                    */}
+                    <span className="dash-header__theme-icons">
+                        <Moon
+                            size={20}
+                            aria-hidden="true"
+                            className="dash-header__theme-icon dash-header__theme-icon--luna"
+                        />
+                        <Sun
+                            size={20}
+                            aria-hidden="true"
+                            className="dash-header__theme-icon dash-header__theme-icon--sol"
+                        />
+                    </span>
                 </button>
 
                 <div className="dash-header__profile">

@@ -186,9 +186,28 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
     // barra es navegacion permanente y el hook no debe hacer nada.
     const drawerRef = useFocusTrap<HTMLElement>(Boolean(open), onClose);
 
+    /*
+     * Cerrar sesión es una llamada de RED, y hasta que responde no se navega.
+     * Sin marcar que está en curso, el botón seguía admitiendo clics: dos
+     * pulsaciones impacientes lanzaban dos cierres contra el servidor.
+     *
+     * `logout()` propaga si el servidor falla (usa try/finally sin catch), y
+     * entonces no había navegación ni aviso: el usuario se quedaba mirando una
+     * barra que no reaccionaba. Al fallar se devuelve el botón a su sitio para
+     * que se pueda reintentar.
+     */
+    const [cerrandoSesion, setCerrandoSesion] = useState(false);
+
     const handleLogout = async () => {
-        await logout();
-        history.push('/login');
+        if (cerrandoSesion) return;
+        setCerrandoSesion(true);
+        try {
+            await logout();
+            history.push('/login');
+        } catch {
+            // Se recupera el control; el error ya lo reporta AuthContext.
+            setCerrandoSesion(false);
+        }
     };
 
     return (
@@ -264,9 +283,11 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                         className="dash-sidebar__nav-item dash-sidebar__logout"
                         onClick={handleLogout}
                         type="button"
+                        disabled={cerrandoSesion}
+                        aria-busy={cerrandoSesion || undefined}
                     >
-                        <LogOut size={20} />
-                        <span>Cerrar Sesión</span>
+                        <LogOut size={20} aria-hidden="true" />
+                        <span>{cerrandoSesion ? 'Cerrando sesión…' : 'Cerrar Sesión'}</span>
                     </button>
                 </div>
 

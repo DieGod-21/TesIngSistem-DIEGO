@@ -203,6 +203,17 @@
  */
 .reportes-table tbody tr:nth-child(n+9) { animation-delay: 0.26s; }
 
+/*
+ * La cascada es para LLEGAR, no para cada filtro.
+ *
+ * La tarjeta de la tabla lleva `key={filter}`: al cambiar de chip se remonta
+ * entera y hace su fundido. Eso está bien —es UNA transición coordinada—, pero
+ * dentro de ella las filas volvían a escalonarse por su cuenta (MEDIDO: reloj
+ * propio en 67ms tras el chip), así que se veían dos entradas superpuestas
+ * para la misma acción. Se queda el fundido de la tarjeta; se va la cascada.
+ */
+.reportes-table--sin-cascada tbody tr { animation: none; }
+
 .reportes-table tbody tr:hover {
   background: var(--color-primary-soft);
   box-shadow: inset 3px 0 0 var(--color-primary);

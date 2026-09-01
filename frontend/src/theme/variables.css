@@ -249,6 +249,10 @@
 
     /* ── Transiciones ── */
     --dash-transition: 150ms ease;
+    /* Cuánto dura el fundido de color al cambiar de tema. Lo lee también
+       `ThemeProvider` para saber cuándo retirar la clase: una sola verdad,
+       igual que hace `useOverlayTransition` con la salida de los diálogos. */
+    --tema-cambio-ms: 180ms;
     --transition-fast: 120ms cubic-bezier(0.22, 1, 0.36, 1);
     --transition-base: 200ms cubic-bezier(0.22, 1, 0.36, 1);
     --transition-slow: 340ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -555,30 +559,56 @@ body {
     --ion-color-step-200:       var(--surface-float);
 }
 
-/* Transición suave al cambiar de tema — solo los contenedores principales */
-.dash-layout,
-.dash-header,
-.dash-body,
-.dash-sidebar,
-.dash-main,
-.kpi-card,
-.sl-body,
-.ui-stat,
-.sl-table-wrap,
-.sl-table__th,
-.auth-form-section,
-.auth-input-wrapper,
-.report-card,
-.reportes-table-card,
-.terna-card,
-.tdetail-card,
-.proy-card,
-.tsb-card {
+/* ═══════════════════════════════════════════════════════════════════
+   CAMBIO DE TEMA — se enciende SOLO mientras dura el cambio
+═══════════════════════════════════════════════════════════════════ */
+/*
+ * Antes esto era una lista de 18 selectores con una transición PERMANENTE.
+ * Tenía dos fallos, y los dos se midieron sobre el producto:
+ *
+ * 1. LA MITAD NO SE APLICABA. `variables.css` se importa antes que el CSS de
+ *    cada módulo, y `transition` es una propiedad abreviada: se sustituye
+ *    entera. Diez de los dieciocho selectores —`.terna-card`, `.proy-card`,
+ *    `.dash-header`, `.tsb-card`…— declaran su propia `transition` más tarde
+ *    y la pisaban por completo. Estaban en la lista sin efecto ninguno.
+ *
+ * 2. LA LISTA SE QUEDÓ VIEJA. No incluye nada de lo añadido después:
+ *    `.ui-card`, `.ui-surface`, la vista rápida, la auditoría de elegibilidad,
+ *    la cola de trabajo. Entre lo pisado y lo omitido, al cambiar de tema unas
+ *    superficies se fundían y la mayoría saltaba de golpe. Ese cambio A DOS
+ *    VELOCIDADES es lo que se leía como brusco: no era que no hubiera
+ *    transición, era que solo la tenían algunas cosas.
+ *
+ * Enumerar componentes envejece mal por construcción: el defecto no era la
+ * lista, era tener una lista. Ahora la transición la enciende una clase que
+ * `ThemeProvider` pone en <html> durante el cambio y quita después.
+ *
+ * · No enumera nada, así que no se puede quedar vieja.
+ * · Va con `!important` y con la especificidad de `:root`, así que ninguna
+ *   `transition` de componente la puede pisar.
+ * · No existe fuera del cambio de tema: apuntar a una tarjeta sigue usando la
+ *   curva del componente. La lista permanente ralentizaba a 220ms el hover de
+ *   los ocho selectores que sí la recibían.
+ *
+ * Solo COLOR. Sin `box-shadow` —caro de interpolar en muchos elementos a la
+ * vez— y sin `transform`: esto no es una animación de pantalla, es que el
+ * color deje de dar un salto.
+ */
+:root.tema-cambiando,
+:root.tema-cambiando *:not(svg *) {
     transition:
-        background-color 220ms ease,
-        border-color     220ms ease,
-        color            220ms ease,
-        box-shadow       220ms ease;
+        background-color var(--tema-cambio-ms) ease,
+        border-color     var(--tema-cambio-ms) ease,
+        color            var(--tema-cambio-ms) ease !important;
+    transition-delay: 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* La preferencia gana: el tema cambia en seco. `ThemeProvider` pone la
+       clase igualmente y la quita igual, así que el ciclo de vida no depende
+       de si la transición llegó a ocurrir. */
+    :root.tema-cambiando,
+    :root.tema-cambiando *:not(svg *) { transition: none !important; }
 }
 
 /* ── Keyframes globales ───────────────────────────────────────────── */
