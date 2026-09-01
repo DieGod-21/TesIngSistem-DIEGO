@@ -167,6 +167,24 @@
  */
 .sl-table__tr:nth-child(n+9) { animation-delay: 0.26s; }
 
+/*
+ * ── DESPUÉS DE LA PRIMERA LLEGADA, LAS FILAS SOLO APARECEN ────────────
+ *
+ * MEDIDO: al pulsar «página siguiente» las siete filas volvían a animarse con
+ * la cascada entera. Las filas se identifican por `id`, así que al paginar
+ * cambian todas las claves, React las desmonta y las vuelve a montar, y la
+ * entrada se reproduce completa. Igual al buscar, que recarga del servidor.
+ *
+ * Escalonar sirve cuando el contenido LLEGA. Paginar no es llegar: es la
+ * misma tabla con otras filas, y la cascada solo retrasa hasta 0,43s lo que
+ * el usuario acaba de pedir, en la acción más repetida del padrón.
+ *
+ * La clase la pone la vista en cuanto arranca una recarga (ver
+ * StudentsListPage). No se toca el `nth-child` de arriba: la primera llegada
+ * se escalona igual que siempre.
+ */
+.sl-table--sin-cascada .sl-table__tr { animation: none; }
+
 .sl-table__tr:last-child {
     border-bottom: none;
 }

@@ -652,9 +652,33 @@
     color: var(--color-primary-text);
 }
 
+/* ── Curso recién guardado ────────────────────────────────────────────
+   Guardar una nota sacaba un aviso en la esquina opuesta y dejaba la fila que
+   había cambiado igual que las demás: el usuario tenía que buscar cuál era
+   para comprobar el número que acababa de escribir.
+
+   Mismo lenguaje que `.terna-card--nueva`, `.proy-card--nueva` y
+   `.usr-list-item--nuevo`: un realce que se desvanece solo. Se usa `inset` en
+   la sombra porque la fila es un `li` dentro de una lista con separadores, y
+   un anillo por fuera se comería el borde del vecino. */
+@keyframes sd-rec-guardado {
+    from { box-shadow: inset 0 0 0 2px var(--color-primary-soft); }
+    to   { box-shadow: inset 0 0 0 0   transparent; }
+}
+.sd-rec--guardado {
+    animation: sd-rec-guardado 2400ms var(--ease-out-expo) both;
+    border-radius: var(--radius-sm);
+}
+
 /* ─── Movimiento reducido (al FINAL del archivo) ──────────────────────
    Toda animacion o transicion nueva de este archivo va POR ENCIMA de aqui. */
 @media (prefers-reduced-motion: reduce) {
     .sd-card__go { transition: none; animation: none; }
     .sd-card.ui-surface--interactive:hover .sd-card__go { transform: none; }
+    /* Sin recorrido, pero el realce se queda: es la respuesta a «¿cuál es?»,
+       y esa información no puede depender del movimiento. */
+    .sd-rec--guardado {
+        animation: none;
+        box-shadow: inset 0 0 0 2px var(--color-primary-soft);
+    }
 }

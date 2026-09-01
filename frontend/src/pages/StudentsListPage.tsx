@@ -25,6 +25,7 @@ import {
     RefreshCw, Users, AlertTriangle, Upload,
 } from 'lucide-react';
 import { useEstudiantesList } from '../hooks/useEstudiantesList';
+import { usePrimeraLlegada } from '../hooks/usePrimeraLlegada';
 
 import { matchesText } from '../utils/text';
 import type { Estudiante } from '../types/api';
@@ -230,10 +231,40 @@ const DefaultStudentsView: React.FC<{
     const urlPage = parsePage(locationSearch);
     const urlPerPage = parsePerPage(locationSearch);
 
+    /*
+     * ── LA CASCADA DE ENTRADA ES PARA LLEGAR, NO PARA CADA CAMBIO ───────
+     *
+     * MEDIDO en el navegador: tras pulsar «página siguiente», las siete filas
+     * volvían a animarse (`animando=7`) con la cascada completa de 0,02s a
+     * 0,23s. Las filas se identifican por `id`, así que al paginar cambian
+     * TODAS las claves, React desmonta y vuelve a montar, y la animación de
+     * entrada se reproduce entera. Lo mismo al buscar, que recarga del
+     * servidor.
+     *
+     * Escalonar tiene sentido cuando el contenido LLEGA: guía la mirada por
+     * algo que no estaba. Paginar no es llegar —es la misma tabla con otras
+     * filas— y ahí la cascada solo retrasa lo que el usuario ya pidió: hasta
+     * 0,43s entre el clic y la última fila, en la acción que más se repite del
+     * padrón. Por eso ninguna tabla de datos seria anima el cambio de página.
+     *
+     * Se escalona la PRIMERA llegada y nada más. Después, las filas aparecen.
+     */
     const {
         estudiantes, pagination, totalAll, atLimit, search, loading, error,
         setSearch, setPage, setLimit, reload,
     } = useEstudiantesList({ limit: urlPerPage, search: initialSearch });
+
+    /*
+     * El primer intento se apoyaba en `loading`, y no funcionaba: MEDIDO, al
+     * paginar las filas nunca llegaban a desmontarse (`filas=7` justo tras el
+     * clic) porque la respuesta llega dentro del mismo lote de React y ningún
+     * render llega a ver `loading === true`. La clase no se ponía jamás.
+     *
+     * Comparar qué expedientes se muestran no depende de esa carrera. El
+     * mecanismo vive en `usePrimeraLlegada` porque Proyectos, Usuarios y
+     * Reportes tenían exactamente el mismo defecto al filtrar.
+     */
+    const primeraLlegada = usePrimeraLlegada(estudiantes.map((e) => e.id));
 
     // Sincroniza la búsqueda con el query param cuando cambia desde fuera
     // (p.ej. el buscador global en TopHeader).
@@ -343,7 +374,10 @@ const DefaultStudentsView: React.FC<{
             )}
 
             <div className="sl-table-wrap">
-                <table className="sl-table" aria-label="Listado de estudiantes">
+                <table
+                    className={`sl-table${primeraLlegada ? '' : ' sl-table--sin-cascada'}`}
+                    aria-label="Listado de estudiantes"
+                >
                     <thead>
                         <tr>
                             <th className="sl-table__th">Estudiante</th>

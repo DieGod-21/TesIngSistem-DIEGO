@@ -5,6 +5,7 @@ import { listProyectos } from '../../../services/proyectosService';
 import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import { matchesText } from '../../../utils/text';
+import { usePrimeraLlegada } from '../../../hooks/usePrimeraLlegada';
 import type { FaseProyecto, Proyecto } from '../../../types/api';
 import ProyectoCard from '../components/ProyectoCard';
 import NuevoProyectoModal from '../components/NuevoProyectoModal';
@@ -129,6 +130,23 @@ const ProyectosListPage: React.FC = () => {
         [proyectos],
     );
 
+    /*
+     * Cargar por primera vez y refrescar no son lo mismo: los dos ponían
+     * `loading` y los dos borraban la cuadrícula para enseñar el esqueleto.
+     * Tras crear un proyecto eso significaba perder de vista los once que ya
+     * estaban para que volvieran todos a la vez — y entre ellos, en algún
+     * sitio, el nuevo.
+     */
+    const cargaInicial = loading && proyectos.length === 0;
+    const refrescando  = loading && proyectos.length > 0;
+
+    /*
+     * La entrada escalonada, solo la primera vez que llegan las tarjetas.
+     * MEDIDO: quitar el filtro de fase rearrancaba las ocho que se habían
+     * desmontado. Ver `usePrimeraLlegada`.
+     */
+    const primeraLlegada = usePrimeraLlegada(visibles.map((p) => p.id));
+
     const filtrando = search.trim() !== '' || fase !== 'all';
 
     return (
@@ -138,7 +156,7 @@ const ProyectosListPage: React.FC = () => {
                 icon={<FolderOpen size={22} />}
                 title="Proyectos"
                 subtitle={
-                    !loading && !error
+                    !cargaInicial && !error
                         ? `${proyectos.length} proyecto${proyectos.length !== 1 ? 's' : ''} registrado${proyectos.length !== 1 ? 's' : ''}`
                         : 'Anteproyectos y trabajos de graduación'
                 }
@@ -150,7 +168,7 @@ const ProyectosListPage: React.FC = () => {
                 }
             />
 
-            {!loading && !error && proyectos.length > 0 && (
+            {!cargaInicial && !error && proyectos.length > 0 && (
                 <div className="ui-toolbar">
                     <div className="ui-search ui-toolbar__search">
                         <Search size={16} className="ui-search__icon" aria-hidden="true" />
@@ -180,7 +198,7 @@ const ProyectosListPage: React.FC = () => {
                 </div>
             )}
 
-            {loading && <ProyectosSkeleton />}
+            {cargaInicial && <ProyectosSkeleton />}
 
             {!loading && error && (
                 <EmptyState
@@ -196,7 +214,7 @@ const ProyectosListPage: React.FC = () => {
                 />
             )}
 
-            {!loading && !error && proyectos.length === 0 && (
+            {!cargaInicial && !error && proyectos.length === 0 && (
                 <EmptyState
                     icon={<FolderPlus size={26} />}
                     title="No hay proyectos registrados"
@@ -211,7 +229,7 @@ const ProyectosListPage: React.FC = () => {
 
             {/* Nada que mostrar POR EL FILTRO no es lo mismo que no haber nada:
                 aquí la salida es limpiar el filtro, no crear un proyecto. */}
-            {!loading && !error && proyectos.length > 0 && visibles.length === 0 && (
+            {!cargaInicial && !error && proyectos.length > 0 && visibles.length === 0 && (
                 <EmptyState
                     icon={<SearchX size={26} />}
                     title="Ningún proyecto coincide"
@@ -228,14 +246,17 @@ const ProyectosListPage: React.FC = () => {
                 />
             )}
 
-            {!loading && !error && visibles.length > 0 && (
+            {!cargaInicial && !error && visibles.length > 0 && (
                 <>
                     {filtrando && (
                         <p className="proy-count" aria-live="polite">
                             {visibles.length} de {proyectos.length} proyecto{proyectos.length !== 1 ? 's' : ''}
                         </p>
                     )}
-                    <div className="proy-grid">
+                    <div
+                        className={`proy-grid${primeraLlegada ? '' : ' proy-grid--sin-cascada'}${refrescando ? ' ui-refrescando' : ''}`}
+                        aria-busy={refrescando || undefined}
+                    >
                         {visibles.map((p) => (
                             <ProyectoCard
                                 key={p.id}

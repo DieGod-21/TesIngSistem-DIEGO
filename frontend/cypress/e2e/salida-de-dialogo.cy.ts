@@ -318,8 +318,8 @@ describe('salida del diálogo', () => {
         cy.get('.ui-modal').should('have.class', 'ui-modal--saliendo').then(($m) => {
             expect(
                 nombreDeAnimacion($m[0]),
-                'la hoja se va con ui-modal-out; si aquí aparece «sheet-up», la consulta de 640px está pisando la salida',
-            ).to.eq('ui-modal-out');
+                'la hoja VUELVE POR DONDE VINO; «sheet-up» aquí significa que la consulta de 640px pisa la salida, y «ui-modal-out» que se está encogiendo en el sitio en vez de bajar',
+            ).to.eq('sheet-down');
         });
 
         cy.get('.ui-modal-overlay', { timeout: 4000 }).should('not.exist');

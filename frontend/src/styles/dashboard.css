@@ -168,7 +168,9 @@
     border: none;
     cursor: pointer;
     width: 100%;
-    transition: background var(--dash-transition), color var(--dash-transition);
+    /* `transform` entra en la transición para que SOLTAR sea tan suave como
+       pulsar; el mismo vocabulario que el botón de tema de la cabecera. */
+    transition: background var(--dash-transition), color var(--dash-transition), transform var(--transition-fast);
 }
 .dash-sidebar__nav-item svg { transition: color var(--dash-transition); }
 
@@ -185,6 +187,34 @@
 .dash-sidebar__nav-item:hover svg {
     color: color-mix(in oklch, var(--aurora-3) 62%, white);
 }
+
+/* ── Foco de teclado ──────────────────────────────────────────────────
+   La barra lateral es la navegación principal del producto y no tenía NINGÚN
+   estilo de foco: quien navega con teclado dependía del anillo por defecto
+   del navegador, que sobre este índigo oscuro casi no se ve.
+
+   El anillo es BLANCO y no `--color-primary` como en el resto del producto:
+   el índigo de marca sobre un fondo índigo oscuro es justo el caso en que un
+   anillo correcto de color resulta ilegible. Es el mismo criterio que ya usa
+   `.ui-btn--contrast` en ui.css.
+
+   `outline-offset` negativo para que el anillo quede DENTRO del ítem: hacia
+   fuera lo cortaría el borde de la barra y se solaparía con el indicador
+   activo que viaja por detrás. */
+.dash-sidebar__nav-item:focus-visible {
+    outline: 2px solid oklch(1 0 0 / 0.9);
+    outline-offset: -2px;
+}
+
+/* ── Pulsación ────────────────────────────────────────────────────────
+   Un control importante tiene que acusar el clic. Se usa `scale`, que es la
+   misma señal que ya emplea el botón de tema, y NO un desplazamiento: mover
+   el ítem al apuntar dejaba una banda de rebote en el borde izquierdo (ver la
+   nota de arriba), y el problema era el movimiento en el eje X, no el acuse.
+
+   Solo con el puntero abajo, así que no compite con `--active` (que aquí
+   significa «ruta actual», no «pulsado»). */
+.dash-sidebar__nav-item:active { transform: scale(0.985); }
 
 /* Estado activo: solo texto/ícono. El fondo y el rail los aporta el indicador
    que viaja (una sola pieza en movimiento) — sensación de que la app navega. */
@@ -249,8 +279,58 @@
     gap: var(--space-4);
 }
 
+/* ── Cerrar sesión ────────────────────────────────────────────────────
+   Era un ítem de navegación más: mismo fondo al apuntar, mismo color, misma
+   señal. Cerrar sesión no es navegar —termina el trabajo y descarta lo que no
+   se haya guardado— y no lo decía por ningún lado.
+
+   La intención destructiva aparece al APUNTAR o al ENFOCAR, no en reposo: un
+   rojo permanente en la barra convierte la salida en lo más llamativo de la
+   navegación y presiona al usuario con algo que casi nunca quiere pulsar. En
+   reposo es un ítem tranquilo; bajo el cursor dice lo que va a hacer.
+
+   Se tiñe el fondo en vez del texto porque el texto de la barra ya es claro
+   sobre índigo: un rojo legible ahí tendría que ser tan claro que dejaría de
+   leerse como advertencia. */
 .dash-sidebar__logout {
     text-align: left;
+}
+
+.dash-sidebar__logout:hover,
+.dash-sidebar__logout:focus-visible {
+    background: color-mix(in oklch, var(--color-danger) 26%, transparent);
+    color: oklch(0.97 0.015 25);
+}
+/* El icono se salta el cian de la aurora que heredaría de `:hover svg`: aquí
+   la firma de marca contradiría el aviso. */
+.dash-sidebar__logout:hover svg,
+.dash-sidebar__logout:focus-visible svg {
+    color: oklch(0.88 0.075 25);
+}
+
+/*
+ * Mientras la sesión se cierra.
+ *
+ * `logout()` es una llamada de red: hasta que responde no se navega y el
+ * botón seguía admitiendo clics, así que dos pulsaciones lanzaban dos cierres.
+ * `aria-busy` lo anuncia a un lector de pantalla y `disabled` lo impide de
+ * verdad; esto solo lo hace visible. `cursor: progress` y no `wait`: la
+ * aplicación sigue respondiendo, es esta acción la que está en curso.
+ */
+.dash-sidebar__logout[aria-busy='true'] {
+    opacity: 0.65;
+    cursor: progress;
+}
+.dash-sidebar__logout[aria-busy='true']:hover {
+    background: color-mix(in oklch, var(--color-danger) 26%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* El acuse de pulsación se apaga; el color, que no es movimiento, se queda:
+       es lo que distingue cerrar sesión de navegar. */
+    .dash-sidebar__nav-item { transition: background var(--dash-transition), color var(--dash-transition); }
+    .dash-sidebar__nav-item:active { transform: none; }
+    .dash-header__theme-toggle:active { transform: none; }
 }
 
 /* Overlay móvil */
@@ -920,6 +1000,50 @@
 
 .dash-header__theme-toggle:active {
     transform: scale(0.94);
+}
+
+/* El foco tiene que verse: es el único control de la cabecera que no lleva
+   texto, así que sin anillo quien navega con teclado no sabe dónde está. */
+.dash-header__theme-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* ── Relevo de iconos sol/luna ────────────────────────────────────────
+   Los dos iconos ocupan la MISMA celda —de ahí el grid de una casilla— para
+   que el botón no cambie de tamaño ni el icono salte al cruzarse.
+
+   El que se va gira y encoge; el que llega aterriza recto. Es el mismo
+   principio que la salida de los diálogos: llegar se presenta, irse solo
+   confirma. 20px es el alto del icono, fijado para que el botón mida igual
+   con o sin iconos dentro. */
+.dash-header__theme-icons {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+}
+.dash-header__theme-icon {
+    grid-area: 1 / 1;
+    transition:
+        opacity   var(--tema-cambio-ms) ease,
+        transform var(--tema-cambio-ms) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Claro: se ofrece la luna (lo que va a pasar si pulsas), el sol espera. */
+.dash-header__theme-icon--luna { opacity: 1; transform: none; }
+.dash-header__theme-icon--sol  { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+
+/* Oscuro: se intercambian. */
+[data-theme="dark"] .dash-header__theme-icon--luna { opacity: 0; transform: rotate(90deg) scale(0.5); }
+[data-theme="dark"] .dash-header__theme-icon--sol  { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    /* El icono correcto sigue siendo el correcto: se cambia sin recorrido.
+       No se apaga la opacidad, que es lo que distingue un icono del otro. */
+    .dash-header__theme-icon { transition: opacity var(--tema-cambio-ms) ease; }
+    .dash-header__theme-icon--sol,
+    [data-theme="dark"] .dash-header__theme-icon--luna { transform: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

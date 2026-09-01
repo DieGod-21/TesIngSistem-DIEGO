@@ -37,5 +37,19 @@ export async function listUsuarios(rol?: RolUsuario, opts: { signal?: AbortSigna
 }
 
 export async function createUsuario(dto: CreateUsuarioDto): Promise<Usuario> {
-    return apiPost<Usuario>(API_PATHS.usuarios.list, dto);
+    /*
+     * MISMA MENTIRA DE TIPO QUE YA TUVO `createProyecto`.
+     *
+     * `apiPost` retira el sobre genérico `{ data }`, pero queda la envoltura
+     * semántica `{ usuario }`. Esta función declaraba devolver un `Usuario` y
+     * devolvía ese objeto intermedio: `Promise<Usuario>` era falso y TypeScript
+     * no podía saberlo, porque el tipo se afirma en el parámetro genérico.
+     *
+     * Pasó inadvertido mientras nadie miró el valor de retorno. En cuanto la
+     * pantalla quiso SEÑALAR el usuario recién creado, `id` llegó `undefined`
+     * y la fila nueva no se marcaba —exactamente el mismo camino por el que se
+     * descubrió en proyectos.
+     */
+    const raw = await apiPost<{ usuario: Usuario } | Usuario>(API_PATHS.usuarios.list, dto);
+    return unwrapEntity<Usuario>(raw, 'usuario', API_PATHS.usuarios.list);
 }

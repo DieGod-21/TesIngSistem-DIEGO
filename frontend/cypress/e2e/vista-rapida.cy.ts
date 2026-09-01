@@ -117,3 +117,12 @@ describe('vista rápida: recorrer el padrón', () => {
         cy.location('search').should('not.match', /preview=/);
     });
 });
+
+/*
+ * Los specs sin import/export comparten un ámbito global para TypeScript, y
+ * este declara `OPCIONES_CLIC` con el mismo nombre que
+ * `navegacion-contextual.cy.ts`: `tsc -p cypress/tsconfig.json` fallaba con
+ * TS2451 y dejaba inservible esa comprobación para TODOS los specs. Marcar el
+ * fichero como módulo encierra sus constantes sin renombrar nada.
+ */
+export {};

@@ -15,6 +15,7 @@ import { userMessageFor } from '../../../services/errorMessages';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
 import { useCountUp } from '../../../hooks/useCountUp';
+import { usePrimeraLlegada } from '../../../hooks/usePrimeraLlegada';
 import { Badge, Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
 import { RESOLUCION_LABEL, RESOLUCION_TONE } from '../../../utils/ternaStatus';
@@ -81,6 +82,14 @@ const ReportesPage: React.FC = () => {
             );
         });
     }, [ternas, filter, query]);
+
+    /*
+     * La cascada de filas, solo la primera vez que llega el reporte. Al
+     * cambiar de chip la tarjeta ya se remonta entera y hace su fundido; las
+     * filas escalonándose otra vez por dentro eran una segunda entrada
+     * encima de la misma acción. Ver `usePrimeraLlegada`.
+     */
+    const primeraLlegada = usePrimeraLlegada(filtered.map((t) => t.terna_id));
 
     // Resultado institucional (protagonista de la pantalla). Todo derivado de
     // datos ya presentes: nada se calcula ni se pide de más.
@@ -173,7 +182,10 @@ const ReportesPage: React.FC = () => {
 
                 {!loading && !error && filtered.length > 0 && (
                     <div key={filter} className="reportes-table-card view-transition">
-                        <table className="reportes-table" aria-label="Reporte de ternas">
+                        <table
+                            className={`reportes-table${primeraLlegada ? '' : ' reportes-table--sin-cascada'}`}
+                            aria-label="Reporte de ternas"
+                        >
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
