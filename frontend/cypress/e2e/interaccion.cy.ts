@@ -265,6 +265,48 @@ describe('lenguaje de interacción', () => {
             });
         });
 
+        it('«Refrescar» en Reportes conserva la tabla y el boton acusa el trabajo', () => {
+            /*
+             * MEDIDO antes del arreglo: el unico boton del producto que se
+             * llama «Refrescar» era el sitio donde refrescar salia peor parado
+             * —la tabla desaparecia entera y un esqueleto ocupaba su lugar— y
+             * ademas no acusaba nada: `aria-busy` no llegaba a aparecer en
+             * NINGUN elemento de la pagina. Se pedia una actualizacion, se
+             * perdia lo que se estaba mirando y no habia senal de que algo
+             * estuviera pasando.
+             *
+             * Las dos mitades importan. Conservar la tabla sin que el boton
+             * diga nada deja la accion sin respuesta; que el boton se ocupe
+             * mientras la tabla se borra no arregla la perdida de contexto.
+             */
+            cy.visitaDemo('/reports');
+            cy.get('.reportes-table tbody tr', { timeout: 20000 }).should('have.length.greaterThan', 0);
+            cy.wait(700);
+
+            const reg: { vacio: number; esqueleto: number; ocupado: number }[] = [];
+            cy.window().then((win) => {
+                const r = { vacio: 0, esqueleto: 0, ocupado: 0 };
+                const mirar = () => {
+                    if (!win.document.querySelector('.reportes-table tbody tr')) r.vacio += 1;
+                    if (win.document.querySelector('.ui-skeleton, .ui-skeleton-row')) r.esqueleto += 1;
+                    if (win.document.querySelector('button[aria-busy="true"]')) r.ocupado += 1;
+                };
+                mirar();
+                new (win as Window & typeof globalThis).MutationObserver(mirar)
+                    .observe(win.document.body, { childList: true, subtree: true, attributes: true });
+                reg.push(r);
+            });
+
+            cy.contains('button', /Refrescar/i).click({ scrollBehavior: 'center' });
+            cy.get('.reportes-table tbody tr', { timeout: 10000 }).should('exist');
+            cy.wait(300);
+            cy.then(() => {
+                expect(reg[0].vacio, 'la tabla nunca se queda sin filas').to.eq(0);
+                expect(reg[0].esqueleto, 'el esqueleto no sustituye a lo que ya estaba').to.eq(0);
+                expect(reg[0].ocupado, 'el boton acusa el trabajo que ha pedido').to.be.greaterThan(0);
+            });
+        });
+
         it('con movimiento reducido, refrescar no atenua nada', () => {
             /*
              * `.ui-refrescando` es el unico cambio VISUAL que este sprint

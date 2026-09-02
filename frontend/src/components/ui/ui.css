@@ -784,6 +784,28 @@
     cursor: not-allowed;
     background: var(--surface-raised);
 }
+/* Un desplegable del sistema dentro de un formulario dibujado a mano es de
+   los detalles que más delatan a una herramienta interna: la caja ya venía del
+   sistema de diseño —mismo alto, borde, radio y anillo de foco que el resto—,
+   pero la punta seguía siendo la del navegador, con otro grosor y otra forma
+   que los chevrons del producto, y distinta en cada sistema operativo.
+
+   Se apaga la apariencia nativa y se dibuja la MISMA punta que usa el resto
+   de la interfaz. El hueco de la derecha se reserva con el padding para que
+   una opción larga nunca pase por debajo de ella. Nada de esto toca el
+   comportamiento: el desplegable lo sigue abriendo el navegador, con su
+   teclado y su lista nativa, que en un móvil es justo lo que se quiere. */
+select.ui-control {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: var(--space-40);
+    background-image: var(--chevron-select);
+    background-repeat: no-repeat;
+    background-position: right var(--space-12) center;
+}
+/* Firefox pinta un resaltado propio sobre el texto del control enfocado. */
+select.ui-control:-moz-focusring { color: transparent; text-shadow: 0 0 0 var(--text-primary); }
+
 /* Un textarea crece con el contenido: la escala fija su SUELO, no su altura. */
 textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertical; }
 
@@ -1254,12 +1276,14 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     border-radius: var(--radius-card);
     padding: var(--space-16) var(--space-20);
     box-shadow: var(--shadow-sm), var(--hairline);
-    transition: box-shadow 200ms var(--ease-out-expo), border-color 200ms var(--ease-out-expo);
 }
-.ui-stat:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--border-strong);
-}
+/* SIN estado al apuntar, a propósito.
+   Estas tarjetas levantaban la sombra y encendían el borde igual que los
+   indicadores del panel, que sí llevan a algún sitio —su sección lo promete
+   por escrito: «toca un indicador para ver el detalle»—. Estas no llevan a
+   ninguna parte: quien las apunta recibe la misma señal y no obtiene nada, y
+   el filtro por rol ya tiene su control, los chips de abajo.
+   Un resumen se lee; no se pulsa. */
 
 .ui-stat__value {
     font-size: var(--text-3xl);
@@ -1324,6 +1348,17 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 
 /* Utilidad: número tabular (para tablas/estadísticas) */
 .ui-tnum { font-variant-numeric: tabular-nums; }
+
+/* ── Recuento de un listado ────────────────────────────────────────────
+   La cifra en cifras tabulares: al filtrar cambia sin parar y, sin ancho
+   fijo por dígito, el texto de al lado baila con cada pulsación. */
+.ui-list-count {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+.ui-list-count__n { color: var(--text-primary); font-weight: var(--weight-semibold); }
 
 /* ═══════════════════════════════════════════════════════════════════
    DESTINO DE UN DESPLAZAMIENTO AUTOMÁTICO
@@ -1613,13 +1648,21 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 }
 
 /* Espacio reservado como en `.ui-field__msg`: validar no debe mover el diálogo. */
+/* El hueco de debajo del campo sirve para dos cosas distintas: explicar y
+   corregir. Estaba SIEMPRE en rojo de error, asi que la nota «Solo se listan
+   estudiantes que aún no tienen proyecto registrado» se leía como un fallo y
+   el diálogo de «Nuevo Proyecto» se abría pareciendo roto sin que nadie
+   hubiera escrito nada. El resto de campos del sistema ya distingue las dos
+   —la nota de la contraseña en «Nuevo Usuario» va en gris—, así que esto era
+   una excepción del selector, no una convención. */
 .ui-picker__msg {
     margin: var(--space-4) 0 0;
     min-height: 1rem;
     font-size: var(--text-xs);
     line-height: var(--leading-snug);
-    color: var(--color-danger);
+    color: var(--text-secondary);
 }
+.ui-picker__msg--error { color: var(--color-danger); }
 
 /* ═══════════════════════════════════════════════════════════════════
    NIVEL 3 — CRISTAL

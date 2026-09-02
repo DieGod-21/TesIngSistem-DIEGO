@@ -9,7 +9,7 @@ import { usePrimeraLlegada } from '../../../hooks/usePrimeraLlegada';
 import type { FaseProyecto, Proyecto } from '../../../types/api';
 import ProyectoCard from '../components/ProyectoCard';
 import NuevoProyectoModal from '../components/NuevoProyectoModal';
-import { Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import { Button, PageHeader, EmptyState, Skeleton, ListCount } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
 import { routes } from '../../../config/routes';
 import '../styles/proyectos.css';
@@ -147,19 +147,18 @@ const ProyectosListPage: React.FC = () => {
      */
     const primeraLlegada = usePrimeraLlegada(visibles.map((p) => p.id));
 
-    const filtrando = search.trim() !== '' || fase !== 'all';
-
     return (
         <div className="proy-page">
+            {/* El recuento vivía en el subtítulo y, en cuanto cargaba, se
+                comía la descripción de la página: pasado el primer segundo ya
+                no quedaba nada que dijera qué son los proyectos, y el mismo 11
+                se repetía abajo en «3 de 11». Una cifra que cambia no es el
+                subtítulo de una sección; el subtítulo es lo que NO cambia. */}
             <PageHeader
                 kicker="Gestión académica"
                 icon={<FolderOpen size={22} />}
                 title="Proyectos"
-                subtitle={
-                    !cargaInicial && !error
-                        ? `${proyectos.length} proyecto${proyectos.length !== 1 ? 's' : ''} registrado${proyectos.length !== 1 ? 's' : ''}`
-                        : 'Anteproyectos y trabajos de graduación'
-                }
+                subtitle="Anteproyectos y trabajos de graduación."
                 actions={
                     <Button onClick={() => setModalOpen(true)}>
                         <Plus size={16} aria-hidden="true" />
@@ -240,7 +239,7 @@ const ProyectosListPage: React.FC = () => {
                     }
                     action={
                         <Button variant="secondary" onClick={() => history.replace('/proyectos')}>
-                            Quitar filtros
+                            Limpiar filtros
                         </Button>
                     }
                 />
@@ -248,11 +247,7 @@ const ProyectosListPage: React.FC = () => {
 
             {!cargaInicial && !error && visibles.length > 0 && (
                 <>
-                    {filtrando && (
-                        <p className="proy-count" aria-live="polite">
-                            {visibles.length} de {proyectos.length} proyecto{proyectos.length !== 1 ? 's' : ''}
-                        </p>
-                    )}
+                    <ListCount showing={visibles.length} total={proyectos.length} noun={['proyecto', 'proyectos']} />
                     <div
                         className={`proy-grid${primeraLlegada ? '' : ' proy-grid--sin-cascada'}${refrescando ? ' ui-refrescando' : ''}`}
                         aria-busy={refrescando || undefined}

@@ -83,6 +83,17 @@
   font-size: var(--text-xs);
 }
 .terna-card__progress {
+  /* MEDIDO: la barra salia 0x6px en las CINCO tarjetas, es decir, nunca se ha
+     visto. La tarjeta es un <button>, y la hoja del navegador le impone
+     `align-items: flex-start`, asi que ningun hijo se estira: esta fila se
+     encogia a su contenido (124px de 464) y la barra, que reparte lo que
+     sobra con `flex: 1`, se quedaba sin nada que repartir. Con la fila
+     encogida el `space-between` tampoco separaba nada y el chevron quedaba
+     pegado al texto, en mitad de la tarjeta.
+
+     Se estira explicitamente en vez de tocar `align-items` de la tarjeta:
+     los demas hijos ya se colocan bien y no hay por que moverlos. */
+  align-self: stretch;
   display: flex;
   justify-content: space-between;
   align-items: center;

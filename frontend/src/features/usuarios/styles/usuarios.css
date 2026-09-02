@@ -122,13 +122,19 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.usr-info__email {
-    margin: var(--space-2) 0 0;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    white-space: nowrap;
+/* El correo dejó de ser un párrafo y pasó a ser un control: se copia de un
+   clic, como el carné y el correo del expediente. Aquí solo se ajusta su sitio
+   en la fila —la caja, los cinco estados y el acuse los pone `.ui-copy`— y se
+   deja que el valor se elida, porque un correo largo no puede empujar al rol
+   fuera de la tarjeta. */
+.usr-info__copy {
+    margin-top: var(--space-2);
+    max-width: 100%;
+}
+.usr-info__copy .ui-copy__value {
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Los estados vacío/error usan la primitiva <EmptyState> del sistema de diseño. */

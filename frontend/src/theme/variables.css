@@ -114,6 +114,15 @@
     --text-secondary:  oklch(0.500 0.020 275);       /* ~5.4:1 */
     --text-muted:      oklch(0.522 0.018 275);       /* re-medido tras bajar --surface-base */
 
+    /* ── Punta del desplegable ────────────────────────────────────────────
+       Un <select> no admite pseudoelementos, así que su flecha solo puede
+       llegar como imagen de fondo, y una imagen de fondo no hereda
+       `currentColor`. Por eso vive aquí, como token: el modo oscuro se
+       resuelve por herencia igual que todo lo demás, y no con un override por
+       clase. El trazo copia el chevron de lucide —2px, extremos y vértice
+       redondeados— que es la punta que usa el resto del producto. */
+    --chevron-select: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666172' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
     /* ── Superficies (semántico) ──────────────────────────────────────────
        La SEPARACIÓN entre el plano de página y la tarjeta es lo que hace que
        una tarjeta se lea como un objeto. Medida contra el tema oscuro, la
@@ -484,6 +493,9 @@ body {
        anterior («~4.2:1») ya lo reconocía y aun así se envió. Mínimo resuelto
        por bisección: L 0.634; se toma 0.645 para dejar margen. */
     --text-muted:     oklch(0.672 0.024 275);   /* ~4.6:1 incluso sobre --surface-raised */
+
+    /* Mismo trazo, aclarado para el fondo oscuro. Ver el token del tema claro. */
+    --chevron-select: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a3a0ae' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
     /* ── Primario — se aclara en dark para mantener contraste y vibración ── */
     --color-primary:         var(--indigo-500);
