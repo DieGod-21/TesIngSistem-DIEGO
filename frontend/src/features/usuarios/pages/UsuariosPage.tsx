@@ -5,7 +5,7 @@ import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import type { Usuario } from '../../../types/api';
 import NuevoUsuarioModal from '../components/NuevoUsuarioModal';
-import { Avatar, Button, Badge, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import { Avatar, Button, Badge, PageHeader, EmptyState, Skeleton, ListCount, CopyField } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
 
 import { matchesText } from '../../../utils/text';
@@ -156,12 +156,17 @@ const UsuariosPage: React.FC = () => {
 
             {!cargaInicial && !error && usuarios.length > 0 && (
                 <>
+                    {/* La tarjeta «Usuarios · total registrados» se retira.
+                        Es la SUMA de las otras dos y, desde que existe el
+                        recuento del listado, el mismo número aparecía dos veces
+                        en la misma pantalla.
+
+                        No es criterio nuevo: el panel de administración ya
+                        sacó «Completación» de su rejilla por exactamente esto
+                        —«una reformulación de las otras dos tarjetas»—. Aquí se
+                        aplica la misma regla al mismo tipo de rejilla. Lo que
+                        queda es lo que el total no dice: cómo se reparte. */}
                     <div className="ui-stat-grid">
-                        <div className="ui-stat">
-                            <span className="ui-stat__label">Usuarios</span>
-                            <span className="ui-stat__value">{usuarios.length}</span>
-                            <span className="ui-stat__sub">Total registrados</span>
-                        </div>
                         <div className="ui-stat" style={{ '--stat-accent': 'var(--color-primary)' } as React.CSSProperties}>
                             <span className="ui-stat__label">Administradores</span>
                             <span className="ui-stat__value">{roleCounts.admin}</span>
@@ -201,6 +206,17 @@ const UsuariosPage: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Las tres tarjetas de arriba son TOTALES y no se mueven al
+                        filtrar: sin esta línea, pulsar «Administradores» dejaba
+                        la pantalla diciendo 7 con una sola fila debajo. */}
+                    {filtered.length > 0 && (
+                        <ListCount
+                            showing={filtered.length}
+                            total={usuarios.length}
+                            noun={['usuario', 'usuarios']}
+                        />
+                    )}
+
                     {filtered.length === 0 ? (
                         <EmptyState
                             icon={<Search size={26} />}
@@ -234,7 +250,20 @@ const UsuariosPage: React.FC = () => {
                                     />
                                     <div className="usr-info">
                                         <p className="usr-info__name">{u.nombre}</p>
-                                        <p className="usr-info__email">{u.email}</p>
+                                        {/* El correo de un evaluador se traslada
+                                            constantemente a otros sistemas, y aquí
+                                            era el único identificador del producto
+                                            que había que seleccionar a mano: el
+                                            expediente, la vista rápida y el detalle
+                                            de reporte ya lo copian de un clic.
+                                            También es lo que vuelve honesto el
+                                            realce de la fila al apuntar, que hasta
+                                            ahora no llevaba a ninguna parte. */}
+                                        <CopyField
+                                            value={u.email}
+                                            label="el correo"
+                                            className="usr-info__copy"
+                                        />
                                     </div>
                                     <Badge tone={u.rol === 'admin' ? 'primary' : 'success'}>
                                         {ROL_LABEL[u.rol] ?? u.rol}

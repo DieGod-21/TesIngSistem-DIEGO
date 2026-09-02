@@ -14,6 +14,8 @@ export { default as Card } from './Card';
 export type { CardProps } from './Card';
 export { default as PageHeader } from './PageHeader';
 export type { PageHeaderProps } from './PageHeader';
+export { default as ListCount } from './ListCount';
+export type { ListCountProps } from './ListCount';
 export { default as EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
 export { default as Field } from './Field';

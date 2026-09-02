@@ -16,7 +16,7 @@ import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../
 import { matchesText } from '../../../utils/text';
 import { useCountUp } from '../../../hooks/useCountUp';
 import { usePrimeraLlegada } from '../../../hooks/usePrimeraLlegada';
-import { Badge, Button, PageHeader, EmptyState, Skeleton } from '../../../components/ui';
+import { Badge, Button, PageHeader, EmptyState, Skeleton, ListCount } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
 import { RESOLUCION_LABEL, RESOLUCION_TONE } from '../../../utils/ternaStatus';
 import '../styles/reportes.css';
@@ -84,6 +84,22 @@ const ReportesPage: React.FC = () => {
     }, [ternas, filter, query]);
 
     /*
+     * Cargar por primera vez y refrescar no son lo mismo.
+     *
+     * «Refrescar» es un botón explícito y era el sitio del producto donde
+     * refrescar salía peor parado: MEDIDO, la tabla desaparecía entera —cero
+     * filas, esqueleto en su lugar— y el botón no acusaba nada (`aria-busy`
+     * no llegaba a aparecer en ningún elemento de la página). Se pedía una
+     * actualización y lo que se obtenía era perder lo que se estaba mirando,
+     * sin señal de que algo estuviera ocurriendo.
+     *
+     * Mismo reparto que en Proyectos, Usuarios y Ternas: el esqueleto solo
+     * cuando no hay nada que conservar.
+     */
+    const cargaInicial = loading && ternas.length === 0;
+    const refrescando  = loading && ternas.length > 0;
+
+    /*
      * La cascada de filas, solo la primera vez que llega el reporte. Al
      * cambiar de chip la tarjeta ya se remonta entera y hace su fundido; las
      * filas escalonándose otra vez por dentro eran una segunda entrada
@@ -121,11 +137,11 @@ const ReportesPage: React.FC = () => {
                     subtitle="Resultado ponderado de todas las ternas del sistema, con resolución final por estudiante."
                 />
 
-                {!loading && !error && total > 0 && (
+                {!cargaInicial && !error && total > 0 && (
                     <ReportesHero total={total} counts={counts} aprobadas={aprobadas} animatedPct={animatedPct} />
                 )}
 
-                <div className="ui-toolbar ui-toolbar--bare" style={loading ? { display: 'none' } : undefined}>
+                <div className="ui-toolbar ui-toolbar--bare" style={cargaInicial ? { display: 'none' } : undefined}>
                     <div className="ui-search" style={{ flex: 1, minWidth: 220 }}>
                         <Search size={15} className="ui-search__icon" aria-hidden="true" />
                         <input
@@ -150,13 +166,18 @@ const ReportesPage: React.FC = () => {
                             </button>
                         ))}
                     </div>
-                    <Button variant="secondary" onClick={() => load()} disabled={loading} aria-label="Refrescar reporte">
+                    <Button
+                        variant="secondary"
+                        onClick={() => load()}
+                        loading={refrescando}
+                        aria-label="Refrescar reporte"
+                    >
                         <RefreshCw size={16} aria-hidden="true" />
                         Refrescar
                     </Button>
                 </div>
 
-                {loading && <ReportesSkeleton />}
+                {cargaInicial && <ReportesSkeleton />}
                 {!loading && error && (
                     <EmptyState
                         tone="danger"
@@ -170,18 +191,35 @@ const ReportesPage: React.FC = () => {
                         }
                     />
                 )}
-                {!loading && !error && filtered.length === 0 && (
+                {!cargaInicial && !error && filtered.length === 0 && (
                     <EmptyState
                         icon={<BarChart3 size={26} />}
                         title={ternas.length === 0 ? 'No hay ternas registradas' : 'Sin resultados'}
                         description={ternas.length === 0
                             ? 'El reporte global está vacío.'
-                            : 'Prueba ajustar la búsqueda o el filtro de resolución.'}
+                            : 'Ninguna terna coincide con la búsqueda o el filtro de resolución.'}
+                        /* Vaciar la pantalla sin ofrecer la salida obligaba a
+                           encontrar a mano el chip activo. Proyectos y Usuarios
+                           ya daban el botón; esta era la única de las tres que
+                           no. */
+                        action={ternas.length > 0 ? (
+                            <Button variant="secondary" onClick={() => { setFilter('all'); setQuery(''); }}>
+                                Limpiar filtros
+                            </Button>
+                        ) : undefined}
                     />
                 )}
 
-                {!loading && !error && filtered.length > 0 && (
-                    <div key={filter} className="reportes-table-card view-transition">
+                {!cargaInicial && !error && filtered.length > 0 && (
+                    <ListCount showing={filtered.length} total={ternas.length} noun={['terna', 'ternas']} />
+                )}
+
+                {!cargaInicial && !error && filtered.length > 0 && (
+                    <div
+                        key={filter}
+                        className={`reportes-table-card view-transition${refrescando ? ' ui-refrescando' : ''}`}
+                        aria-busy={refrescando || undefined}
+                    >
                         <table
                             className={`reportes-table${primeraLlegada ? '' : ' reportes-table--sin-cascada'}`}
                             aria-label="Reporte de ternas"

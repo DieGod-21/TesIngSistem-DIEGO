@@ -168,7 +168,11 @@ function Picker<T>({
                         <X size={16} aria-hidden="true" />
                     </button>
                 </div>
-                <p id={`${id}-error`} className="ui-picker__msg" aria-live="polite">
+                <p
+                    id={`${id}-error`}
+                    className={`ui-picker__msg${error ? ' ui-picker__msg--error' : ''}`}
+                    aria-live="polite"
+                >
                     {error ?? ''}
                 </p>
             </div>
@@ -237,7 +241,15 @@ function Picker<T>({
                 </ul>
             )}
 
-            <p id={`${id}-error`} className="ui-picker__msg" aria-live="polite">
+            {/* Un mismo hueco para la nota y para el error, pero NO el mismo
+                color: la nota explica y el error corrige. Pintadas igual, el
+                dialogo de «Nuevo Proyecto» se abria con una linea roja bajo el
+                primer campo sin que nadie hubiera hecho nada todavia. */}
+            <p
+                id={`${id}-error`}
+                className={`ui-picker__msg${error ? ' ui-picker__msg--error' : ''}`}
+                aria-live="polite"
+            >
                 {error ?? hint ?? ''}
             </p>
         </div>

@@ -6,15 +6,15 @@
  *   - evaluador → sólo las que tiene asignadas
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { ClipboardList, Users, AlertTriangle, RefreshCw, Inbox, Plus } from 'lucide-react';
+import { ClipboardList, AlertTriangle, RefreshCw, Inbox, Plus } from 'lucide-react';
 import TernaCard from '../components/TernaCard';
 import NuevaTernaModal from '../components/NuevaTernaModal';
 import { useTernas } from '../hooks/useTernas';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
-import { PageHeader, Button, EmptyState, Skeleton } from '../../../components/ui';
+import { PageHeader, Button, EmptyState, Skeleton, ListCount } from '../../../components/ui';
 import type { EstadoTerna } from '../../../types/api';
 import { routes } from '../../../config/routes';
 import '../styles/ternas.css';
@@ -43,7 +43,7 @@ const TernasSkeleton: React.FC = () => (
 
 const TernasListPage: React.FC = () => {
     const history = useHistory();
-    const { isAdmin, user } = useAuth();
+    const { isAdmin } = useAuth();
     const { toast } = useToast();
     const [filter, setFilter] = useState<FilterValue>('all');
     const [altaAbierta, setAltaAbierta] = useState(false);
@@ -72,13 +72,6 @@ const TernasListPage: React.FC = () => {
     const cargaInicial = loading && ternas.length === 0;
     const refrescando  = loading && ternas.length > 0;
 
-    const counts = useMemo(() => ({
-        total:      ternas.length,
-        pendientes: ternas.filter((t) => t.estado === 'pendiente').length,
-        progreso:   ternas.filter((t) => t.estado === 'en_progreso').length,
-        completas:  ternas.filter((t) => t.estado === 'completada').length,
-    }), [ternas]);
-
     const creada = (numero: number) => {
         setAltaAbierta(false);
         toast.success(`Terna #${numero} creada.`);
@@ -94,8 +87,8 @@ const TernasListPage: React.FC = () => {
                     title="Ternas de Evaluación"
                     subtitle={
                         isAdmin
-                            ? `Estás viendo todas las ternas como administrador (${counts.total}).`
-                            : `Hola ${user?.nombre ?? ''}. Estas son las ternas que tienes asignadas.`
+                            ? 'Paneles de evaluación sobre proyectos ya registrados.'
+                            : 'Las ternas de evaluación que tienes asignadas.'
                     }
                     actions={
                         isAdmin ? (
@@ -119,11 +112,20 @@ const TernasListPage: React.FC = () => {
                             {f.label}
                         </button>
                     ))}
-                    <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                        <Users size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                        {ternas.length} resultado{ternas.length !== 1 ? 's' : ''}
-                    </span>
                 </div>
+
+                {/* Bajo la barra de filtros, en el mismo sitio que en Proyectos,
+                    Reportes y Usuarios. Estaba alineado al final de la propia
+                    barra: adyacente a los controles igual, pero una cuarta
+                    colocación para un mismo elemento en cuatro pantallas.
+
+                    Durante la primera carga se calla. Anunciar «0 ternas» para
+                    corregirlo a «5» un instante después es peor que no decir
+                    nada; al REFRESCAR sí se mantiene, porque entonces la cifra
+                    anterior sigue siendo cierta. */}
+                {!cargaInicial && (
+                    <ListCount showing={ternas.length} noun={['terna', 'ternas']} />
+                )}
 
                 {cargaInicial && <TernasSkeleton />}
 
