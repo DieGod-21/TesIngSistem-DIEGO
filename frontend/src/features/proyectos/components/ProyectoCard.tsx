@@ -30,7 +30,29 @@ const ProyectoCard: React.FC<Props> = ({ proyecto, onOpen, destacado = false }) 
         ref={(el) => {
             // Traerla a la vista si la cuadrícula es larga. `nearest` evita el
             // salto brusco cuando ya estaba visible, que es el caso normal.
-            if (destacado && el) el.scrollIntoView({ block: 'nearest' });
+/*
+             * `center`, y NO `nearest`.
+             *
+             * MEDIDO tras crear, a 390x844: con `nearest` la fila quedaba en
+             * 749..844 —pegada al borde inferior— y el aviso de éxito, que es
+             * `position: fixed` en 756..820, se dibujaba ENCIMA de la fila que
+             * decía haber creado.
+             *
+             * `nearest` desplaza lo mínimo, y lo mínimo es dejarla tocando el
+             * borde. El arreglo evidente —un `scroll-margin-bottom` en la
+             * fila— está PROBADO que no sirve: el motor lo ignora aquí, y
+             * sigue ignorándolo forzado a 300px.
+             *
+             * Con `center` la fila queda en 620..715, con 129px libres por
+             * debajo: fuera del alcance del aviso. Depende de que haya sitio a
+             * donde bajar, y ese sitio lo crea la reserva `--zona-avisos` que
+             * llevan las propias listas (ver `ui.css`); sin ella el recorrido
+             * se agotaba 112px antes y `center` tampoco llegaba.
+             *
+             * Sin movimiento animado: `scrollIntoView` sin `behavior` salta,
+             * así que no hay nada que reducir.
+             */
+            if (destacado && el) el.scrollIntoView({ block: 'center' });
         }}
         /* `ui-scroll-anchor`: reserva el hueco de la cabecera pegajosa para que
            el desplazamiento de arriba no deje la tarjeta debajo de ella. */
@@ -38,7 +60,10 @@ const ProyectoCard: React.FC<Props> = ({ proyecto, onOpen, destacado = false }) 
         onClick={() => onOpen(proyecto.id)}
         aria-label={`Abrir el proyecto «${proyecto.titulo}»`}
     >
-        <h3 className="proy-card__title">{proyecto.titulo}</h3>
+        {/* h2 y no h3: el único encabezado por encima es el h1 de la página, y
+            saltarse un nivel rompe la navegación por encabezados. El tamaño lo
+            manda la clase, no la etiqueta. */}
+        <h2 className="proy-card__title">{proyecto.titulo}</h2>
 
         {/* La ausencia se NOMBRA. Las tarjetas de una fila comparten alto, así
             que un proyecto sin descripción dejaba un vacío entre el título y el

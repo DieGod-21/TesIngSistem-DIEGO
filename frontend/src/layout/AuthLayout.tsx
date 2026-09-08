@@ -22,7 +22,13 @@ interface AuthLayoutProps {
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     return (
         <IonPage>
-            <IonContent scrollY={false} fullscreen>
+            {/*
+              * `role="presentation"` por lo mismo que en `AppShell`: Ionic le
+              * pone `role="main"` a su `ion-content`, y `LoginPage` ya trae su
+              * propio `<main class="auth-screen">` dentro. Dos landmarks
+              * principales en la pantalla de entrada del producto.
+              */}
+            <IonContent role="presentation" scrollY={false} fullscreen>
                 {children}
             </IonContent>
         </IonPage>

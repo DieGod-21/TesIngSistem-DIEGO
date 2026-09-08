@@ -11,6 +11,7 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, useHistory, useLocation } from 'react-router-dom';
+import { prefetchRuta } from '../routes/routeChunks';
 import {
     Home,
     UserPlus,
@@ -260,6 +261,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                             className="dash-sidebar__nav-item"
                             activeClassName="dash-sidebar__nav-item--active"
                             onClick={onClose}
+                            /* Entre que el puntero se posa y llega el clic hay
+                               cientos de milisegundos muertos. Se usan para
+                               traer el módulo, de modo que al pulsar ya esté y
+                               el usuario se ahorre uno de los dos esqueletos
+                               encadenados que se midieron. `onFocus` cubre lo
+                               mismo para quien navega con el teclado. */
+                            onMouseEnter={() => prefetchRuta(item.to)}
+                            onFocus={() => prefetchRuta(item.to)}
                         >
                             {item.icon}
                             <span>{item.label}</span>

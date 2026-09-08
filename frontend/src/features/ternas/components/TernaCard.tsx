@@ -19,7 +19,8 @@ const TernaCard: React.FC<Props> = ({ terna, onSelect, destacado = false }) => {
     return (
         <button
             type="button"
-            ref={(el) => { if (destacado && el) el.scrollIntoView({ block: 'nearest' }); }}
+            /* `center` y no `nearest`: ver la medición en `ProyectoCard`. */
+            ref={(el) => { if (destacado && el) el.scrollIntoView({ block: 'center' }); }}
             /* `ui-scroll-anchor`: la cabecera es pegajosa y, si la terna recién
                creada queda por encima de la ventana, «lo más cercano» es el
                borde de arriba, o sea debajo de la cabecera. */
@@ -34,7 +35,8 @@ const TernaCard: React.FC<Props> = ({ terna, onSelect, destacado = false }) => {
                 </Badge>
             </div>
 
-            <h3 className="terna-card__title">{terna.titulo || 'Sin título'}</h3>
+            {/* h2 y no h3: ver la nota en `ProyectoCard`. */}
+            <h2 className="terna-card__title">{terna.titulo || 'Sin título'}</h2>
 
             <p className="terna-card__student">
                 {terna.estudiante_nombre}

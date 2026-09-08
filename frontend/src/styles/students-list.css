@@ -261,7 +261,6 @@
     .sl-listbar__utils { justify-content: space-between; }
 
     /* Objetivos táctiles cómodos (~44px) cuando la tabla se opera con el dedo. */
-    .sl-pager__btn { width: 40px; height: 40px; }
 
     /* Columna de identidad congelada: el nombre permanece visible al desplazar
        la tabla en horizontal; la sombra derecha señala que hay más contenido. */
@@ -388,5 +387,29 @@
     .ui-avatar {
         animation: none;
         transition: none;
+    }
+}
+
+/* ── Objetivo táctil de la paginación ─────────────────────────────────
+ *
+ * Aquí arriba, dentro de la consulta de 640px, vivía
+ * `.sl-pager__btn { width: 40px; height: 40px; }`. La intención era la
+ * correcta y NO SE CUMPLÍA: la regla base se declara más abajo con la misma
+ * especificidad y, a igualdad, gana la última. MEDIDO a 390x844 con puntero
+ * grueso emulado: 32x32, el valor base, no los 40 que se pedían.
+ *
+ * Son CUATRO botones contiguos —primera, anterior, siguiente, última— y es el
+ * peor caso para un dedo: fallar no lleva a no pasar nada, lleva a saltar al
+ * final del padrón.
+ *
+ * Se decide por capacidad del dispositivo y no por ancho de ventana, que es el
+ * criterio que ya sigue el resto del sistema (ver el bloque equivalente en
+ * `ui.css`): una tableta con puntero grueso a 1024px necesita el objetivo
+ * grande igual que un teléfono. Con ratón no cambia un píxel.
+ */
+@media (pointer: coarse) {
+    .sl-pager__btn {
+        width: var(--control-h-lg);
+        height: var(--control-h-lg);
     }
 }

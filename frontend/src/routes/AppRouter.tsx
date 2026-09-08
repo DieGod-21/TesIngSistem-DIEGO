@@ -28,23 +28,30 @@ import { Skeleton } from '../components/ui';
 // el primer render probable en cada estado y no deben esperar un chunk.
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
+import { CHUNKS } from './routeChunks';
 
 // ─── Rutas diferidas (code-splitting por ruta) ────────────────────────
 // Páginas secundarias, de detalle y administrativas: se dividen en chunks
 // propios y se cargan bajo demanda, fuera del bundle inicial. El AppShell
 // (sidebar + header) permanece montado; solo el área de contenido espera.
-const StudentNewPage    = lazy(() => import('../pages/StudentNewPage'));
-const StudentsListPage  = lazy(() => import('../pages/StudentsListPage'));
+// Los destinos de la barra lateral toman su cargador de `routeChunks`, que es
+// el mismo que usa la precarga al posar el puntero: así una sola descarga sirve
+// para las dos cosas y las dos listas no pueden separarse.
+const StudentNewPage    = lazy(CHUNKS['/students/new']);
+const StudentsListPage  = lazy(CHUNKS['/students']);
+const TernasListPage    = lazy(CHUNKS['/ternas']);
+const ReportesPage      = lazy(CHUNKS['/reports']);
+const ProyectosListPage = lazy(CHUNKS['/proyectos']);
+const UsuariosPage      = lazy(CHUNKS['/usuarios']);
+
+// Rutas de detalle: no cuelgan de la barra lateral, así que no hay gesto
+// previo del que colgar una precarga. Se quedan como estaban.
 const StudentDetailPage = lazy(() => import('../pages/StudentDetailPage'));
-const TernasListPage    = lazy(() => import('../features/ternas/pages/TernasListPage'));
 const TernaDetailPage   = lazy(() => import('../features/ternas/pages/TernaDetailPage'));
-const ReportesPage      = lazy(() => import('../features/reportes/pages/ReportesPage'));
 const ReportDetailPage  = lazy(() => import('../features/reportes/pages/ReportDetailPage'));
-const ProyectosListPage  = lazy(() => import('../features/proyectos/pages/ProyectosListPage'));
 const MisProyectosPage   = lazy(() => import('../features/evaluator/pages/MisProyectosPage'));
 const MisTernasPage      = lazy(() => import('../features/evaluator/pages/MisTernasPage'));
 const ProyectoDetailPage = lazy(() => import('../features/proyectos/pages/ProyectoDetailPage'));
-const UsuariosPage      = lazy(() => import('../features/usuarios/pages/UsuariosPage'));
 
 // ─── Spinner compartido ───────────────────────────────────────────────
 const Spinner: React.FC = () => (
