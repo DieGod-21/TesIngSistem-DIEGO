@@ -214,7 +214,7 @@ const NuevoProyectoModal: React.FC<Props> = ({ open, onClose, onCreated, carnets
                     </div>
 
                     {apiError && (
-                        <Alert tone="danger">{apiError}</Alert>
+                        <Alert tone="danger" autoFocus>{apiError}</Alert>
                     )}
 
                     <footer className="ui-modal__footer">

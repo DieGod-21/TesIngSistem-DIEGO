@@ -133,6 +133,18 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
     const listboxId = 'th-search-listbox';
 
     /*
+     * El listbox solo EXISTE cuando hay sugerencias que poner en él: mientras
+     * se busca, y cuando no hay coincidencias, el panel enseña un texto de
+     * estado y ninguna lista.
+     *
+     * `aria-controls` apuntaba igualmente al identificador, así que en todas
+     * las pantallas del producto había una referencia a un elemento
+     * inexistente —MEDIDO: las seis—. Un IDREF colgado no es inofensivo: el
+     * lector de pantalla anuncia un control que no puede alcanzar.
+     */
+    const hayListbox = panelOpen && !loading && suggestions.length > 0;
+
+    /*
      * Anuncio conciso para lectores de pantalla. Un solo mensaje de estado
      * (aria-live="polite") evita que se relea toda la lista en cada tecla:
      * comunica cuántas coincidencias hay y cómo navegarlas.
@@ -222,7 +234,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuToggle }) => {
                     aria-label="Ir a un estudiante"
                     role="combobox"
                     aria-expanded={panelOpen}
-                    aria-controls={listboxId}
+                    aria-controls={hayListbox ? listboxId : undefined}
                     aria-autocomplete="list"
                     aria-activedescendant={activeIndex >= 0 ? `th-sug-${activeIndex}` : undefined}
                     autoComplete="off"

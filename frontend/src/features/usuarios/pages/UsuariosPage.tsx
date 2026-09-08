@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Users, UserPlus, AlertTriangle, RefreshCw, Search } from 'lucide-react';
-import { listUsuarios } from '../../../services/usuariosService';
+import { listUsuariosCached, USUARIOS_LIST_KEY } from '../../../services/usuariosService';
+import { getCached } from '../../../services/cache';
 import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import type { Usuario } from '../../../types/api';
@@ -42,7 +43,14 @@ const UsuariosSkeleton: React.FC = () => (
 
 const UsuariosPage: React.FC = () => {
     const { toast } = useToast();
-    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+    /*
+     * Volver a Usuarios no es abrirlo por primera vez: se sirve lo ya conocido
+     * en el primer render y se revalida detrás. Ver la nota extensa en
+     * `ProyectosListPage`, que documenta la medición.
+     */
+    const [usuarios, setUsuarios] = useState<Usuario[]>(
+        () => getCached<Usuario[]>(USUARIOS_LIST_KEY) ?? [],
+    );
     const [loading, setLoading]   = useState(true);
     const [error, setError]       = useState<string | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -60,7 +68,7 @@ const UsuariosPage: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await listUsuarios(undefined, { signal });
+            const data = await listUsuariosCached();
             if (signal?.aborted) return;
             setUsuarios(data);
         } catch (e) {
@@ -240,7 +248,8 @@ const UsuariosPage: React.FC = () => {
                                     ref={(el) => {
                                         // `nearest`: si ya está a la vista no se
                                         // mueve nada, que es el caso normal.
-                                        if (u.id === recienCreado && el) el.scrollIntoView({ block: 'nearest' });
+                                        /* `center` y no `nearest`: ver la medición en `ProyectoCard`. */
+                                        if (u.id === recienCreado && el) el.scrollIntoView({ block: 'center' });
                                     }}
                                 >
                                     <Avatar

@@ -25,6 +25,65 @@
     border: 0;
 }
 
+/* ── Saltar al contenido ──────────────────────────────────────────────
+ *
+ * WCAG 2.4.1 «Evitar bloques», nivel A: si un bloque se repite en todas las
+ * pantallas, tiene que haber forma de saltárselo.
+ *
+ * MEDIDO en el padrón: desde el principio del documento hay OCHO destinos de
+ * la barra lateral más el buscador global y el conmutador de tema antes de
+ * llegar a la primera parada de la página. Diez tabuladores, en cada carga,
+ * para empezar a trabajar.
+ *
+ * (Al navegar DENTRO de la aplicación el foco se queda en el enlace pulsado y
+ * no se vuelve al principio —comprobado—, así que esto es para quien entra por
+ * una URL directa o recarga; que es exactamente el caso que 2.4.1 cubre.)
+ *
+ * Invisible hasta que se enfoca: no ocupa sitio ni aparece con el ratón, y en
+ * cuanto el teclado lo alcanza se muestra como cualquier otro control. */
+.ui-skip-link {
+    position: absolute;
+    left: var(--space-8);
+    top: var(--space-8);
+    z-index: 10000;
+    /* Mismo suelo que el resto de controles del producto: es un control, no
+       una nota. Con el padding solo quedaba en 39px. */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h-lg);
+    padding: var(--space-10) var(--space-16);
+    border-radius: var(--radius-md);
+    background: var(--surface-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    text-decoration: none;
+    /* Se aparta con `transform`, no con `top`.
+       El desplazamiento vive en la capa de composición y no toca la
+       maquetación; la regla de arquitectura que lo exige lo comprueba, y con
+       `top` la prueba falla. Aquí además es lo más simple: la posición en
+       reposo es «yo entero, más el aire de arriba, hacia arriba». */
+    transform: translateY(calc(-100% - var(--space-24)));
+    transition: transform var(--transition-base);
+}
+
+/* `:focus` y no `:focus-visible`.
+ *
+ * En reposo el enlace está FUERA de la pantalla, así que no hay forma de
+ * enfocarlo con el ratón y el motivo habitual para preferir `:focus-visible`
+ * —no encender el anillo al hacer clic— aquí no existe. A cambio, `:focus`
+ * responde también al foco puesto por programa, que es como llega en las
+ * pruebas y como podría llegar desde una extensión de accesibilidad. */
+.ui-skip-link:focus {
+    transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-skip-link { transition: none; }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    BUTTON
 ═══════════════════════════════════════════════════════════════════ */
@@ -201,14 +260,25 @@
    tableta con puntero grueso a 1024px necesita el objetivo grande, y un
    portátil estrecho con ratón no.
 
-   Solo crecen los botones de ICONO, que son los que se quedaban cortos
-   (32px). Los botones con texto ya llegan por su propio padding —medido:
-   214 controles del producto están en 44px o más—, así que subirlos en
-   bloque solo habría inflado las barras densas sin ganar nada. */
+   Aquí decía que los botones con texto ya llegaban solos por su padding.
+   NO llegan: `.ui-btn` DECLARA `min-height: var(--control-h-md)`, que son
+   36px, y el padding no puede superar un mínimo declarado. MEDIDO a 390px,
+   «Nuevo Usuario» —la acción primaria de Administración— daba 36px de alto.
+
+   Y deja al producto en contra de sí mismo: los campos de formulario
+   (`.ui-control`, `.ui-select`) ya están en 44px. Con el dedo, el control
+   que se rellena era mayor que el botón que lo envía.
+
+   Solo con puntero grueso: con ratón, 36px es un objetivo cómodo y las
+   barras densas se quedan como están. */
 @media (pointer: coarse) {
     .ui-icon-btn {
         width: var(--control-h-lg);
         height: var(--control-h-lg);
+    }
+
+    .ui-btn {
+        min-height: var(--control-h-lg);
     }
 }
 
@@ -1267,6 +1337,21 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     gap: var(--space-14);
 }
 
+/* En móvil el resumen no puede costar una pantalla.
+ *
+ * MEDIDO a 390×844: la primera fila de Usuarios empezaba en y=808 —el borde
+ * inferior de la ventana— porque las tarjetas se apilaban en columna y se
+ * comían 232px. Proyectos y Ternas ponen su primer elemento en y≈478. El
+ * resumen es orientación; el listado es el trabajo, y estaba debajo de todo.
+ *
+ * En una sola fila, con la cifra al lado del rótulo en vez de debajo. Se
+ * conserva todo el texto: no se esconde nada por ser pequeño. */
+@media (max-width: 640px) {
+    .ui-stat-grid { grid-template-columns: 1fr 1fr; gap: var(--space-10); }
+    .ui-stat { padding: var(--space-12) var(--space-14); gap: var(--space-2); }
+    .ui-stat__value { font-size: var(--text-2xl); }
+}
+
 .ui-stat {
     display: flex;
     flex-direction: column;
@@ -1383,7 +1468,44 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
    no la tenían.
 ═══════════════════════════════════════════════════════════════════ */
 
+/*
+ * Solo el hueco de la cabecera pegajosa.
+ *
+ * Aquí llegó a haber también un `scroll-margin-bottom` para apartar del aviso
+ * la fila recién creada. Se quitó porque NO HACE NADA: MEDIDO, el motor lo
+ * ignora en este scroller con `block: 'nearest'` y con `block: 'end'`, y sigue
+ * ignorándolo forzado a 300px —la fila no se movió un píxel en ninguno de los
+ * tres casos—. Se destapa cambiando la alineación, no el margen; ver el
+ * comentario de `ProyectoCard`.
+ */
 .ui-scroll-anchor { scroll-margin-top: var(--space-96); }
+
+/*
+ * DÓNDE va la reserva, y por qué en las listas y no en la página.
+ *
+ * El envoltorio de página alarga el recorrido, sí, pero se lo alarga a TODAS:
+ * MEDIDO, la pantalla de «ningún usuario coincide», que no tiene nada que
+ * desplazar, pasaba a desplazar 115px. Una barra de scroll para enseñar un
+ * hueco vacío.
+ *
+ * Va, entonces, en las propias listas. Una lista corta no llega al borde
+ * inferior y el hueco se queda dentro de lo que ya sobraba; una larga es
+ * justamente la que necesita sitio bajo su última fila. Y donde no hay lista
+ * —un estado vacío, un error— no hay nada que reservar.
+ *
+ * NOTA HISTÓRICA. Aquí se intentó antes pedirle el hueco al `ion-content` con
+ * `--padding-bottom`, y se aplicaba sin mover `scrollHeight` ni un píxel. La
+ * causa no era este mecanismo sino un defecto del armazón: `.dash-main` no
+ * contenía su propio contenido, así que el hueco aterrizaba en mitad de la
+ * lista. Ese defecto ya está corregido —ver `flex-shrink: 0` en
+ * `.dash-layout`— y hoy aquel camino funcionaría; se mantiene este porque
+ * sigue siendo el que no cobra scroll a las pantallas sin lista.
+ */
+.usr-list,
+.proy-grid,
+.ternas-grid {
+    padding-bottom: var(--zona-avisos);
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    EMPTY STATE

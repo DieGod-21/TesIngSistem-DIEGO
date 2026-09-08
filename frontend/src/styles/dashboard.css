@@ -42,6 +42,36 @@
     /* IonContent detecta la altura real y habilita el scroll */
     height: auto;
     min-height: 100%;
+    /*
+     * NO ENCOGER. Una línea, y sostiene la cabecera pegajosa entera.
+     *
+     * El `.inner-scroll` de Ionic es un flex de COLUMNA, así que este
+     * contenedor es un ítem suyo y su eje PRINCIPAL es el vertical. Con el
+     * `flex-shrink: 1` de fábrica, el ítem se encoge hasta caber en el
+     * scrollport y su caja deja de contener lo que lleva dentro.
+     *
+     * MEDIDO en el padrón, 1280x800: `.dash-layout` y `.dash-main` valían
+     * 764px mientras el contenido del scroller llegaba a 3516.
+     *
+     * Y eso SÍ se ve. La cabecera es `position: sticky`, y un elemento pegado
+     * solo puede pegarse dentro de la caja de su contenedor: pasados esos
+     * 764px se despegaba y se iba con el resto del desplazamiento. MEDIDO,
+     * altura de la cabecera respecto a la ventana al 0 %, 50 % y 100 % del
+     * recorrido:
+     *
+     *     antes    top = 0, -671, -2029      (desaparece)
+     *     despues  top = 0,    0,     0      (se queda)
+     *
+     * Es decir: en cualquier pantalla larga —el padrón, reportes— se perdían
+     * el buscador global, el conmutador de tema, el perfil y el contexto de la
+     * página durante todo el resto del desplazamiento. La intención contraria
+     * está escrita unas líneas más abajo, en el comentario de la cabecera: «la
+     * lista pasa POR DEBAJO de ella al desplazarse».
+     *
+     * `align-self` no sirve aquí —opera sobre el eje transversal, que en una
+     * columna es el horizontal— y se comprobó que no cambia nada.
+     */
+    flex-shrink: 0;
     /* 100% del viewport de IonContent, no 100vh */
     background-color: var(--dash-bg);
     /* Atmósfera institucional: luz ambiental continua tras TODO el contenido
@@ -1099,7 +1129,61 @@
     .dash-sidebar-overlay,
     .dash-sidebar--open ~ .dash-main .dash-sidebar-overlay,
     .dash-sidebar--open .dash-sidebar__nav-item { animation: none; }
+
+    /*
+     * El CAJÓN, no solo lo que lleva dentro.
+     *
+     * Aquí se apagaba la cascada de los enlaces y se dejaba encendido el
+     * desplazamiento del panel que los contiene, que es el movimiento MÁS
+     * grande del producto. MEDIDO a 390x844 con la preferencia activa:
+     *
+     *     .dash-sidebar  transition-duration = 0.28s   (sin cambio)
+     *     .dash-sidebar__nav-item  animation = none    (ya neutralizado)
+     *
+     * Son 256px de barrido sobre una ventana de 390 —dos tercios de la
+     * pantalla— durante 280ms. Justo el tipo de movimiento por el que existe
+     * esta preferencia; la animación decorativa de los enlaces, en cambio, es
+     * la que menos importaba. El cajón sigue abriéndose y cerrándose igual:
+     * lo único que desaparece es el trayecto.
+     */
+    .dash-sidebar { transition: none; }
 }
+/* ── Objetivo táctil de los controles de la cabecera ──────────────────
+ *
+ * MEDIDO a 390x844 con `pointer: coarse` emulado de verdad en Chrome (no
+ * inferido de la hoja de estilos):
+ *
+ *     .dash-header__menu-btn      32 x 32
+ *     .dash-header__theme-toggle  38 x 34
+ *
+ * El primero es el botón de menú: en móvil la barra lateral está fuera de
+ * pantalla y ESE botón es el único camino a la navegación, en todas las
+ * pantallas del producto. Estaba en 32px, doce por debajo del objetivo que el
+ * resto del sistema ya cumple —los campos de formulario y, desde hace un
+ * sprint, los botones de texto—.
+ *
+ * No los alcanzaba la regla que ya existía para puntero grueso en `ui.css`
+ * porque esa apunta a `.ui-icon-btn`, y estos dos son controles propios de la
+ * cabecera con sus propias clases.
+ *
+ * Va al final del archivo a propósito: las consultas de ancho de más arriba
+ * declaran `.dash-header__menu-btn` y, a igualdad de especificidad, gana la
+ * última. Es la misma lección que ya documenta el bloque de movimiento
+ * reducido de unas líneas más arriba.
+ *
+ * Solo con puntero grueso: con ratón, 32px es un objetivo cómodo y la
+ * cabecera no necesita crecer. */
+@media (pointer: coarse) {
+    .dash-header__menu-btn,
+    .dash-header__theme-toggle {
+        min-width: var(--control-h-lg);
+        min-height: var(--control-h-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
 /* Marca del espacio de trabajo en la cabecera del evaluador, donde el
    coordinador tiene el buscador del padrón. Ocupa el mismo hueco flexible
    para que los controles de la derecha no se desplacen entre roles. */

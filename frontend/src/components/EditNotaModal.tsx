@@ -193,7 +193,7 @@ const EditNotaModal: React.FC<Props> = ({
                     </div>
 
                     {apiError && (
-                        <Alert tone="danger">{apiError}</Alert>
+                        <Alert tone="danger" autoFocus>{apiError}</Alert>
                     )}
 
                     <footer className="ui-modal__footer">

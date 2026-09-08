@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { FolderOpen, FolderPlus, Plus, AlertTriangle, RefreshCw, Search, SearchX } from 'lucide-react';
-import { listProyectos } from '../../../services/proyectosService';
+import { listProyectosCached, PROYECTOS_LIST_KEY } from '../../../services/proyectosService';
+import { getCached } from '../../../services/cache';
 import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import { matchesText } from '../../../utils/text';
@@ -42,7 +43,26 @@ const ProyectosListPage: React.FC = () => {
     const history = useHistory();
     const location = useLocation();
 
-    const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+/*
+ * VOLVER A UN MÓDULO NO ES ABRIRLO POR PRIMERA VEZ.
+ *
+ * MEDIDO saliendo a Usuarios y regresando dos segundos después:
+ *
+ *     contenido@48 -> ESQUELETO@94 -> contenido@228
+ *
+ * El módulo tiraba lo que ya se estaba viendo, ponía el esqueleto 134ms y
+ * volvía a pintar EXACTAMENTE la misma lista. El componente se desmonta al
+ * navegar, así que arrancaba de cero aunque el dato siguiera fresco.
+ *
+ * La caché del servicio ya existía y ya se invalidaba en cada escritura; solo
+ * faltaba leerla. `getCached` es SÍNCRONO: sirve de valor inicial, así que la
+ * lista se pinta en el primer render y no hay hueco donde quepa un esqueleto.
+ * Si venció el TTL devuelve `undefined` y se ve el esqueleto, que es lo
+ * correcto: no se presenta como actual algo que ya no sabemos si lo es.
+ */
+    const [proyectos, setProyectos] = useState<Proyecto[]>(
+        () => getCached<Proyecto[]>(PROYECTOS_LIST_KEY) ?? [],
+    );
     const [loading, setLoading]     = useState(true);
     const [error, setError]         = useState<string | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -91,7 +111,7 @@ const ProyectosListPage: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await listProyectos({}, { signal });
+            const data = await listProyectosCached();
             if (signal?.aborted) return;
             setProyectos(data);
         } catch (e) {

@@ -187,7 +187,7 @@ const EditarEstudianteModal: React.FC<Props> = ({ open, estudiante, onClose, onS
                         />
                     </div>
 
-                    {apiError && <Alert tone="danger">{apiError}</Alert>}
+                    {apiError && <Alert tone="danger" autoFocus>{apiError}</Alert>}
 
                     <footer className="ui-modal__footer">
                         <Button variant="secondary" onClick={cerrar} disabled={guardando}>

@@ -9,7 +9,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { BarChart3, Search, RefreshCw, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
-import { getGlobalTernasReport } from '../../../services/reportesService';
+import {
+    getGlobalTernasReportCached,
+    invalidateReportes,
+    REPORTES_TERNAS_GLOBAL_KEY,
+} from '../../../services/reportesService';
+import { getCached } from '../../../services/cache';
 import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
@@ -37,17 +42,34 @@ const FILTERS: { value: Filter; label: string }[] = [
 const ReportesPage: React.FC = () => {
     const { capabilities } = useAuth();
     const history = useHistory();
-    const [data, setData] = useState<ReporteTernasGlobal | null>(null);
+    /*
+     * Volver al reporte no es abrirlo por primera vez: se sirve lo ya conocido
+     * en el primer render y se revalida detrás. Ver la nota extensa en
+     * `ProyectosListPage`, que documenta la medición.
+     */
+    const [data, setData] = useState<ReporteTernasGlobal | null>(
+        () => getCached<ReporteTernasGlobal>(REPORTES_TERNAS_GLOBAL_KEY) ?? null,
+    );
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<Filter>('all');
     const [query, setQuery] = useState('');
 
-    const load = async (signal?: AbortSignal) => {
+    /*
+     * `forzar` distingue las dos maneras de llegar aqui.
+     *
+     * Entrar en la pantalla acepta lo cacheado: es justo lo que evita el
+     * esqueleto al volver. Pero «Refrescar» es una peticion EXPLICITA de datos
+     * nuevos, y devolverle lo mismo que ya tenia —sin tocar la red— convertiria
+     * el boton en un adorno. Se invalida primero para que la lectura vuelva
+     * al origen; el TTL manda en el primer caso y el usuario en el segundo.
+     */
+    const load = async (signal?: AbortSignal, forzar = false) => {
         setLoading(true);
         setError(null);
         try {
-            const report = await getGlobalTernasReport({ signal });
+            if (forzar) invalidateReportes();
+            const report = await getGlobalTernasReportCached();
             if (signal?.aborted) return;
             setData(report);
         } catch (e) {
@@ -168,7 +190,7 @@ const ReportesPage: React.FC = () => {
                     </div>
                     <Button
                         variant="secondary"
-                        onClick={() => load()}
+                        onClick={() => load(undefined, true)}
                         loading={refrescando}
                         aria-label="Refrescar reporte"
                     >
@@ -185,7 +207,7 @@ const ReportesPage: React.FC = () => {
                         title="No se pudo cargar el reporte"
                         description={error}
                         action={
-                            <Button variant="secondary" onClick={() => load()}>
+                            <Button variant="secondary" onClick={() => load(undefined, true)}>
                                 <RefreshCw size={16} aria-hidden="true" /> Reintentar
                             </Button>
                         }

@@ -372,6 +372,33 @@
     --space-48:  3rem;       /* 48px */
     --space-96:  6rem;       /* 96px — respiro de portada (login) */
 
+    /*
+     * LA FRANJA QUE SE COBRAN LOS AVISOS.
+     *
+     * El aviso de éxito es `position: fixed` en la esquina inferior. MEDIDO
+     * tras crear un usuario, en las dos anchuras:
+     *
+     *     escritorio  fila nueva top=705 bottom=800 · aviso top=712  → la tapa
+     *     móvil       fila nueva top=749 bottom=844 · aviso top=756  → la tapa
+     *
+     * El aviso se dibujaba ENCIMA de la fila que decía haber creado. La causa
+     * no era `scrollIntoView`, que hacía su trabajo: `block: 'nearest'` mueve
+     * lo mínimo, y lo mínimo dejaba la fila justo tocando el borde inferior.
+     * Debajo de la última fila no había NADA a donde seguir bajando —quedaban
+     * 17px de recorrido en móvil y 33px en escritorio, y hacían falta ~100—,
+     * así que ningún margen de desplazamiento podía apartarla: primero hay que
+     * crear el sitio.
+     *
+     * No es un número inventado: es la suma de lo que el propio aviso ocupa.
+     * `--space-24` es su separación del borde (la declara `.toast-container`),
+     * 4rem es el alto medido de un aviso de una línea (64px), y el segundo
+     * `--space-24` es la holgura para que la fila no quede pegada a él.
+     *
+     * Sirve además a algo más general: una lista cuya última fila termina a ras
+     * del borde de la ventana siempre parece cortada.
+     */
+    --zona-avisos: calc(var(--space-24) + 4rem + var(--space-24));
+
     /* ── Interlineado ────────────────────────────────────────────────────
        Cinco pasos frente a quince valores. La mitad de la deriva eran
        vecinos indistinguibles: 1 / 1.05 / 1.06 / 1.1 son la misma decisión
@@ -401,6 +428,37 @@
     --toast-warning-bg:     oklch(0.975 0.035 85);
     --toast-warning-border: oklch(0.840 0.120 80);
     --toast-warning-text:   oklch(0.450 0.110 65);
+
+    /* ── Puente con Ionic ────────────────────────────────────────────────
+     *
+     * Ionic no lee los tokens de este sistema: lee los suyos. Estas variables
+     * son el puente, y SOLO estaban declaradas en el bloque oscuro. El tema
+     * claro —que es el de partida— se quedaba sin puente y Ionic caía en sus
+     * valores de fábrica.
+     *
+     * MEDIDO recorriendo el texto visible de cada pantalla y comparando el
+     * color calculado con la paleta:
+     *
+     *     /reports  tema claro   10 elementos en NEGRO PURO rgb(0,0,0)
+     *     /reports  tema oscuro   0
+     *
+     * Los nombres de estudiante y los títulos de proyecto de la tabla de
+     * reportes —la pantalla más densa del producto— se pintaban en el negro
+     * de fábrica del navegador en vez de en `--text-primary`, que es un
+     * casi-negro con una pizca de índigo. En oscuro salían bien, y solo
+     * porque el puente existía ahí. No era una decisión de diseño: era la
+     * mitad clara de una tabla sin rellenar.
+     *
+     * `body` heredaba además un `color` blanco, invisible sobre fondo claro
+     * para cualquier texto que no declare el suyo.
+     */
+    --ion-background-color:     var(--surface-base);
+    --ion-background-color-rgb: 243, 242, 247;
+    --ion-text-color:           var(--text-primary);
+    --ion-text-color-rgb:       74, 72, 88;
+    --ion-item-background:      var(--surface-card);
+    --ion-toolbar-background:   var(--surface-card);
+    --ion-border-color:         var(--border);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

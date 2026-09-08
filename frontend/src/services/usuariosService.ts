@@ -7,6 +7,7 @@
 import { apiGet, apiPost } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 import { unwrapEntity, unwrapCollection } from './normalize';
+import { cached, invalidate } from './cache';
 import type { Usuario, RolUsuario } from '../types/api';
 
 export interface CreateUsuarioDto {
@@ -36,6 +37,25 @@ export async function listUsuarios(rol?: RolUsuario, opts: { signal?: AbortSigna
     return unwrapCollection<Usuario>(data, ['usuarios'], url);
 }
 
+// ─── Listado cacheado (el servicio POSEE su caché) ───────────────────
+// Mismo reparto que en proyectos, ternas y reportes: el servicio guarda su
+// listado y lo invalida él mismo tras cada escritura. Usuarios era el único
+// módulo de listado que no lo tenía, y por eso volver a él siempre costaba una
+// petición y un esqueleto.
+
+export const USUARIOS_CACHE_PREFIX = 'usuarios';
+export const USUARIOS_LIST_KEY = 'usuarios:list';
+
+/** Listado completo de usuarios (sin filtro de rol), cacheado + deduplicado. */
+export function listUsuariosCached(): Promise<Usuario[]> {
+    return cached(USUARIOS_LIST_KEY, () => listUsuarios());
+}
+
+/** Invalida el listado de usuarios tras un alta. */
+export function invalidateUsuarios(): void {
+    invalidate(USUARIOS_CACHE_PREFIX);
+}
+
 export async function createUsuario(dto: CreateUsuarioDto): Promise<Usuario> {
     /*
      * MISMA MENTIRA DE TIPO QUE YA TUVO `createProyecto`.
@@ -51,5 +71,8 @@ export async function createUsuario(dto: CreateUsuarioDto): Promise<Usuario> {
      * descubrió en proyectos.
      */
     const raw = await apiPost<{ usuario: Usuario } | Usuario>(API_PATHS.usuarios.list, dto);
+    // El listado que acabamos de dejar obsoleto: la siguiente lectura vuelve al
+    // origen en vez de servir una lista sin el recién creado.
+    invalidateUsuarios();
     return unwrapEntity<Usuario>(raw, 'usuario', API_PATHS.usuarios.list);
 }

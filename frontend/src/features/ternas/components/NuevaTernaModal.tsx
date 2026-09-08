@@ -363,7 +363,7 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         Una vez creada, la terna no puede eliminarse desde el sistema.
                     </p>
 
-                    {apiError && <Alert tone="danger" role="alert">{apiError}</Alert>}
+                    {apiError && <Alert tone="danger" role="alert" autoFocus>{apiError}</Alert>}
 
                     <footer className="ui-modal__footer">
                         <Button variant="secondary" onClick={cerrar} disabled={enviando}>
