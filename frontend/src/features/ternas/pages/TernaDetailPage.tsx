@@ -49,6 +49,32 @@ const TernaDetailPage: React.FC = () => {
     // cruzados, pero las tres entidades sí llevan el carné.
     const enlaces = useEntityLinks(terna?.carnet, ['estudiante', 'proyecto']);
 
+    /*
+     * CARGAR POR PRIMERA VEZ Y RECARGAR NO SON LO MISMO.
+     *
+     * Los cuatro listados del producto ya distinguian las dos cosas; esta
+     * pantalla, no: cualquier `reload()` ponia `loading` y el `{loading && …}`
+     * de abajo DESMONTABA la pagina entera —formulario de evaluacion incluido—
+     * para volver a montarla despues.
+     *
+     * Y `reload` es justo lo que se llama tras guardar un borrador o enviar una
+     * evaluacion, que es el trabajo entero del evaluador. MEDIDO con teclado,
+     * fotograma a fotograma, tras pulsar «Guardar borrador»:
+     *
+     *     @3f  foco en el boton, que se deshabilita
+     *     @4f  foco en BODY               (deshabilitar lo tira al documento)
+     *     @19f el boton YA NO EXISTE      (la pagina se desmonto)
+     *     @49f vuelve, pero es otro elemento
+     *
+     * Con la pagina desmontandose no hay forma de devolver el foco: la
+     * referencia apunta a un nodo desechado y el estado del componente se
+     * pierde con el. Conservar lo que ya esta pintado arregla las dos cosas a
+     * la vez —el parpadeo y el foco— y es ademas el patron que el resto del
+     * producto ya sigue.
+     */
+    const cargaInicial = loading && !terna;
+    const refrescando  = loading && !!terna;
+
     return (
         <div className="ternas-page">
                 <Button
@@ -60,7 +86,7 @@ const TernaDetailPage: React.FC = () => {
                     Volver a Ternas
                 </Button>
 
-                {loading && <TernaDetailSkeleton />}
+                {cargaInicial && <TernaDetailSkeleton />}
                 {!loading && error && (
                     <EmptyState
                         tone="danger"
@@ -74,7 +100,7 @@ const TernaDetailPage: React.FC = () => {
                         }
                     />
                 )}
-                {!loading && !error && !terna && (
+                {!cargaInicial && !error && !terna && (
                     <EmptyState
                         icon={<FileText size={26} />}
                         title="Terna no encontrada"
@@ -82,8 +108,19 @@ const TernaDetailPage: React.FC = () => {
                     />
                 )}
 
-                {!loading && !error && terna && (
-                    <>
+                {/* `ui-refrescando` atenua con retardo: una respuesta rapida
+                    —la norma— no produce ni un parpadeo.
+
+                    `terna-detail-body` NO es decoracion: antes esto era un
+                    fragmento y sus hijos eran hijos flex de `.ternas-page`,
+                    que aporta `gap: var(--content-gap)`. Al envolverlos, esa
+                    separacion se perdia (MEDIDO: 56px -> 32px). La clase
+                    repone el mismo contexto flex con el mismo token. */}
+                {!cargaInicial && !error && terna && (
+                    <div
+                        className={`terna-detail-body${refrescando ? ' ui-refrescando' : ''}`}
+                        aria-busy={refrescando || undefined}
+                    >
                         <PageHeader
                             kicker="Evaluación"
                             icon={<ClipboardList size={22} />}
@@ -192,7 +229,7 @@ const TernaDetailPage: React.FC = () => {
                                 </article>
                             </section>
                         </div>
-                    </>
+                    </div>
                 )}
         </div>
     );

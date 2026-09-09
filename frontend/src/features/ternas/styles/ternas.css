@@ -126,6 +126,20 @@
 }
 
 /* Detail */
+
+/* El cuerpo del detalle va envuelto para poder atenuarlo al refrescar
+   (`ui-refrescando` + `aria-busy`). Ese envoltorio sacaba a sus hijos del flex
+   de `.ternas-page`, que es quien aporta el ritmo vertical entre secciones:
+   la separacion cabecera->rejilla caia de 56px a 32px. Se repone el mismo
+   contexto con el mismo token, no con un valor nuevo.
+   (`display: contents` lo arreglaria tambien, pero anula la opacidad de
+   `.ui-refrescando`, que es justo para lo que existe el envoltorio.) */
+.terna-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--content-gap);
+}
+
 .terna-detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);

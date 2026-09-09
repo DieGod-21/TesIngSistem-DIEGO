@@ -31,7 +31,7 @@
  * verdad la tiene el servidor y conservar una copia solo puede divergir.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Save, Send, Lock, RotateCw, PencilLine } from 'lucide-react';
 import { saveDraft, submitEvaluation, reopenEvaluation } from '../../../services/ternasService';
 import { useAuth } from '../../../context/AuthContext';
@@ -102,6 +102,73 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
     const [pending, setPending] = useState<PendingAction>(null);
     const [scoreError, setScoreError] = useState<string | null>(null);
 
+    /*
+     * A DONDE VA EL FOCO CUANDO TERMINA UNA ACCION.
+     *
+     * Los dos botones se deshabilitan mientras dura la peticion
+     * (`disabled={busy !== null}`), y deshabilitar el elemento enfocado tira el
+     * foco al documento. MEDIDO con teclado, en las dos acciones del rol:
+     *
+     *     antes de pulsar «Guardar borrador»  foco = el propio boton
+     *     despues                              foco = BODY
+     *     tras «Enviar evaluacion» confirmada  foco = BODY
+     *
+     * En un dialogo esto ya se corrigio en su momento; aqui el formulario es el
+     * trabajo entero del evaluador, y quien navega con teclado se queda fuera:
+     * para seguir tiene que recorrer otra vez la barra lateral y la cabecera.
+     *
+     * Guardar borrador deja el formulario en pie, asi que el foco vuelve al
+     * boton que se pulso. Enviar lo sustituye por el aviso de «ya enviada»
+     * —que es lo que ahora explica el estado— y ahi aterriza.
+     */
+    const botonBorradorRef = useRef<HTMLButtonElement>(null);
+    const enviadaRef = useRef<HTMLDivElement>(null);
+    const [destinoFoco, setDestinoFoco] = useState<'borrador' | 'enviada' | null>(null);
+
+    /*
+     * El destino se PIDE al terminar la peticion y se atiende cuando de verdad
+     * se puede, que no es el mismo momento:
+     *
+     *   · `busy` sigue puesto hasta el `finally`, y `.focus()` sobre un boton
+     *     deshabilitado NO HACE NADA —falla en silencio y sin error—. MEDIDO:
+     *     con el efecto limpiando la peticion en su primera pasada, el foco
+     *     seguia en BODY.
+     *   · al enviar, el aviso de «ya enviada» no existe hasta que `onChanged()`
+     *     trae los datos nuevos.
+     *
+     * Por eso la peticion solo se borra cuando el foco ha aterrizado, y `busy`
+     * e `isLocked` estan en las dependencias: son las dos transiciones que
+     * hacen alcanzable cada destino.
+     */
+    useEffect(() => {
+        if (!destinoFoco) return;
+
+        /* Los dos destinos son elementos distintos —un boton y un aviso—, asi
+           que el tipo comun es HTMLElement y `disabled` solo existe en uno. Se
+           comprueba estrechando por instancia, no afirmando un tipo que el
+           aviso no tiene. */
+        const destino: HTMLElement | null =
+            destinoFoco === 'borrador' ? botonBorradorRef.current : enviadaRef.current;
+        if (!destino) return;
+        if (destino instanceof HTMLButtonElement && destino.disabled) return;
+
+        /* NO ROBAR EL FOCO.
+           Deshabilitar el boton pulsado tira el foco al documento, y ese es el
+           caso que hay que reparar. Pero si mientras se guardaba el usuario se
+           fue a otro control —el area de comentarios, la barra lateral—, ese
+           foco es suyo y moverlo seria peor que el defecto. Solo se recupera
+           cuando el foco quedo suelto. */
+        const activo = destino.ownerDocument.activeElement;
+        const quedoSuelto = activo === null || activo === destino.ownerDocument.body;
+        if (!quedoSuelto && activo !== destino) {
+            setDestinoFoco(null);
+            return;
+        }
+
+        destino.focus();
+        setDestinoFoco(null);
+    }, [destinoFoco, isLocked, busy]);
+
     const parseScore = (): number | null => {
         if (score.trim() === '') return null;
         const n = Number(score);
@@ -124,6 +191,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                 comentarios: comments.trim() || null,
             });
             toast.success('Borrador guardado.');
+            setDestinoFoco('borrador');
             // Ya está en el servidor: la copia local sobra y solo podría divergir.
             descartar(terna.id);
             await onChanged();
@@ -152,6 +220,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
         try {
             await submitEvaluation(terna.id, { calificacion: n, comentarios: comments.trim() || null });
             toast.success('Evaluación enviada exitosamente.');
+            setDestinoFoco('enviada');
             descartar(terna.id);
             setPending(null);
             await onChanged();
@@ -194,7 +263,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
     return (
         <div className="eval-form">
             {isLocked ? (
-                <div className="eval-locked" role="status">
+                <div className="eval-locked" role="status" tabIndex={-1} ref={enviadaRef}>
                     <Lock size={14} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 6 }} />
                     Tu evaluación ya fue enviada (calificación <strong>{mine?.calificacion}</strong>).
                     {' '}Solo el administrador puede reabrirla.
@@ -256,6 +325,7 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
 
                     <div className="eval-form__actions">
                         <Button
+                            ref={botonBorradorRef}
                             variant="secondary"
                             onClick={handleDraft}
                             loading={busy === 'draft'}
