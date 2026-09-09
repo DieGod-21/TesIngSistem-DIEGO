@@ -142,6 +142,10 @@ const StudentDetailPage: React.FC = () => {
         toast.success('Nota guardada correctamente.');
     };
 
+    /* Ver la nota del bloque de abajo: recargar no puede tirar lo ya pintado. */
+    const cargaInicial = state.loading && !state.student;
+    const refrescando  = state.loading && !!state.student;
+
     return (
         <div className="ternas-page">
             <Button
@@ -153,7 +157,24 @@ const StudentDetailPage: React.FC = () => {
                 {cameFromApp ? 'Volver' : 'Ir al listado'}
             </Button>
 
-            {state.loading && <StudentDetailSkeleton />}
+            {/*
+              * CARGAR POR PRIMERA VEZ Y RECARGAR NO SON LO MISMO — el mismo
+              * reparto que ya siguen los cuatro listados.
+              *
+              * `dossier.reload()` se llama tras guardar una nota o editar al
+              * estudiante, y con `state.loading` a secas eso DESMONTABA el
+              * expediente entero para volver a montarlo.
+              *
+              * El coste no es solo el parpadeo: el dialogo devuelve el foco al
+              * boton que lo abrio —trabajo deliberado del producto— y el
+              * remonte lo deshacia acto seguido. MEDIDO fotograma a fotograma
+              * al guardar una nota:
+              *
+              *     @103f foco en `nota-edit-btn`   (el dialogo lo devolvio bien)
+              *     @104f el nodo YA NO EXISTE, foco en BODY
+              *     @135f vuelve, pero es otro elemento
+              */}
+            {cargaInicial && <StudentDetailSkeleton />}
             {!state.loading && state.error && (
                 <EmptyState
                     tone="danger"
@@ -163,8 +184,12 @@ const StudentDetailPage: React.FC = () => {
                 />
             )}
 
-            {!state.loading && !state.error && state.student && (
-                <div className="view-transition sd-record" key={state.student.id}>
+            {!cargaInicial && !state.error && state.student && (
+                <div
+                    className={`view-transition sd-record${refrescando ? ' ui-refrescando' : ''}`}
+                    aria-busy={refrescando || undefined}
+                    key={state.student.id}
+                >
                     {/* ── Encabezado de perfil: quién es · veredicto · stats ─ */}
                     <header className="sd-hero">
                         <div className="sd-hero__top">
