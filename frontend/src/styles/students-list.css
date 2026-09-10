@@ -123,7 +123,7 @@
     font-size: var(--text-3xs);
     font-weight: var(--weight-bold);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-caps-sm);
     color: var(--dash-text-muted);
     background: var(--surface-raised);
     border-bottom: 1px solid var(--dash-border);
@@ -155,10 +155,7 @@
 .sl-table__tr:nth-child(8)  { animation-delay: 0.23s; }
 
 /*
- * MEDIDO: con la página llena (20 filas) las nueve en adelante tenían retardo
- * CERO, así que aparecían ANTES que las ocho escalonadas. La cascada se leía
- * al revés —el grueso de la tabla de golpe y luego las primeras cayendo por
- * detrás— y quedaba peor que no escalonar nada.
+ * Pasada la octava fila el retardo era CERO: la cascada se leía al revés.
  *
  * El escalonado nunca quiso llegar a la fila cien: pasadas ocho deja de
  * ordenar la mirada y empieza a retrasar contenido. Lo que faltaba era decir
@@ -170,10 +167,8 @@
 /*
  * ── DESPUÉS DE LA PRIMERA LLEGADA, LAS FILAS SOLO APARECEN ────────────
  *
- * MEDIDO: al pulsar «página siguiente» las siete filas volvían a animarse con
- * la cascada entera. Las filas se identifican por `id`, así que al paginar
- * cambian todas las claves, React las desmonta y las vuelve a montar, y la
- * entrada se reproduce completa. Igual al buscar, que recarga del servidor.
+ * Las filas se identifican por `id`: al paginar cambian todas las claves,
+ * React las remonta y la entrada se reproduce entera.
  *
  * Escalonar sirve cuando el contenido LLEGA. Paginar no es llegar: es la
  * misma tabla con otras filas, y la cascada solo retrasa hasta 0,43s lo que
@@ -395,8 +390,7 @@
  * Aquí arriba, dentro de la consulta de 640px, vivía
  * `.sl-pager__btn { width: 40px; height: 40px; }`. La intención era la
  * correcta y NO SE CUMPLÍA: la regla base se declara más abajo con la misma
- * especificidad y, a igualdad, gana la última. MEDIDO a 390x844 con puntero
- * grueso emulado: 32x32, el valor base, no los 40 que se pedían.
+ * especificidad y, a igualdad, gana la última: quedaban en 32x32.
  *
  * Son CUATRO botones contiguos —primera, anterior, siguiente, última— y es el
  * peor caso para un dedo: fallar no lleva a no pasar nada, lleva a saltar al

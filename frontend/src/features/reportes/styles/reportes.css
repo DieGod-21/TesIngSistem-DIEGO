@@ -42,7 +42,7 @@
 .reportes-hero__num {
   font-size: clamp(2.8rem, 6vw, 3.6rem);
   font-weight: var(--weight-bold);
-  letter-spacing: -0.03em;
+  letter-spacing: var(--tracking-tighter);
 }
 .reportes-hero__unit {
   font-size: clamp(1.4rem, 3vw, 1.8rem);
@@ -168,7 +168,7 @@
   color: var(--text-secondary);
   font-weight: var(--weight-bold);
   font-size: var(--text-2xs);
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps-sm);
   text-transform: uppercase;
   white-space: nowrap;
   user-select: none;
@@ -191,10 +191,7 @@
 .reportes-table tbody tr:nth-child(8) { animation-delay: 0.23s; }
 
 /*
- * MEDIDO: con la página llena (20 filas) las nueve en adelante tenían retardo
- * CERO, así que aparecían ANTES que las ocho escalonadas. La cascada se leía
- * al revés —el grueso de la tabla de golpe y luego las primeras cayendo por
- * detrás— y quedaba peor que no escalonar nada.
+ * Pasada la octava fila el retardo era CERO: la cascada se leía al revés.
  *
  * El escalonado nunca quiso llegar a la fila cien: pasadas ocho deja de
  * ordenar la mirada y empieza a retrasar contenido. Lo que faltaba era decir
@@ -208,9 +205,9 @@
  *
  * La tarjeta de la tabla lleva `key={filter}`: al cambiar de chip se remonta
  * entera y hace su fundido. Eso está bien —es UNA transición coordinada—, pero
- * dentro de ella las filas volvían a escalonarse por su cuenta (MEDIDO: reloj
- * propio en 67ms tras el chip), así que se veían dos entradas superpuestas
- * para la misma acción. Se queda el fundido de la tarjeta; se va la cascada.
+ * dentro de ella las filas volvían a escalonarse por su cuenta, así que se veían
+ * dos entradas superpuestas para la misma acción. Se queda el fundido de la
+ * tarjeta; se va la cascada.
  */
 .reportes-table--sin-cascada tbody tr { animation: none; }
 
@@ -297,7 +294,7 @@
   margin: 0;
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
 }

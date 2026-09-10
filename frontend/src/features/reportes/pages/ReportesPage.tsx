@@ -109,11 +109,9 @@ const ReportesPage: React.FC = () => {
      * Cargar por primera vez y refrescar no son lo mismo.
      *
      * «Refrescar» es un botón explícito y era el sitio del producto donde
-     * refrescar salía peor parado: MEDIDO, la tabla desaparecía entera —cero
-     * filas, esqueleto en su lugar— y el botón no acusaba nada (`aria-busy`
-     * no llegaba a aparecer en ningún elemento de la página). Se pedía una
-     * actualización y lo que se obtenía era perder lo que se estaba mirando,
-     * sin señal de que algo estuviera ocurriendo.
+     * refrescar salía peor parado: la tabla desaparecía entera y nada acusaba
+     * que hubiera una petición en curso. Se pedía una actualización y lo que se
+     * obtenía era perder lo que se estaba mirando.
      *
      * Mismo reparto que en Proyectos, Usuarios y Ternas: el esqueleto solo
      * cuando no hay nada que conservar.

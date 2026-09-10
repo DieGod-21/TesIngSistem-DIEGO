@@ -80,7 +80,7 @@
 .ring__value {
     font-size: var(--text-2xl);
     font-weight: var(--weight-bold);
-    letter-spacing: -0.03em;
+    letter-spacing: var(--tracking-tighter);
     color: var(--text-primary);
     line-height: var(--leading-none);
     font-variant-numeric: tabular-nums;
@@ -129,7 +129,7 @@
     background: var(--color-warning-light);
     border-color: color-mix(in oklch, var(--color-warning) 35%, transparent);
 }
-.deadline-item__month { font-size: var(--text-3xs); font-weight: var(--weight-bold); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.deadline-item__month { font-size: var(--text-3xs); font-weight: var(--weight-bold); text-transform: uppercase; letter-spacing: var(--tracking-caps-sm); color: var(--text-muted); }
 .deadline-item__day { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--leading-none); color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .deadline-item__body { flex: 1; min-width: 0; }
 .deadline-item__title { margin: 0; font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); }

@@ -46,11 +46,7 @@ const ProyectosListPage: React.FC = () => {
 /*
  * VOLVER A UN MÓDULO NO ES ABRIRLO POR PRIMERA VEZ.
  *
- * MEDIDO saliendo a Usuarios y regresando dos segundos después:
- *
- *     contenido@48 -> ESQUELETO@94 -> contenido@228
- *
- * El módulo tiraba lo que ya se estaba viendo, ponía el esqueleto 134ms y
+ * Al volver al módulo, tiraba lo que ya se estaba viendo, ponía el esqueleto y
  * volvía a pintar EXACTAMENTE la misma lista. El componente se desmonta al
  * navegar, así que arrancaba de cero aunque el dato siguiera fresco.
  *
@@ -162,7 +158,7 @@ const ProyectosListPage: React.FC = () => {
 
     /*
      * La entrada escalonada, solo la primera vez que llegan las tarjetas.
-     * MEDIDO: quitar el filtro de fase rearrancaba las ocho que se habían
+     * Quitar un filtro rearrancaba la entrada de las tarjetas que se habían
      * desmontado. Ver `usePrimeraLlegada`.
      */
     const primeraLlegada = usePrimeraLlegada(visibles.map((p) => p.id));

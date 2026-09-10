@@ -1,36 +1,16 @@
 /**
  * ListCount.tsx — Cuántos elementos está enseñando esta lista.
  *
- * ── POR QUÉ EXISTE ──────────────────────────────────────────────────────
- *
- * MEDIDO sobre el producto en marcha: cinco listados, cinco respuestas
- * distintas a la misma pregunta.
- *
- *   · Estudiantes  «27 estudiantes registrados · 5 coincidencias»
- *   · Proyectos    «3 de 11 proyectos», y solo con filtro puesto
- *   · Ternas       «5 resultados», y ADEMÁS el mismo 5 en el subtítulo
- *   · Reportes     nada
- *   · Usuarios     nada — y sus tarjetas seguían anunciando 7 mientras la
- *                  pantalla enseñaba UNA fila
- *
- * Los dos últimos son el problema de verdad: filtrar cambia lo que se ve y
- * nada lo confirma. Un filtro que no dice cuánto ha dejado fuera obliga a
- * contar a mano para saber si sirvió.
- *
- * La regla no se inventa aquí: Estudiantes ya la cumplía. Esto la vuelve
- * compartida —y por tanto repetible— para el resto del producto. Estudiantes
- * se queda como está a propósito: su barra de listado tiene más piezas y el
- * epic de su workspace está cerrado.
- *
- * ── QUÉ DICE ────────────────────────────────────────────────────────────
+ * Un filtro que no dice cuánto dejó fuera obliga a contar a mano. Cinco
+ * listados respondían de cinco formas distintas; esto la vuelve compartida.
  *
  *   sin filtro            «11 proyectos»
  *   con filtro            «3 de 11 proyectos»
  *   sin total conocido    «5 ternas»
  *
- * El último caso no es un descuido: Ternas filtra EN EL SERVIDOR y solo
- * recibe lo que pidió, así que el total sin filtrar no está en la pantalla.
- * Inventarlo sería peor que omitirlo.
+ * El último caso es deliberado: Ternas filtra en el servidor y solo recibe lo
+ * que pidió, así que el total sin filtrar no está en la pantalla. Inventarlo
+ * sería peor que omitirlo.
  */
 
 import React from 'react';

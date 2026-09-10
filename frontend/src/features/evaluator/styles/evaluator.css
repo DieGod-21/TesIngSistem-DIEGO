@@ -15,10 +15,8 @@
 /* ─── Envoltorio de página ──────────────────────────────────────────────── */
 
 /*
- * MEDIDO: sin esto, «Mis ternas» empezaba a 0px de la cabecera mientras la
- * misma pantalla del coordinador deja 64px, y el contenido llegaba pegado al
- * borde y sin ancho máximo. Las páginas del evaluador se renderizaban desnudas,
- * sin el envoltorio que el resto del producto sí tiene.
+ * Sin esto las páginas del evaluador se renderizan desnudas: pegadas al borde
+ * y sin ancho máximo, a diferencia del resto del producto.
  *
  * Mismas cuatro declaraciones que `.ternas-page`, `.proyectos-page`,
  * `.usuarios-page`… (el producto repite este bloque en siete hojas; unificarlo
@@ -103,6 +101,12 @@
     .asig__link:hover {
         background: var(--color-primary-soft);
     }
+}
+
+/* Acuse de la pulsación: es la vía por la que el evaluador abre su trabajo. */
+.asig__link:active { transform: scale(0.995); }
+@media (prefers-reduced-motion: reduce) {
+    .asig__link:active { transform: none; }
 }
 
 .asig__link:focus-visible {
@@ -323,9 +327,9 @@
 /*
  * Contador dentro del chip del sistema.
  *
- * MEDIDO: con `opacity: .75` el contraste caia a 3.99:1 en tema oscuro, por
- * debajo del 4.5 exigido. La opacidad sobre texto es una forma encubierta de
- * bajar el contraste; el contador hereda el color ya calibrado del chip.
+ * Con `opacity: .75` el contraste caía a 3.99:1 en tema oscuro, por debajo del
+ * 4.5 exigido: la opacidad sobre texto baja el contraste de forma encubierta.
+ * El contador hereda el color ya calibrado del chip.
  */
 .ev-filtro__n {
     font-variant-numeric: tabular-nums;

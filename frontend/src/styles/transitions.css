@@ -57,7 +57,8 @@
 
 .view-transition {
     animation: view-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    will-change: opacity, transform;
+    /* Sin `will-change`: la pista era permanente para una animación de 220ms al
+       montar, y mantenía una capa de composición viva toda la vida del elemento. */
     /* Envuelve contenido dentro de contenedores flex y arrastraba el mismo
        problema que `.dash-main`: como ítem flex con `min-width:auto` se negaba
        a encoger y transmitía el ancho mínimo de la tabla hacia arriba. */

@@ -1,63 +1,16 @@
 /**
- * useOverlayTransition.ts — Ciclo de vida de una capa que se abre y se cierra.
+ * useOverlayTransition — mantiene una capa montada mientras se va.
  *
- * ── QUÉ PROBLEMA RESUELVE ───────────────────────────────────────────────
+ * React desmonta en cuanto `open` pasa a false, así que sin esto no queda nada
+ * que animar en el cierre. El hook posee esa ventana y retira la capa al
+ * terminar.
  *
- * Los diálogos del producto entran animados y se van de golpe:
- *
- *     abrir → entrada animada → interacción → cerrar → desmontaje INMEDIATO
- *
- * La asimetría se nota. Al abrir, la capa se presenta y el ojo la sigue; al
- * cerrar desaparece entre dos cuadros y el contexto de debajo reaparece sin
- * que nadie lo haya anunciado. Es la diferencia entre cerrar una puerta y que
- * la puerta deje de existir.
- *
- * El estorbo no es la animación —CSS la hace en cuatro líneas— sino que React
- * desmonta el componente en cuanto `open` pasa a false, así que no queda nada
- * que animar. Este hook posee esa ventana: mantiene la capa montada mientras
- * se va, y la retira cuando termina.
- *
- *     abrir → entrada → interacción → cierre → SALIDA animada → desmontaje
- *
- * ── POR QUÉ NO GSAP ─────────────────────────────────────────────────────
- *
- * Se evaluó. Una salida de diálogo son dos elementos, una duración y ningún
- * valor dinámico: no hay orquestación que coordinar ni recorrido que revertir,
- * que es donde una librería de animación gana. Lo único que CSS no podía hacer
- * era retrasar el desmontaje, y eso es estado de React —este hook— no motor de
- * animación. Añadir una dependencia para un fundido de 140ms sería pagar peso
- * de bundle por nada.
- *
- * Lo que SÍ justificaría revisarlo: salidas interrumpibles que deban invertirse
- * a mitad de camino, transiciones de elemento compartido (FLIP) entre la fila
- * de una lista y su panel, o escalonados con número de elementos variable.
- *
- * ── LA PROPIEDAD QUE NO SE PUEDE PERDER ─────────────────────────────────
- *
- * Una capa atascada tapa la aplicación entera. Por eso el desmontaje NUNCA
- * depende de un solo aviso: se escucha el fin de la animación y además se pone
- * un techo de tiempo. Si la animación no existe (movimiento reducido), si el
- * navegador no dispara el evento o si una edición futura del CSS quita el
- * keyframe, la capa se cierra igual.
- *
- * El techo se DEDUCE del CSS ya aplicado en vez de escribirse aquí como
- * número: así no hay dos verdades que se puedan desincronizar, y el caso de
- * movimiento reducido —donde el CSS deja la duración en cero— sale gratis.
- *
- * ── USO ─────────────────────────────────────────────────────────────────
+ * El desmontaje no depende de un solo aviso: se escucha el fin de la animación
+ * y además se aplica un techo de tiempo, porque una capa atascada tapa la
+ * aplicación entera. El techo se deduce del CSS aplicado en vez de fijarse
+ * aquí, para que no haya dos duraciones que desincronizar.
  *
  *     const { montado, saliendo, overlayRef } = useOverlayTransition(open);
- *     if (!montado) return null;
- *     return createPortal(
- *         <div ref={overlayRef}
- *              className={`ui-modal-overlay${saliendo ? ' ui-modal-overlay--saliendo' : ''}`}
- *              aria-hidden={saliendo || undefined}>
- *             <div className={`ui-modal${saliendo ? ' ui-modal--saliendo' : ''}`}>…</div>
- *         </div>, document.body);
- *
- * El foco NO espera a la salida: el atrapador se desactiva en cuanto `open`
- * pasa a false y devuelve el foco a quien abrió. Quien usa teclado recupera el
- * control de inmediato mientras la capa termina de irse.
  */
 
 import { useEffect, useRef, useState } from 'react';

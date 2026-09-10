@@ -1,11 +1,9 @@
 /**
  * KpiSkeleton.tsx — Hueco de las fichas de indicadores mientras cargan.
  *
- * MEDIDO en su día sobre el panel del coordinador: con dos líneas medía 94px
- * frente a los 101px de la ficha real, y al llegar los datos toda la página
- * daba un salto de 7px. Son TRES filas —rótulo, cifra y descripción—, las
- * mismas que tiene la ficha y con los mismos tamaños, así que el hueco
- * reservado es exactamente el que se va a ocupar.
+ * Tres filas —rótulo, cifra y descripción—, las mismas que la ficha real y con
+ * los mismos tamaños: el hueco reservado es el que se va a ocupar, así que al
+ * llegar los datos la página no da ningún salto.
  *
  * Vive aquí, y no dentro de un panel, porque los dos workspaces enseñan tres
  * fichas del mismo material: si el esqueleto se duplicara, la corrección de

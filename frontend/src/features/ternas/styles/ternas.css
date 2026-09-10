@@ -46,6 +46,14 @@
   border-color: var(--border-strong);
   border-top-color: var(--color-primary);
 }
+/* Acuse de la pulsación, como el resto de superficies clicables del sistema.
+   Permitido por la REGLA DE ESTADO AL APUNTAR: al pulsar, el puntero queda
+   capturado y el elemento no puede oscilar. */
+.terna-card:active { transform: scale(0.995); }
+@media (prefers-reduced-motion: reduce) {
+  .terna-card:active { transform: none; }
+}
+
 .terna-card__head {
   display: flex;
   justify-content: space-between;
@@ -55,15 +63,11 @@
 .terna-card__numero {
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   color: var(--text-muted);
   text-transform: uppercase;
 }
-/* `.terna-card__estado` + `.estado-*` ELIMINADOS: el estado lo pinta <Badge>.
-   Una iteración previa alineó solo los COLORES de este chip con los del DS y
-   lo declaró "consistencia total"; la medición sobre el render demostró que
-   seguía divergiendo en tamaño (12px vs 11px), caja (MAYÚSCULAS vs normal),
-   tracking, padding y borde. Alinear tokens no es unificar componentes. */
+/* `.terna-card__estado` + `.estado-*` ELIMINADOS: el estado lo pinta <Badge>. */
 
 .terna-card__title {
   margin: 0;
@@ -83,16 +87,8 @@
   font-size: var(--text-xs);
 }
 .terna-card__progress {
-  /* MEDIDO: la barra salia 0x6px en las CINCO tarjetas, es decir, nunca se ha
-     visto. La tarjeta es un <button>, y la hoja del navegador le impone
-     `align-items: flex-start`, asi que ningun hijo se estira: esta fila se
-     encogia a su contenido (124px de 464) y la barra, que reparte lo que
-     sobra con `flex: 1`, se quedaba sin nada que repartir. Con la fila
-     encogida el `space-between` tampoco separaba nada y el chevron quedaba
-     pegado al texto, en mitad de la tarjeta.
-
-     Se estira explicitamente en vez de tocar `align-items` de la tarjeta:
-     los demas hijos ya se colocan bien y no hay por que moverlos. */
+  /* La tarjeta es un <button> y el navegador le impone `align-items: flex-start`:
+     sin estirar esta fila, la barra se queda a 0px de ancho. */
   align-self: stretch;
   display: flex;
   justify-content: space-between;
@@ -127,13 +123,8 @@
 
 /* Detail */
 
-/* El cuerpo del detalle va envuelto para poder atenuarlo al refrescar
-   (`ui-refrescando` + `aria-busy`). Ese envoltorio sacaba a sus hijos del flex
-   de `.ternas-page`, que es quien aporta el ritmo vertical entre secciones:
-   la separacion cabecera->rejilla caia de 56px a 32px. Se repone el mismo
-   contexto con el mismo token, no con un valor nuevo.
-   (`display: contents` lo arreglaria tambien, pero anula la opacidad de
-   `.ui-refrescando`, que es justo para lo que existe el envoltorio.) */
+/* El envoltorio que permite atenuar al refrescar sacaba a sus hijos del flex
+   de `.ternas-page`; se repone el mismo contexto con el mismo token. */
 .terna-detail-body {
   display: flex;
   flex-direction: column;
@@ -185,7 +176,7 @@
   margin: 0;
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
 }

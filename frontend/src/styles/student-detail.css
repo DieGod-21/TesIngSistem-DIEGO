@@ -138,7 +138,7 @@
     margin: 0;
     font-size: clamp(1.55rem, 2.6vw, 2rem);
     font-weight: var(--weight-bold);
-    letter-spacing: -0.03em;
+    letter-spacing: var(--tracking-tighter);
     line-height: var(--leading-none);
     color: var(--text-primary);
     overflow-wrap: anywhere;
@@ -213,7 +213,7 @@
     font-size: var(--text-2xs);
     font-weight: var(--weight-bold);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-caps);
     color: var(--text-secondary);
     white-space: nowrap;
 }
@@ -312,7 +312,7 @@
 .sd-terna__num {
     font-size: var(--text-xl);
     font-weight: var(--weight-bold);
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
     color: var(--text-primary);
     font-variant-numeric: tabular-nums;
     line-height: var(--leading-none);
@@ -526,7 +526,7 @@
 .sd-rec__score {
     font-size: var(--text-2xl);
     font-weight: var(--weight-bold);
-    letter-spacing: -0.03em;
+    letter-spacing: var(--tracking-tighter);
     line-height: var(--leading-none);
     font-variant-numeric: tabular-nums;
     color: var(--text-primary);

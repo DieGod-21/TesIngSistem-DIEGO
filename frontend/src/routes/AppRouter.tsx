@@ -53,21 +53,9 @@ const MisProyectosPage   = lazy(() => import('../features/evaluator/pages/MisPro
 const MisTernasPage      = lazy(() => import('../features/evaluator/pages/MisTernasPage'));
 const ProyectoDetailPage = lazy(() => import('../features/proyectos/pages/ProyectoDetailPage'));
 
-// ─── Spinner compartido ───────────────────────────────────────────────
-const Spinner: React.FC = () => (
-    <div
-        style={{
-            width: 40,
-            height: 40,
-            border: '3px solid var(--border)',
-            borderTopColor: 'var(--color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-        }}
-    >
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-);
+// El spinner vive en ui.css: allí lo alcanza el bloque de movimiento reducido,
+// que un keyframe inyectado desde aquí no puede tener.
+const Spinner: React.FC = () => <div className="ui-spinner" />;
 
 // ─── Auth loading screen ─────────────────────────────────────────────
 const AuthLoadingScreen: React.FC = () => (

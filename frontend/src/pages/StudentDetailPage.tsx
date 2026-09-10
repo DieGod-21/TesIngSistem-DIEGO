@@ -142,7 +142,7 @@ const StudentDetailPage: React.FC = () => {
         toast.success('Nota guardada correctamente.');
     };
 
-    /* Ver la nota del bloque de abajo: recargar no puede tirar lo ya pintado. */
+    // Recargar no puede tirar lo ya pintado: el diálogo devuelve el foco aquí.
     const cargaInicial = state.loading && !state.student;
     const refrescando  = state.loading && !!state.student;
 
@@ -157,23 +157,6 @@ const StudentDetailPage: React.FC = () => {
                 {cameFromApp ? 'Volver' : 'Ir al listado'}
             </Button>
 
-            {/*
-              * CARGAR POR PRIMERA VEZ Y RECARGAR NO SON LO MISMO — el mismo
-              * reparto que ya siguen los cuatro listados.
-              *
-              * `dossier.reload()` se llama tras guardar una nota o editar al
-              * estudiante, y con `state.loading` a secas eso DESMONTABA el
-              * expediente entero para volver a montarlo.
-              *
-              * El coste no es solo el parpadeo: el dialogo devuelve el foco al
-              * boton que lo abrio —trabajo deliberado del producto— y el
-              * remonte lo deshacia acto seguido. MEDIDO fotograma a fotograma
-              * al guardar una nota:
-              *
-              *     @103f foco en `nota-edit-btn`   (el dialogo lo devolvio bien)
-              *     @104f el nodo YA NO EXISTE, foco en BODY
-              *     @135f vuelve, pero es otro elemento
-              */}
             {cargaInicial && <StudentDetailSkeleton />}
             {!state.loading && state.error && (
                 <EmptyState
