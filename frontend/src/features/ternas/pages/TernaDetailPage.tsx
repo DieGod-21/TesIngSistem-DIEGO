@@ -49,29 +49,8 @@ const TernaDetailPage: React.FC = () => {
     // cruzados, pero las tres entidades sí llevan el carné.
     const enlaces = useEntityLinks(terna?.carnet, ['estudiante', 'proyecto']);
 
-    /*
-     * CARGAR POR PRIMERA VEZ Y RECARGAR NO SON LO MISMO.
-     *
-     * Los cuatro listados del producto ya distinguian las dos cosas; esta
-     * pantalla, no: cualquier `reload()` ponia `loading` y el `{loading && …}`
-     * de abajo DESMONTABA la pagina entera —formulario de evaluacion incluido—
-     * para volver a montarla despues.
-     *
-     * Y `reload` es justo lo que se llama tras guardar un borrador o enviar una
-     * evaluacion, que es el trabajo entero del evaluador. MEDIDO con teclado,
-     * fotograma a fotograma, tras pulsar «Guardar borrador»:
-     *
-     *     @3f  foco en el boton, que se deshabilita
-     *     @4f  foco en BODY               (deshabilitar lo tira al documento)
-     *     @19f el boton YA NO EXISTE      (la pagina se desmonto)
-     *     @49f vuelve, pero es otro elemento
-     *
-     * Con la pagina desmontandose no hay forma de devolver el foco: la
-     * referencia apunta a un nodo desechado y el estado del componente se
-     * pierde con el. Conservar lo que ya esta pintado arregla las dos cosas a
-     * la vez —el parpadeo y el foco— y es ademas el patron que el resto del
-     * producto ya sigue.
-     */
+    // Recargar no es cargar: conserva lo pintado para no desmontar el
+    // formulario de evaluación a media faena.
     const cargaInicial = loading && !terna;
     const refrescando  = loading && !!terna;
 
@@ -108,14 +87,8 @@ const TernaDetailPage: React.FC = () => {
                     />
                 )}
 
-                {/* `ui-refrescando` atenua con retardo: una respuesta rapida
-                    —la norma— no produce ni un parpadeo.
-
-                    `terna-detail-body` NO es decoracion: antes esto era un
-                    fragmento y sus hijos eran hijos flex de `.ternas-page`,
-                    que aporta `gap: var(--content-gap)`. Al envolverlos, esa
-                    separacion se perdia (MEDIDO: 56px -> 32px). La clase
-                    repone el mismo contexto flex con el mismo token. */}
+                {/* `terna-detail-body` repone el flex que aportaba el padre:
+                    sin ella el envoltorio se come el `gap`. */}
                 {!cargaInicial && !error && terna && (
                     <div
                         className={`terna-detail-body${refrescando ? ' ui-refrescando' : ''}`}

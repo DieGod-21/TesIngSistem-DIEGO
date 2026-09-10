@@ -52,10 +52,7 @@
 .usr-list-item:nth-child(8) { animation-delay: 0.24s; }
 
 /*
- * MEDIDO: con la página llena (20 filas) las nueve en adelante tenían retardo
- * CERO, así que aparecían ANTES que las ocho escalonadas. La cascada se leía
- * al revés —el grueso de la tabla de golpe y luego las primeras cayendo por
- * detrás— y quedaba peor que no escalonar nada.
+ * Pasada la octava fila el retardo era CERO: la cascada se leía al revés.
  *
  * El escalonado nunca quiso llegar a la fila cien: pasadas ocho deja de
  * ordenar la mirada y empieza a retrasar contenido. Lo que faltaba era decir
@@ -67,9 +64,8 @@
 /*
  * La cascada es para LLEGAR, no para cada filtro ni para cada alta.
  *
- * MEDIDO: al volver a «Todos» rearrancaban seis filas, y tras crear un usuario
- * las NUEVE, con el reloj en cero — justo en el instante en que había que
- * mirar UNA. El anillo de la recién creada competía con ocho entradas.
+ * Al volver a «Todos» rearrancaban seis filas; tras crear un usuario, las nueve
+ * — justo cuando había que mirar UNA.
  *
  * Se excluye `--nuevo`: ese anillo no es entrada, es la respuesta a «¿cuál?».
  */

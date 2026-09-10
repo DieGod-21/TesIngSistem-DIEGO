@@ -48,6 +48,8 @@ const MisProyectosPage: React.FC = () => {
     return (
         <div className="ev-page">
             <PageHeader
+                kicker="Evaluación"
+                icon={<FolderOpen size={22} />}
                 title="Mis proyectos"
                 subtitle="Los trabajos de graduación de las ternas que evalúas"
             />

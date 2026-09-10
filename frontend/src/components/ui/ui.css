@@ -30,14 +30,7 @@
  * WCAG 2.4.1 «Evitar bloques», nivel A: si un bloque se repite en todas las
  * pantallas, tiene que haber forma de saltárselo.
  *
- * MEDIDO en el padrón: desde el principio del documento hay OCHO destinos de
- * la barra lateral más el buscador global y el conmutador de tema antes de
- * llegar a la primera parada de la página. Diez tabuladores, en cada carga,
- * para empezar a trabajar.
- *
- * (Al navegar DENTRO de la aplicación el foco se queda en el enlace pulsado y
- * no se vuelve al principio —comprobado—, así que esto es para quien entra por
- * una URL directa o recarga; que es exactamente el caso que 2.4.1 cubre.)
+ * Sin el son diez tabuladores en cada carga directa para empezar a trabajar.
  *
  * Invisible hasta que se enfoca: no ocupa sitio ni aparece con el ratón, y en
  * cuanto el teclado lo alcanza se muestra como cualquier otro control. */
@@ -246,6 +239,7 @@
     background: var(--surface-raised);
     color: var(--text-primary);
 }
+.ui-icon-btn:active:not(:disabled) { transform: scale(0.98); }
 .ui-icon-btn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
@@ -260,17 +254,9 @@
    tableta con puntero grueso a 1024px necesita el objetivo grande, y un
    portátil estrecho con ratón no.
 
-   Aquí decía que los botones con texto ya llegaban solos por su padding.
-   NO llegan: `.ui-btn` DECLARA `min-height: var(--control-h-md)`, que son
-   36px, y el padding no puede superar un mínimo declarado. MEDIDO a 390px,
-   «Nuevo Usuario» —la acción primaria de Administración— daba 36px de alto.
-
-   Y deja al producto en contra de sí mismo: los campos de formulario
-   (`.ui-control`, `.ui-select`) ya están en 44px. Con el dedo, el control
-   que se rellena era mayor que el botón que lo envía.
-
-   Solo con puntero grueso: con ratón, 36px es un objetivo cómodo y las
-   barras densas se quedan como están. */
+   `.ui-btn` declara `min-height: var(--control-h-md)` (36px) y el padding no
+   puede superar un mínimo declarado, así que no llegan solos a 44px. Solo con
+   puntero grueso: con ratón 36px es cómodo. */
 @media (pointer: coarse) {
     .ui-icon-btn {
         width: var(--control-h-lg);
@@ -298,10 +284,25 @@
 }
 @keyframes ui-spin { to { transform: rotate(360deg); } }
 
+/* Spinner suelto (verificación de sesión): no hay forma de contenido que
+   prometer todavía, así que aquí sí es la respuesta correcta. Mismo keyframe
+   que el del botón. */
+.ui-spinner {
+    width: var(--space-40, 40px);
+    height: var(--space-40, 40px);
+    border: 3px solid var(--border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: ui-spin 0.8s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .ui-btn { transition: none; }
     .ui-btn:active:not(:disabled) { transform: none; }
+    .ui-icon-btn:active:not(:disabled) { transform: none; }
+    /* Se ralentiza en vez de detenerse: un spinner parado se lee como roto. */
     .ui-btn__spinner { animation-duration: 1.4s; }
+    .ui-spinner { animation-duration: 1.6s; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1337,15 +1338,9 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     gap: var(--space-14);
 }
 
-/* En móvil el resumen no puede costar una pantalla.
- *
- * MEDIDO a 390×844: la primera fila de Usuarios empezaba en y=808 —el borde
- * inferior de la ventana— porque las tarjetas se apilaban en columna y se
- * comían 232px. Proyectos y Ternas ponen su primer elemento en y≈478. El
- * resumen es orientación; el listado es el trabajo, y estaba debajo de todo.
- *
- * En una sola fila, con la cifra al lado del rótulo en vez de debajo. Se
- * conserva todo el texto: no se esconde nada por ser pequeño. */
+/* En móvil el resumen no puede costar una pantalla: apilado en columna
+ * empujaba la primera fila del listado fuera de la ventana. Se conserva todo
+ * el texto; no se esconde nada por ser pequeño. */
 @media (max-width: 640px) {
     .ui-stat-grid { grid-template-columns: 1fr 1fr; gap: var(--space-10); }
     .ui-stat { padding: var(--space-12) var(--space-14); gap: var(--space-2); }
@@ -1374,7 +1369,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     font-size: var(--text-3xl);
     font-weight: var(--weight-bold);
     line-height: var(--leading-tight);
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
     color: var(--stat-accent, var(--text-primary));
     font-variant-numeric: tabular-nums;
 }
@@ -1382,7 +1377,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
     font-size: var(--text-2xs);
     font-weight: var(--weight-bold);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-caps);
     color: var(--text-muted);
 }
 .ui-stat__sub {
@@ -1417,7 +1412,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 }
 .ui-avatar--sm { width: 2rem;    height: 2rem;    font-size: var(--text-2xs); }
 .ui-avatar--lg { width: 2.75rem; height: 2.75rem; font-size: var(--text-base); }
-.ui-avatar--xl { width: 3.75rem; height: 3.75rem; font-size: var(--text-xl); letter-spacing: -0.02em; }
+.ui-avatar--xl { width: 3.75rem; height: 3.75rem; font-size: var(--text-xl); letter-spacing: var(--tracking-tight); }
 
 /* Cabeceras de perfil: el cuadrado redondeado da más peso a la identidad.
    El radio escala con el tamaño para mantener la misma curvatura percibida. */
@@ -1471,22 +1466,16 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 /*
  * Solo el hueco de la cabecera pegajosa.
  *
- * Aquí llegó a haber también un `scroll-margin-bottom` para apartar del aviso
- * la fila recién creada. Se quitó porque NO HACE NADA: MEDIDO, el motor lo
- * ignora en este scroller con `block: 'nearest'` y con `block: 'end'`, y sigue
- * ignorándolo forzado a 300px —la fila no se movió un píxel en ninguno de los
- * tres casos—. Se destapa cambiando la alineación, no el margen; ver el
- * comentario de `ProyectoCard`.
+ * `scroll-margin-bottom` NO funciona en este scroller (probado): se destapa
+ * cambiando la alineación, no el margen.
  */
 .ui-scroll-anchor { scroll-margin-top: var(--space-96); }
 
 /*
  * DÓNDE va la reserva, y por qué en las listas y no en la página.
  *
- * El envoltorio de página alarga el recorrido, sí, pero se lo alarga a TODAS:
- * MEDIDO, la pantalla de «ningún usuario coincide», que no tiene nada que
- * desplazar, pasaba a desplazar 115px. Una barra de scroll para enseñar un
- * hueco vacío.
+ * En el envoltorio de página se lo alarga a TODAS: un estado vacío acababa
+ * con barra de scroll para enseñar un hueco.
  *
  * Va, entonces, en las propias listas. Una lista corta no llega al borde
  * inferior y el hueco se queda dentro de lo que ya sobraba; una larga es
@@ -1930,7 +1919,7 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 .ui-relation__kicker {
     font-size: var(--text-2xs);
     font-weight: var(--weight-bold);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
     color: var(--text-muted);
 }
@@ -1966,12 +1955,6 @@ textarea.ui-control { min-height: calc(var(--control-h-lg) * 2); resize: vertica
 }
 
 /* ── Refrescando: los datos se están recargando, pero YA HAY datos ─────
- *
- * Recargar ponía la bandera de carga y el esqueleto sustituía al contenido.
- * MEDIDO: al crear un usuario la lista entera desaparecía (`esqueleto=true`,
- * la zona se quedaba sin filas) y volvía con las nueve reanimándose — justo
- * cuando había que mirar UNA. Al filtrar ternas pasaba lo mismo sin que
- * cambiara nada de fondo: cuatro cajas grises y vuelta a empezar.
  *
  * Un esqueleto responde «¿hay algo?». Refrescar ya tiene la respuesta, y la
  * pregunta es otra: «¿esto está al día?». Se conserva lo que hay y se atenúa.

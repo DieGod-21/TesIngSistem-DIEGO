@@ -73,7 +73,7 @@
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   color: var(--text-secondary);
 }
 
@@ -132,7 +132,7 @@
 .tsb-grade__label {
   font-weight: var(--weight-bold);
   font-size: var(--text-xs);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   background: var(--surface-raised);
   padding: var(--space-2) var(--space-8);
   border-radius: var(--radius-sm);

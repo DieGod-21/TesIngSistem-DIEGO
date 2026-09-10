@@ -98,10 +98,7 @@
 .proy-card:nth-child(8) { animation-delay: 0.24s; }
 
 /*
- * MEDIDO: con la página llena (20 filas) las nueve en adelante tenían retardo
- * CERO, así que aparecían ANTES que las ocho escalonadas. La cascada se leía
- * al revés —el grueso de la tabla de golpe y luego las primeras cayendo por
- * detrás— y quedaba peor que no escalonar nada.
+ * Pasada la octava fila el retardo era CERO: la cascada se leía al revés.
  *
  * El escalonado nunca quiso llegar a la fila cien: pasadas ocho deja de
  * ordenar la mirada y empieza a retrasar contenido. Lo que faltaba era decir
@@ -113,11 +110,8 @@
 /*
  * La cascada es para LLEGAR, no para cada filtro.
  *
- * MEDIDO en el navegador: al volver de «PG1» a «Todas», las ocho tarjetas que
- * el filtro había desmontado arrancaban de cero otra vez (`recien-arrancadas=8`,
- * reloj propio en 50ms). Filtrar no es llegar: es la misma cuadrícula
- * enseñando otra cosa, y ahí el escalonado solo retrasa lo que se acaba de
- * pedir. Quién decide es `usePrimeraLlegada`.
+ * Filtrar no es llegar: es la misma cuadrícula enseñando otra cosa, y el
+ * escalonado solo retrasa lo que se acaba de pedir. Decide `usePrimeraLlegada`.
  *
  * La recién creada queda FUERA a propósito: su anillo no es entrada, es la
  * respuesta a «¿cuál de todas?». Sin el `:not()` esta regla —más específica—
@@ -259,7 +253,7 @@
 .pd-nota__curso {
     font-size: var(--text-2xs);
     font-weight: var(--weight-bold);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-caps);
     color: var(--text-secondary);
 }
 
@@ -376,7 +370,7 @@
     margin: 0;
     font-size: var(--text-2xs);
     font-weight: var(--weight-bold);
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-caps-sm);
     text-transform: uppercase;
     color: var(--text-muted);
 }
@@ -418,7 +412,7 @@
     margin: 0;
     font-size: var(--text-2xs);
     font-weight: var(--weight-bold);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
     color: var(--text-muted);
 }
@@ -452,7 +446,7 @@
 .pd-tesis__label {
     font-size: var(--text-2xs);
     font-weight: var(--weight-bold);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
     color: var(--text-muted);
 }

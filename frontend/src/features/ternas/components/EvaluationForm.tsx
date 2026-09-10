@@ -102,62 +102,27 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
     const [pending, setPending] = useState<PendingAction>(null);
     const [scoreError, setScoreError] = useState<string | null>(null);
 
-    /*
-     * A DONDE VA EL FOCO CUANDO TERMINA UNA ACCION.
-     *
-     * Los dos botones se deshabilitan mientras dura la peticion
-     * (`disabled={busy !== null}`), y deshabilitar el elemento enfocado tira el
-     * foco al documento. MEDIDO con teclado, en las dos acciones del rol:
-     *
-     *     antes de pulsar «Guardar borrador»  foco = el propio boton
-     *     despues                              foco = BODY
-     *     tras «Enviar evaluacion» confirmada  foco = BODY
-     *
-     * En un dialogo esto ya se corrigio en su momento; aqui el formulario es el
-     * trabajo entero del evaluador, y quien navega con teclado se queda fuera:
-     * para seguir tiene que recorrer otra vez la barra lateral y la cabecera.
-     *
-     * Guardar borrador deja el formulario en pie, asi que el foco vuelve al
-     * boton que se pulso. Enviar lo sustituye por el aviso de «ya enviada»
-     * —que es lo que ahora explica el estado— y ahi aterriza.
-     */
+    /* Los botones se deshabilitan mientras dura la petición, y eso tira el
+       foco al documento. Guardar deja el formulario en pie (vuelve al botón);
+       enviar lo sustituye por el aviso de «ya enviada» (aterriza ahí). */
     const botonBorradorRef = useRef<HTMLButtonElement>(null);
     const enviadaRef = useRef<HTMLDivElement>(null);
     const [destinoFoco, setDestinoFoco] = useState<'borrador' | 'enviada' | null>(null);
 
-    /*
-     * El destino se PIDE al terminar la peticion y se atiende cuando de verdad
-     * se puede, que no es el mismo momento:
-     *
-     *   · `busy` sigue puesto hasta el `finally`, y `.focus()` sobre un boton
-     *     deshabilitado NO HACE NADA —falla en silencio y sin error—. MEDIDO:
-     *     con el efecto limpiando la peticion en su primera pasada, el foco
-     *     seguia en BODY.
-     *   · al enviar, el aviso de «ya enviada» no existe hasta que `onChanged()`
-     *     trae los datos nuevos.
-     *
-     * Por eso la peticion solo se borra cuando el foco ha aterrizado, y `busy`
-     * e `isLocked` estan en las dependencias: son las dos transiciones que
-     * hacen alcanzable cada destino.
-     */
+    /* El destino se pide al terminar y se atiende cuando es alcanzable:
+       `.focus()` sobre un botón deshabilitado no hace nada y no avisa. Por eso
+       la intención se limpia al aterrizar, con `busy`/`isLocked` en las deps. */
     useEffect(() => {
         if (!destinoFoco) return;
 
-        /* Los dos destinos son elementos distintos —un boton y un aviso—, asi
-           que el tipo comun es HTMLElement y `disabled` solo existe en uno. Se
-           comprueba estrechando por instancia, no afirmando un tipo que el
-           aviso no tiene. */
+        // Un botón o un aviso: `disabled` solo existe en uno.
         const destino: HTMLElement | null =
             destinoFoco === 'borrador' ? botonBorradorRef.current : enviadaRef.current;
         if (!destino) return;
         if (destino instanceof HTMLButtonElement && destino.disabled) return;
 
-        /* NO ROBAR EL FOCO.
-           Deshabilitar el boton pulsado tira el foco al documento, y ese es el
-           caso que hay que reparar. Pero si mientras se guardaba el usuario se
-           fue a otro control —el area de comentarios, la barra lateral—, ese
-           foco es suyo y moverlo seria peor que el defecto. Solo se recupera
-           cuando el foco quedo suelto. */
+        // Solo se recupera el foco si quedó suelto: si el usuario se fue a
+        // otro control, moverlo sería peor que el defecto.
         const activo = destino.ownerDocument.activeElement;
         const quedoSuelto = activo === null || activo === destino.ownerDocument.body;
         if (!quedoSuelto && activo !== destino) {

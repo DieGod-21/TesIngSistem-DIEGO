@@ -42,8 +42,7 @@ const CAP_FILTERED = 50;
 /**
  * Filas del esqueleto mientras carga.
  *
- * MEDIDO: con 3 filas el hueco valía 269px y la cola llena ocupa 629px, así que
- * al llegar los datos la página crecía 360px de golpe —cinco filas exactas—.
+ * Con pocas filas de esqueleto la página crecía de golpe al llegar los datos.
  *
  * No puede quedar a cero: cuántos ítems habrá es justo lo que no se sabe hasta
  * que llegan. Se reserva el alto del caso HABITUAL (la cola llena, que es su

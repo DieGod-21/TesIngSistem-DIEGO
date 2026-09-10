@@ -28,8 +28,8 @@ export interface AlertProps {
     /**
      * Se lleva el foco al aparecer.
      *
-     * Para el error de un envío que falla. MEDIDO: al fallar el alta de un
-     * usuario el foco acababa en `<body>`. El botón enviado se deshabilita
+     * Para el error de un envío que falla: el foco acababa en `<body>`, porque
+     * el botón enviado se deshabilita
      * mientras dura la petición, y deshabilitar el elemento enfocado tira el
      * foco al documento; en el camino feliz no se nota porque el diálogo se
      * cierra y el foco vuelve solo al botón que lo abrió, pero cuando falla el

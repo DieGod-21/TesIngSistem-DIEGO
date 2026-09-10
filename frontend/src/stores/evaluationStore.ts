@@ -1,42 +1,13 @@
 /**
- * evaluationStore.ts — Estado del PROCESO de evaluar. Zustand.
+ * evaluationStore.ts — Lo que el evaluador ha escrito y todavía no ha mandado.
  *
- * ═══ QUÉ PROBLEMA REAL RESUELVE ═════════════════════════════════════════════
+ * Es estado de un PROCESO: empieza en una pantalla, sigue en otra y sobrevive
+ * al desmontaje. Antes vivía en `useState` del formulario y se perdía al salir
+ * a comprobar un dato.
  *
- * El formulario de evaluación guardaba la calificación y las observaciones en
- * `useState`, y un `useEffect` los reponía desde el servidor cada vez que
- * cambiaba la terna. Consecuencia medible: el evaluador escribía media página
- * de observaciones, abría el proyecto para comprobar un dato, volvía… y no
- * quedaba nada. El borrador del servidor solo existe si se pulsa «Guardar
- * borrador» a propósito; todo lo tecleado antes de eso vivía en un componente
- * que se desmonta al navegar.
- *
- * Eso no es estado de servidor ni estado de una pantalla: es estado de un
- * PROCESO que atraviesa varias vistas y sobrevive al desmontaje. Es justo el
- * caso para el que un store compartido está bien empleado.
- *
- * ═══ QUÉ NO GUARDA (Y POR QUÉ) ══════════════════════════════════════════════
- *
- * NO guarda ternas, ni proyectos, ni evaluadores, ni resultados. Nada que
- * venga del servidor entra aquí. Duplicar el estado de servidor en un store
- * global es exactamente cómo estas herramientas se convierten en una segunda
- * base de datos que se desincroniza en silencio: el servidor cambia, el store
- * no se entera, y el usuario acaba mirando datos viejos con aspecto de nuevos.
- *
- * El estado de servidor sigue donde estaba: en `services/` con su caché de TTL,
- * deduplicación e invalidación por prefijo.
- *
- * Aquí solo vive UNA cosa: lo que la persona ha escrito y todavía no ha
- * mandado. Es información que el servidor no tiene y que se perdería sin esto.
- *
- * ═══ POR QUÉ NO PERSISTE EN disco ═══════════════════════════════════════════
- *
- * Vive en memoria y muere con la pestaña. Persistirlo en `localStorage`
- * resucitaría un borrador escrito hace tres días sobre una terna que el
- * administrador pudo reabrir, reasignar o completar mientras tanto, y lo
- * pintaría encima de los datos frescos del servidor sin que nadie lo pidiera.
- * Recuperar lo tecleado dentro de la misma sesión es útil; resucitarlo entre
- * sesiones es una fuente de errores.
+ * NO guarda nada que venga del servidor —eso vive en `services/` con su caché—
+ * ni persiste en disco: un borrador de hace tres días se pintaría encima de
+ * datos frescos sobre una terna que pudieron reabrir o reasignar.
  */
 
 import { create } from 'zustand';

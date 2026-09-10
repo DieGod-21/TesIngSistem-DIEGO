@@ -18,6 +18,7 @@
 
 import React, { useMemo } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
+import { ClipboardList } from 'lucide-react';
 import { PageHeader } from '../../../components/ui';
 import AssignmentQueue from '../components/AssignmentQueue';
 import { useEvaluatorWorkspace } from '../hooks/useEvaluatorWorkspace';
@@ -76,6 +77,8 @@ const MisTernasPage: React.FC = () => {
     return (
         <div className="ev-page">
             <PageHeader
+                kicker="Evaluación"
+                icon={<ClipboardList size={22} />}
                 title="Mis ternas"
                 subtitle="Los paneles de evaluación en los que participas"
             />
