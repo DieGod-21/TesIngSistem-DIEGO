@@ -84,11 +84,27 @@ interface WorkQueueProps {
     stageLabel?: string;
     /** Quita el acotamiento. */
     onClearStage?: () => void;
+    /**
+     * Sustituye `CAP` para la cola sin acotar por etapa. Pensado para un
+     * anfitrión compacto (el panel de control) que muestra una muestra y
+     * remite el resto a otra pantalla — no cambia qué cuenta como pendiente,
+     * solo cuánto se pinta aquí.
+     */
+    limit?: number;
+    /**
+     * Si se pasa, el remanente ("y N más") se ofrece como una continuación
+     * navegable en vez de solo anunciarse en texto. Sin esta prop el
+     * comportamiento es el de siempre: un aviso, no un enlace.
+     */
+    onVerTodo?: () => void;
+    /** Texto del enlace de continuación. */
+    verTodoLabel?: string;
 }
 
 const WorkQueue: React.FC<WorkQueueProps> = ({
     items, capabilities, loading, error, onOpen,
     stage = null, stageLabel, onClearStage,
+    limit, onVerTodo, verTodoLabel = 'Ver todo en Estudiantes',
 }) => {
     // Política (queuePolicy): visibles + accionables por el usuario. La regla
     // vive en la política, no en el componente.
@@ -114,7 +130,7 @@ const WorkQueue: React.FC<WorkQueueProps> = ({
         [pending, stage],
     );
 
-    const visible = shown.slice(0, stage ? CAP_FILTERED : CAP);
+    const visible = shown.slice(0, stage ? CAP_FILTERED : (limit ?? CAP));
     const overflow = shown.length - visible.length;
     const loaded = items !== null;
 
@@ -229,7 +245,13 @@ const WorkQueue: React.FC<WorkQueueProps> = ({
                             );
                         })}
                     </ul>
-                    {overflow > 0 && (
+                    {overflow > 0 && onVerTodo && (
+                        <button type="button" className="wq__overflow-link" onClick={onVerTodo}>
+                            y <strong>{overflow}</strong> {overflow === 1 ? 'ítem más' : 'ítems más'} · {verTodoLabel}
+                            <ChevronRight size={14} aria-hidden="true" />
+                        </button>
+                    )}
+                    {overflow > 0 && !onVerTodo && (
                         <p className="wq__overflow">
                             y <strong>{overflow}</strong> {overflow === 1 ? 'ítem más' : 'ítems más'} en cola
                         </p>

@@ -22,6 +22,13 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     block?: boolean;
     /** Muestra spinner y deshabilita el botón. */
     loading?: boolean;
+    /**
+     * Con `loading`, rota el icono ya presente (primer `svg` hijo) en vez de
+     * añadir el spinner aparte. Pensado para refrescar/reintentar: el icono
+     * ya dice «esto recarga», y sumarle un spinner al lado solo duplica el
+     * mensaje y además cambia el ancho del botón al aparecer y desaparecer.
+     */
+    spinIcon?: boolean;
 }
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
@@ -37,6 +44,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size = 'md',
             block = false,
             loading = false,
+            spinIcon = false,
             disabled,
             className,
             children,
@@ -50,6 +58,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             `ui-btn--${variant}`,
             SIZE_CLASS[size],
             block ? 'ui-btn--block' : '',
+            loading && spinIcon ? 'ui-btn--spin-icon' : '',
             className ?? '',
         ]
             .filter(Boolean)
@@ -64,7 +73,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 aria-busy={loading || undefined}
                 {...rest}
             >
-                {loading && <span className="ui-btn__spinner" aria-hidden="true" />}
+                {loading && !spinIcon && <span className="ui-btn__spinner" aria-hidden="true" />}
                 {children}
             </button>
         );

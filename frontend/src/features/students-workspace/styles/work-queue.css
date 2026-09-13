@@ -206,6 +206,43 @@
 }
 .wq__overflow strong { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
+/* Continuación navegable: la misma información que `.wq__overflow`, pero
+   accionable — el anfitrión compacto (panel de control) acota la cola
+   visible y necesita un destino real para "lo demás", no solo un aviso. */
+.wq__overflow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-primary-text);
+    cursor: pointer;
+}
+.wq__overflow-link strong { font-variant-numeric: tabular-nums; }
+.wq__overflow-link:hover { text-decoration: underline; }
+/* Misma señal direccional que «Abrir expediente completo» (quick-view.css) y
+   la auditoría de elegibilidad: el icono se adelanta, el disparador del
+   :hover no se mueve. */
+.wq__overflow-link svg {
+    transition: transform var(--transition-fast);
+}
+.wq__overflow-link:hover svg {
+    transform: translateX(3px);
+}
+.wq__overflow-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+}
+@media (max-width: 640px) {
+    .wq__overflow-link { min-height: 44px; }
+}
+
 .wq__note {
     margin: 0;
     font-size: var(--text-sm);
@@ -272,6 +309,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     .wq__scope { transition: none; }
+    .wq__overflow-link svg { transition: none; }
+    .wq__overflow-link:hover svg { transform: none; }
 }
 
 @media (max-width: 640px) {

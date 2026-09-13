@@ -185,6 +185,22 @@
     position: relative;   /* ancla del indicador activo que "viaja" */
 }
 
+/* Etiqueta de sección — mismo rótulo que el kicker de la página a la que
+   agrupa (ver `group` en Sidebar.tsx), no una taxonomía inventada para la
+   barra. Solo aparece cuando agrupa 2 o más ítems visibles. */
+.dash-sidebar__nav-group {
+    margin: var(--space-12) var(--space-12) 0;
+    padding: 0 var(--space-12);
+    font-size: var(--text-3xs);
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps-sm);
+    color: oklch(1 0 0 / 0.45);
+}
+/* La primera etiqueta no necesita el aire superior: ya lo da el padding del
+   propio `<nav>`, y sumarlo aquí también lo duplicaba. */
+.dash-sidebar__nav-group:first-child { margin-top: 0; }
+
 .dash-sidebar__nav-item {
     position: relative;
     z-index: 1;           /* por encima del indicador que viaja detrás */
@@ -310,6 +326,35 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+}
+
+/* Identidad de la sesión, justo encima de la acción que la termina. */
+.dash-sidebar__identity {
+    display: flex;
+    align-items: center;
+    gap: var(--space-10);
+    padding: var(--space-8) var(--space-12);
+    margin-bottom: var(--space-4);
+}
+.dash-sidebar__identity-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: var(--space-2);
+}
+.dash-sidebar__identity-name {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dash-sidebar__identity-role {
+    font-size: var(--text-3xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps-sm);
+    color: oklch(1 0 0 / 0.55);
 }
 
 /* ── Cerrar sesión ────────────────────────────────────────────────────
@@ -794,6 +839,17 @@
     color: oklch(0.93 0.02 275);
 }
 
+/* La ficha que domina la fila: más escala tipográfica, no más color — el color
+   de alerta es una señal semántica aparte y `--primary` debe convivir con ella
+   sin pisarla (una ficha puede ser ambas a la vez). Nada aquí toca borde ni
+   fondo, así que no hay conflicto de especificidad con `--alerta`. */
+.cohort-tile--primary .cohort-tile__value {
+    font-size: clamp(1.75rem, 3.6vw, 2.25rem);
+}
+.cohort-tile--primary .cohort-tile__label {
+    font-size: var(--text-xs);
+}
+
 /* Hay trabajo sin resolver. Ámbar cálido y no rojo: sobre la portada oscura el
    rojo compite con la aurora índigo y se lee como un fallo del sistema, cuando
    lo que dice es «quedan expedientes». Refuerza a la cifra, no la sustituye. */
@@ -968,6 +1024,10 @@
     .dash-sidebar--open .dash-sidebar__nav-item:nth-child(5) { animation-delay: 0.20s; }
     .dash-sidebar--open .dash-sidebar__nav-item:nth-child(6) { animation-delay: 0.24s; }
     .dash-sidebar--open .dash-sidebar__nav-item:nth-child(7) { animation-delay: 0.28s; }
+    /* La etiqueta de grupo «Gestión académica» ocupa una posición en `<nav>`
+       sin llevar esta clase, así que para el coordinador (con esa sección
+       agrupada) el último ítem cae en la posición 8, no en la 7. */
+    .dash-sidebar--open .dash-sidebar__nav-item:nth-child(8) { animation-delay: 0.32s; }
 
     /* Mostrar overlay cuando sidebar abierta */
     .dash-sidebar--open~.dash-main .dash-sidebar-overlay,

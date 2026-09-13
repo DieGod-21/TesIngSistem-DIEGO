@@ -159,6 +159,9 @@ const EvaluatorDashboard: React.FC = () => {
                                 kpis={kpis}
                                 groupLabel="Tu carga de evaluación"
                                 destinoHint="Ver estas ternas."
+                                /* Lo que de verdad pide algo del evaluador, no cuánto
+                                   ya envió ni en cuántos paneles participa. */
+                                primaryId="ev-pendientes"
                             />
                         )}
 

@@ -255,6 +255,75 @@ describe('apariencia', () => {
         });
     });
 
+    describe('el padrón enseña estudiantes', () => {
+        /** Nombres que no caben en el hueco que tienen. */
+        function truncados(win: Window): string[] {
+            return Array.from(win.document.querySelectorAll('.sl-student-name'))
+                .filter((el) => (el as HTMLElement).scrollWidth > (el as HTMLElement).clientWidth + 1)
+                .map((el) => el.textContent?.trim() ?? '');
+        }
+
+        beforeEach(() => {
+            cy.visitaDemo('/students');
+            cy.get('.pb__chip-count', { timeout: 20000 }).should('exist');
+            cy.get('.sl-table__tr', { timeout: 20000 }).should('have.length.greaterThan', 3);
+        });
+
+        it('a 1280 los nombres se leen enteros salvo el que de verdad no cabe', () => {
+            /*
+             * MEDIDO antes del arreglo: 16 de 20 nombres salían cortados a
+             * media palabra —«EDGAR LEONEL CASTAÑED…»— por un tope fijo de
+             * 200px, mientras la propia celda medía 320px. Quince de los
+             * dieciséis necesitaban entre 203 y 243px: se recortaba
+             * información teniendo sitio libre al lado.
+             *
+             * El único que puede seguir recortado es el nombre más largo del
+             * padrón, que pide 494px y no cabe en ninguna tabla razonable.
+             */
+            cy.window().then((win) => {
+                const cortados = truncados(win);
+                expect(cortados.length, `cortados: ${cortados.join(' | ')}`).to.be.lessThan(3);
+                cortados.forEach((n) => {
+                    expect(n, 'solo se recorta el nombre larguísimo').to.match(/XITUMUL|^$/);
+                });
+            });
+        });
+
+        it('la tabla no desborda su tarjeta a 1280', () => {
+            // Dar más sitio al nombre no puede pagarse con una barra de
+            // desplazamiento horizontal dentro de la tarjeta.
+            cy.get('.sl-table-wrap').should(($w) => {
+                const el = $w[0];
+                expect(el.scrollWidth, 'la tabla cabe').to.be.at.most(el.clientWidth + 1);
+            });
+        });
+
+        it('el listado va ANTES que la cola de trabajo', () => {
+            /*
+             * MEDIDO antes del arreglo: la tabla empezaba a 1284px con una
+             * ventana de 800px de alto, así que la pantalla llamada
+             * «Estudiantes» tardaba 1,6 pantallas en enseñar estudiantes. La
+             * cola no se quitó —sigue entera, con sus mismas acciones—: se
+             * ordenó por prioridad.
+             *
+             * Se compara la POSICIÓN de los dos bloques en el documento, no un
+             * píxel concreto: así la prueba sobrevive a cambios de espaciado.
+             */
+            cy.get('.sl-table-wrap').then(($tabla) => {
+                cy.get('.wq').then(($cola) => {
+                    const orden = $tabla[0].compareDocumentPosition($cola[0]);
+                    const colaVaDespues = (orden & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+                    expect(colaVaDespues, 'la cola va después del padrón').to.eq(true);
+                });
+            });
+        });
+
+        it('la cola conserva sus ítems y su acción tras el cambio de sitio', () => {
+            cy.get('.wq__item').should('have.length.greaterThan', 0);
+            cy.get('.wq').find('a,button').should('have.length.greaterThan', 0);
+        });
+    });
+
     describe('desplegables', () => {
         it('llevan la punta del producto, no la del navegador', () => {
             /*

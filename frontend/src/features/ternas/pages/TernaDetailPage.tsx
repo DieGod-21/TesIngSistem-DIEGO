@@ -169,7 +169,7 @@ const TernaDetailPage: React.FC = () => {
 
                                 <article className="tdetail-card">
                                     <h2 className="tdetail-card__title">Mi evaluación</h2>
-                                    <EvaluationForm terna={terna} onChanged={reload} />
+                                    <EvaluationForm terna={terna} onChanged={reload} notaMinima={eligibility?.nota_minima} />
                                 </article>
                             </section>
 

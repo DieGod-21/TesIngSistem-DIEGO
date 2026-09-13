@@ -120,10 +120,9 @@ const ReportesPage: React.FC = () => {
     const refrescando  = loading && ternas.length > 0;
 
     /*
-     * La cascada de filas, solo la primera vez que llega el reporte. Al
-     * cambiar de chip la tarjeta ya se remonta entera y hace su fundido; las
-     * filas escalonándose otra vez por dentro eran una segunda entrada
-     * encima de la misma acción. Ver `usePrimeraLlegada`.
+     * La cascada de filas, solo la primera vez que llega el reporte. Filtrar
+     * NO es llegar: sin esto, cada chip volvería a escalonar las filas que ya
+     * estaban ahí. Ver `usePrimeraLlegada`.
      */
     const primeraLlegada = usePrimeraLlegada(filtered.map((t) => t.terna_id));
 
@@ -190,6 +189,7 @@ const ReportesPage: React.FC = () => {
                         variant="secondary"
                         onClick={() => load(undefined, true)}
                         loading={refrescando}
+                        spinIcon
                         aria-label="Refrescar reporte"
                     >
                         <RefreshCw size={16} aria-hidden="true" />
@@ -236,7 +236,6 @@ const ReportesPage: React.FC = () => {
 
                 {!cargaInicial && !error && filtered.length > 0 && (
                     <div
-                        key={filter}
                         className={`reportes-table-card view-transition${refrescando ? ' ui-refrescando' : ''}`}
                         aria-busy={refrescando || undefined}
                     >

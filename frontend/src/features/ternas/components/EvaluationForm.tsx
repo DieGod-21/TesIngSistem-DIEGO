@@ -41,10 +41,18 @@ import { Button } from '../../../components/ui';
 import { useEvaluationStore, hayCambiosSinGuardar } from '../../../stores/evaluationStore';
 import type { TernaDetalle, EvaluadorTerna } from '../../../types/api';
 import { userMessageFor } from '../../../services/errorMessages';
+import '../../../components/thesis/thesis-status.css';
 
 interface Props {
     terna: TernaDetalle;
     onChanged: () => void | Promise<void>;
+    /**
+     * El mismo umbral que ya se pinta en «Elegibilidad de tesis», en la otra
+     * columna de esta misma pantalla — no un número propio del formulario.
+     * `undefined` mientras esa tarjeta todavía no cargó: la barra de abajo
+     * solo aparece cuando hay un umbral real que enseñar, nunca uno inventado.
+     */
+    notaMinima?: number;
 }
 
 type PendingAction =
@@ -69,7 +77,7 @@ function findMyEvaluation(terna: TernaDetalle, usuarioId: number | null): Evalua
     return terna.evaluadores.find((e) => (e.id ?? e.usuario_id) === usuarioId) ?? null;
 }
 
-const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
+const EvaluationForm: React.FC<Props> = ({ terna, onChanged, notaMinima }) => {
     const { isAdmin, usuarioId, capabilities } = useAuth();
     const { toast } = useToast();
     const mine = findMyEvaluation(terna, usuarioId);
@@ -84,6 +92,23 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
     // Lo que se ve: lo tecleado manda sobre lo del servidor.
     const score = local?.calificacion ?? (mine?.calificacion?.toString() ?? '');
     const comments = local?.comentarios ?? (mine?.comentarios ?? '');
+    /*
+     * Mismo cálculo que `CourseProgressRow` en ThesisStatusBadge, para la
+     * misma barra visual: el número que se está escribiendo aquí es el mismo
+     * que esa tarjeta compara contra el umbral, y hasta ahora era el único
+     * dato del formulario sin ningún refuerzo visual pese a ser el que de
+     * verdad importa.
+     */
+    const scoreNum = score.trim() === '' ? null : Number(score);
+    const scoreValido = scoreNum != null && !Number.isNaN(scoreNum);
+    const scorePct = scoreValido ? Math.max(0, Math.min(100, scoreNum as number)) : 0;
+    /*
+     * Verde/rojo SOLO reflejan si ESTE número, de ser el definitivo, cruza el
+     * umbral — no el resultado de la terna, que promedia a todos los
+     * evaluadores. Sin nota tecleada la barra queda neutra: no hay nada que
+     * juzgar todavía.
+     */
+    const scoreTono = !scoreValido ? '' : (scoreNum as number) >= (notaMinima ?? 0) ? ' tsb-grade--pass' : ' tsb-grade--fail';
     const sinGuardar = hayCambiosSinGuardar(local, {
         calificacion: mine?.calificacion ?? null,
         comentarios: mine?.comentarios ?? null,
@@ -261,6 +286,18 @@ const EvaluationForm: React.FC<Props> = ({ terna, onChanged }) => {
                             <span id="ev-score-hint" className="eval-form__hint">
                                 Requerida para enviar; opcional para guardar borrador.
                             </span>
+                        )}
+                        {notaMinima != null && (
+                            <div
+                                className={`tsb-grade__bar eval-form__score-bar${scoreTono}`}
+                                role="img"
+                                aria-label={`Calificación: ${scoreValido ? scoreNum : 'sin ingresar'} de 100 (mínimo ${notaMinima})`}
+                            >
+                                <div className="tsb-grade__fill" style={{ '--bar-fill': `${scorePct}%` } as React.CSSProperties} />
+                                <div className="tsb-grade__threshold" style={{ left: `${notaMinima}%` }} aria-hidden="true">
+                                    <span className="tsb-grade__threshold-label">{notaMinima}</span>
+                                </div>
+                            </div>
                         )}
                     </div>
 
