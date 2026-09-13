@@ -39,6 +39,15 @@ interface Props {
     groupLabel?: string;
     /** Qué hay al otro lado de la ficha. Va en el nombre accesible del botón. */
     destinoHint?: string;
+    /**
+     * `id` del indicador que domina visualmente la fila.
+     *
+     * Las tres fichas pesaban lo mismo aunque no dijeran lo mismo: un total de
+     * contexto, un conteo positivo y el único que de verdad pide acción. Se
+     * destaca por ESCALA tipográfica, no por color — el color de alerta ya lo
+     * lleva `--alerta` y hay que dejarlo intacto como la señal semántica que es.
+     */
+    primaryId?: string;
 }
 
 function toNumeric(val: string | number): number | null {
@@ -48,7 +57,9 @@ function toNumeric(val: string | number): number | null {
 
 const AnimatedValue: React.FC<{ value: number }> = ({ value }) => <>{useCountUp(value)}</>;
 
-const CohortTile: React.FC<{ data: KpiData; destinoHint: string }> = ({ data, destinoHint }) => {
+const CohortTile: React.FC<{ data: KpiData; destinoHint: string; primary: boolean }> = ({
+    data, destinoHint, primary,
+}) => {
     const history = useHistory();
     const Icon = resolveIcon(data.iconName);
     const numeric = toNumeric(data.value);
@@ -75,7 +86,7 @@ const CohortTile: React.FC<{ data: KpiData; destinoHint: string }> = ({ data, de
         </>
     );
 
-    const clase = `cohort-tile${alerta ? ' cohort-tile--alerta' : ''}`;
+    const clase = `cohort-tile${alerta ? ' cohort-tile--alerta' : ''}${primary ? ' cohort-tile--primary' : ''}`;
 
     if (!destino) {
         return <div className={clase}>{contenido}</div>;
@@ -99,10 +110,11 @@ const CohortTiles: React.FC<Props> = ({
     kpis,
     groupLabel = 'Estado de la cohorte',
     destinoHint = 'Ver el detalle en el padrón.',
+    primaryId,
 }) => (
     <div className="cohort-tiles" role="group" aria-label={groupLabel}>
         {kpis.map((k) => (
-            <CohortTile key={k.id} data={k} destinoHint={destinoHint} />
+            <CohortTile key={k.id} data={k} destinoHint={destinoHint} primary={k.id === primaryId} />
         ))}
     </div>
 );

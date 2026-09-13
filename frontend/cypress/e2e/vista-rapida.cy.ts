@@ -116,6 +116,27 @@ describe('vista rápida: recorrer el padrón', () => {
         cy.get('.sl-table__tr').should('have.length.greaterThan', 3);
         cy.location('search').should('not.match', /preview=/);
     });
+
+    it('«Abrir expediente completo» y luego Volver deja en el padrón, no en el panel', () => {
+        /*
+         * MEDIDO antes del arreglo: abrir el expediente completo desde aquí
+         * APILABA una entrada de historial sobre la de la vista rápida (dos
+         * `push` seguidos). «Volver» en el expediente hacía un solo
+         * `goBack()` y aterrizaba de nuevo sobre la URL con `?preview=`, y
+         * había que cerrar el panel una SEGUNDA vez para llegar al padrón.
+         *
+         * El arreglo cambia ese `push` por un `replace`: la entrada de la
+         * vista rápida se sustituye en vez de apilarse, así que un solo
+         * «Volver» basta.
+         */
+        cy.contains('.qv-cta', /Abrir expediente completo/i).click();
+        cy.location('pathname', { timeout: 20000 }).should('match', /^\/students\/\d+$/);
+
+        cy.contains('button', /Volver|Ir al listado/i).click();
+        cy.location('pathname', { timeout: 20000 }).should('eq', '/students');
+        cy.get('.qv-panel').should('not.exist');
+        cy.location('search').should('not.match', /preview=/);
+    });
 });
 
 /*

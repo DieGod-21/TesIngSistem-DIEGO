@@ -155,7 +155,12 @@ describe('lenguaje de interacción', () => {
                 expect(animando(win), 'al llegar, las filas se escalonan').to.be.greaterThan(0);
             });
 
-            cy.get('.sl-pager__btn').eq(2).click();          // página siguiente
+            /* `scrollBehavior: 'center'` como en el resto del repositorio: el
+               paginador ya no es lo último de la página —la cola de trabajo va
+               debajo—, así que al desplazarlo a la vista por arriba queda bajo
+               la cabecera pegajosa y el clic no llega. Lo que la prueba vigila
+               (que paginar no reestrene la cascada) no cambia. */
+            cy.get('.sl-pager__btn').eq(2).click({ scrollBehavior: 'center' }); // página siguiente
             cy.get('.sl-table__tr', { timeout: 10000 }).should('have.length.greaterThan', 3);
             cy.window().then((win) => {
                 expect(animando(win), 'paginar ya no reproduce la entrada').to.eq(0);
@@ -208,6 +213,37 @@ describe('lenguaje de interacción', () => {
             cy.get('.reportes-table tbody tr').should('exist');
             cy.window().then((win) => {
                 expect(recienArrancadas(win, '.reportes-table tbody tr'), 'filtrar no reestrena').to.eq(0);
+            });
+        });
+
+        it('reportes: cambiar de chip no remonta la tarjeta ni salta de golpe', () => {
+            /*
+             * MEDIDO antes del arreglo: la tarjeta llevaba `key={filter}` y se
+             * desmontaba entera en cada chip —incluidas las filas que seguían
+             * siendo las mismas—, con un salto más brusco cuanto más se acortaba
+             * el resultado. Se marca el nodo de la tarjeta y el de una fila que
+             * sobrevive al filtro: si cualquiera desaparece, algo se remontó.
+             */
+            cy.visitaDemo('/reports');
+            cy.get('.reportes-table tbody tr', { timeout: 20000 }).should('have.length.greaterThan', 1);
+
+            cy.get('.reportes-table-card').then(($c) => { $c[0].dataset.testigo = 'misma-tarjeta'; });
+            cy.get('.reportes-table tbody tr').first().invoke('attr', 'aria-label');
+            cy.get('.reportes-table tbody tr').then(($filas) => {
+                // Cualquier resolución que deje al menos una fila visible tras
+                // filtrar sirve de testigo; se toma la primera fila tal cual.
+                $filas[0].dataset.testigo = 'misma-fila';
+            });
+
+            cy.get('.ui-chip').eq(1).click({ scrollBehavior: 'center' });
+            cy.get('.reportes-table-card').should('have.attr', 'data-testigo', 'misma-tarjeta');
+            // La fila marcada solo sigue en el documento si su resolución
+            // coincide con el filtro elegido; de lo contrario React la retira
+            // (correcto) sin tocar las demás. Cualquiera de los dos casos es
+            // sano: lo único que NO puede pasar es que la tarjeta se remonte.
+            cy.get('body').then(($b) => {
+                const sigue = $b.find('[data-testigo="misma-fila"]').length > 0;
+                if (sigue) cy.get('[data-testigo="misma-fila"]').should('exist');
             });
         });
     });

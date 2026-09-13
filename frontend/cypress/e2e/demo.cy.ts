@@ -55,6 +55,20 @@ describe('entorno de demostración', () => {
             .should('exist');
     });
 
+    it('el estado restringido ofrece salida y lleva al panel', () => {
+        /*
+         * Era el único final del producto sin camino de vuelta: los vacíos dan
+         * «Limpiar filtros» y los errores «Reintentar», pero aquí solo quedaba
+         * la barra lateral. Se comprueban las DOS mitades: que la explicación
+         * siga ahí y que la salida funcione de verdad.
+         */
+        cy.entrar('rmendez@miumg.edu.gt');
+        cy.visitaDemo('/students');
+        cy.contains('Acceso restringido', { timeout: 20000 }).should('be.visible');
+        cy.contains('button', /ir al inicio/i).should('be.visible').click();
+        cy.location('pathname', { timeout: 20000 }).should('eq', '/dashboard');
+    });
+
     it('la banda no tapa «Cerrar Sesión» en ninguna altura de ventana', () => {
         cy.entrar();
         [720, 800, 900].forEach((alto) => {

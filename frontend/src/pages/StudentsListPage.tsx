@@ -181,19 +181,8 @@ const StudentsListPage: React.FC = () => {
 
                 {capabilities.canViewReports && <SinceLastVisit diff={sinceDiff} />}
 
-                {capabilities.canViewReports && (
-                    <WorkQueue
-                        items={pipeline.result ? pipeline.result.items : null}
-                        capabilities={capabilities}
-                        loading={pipeline.loading}
-                        error={pipeline.error}
-                        onOpen={(item) => history.push(resolveWorkItemHref(item))}
-                        stage={activeStage}
-                        stageLabel={activeStage ? STAGE_LABEL[activeStage] : undefined}
-                        onClearStage={() => goStage(null)}
-                    />
-                )}
-
+                {/* La lente va PEGADA al listado porque es su filtro: los chips
+                    de arriba deciden qué filas se ven justo debajo. */}
                 <ProgressBand
                     activeLens={activeLens}
                     onSelectLens={goLens}
@@ -215,6 +204,29 @@ const StudentsListPage: React.FC = () => {
                             locationSearch={location.search}
                         />}
                 </div>
+
+                {/*
+                 * LA COLA VA DESPUÉS DEL PADRÓN, no antes.
+                 *
+                 * MEDIDO: con la cola arriba, la tabla de estudiantes empezaba
+                 * a 1284px en una ventana de 800px de alto. La pantalla que se
+                 * llama «Estudiantes» tardaba 1,6 pantallas en enseñar
+                 * estudiantes, y lo que ocupaba ese sitio —la cola de trabajo—
+                 * ya está entera, y con su propia salida, en el panel de
+                 * control. No se quita nada: se ordena por prioridad.
+                 */}
+                {capabilities.canViewReports && (
+                    <WorkQueue
+                        items={pipeline.result ? pipeline.result.items : null}
+                        capabilities={capabilities}
+                        loading={pipeline.loading}
+                        error={pipeline.error}
+                        onOpen={(item) => history.push(resolveWorkItemHref(item))}
+                        stage={activeStage}
+                        stageLabel={activeStage ? STAGE_LABEL[activeStage] : undefined}
+                        onClearStage={() => goStage(null)}
+                    />
+                )}
         </div>
     );
 };
@@ -357,7 +369,8 @@ const DefaultStudentsView: React.FC<{
                     <Button
                         variant="secondary"
                         onClick={reload}
-                        disabled={loading}
+                        loading={loading}
+                        spinIcon
                         aria-label="Refrescar listado"
                     >
                         <RefreshCw size={16} aria-hidden="true" />
@@ -375,7 +388,7 @@ const DefaultStudentsView: React.FC<{
 
             <div className="sl-table-wrap">
                 <table
-                    className={`sl-table${primeraLlegada ? '' : ' sl-table--sin-cascada'}`}
+                    className={`sl-table sl-table--padron${primeraLlegada ? '' : ' sl-table--sin-cascada'}`}
                     aria-label="Listado de estudiantes"
                 >
                     <thead>
@@ -447,14 +460,14 @@ const DefaultStudentsView: React.FC<{
                                 <td className="sl-table__td">
                                     <div className="sl-student-cell">
                                         <Avatar name={s.nombre} />
-                                        <div>
+                                        <div className="sl-student-text">
                                             <p className="sl-student-name">{s.nombre}</p>
                                             <p className="sl-student-carnet">{s.carnet}</p>
                                         </div>
                                     </div>
                                 </td>
                                 <td className="sl-table__td">
-                                    <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{s.email || '—'}</span>
+                                    <span className="sl-email" title={s.email || undefined} style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{s.email || '—'}</span>
                                 </td>
                                 <td className="sl-table__td">
                                     {(() => {
@@ -497,7 +510,12 @@ const DefaultStudentsView: React.FC<{
             <StudentQuickView
                 studentId={previewId}
                 onClose={closePreview}
-                onOpenFull={(sid) => history.push(routes.studentDetail(sid))}
+                // `replace`, no `push`: abrir la vista completa sustituye la
+                // entrada de la inspección rápida en vez de apilarse sobre
+                // ella. Sin esto, «Volver» desde la vista completa aterrizaba
+                // en la inspección (con el panel abierto otra vez) en lugar
+                // del listado, y había que cerrarlo una segunda vez.
+                onOpenFull={(sid) => history.replace(routes.studentDetail(sid))}
                 onPrev={previewIndex > 0 ? () => stepPreview(-1) : undefined}
                 onNext={
                     previewIndex >= 0 && previewIndex < estudiantes.length - 1
@@ -614,7 +632,8 @@ const TesisFilteredView: React.FC<{
                     <Button
                         variant="secondary"
                         onClick={() => load()}
-                        disabled={loading}
+                        loading={loading}
+                        spinIcon
                         aria-label="Refrescar listado"
                     >
                         <RefreshCw size={16} aria-hidden="true" />
@@ -693,7 +712,7 @@ const TesisFilteredView: React.FC<{
                                     <td className="sl-table__td">
                                         <div className="sl-student-cell">
                                             <Avatar name={s.nombre} />
-                                            <div>
+                                            <div className="sl-student-text">
                                                 <p className="sl-student-name">{s.nombre}</p>
                                                 <p className="sl-student-carnet">{s.carnet}</p>
                                             </div>

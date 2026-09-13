@@ -203,11 +203,11 @@
 /*
  * La cascada es para LLEGAR, no para cada filtro.
  *
- * La tarjeta de la tabla lleva `key={filter}`: al cambiar de chip se remonta
- * entera y hace su fundido. Eso está bien —es UNA transición coordinada—, pero
- * dentro de ella las filas volvían a escalonarse por su cuenta, así que se veían
- * dos entradas superpuestas para la misma acción. Se queda el fundido de la
- * tarjeta; se va la cascada.
+ * Las filas se identifican por `terna_id`, así que cambiar de chip no las
+ * remonta —React reordena/quita/pone lo que corresponda—, y sin esta clase
+ * `usePrimeraLlegada` seguiría bastando para no repetir la entrada. Se deja
+ * de todos modos como cinturón y tirantes: si algún día una fila SÍ cambia de
+ * clave entre filtros, que no vuelva a escalonarse por eso.
  */
 .reportes-table--sin-cascada tbody tr { animation: none; }
 

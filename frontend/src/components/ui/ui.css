@@ -284,6 +284,14 @@
 }
 @keyframes ui-spin { to { transform: rotate(360deg); } }
 
+/* ── Icono que gira en vez de spinner aparte (refrescar/reintentar) ──
+   Mismo keyframe, aplicado directo al icono que ya trae el botón: nada se
+   añade ni se quita del árbol, así que el ancho del botón no cambia al
+   entrar o salir de carga. */
+.ui-btn--spin-icon svg:first-child {
+    animation: ui-spin 0.7s linear infinite;
+}
+
 /* Spinner suelto (verificación de sesión): no hay forma de contenido que
    prometer todavía, así que aquí sí es la respuesta correcta. Mismo keyframe
    que el del botón. */
@@ -303,6 +311,7 @@
     /* Se ralentiza en vez de detenerse: un spinner parado se lee como roto. */
     .ui-btn__spinner { animation-duration: 1.4s; }
     .ui-spinner { animation-duration: 1.6s; }
+    .ui-btn--spin-icon svg:first-child { animation-duration: 1.4s; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -837,6 +846,11 @@
     font: inherit;
     font-size: var(--text-base);
     outline: none;
+    /* El propio login ya viste su campo con este mismo reposo (`--shadow-xs`)
+       y funciona en los dos temas; aquí faltaba en el control genérico, que
+       por eso leía más plano que el de la pantalla de acceso pese a compartir
+       borde, radio y anillo de foco. */
+    box-shadow: var(--shadow-xs);
     transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 .ui-control::placeholder { color: var(--text-muted); }

@@ -184,6 +184,9 @@ const AdminDashboard: React.FC = () => {
                                     .filter((k) => k.id !== PROGRESS_KPI_ID)
                                     .map((k) => (KPI_LABEL[k.id] ? { ...k, label: KPI_LABEL[k.id] } : k))
                                     .map((k) => (k.id === TOTAL_KPI_ID ? conciliarTotal(k, padronTotal) : k))}
+                                /* El indicador que de verdad pide algo del coordinador,
+                                   no el que solo describe el tamaño de la cohorte. */
+                                primaryId="kpi-pending"
                             />
                         )}
                         {/* El error de los indicadores se resuelve DENTRO de su
@@ -225,6 +228,12 @@ const AdminDashboard: React.FC = () => {
                             loading={pipeline.loading}
                             error={pipeline.error}
                             onOpen={(item) => history.push(resolveWorkItemHref(item))}
+                            /* El panel de control es una vista de orientación, no el
+                               espacio de trabajo: una muestra acotada con una
+                               continuación real hacia el padrón evita que la cola
+                               ocupe la pantalla entera antes del progreso académico. */
+                            limit={5}
+                            onVerTodo={() => history.push(routes.students())}
                         />
                     </div>
 

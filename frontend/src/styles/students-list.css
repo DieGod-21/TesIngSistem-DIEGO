@@ -117,6 +117,61 @@
     font-size: var(--text-base);
 }
 
+/*
+ * ── REPARTO DECLARADO DE COLUMNAS DEL PADRÓN (desde 1200px) ────────────
+ *
+ * EL DEFECTO, MEDIDO: con el tope fijo de 200px sobre el nombre, 16 de 20
+ * nombres salían cortados a media palabra a 1280px —«EDGAR LEONEL
+ * CASTAÑED…»— y quince de ellos necesitaban entre 203 y 243px, mientras la
+ * celda que los contenía medía 320px. Se recortaba información teniendo
+ * sitio libre al lado.
+ *
+ * POR QUÉ NO BASTA QUITAR EL TOPE: con `table-layout: auto` el ancho de la
+ * columna lo decide el contenido, y el nombre va en `nowrap`, así que su
+ * ancho preferido es el del nombre más largo del padrón (494px). Sin tope, la
+ * tabla crecía a 1124px dentro de una tarjeta de ~941px y aparecía una barra
+ * de desplazamiento horizontal DENTRO de la tarjeta. Declarar porcentajes
+ * tampoco bastaba —se medían los mismos 576px—: en reparto automático el
+ * contenido manda sobre el ancho declarado.
+ *
+ * LA SOLUCIÓN: `table-layout: fixed`. El ancho lo manda el reparto y no el
+ * contenido, la columna del nombre recibe su parte, el nombre la usa entera y
+ * la elipsis solo entra cuando de verdad no cabe. Los porcentajes parten del
+ * reparto que la tabla ya hacía (34/27/19/13/6) y ceden al nombre el aire que
+ * sobraba en correo y estado: «Activo» ocupaba 45px en una columna de 125px.
+ *
+ * POR QUÉ SOLO DESDE 1200px: entre 641 y 1199px la barra lateral se queda con
+ * 256px y a la tabla le restan ~690px para cinco columnas. Ahí no sobra
+ * sitio, y MEDIDO: con el reparto declarado el nombre bajaba a 275px (193px
+ * útiles), por debajo de los 200px de antes, porque el reparto fijo escala
+ * las columnas para cuadrar el 100% y un suelo absoluto no sobrevive a esa
+ * escala. Forzarlo ahí solo movía el recorte al correo y a la insignia de
+ * tesis. Ese tramo —y el de móvil, con su columna de identidad congelada y su
+ * tope de 140px— se quedan EXACTAMENTE como estaban: el arreglo se aplica
+ * donde el espacio existe de verdad, que es donde se midió el defecto.
+ */
+@media (min-width: 1200px) {
+    .sl-table--padron { table-layout: fixed; }
+    .sl-table--padron .sl-table__th:nth-child(1) { width: 40%; }
+    .sl-table--padron .sl-table__th:nth-child(2) { width: 24%; }
+    .sl-table--padron .sl-table__th:nth-child(3) { width: 18%; }
+    .sl-table--padron .sl-table__th:nth-child(4) { width: 12%; }
+    .sl-table--padron .sl-table__th:nth-child(5) { width: 6%; }
+
+    /* Aquí sí: el nombre usa la columna entera en vez del tope en píxeles. */
+    .sl-table--padron .sl-student-name { max-width: 100%; }
+
+    /* Con reparto fijo la columna ya no se ensancha para el correo más largo:
+       si no cabe, se recorta con elipsis en vez de derramarse sobre «Tesis». */
+    .sl-table--padron .sl-email {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
 .sl-table__th {
     padding: var(--space-12) var(--space-16);
     text-align: left;
@@ -216,12 +271,40 @@
     display: flex;
     align-items: center;
     gap: var(--space-10);
+    /* Sin esto el nombre no puede encogerse: un ítem flex vale por defecto
+       `min-width: auto`, así que con el texto en `nowrap` la celda se niega a
+       ser más estrecha que el nombre entero y arrastra la tabla. Con 0, manda
+       el ancho que la columna reparte y la elipsis hace su trabajo. */
+    min-width: 0;
+}
+
+/* Envoltorio del texto (nombre + carné). Misma razón que arriba: es el ítem
+   flex que contiene al nombre, y sin `min-width: 0` el tope de abajo no puede
+   ceder. */
+.sl-student-text {
+    min-width: 0;
 }
 
 .sl-table__tr:hover .ui-avatar {
     box-shadow: var(--shadow-md);
 }
 
+/*
+ * El nombre ocupa lo que la columna le dé, no un tope en píxeles.
+ *
+ * MEDIDO con el tope fijo de 200px a 1280px: 16 de 20 nombres del padrón
+ * salían cortados a media palabra —«EDGAR LEONEL CASTAÑED…»— y quince de
+ * ellos necesitaban entre 203 y 243px, mientras la propia celda medía 320px.
+ * Se recortaba información teniendo sitio libre al lado.
+ *
+ * A partir de 1200px el tope pasa a ser `100%` de la columna (ver el reparto
+ * declarado más arriba): el límite lo pone la tabla, que es quien sabe cuánto
+ * sitio hay. Este valor queda como base para los anchos intermedios, donde la
+ * barra lateral no deja sitio que repartir, y el tope estrecho de móvil
+ * —columna congelada— sigue vigente más abajo. La elipsis se conserva siempre
+ * para el caso que de verdad no cabe: el nombre más largo del padrón pide
+ * 494px.
+ */
 .sl-student-name {
     font-weight: var(--weight-semibold);
     color: var(--dash-text-primary);

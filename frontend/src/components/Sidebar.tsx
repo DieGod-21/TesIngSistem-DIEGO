@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import type { Capabilities } from '../config/permissions';
+import { getRoleLabel, type Capabilities } from '../config/permissions';
+import { Avatar } from './ui';
 import umgLogo from '../assets/umg_logo.png';
 
 // ─── Tipos ───────────────────────────────────────────────────────────
@@ -56,19 +57,32 @@ interface NavItem {
      * estado activo por completo (ignora `exact`).
      */
     matchSection?: (pathname: string) => boolean;
+    /**
+     * Sección a la que pertenece, para agrupar visualmente.
+     *
+     * Se reutiliza el MISMO rótulo que ya usa `kicker` en la cabecera de cada
+     * página («Gestión académica», visible en Estudiantes/Nuevo
+     * Registro/Proyectos) en vez de inventar una taxonomía nueva solo para la
+     * barra lateral. Ternas, Reportes y Usuarios no comparten kicker con
+     * ningún otro ítem —cada uno es su propia sección de una sola entrada—,
+     * así que agruparlos sería fabricar una categoría que no existe en
+     * ningún otro sitio del producto.
+     */
+    group?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
     { label: 'Inicio',         to: '/dashboard',    icon: <Home size={20} />,           exact: true },
     { label: 'Nuevo Registro', to: '/students/new', icon: <UserPlus size={20} />,        exact: true,
-        capability: 'canCoordinate' },
+        capability: 'canCoordinate', group: 'Gestión académica' },
     {
         label: 'Estudiantes', to: '/students', icon: <Users size={20} />,
-        capability: 'canCoordinate',
+        capability: 'canCoordinate', group: 'Gestión académica',
         // Activo en /students y /students/:id, pero NO en /students/new (ítem propio).
         matchSection: (p) => p === '/students' || (p.startsWith('/students/') && p !== '/students/new'),
     },
     { label: 'Proyectos', labelEvaluador: 'Mis proyectos', to: '/proyectos', icon: <FolderOpen size={20} />,
+        group: 'Gestión académica',
         matchSection: (p) => p === '/proyectos' || p.startsWith('/proyectos/') },
     { label: 'Ternas', labelEvaluador: 'Mis ternas', to: '/ternas', icon: <ClipboardList size={20} />,
         matchSection: (p) => p === '/ternas' || p.startsWith('/ternas/') },
@@ -81,7 +95,7 @@ const NAV_ITEMS: NavItem[] = [
 // ─── Componente ──────────────────────────────────────────────────────
 
 const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
-    const { capabilities, workspace, logout } = useAuth();
+    const { user, capabilities, workspace, logout } = useAuth();
     const history = useHistory();
     const location = useLocation();
 
@@ -92,6 +106,33 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                 ? { ...item, label: item.labelEvaluador }
                 : item
         ));
+
+    /*
+     * Cuántos ítems VISIBLES caen en cada grupo. Con capacidades filtradas,
+     * «Gestión académica» trae 3 para quien coordina y solo 1 (Proyectos, ya
+     * renombrado «Mis proyectos») para el evaluador — y un grupo de un solo
+     * ítem no agrupa nada, solo añade una etiqueta de más encima de un enlace
+     * que ya se entendía solo. El rótulo únicamente aparece cuando agrupa de
+     * verdad; el evaluador ve la lista plana de siempre.
+     */
+    const groupCounts = items.reduce<Record<string, number>>((acc, item) => {
+        if (item.group) acc[item.group] = (acc[item.group] ?? 0) + 1;
+        return acc;
+    }, {});
+
+    /** Ítems intercalados con la etiqueta de grupo, solo donde agrupa 2+. */
+    type NavRow = { kind: 'header'; label: string } | { kind: 'item'; item: NavItem };
+    const rows: NavRow[] = [];
+    {
+        let lastGroup: string | undefined;
+        for (const item of items) {
+            if (item.group && item.group !== lastGroup && groupCounts[item.group] > 1) {
+                rows.push({ kind: 'header', label: item.group });
+            }
+            lastGroup = item.group;
+            rows.push({ kind: 'item', item });
+        }
+    }
 
     /* ── Indicador activo que "viaja" ──────────────────────────────────
      *
@@ -248,31 +289,44 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
 
                 {/* Navegación principal */}
                 <nav className="dash-sidebar__nav" aria-label="Navegación principal" ref={navRef}>
-                    {items.map((item) => (
-                        <NavLink
-                            key={item.label}
-                            to={item.to}
-                            exact={item.exact}
-                            isActive={
-                                item.matchSection
-                                    ? (_, loc) => item.matchSection!(loc.pathname)
-                                    : undefined
-                            }
-                            className="dash-sidebar__nav-item"
-                            activeClassName="dash-sidebar__nav-item--active"
-                            onClick={onClose}
-                            /* Entre que el puntero se posa y llega el clic hay
-                               cientos de milisegundos muertos. Se usan para
-                               traer el módulo, de modo que al pulsar ya esté y
-                               el usuario se ahorre uno de los dos esqueletos
-                               encadenados que se midieron. `onFocus` cubre lo
-                               mismo para quien navega con el teclado. */
-                            onMouseEnter={() => prefetchRuta(item.to)}
-                            onFocus={() => prefetchRuta(item.to)}
-                        >
-                            {item.icon}
-                            <span>{item.label}</span>
-                        </NavLink>
+                    {rows.map((row) => (
+                        row.kind === 'header'
+                            ? (
+                                /* Sin `aria-hidden`: la agrupación orienta
+                                   tanto a quien la ve como a quien navega con
+                                   lector de pantalla — ocultarla solo a uno de
+                                   los dos habría dejado a uno con menos
+                                   contexto que al otro sin ningún motivo. */
+                                <p key={`grupo-${row.label}`} className="dash-sidebar__nav-group">
+                                    {row.label}
+                                </p>
+                            )
+                            : (
+                                <NavLink
+                                    key={row.item.label}
+                                    to={row.item.to}
+                                    exact={row.item.exact}
+                                    isActive={
+                                        row.item.matchSection
+                                            ? (_, loc) => row.item.matchSection!(loc.pathname)
+                                            : undefined
+                                    }
+                                    className="dash-sidebar__nav-item"
+                                    activeClassName="dash-sidebar__nav-item--active"
+                                    onClick={onClose}
+                                    /* Entre que el puntero se posa y llega el clic hay
+                                       cientos de milisegundos muertos. Se usan para
+                                       traer el módulo, de modo que al pulsar ya esté y
+                                       el usuario se ahorre uno de los dos esqueletos
+                                       encadenados que se midieron. `onFocus` cubre lo
+                                       mismo para quien navega con el teclado. */
+                                    onMouseEnter={() => prefetchRuta(row.item.to)}
+                                    onFocus={() => prefetchRuta(row.item.to)}
+                                >
+                                    {row.item.icon}
+                                    <span>{row.item.label}</span>
+                                </NavLink>
+                            )
                     ))}
 
                     {/* Indicador activo que se desplaza entre destinos. */}
@@ -288,6 +342,24 @@ const Sidebar: React.FC<SidebarProps> = ({ open = false, onClose }) => {
                 </nav>
 
                 <div className="dash-sidebar__footer">
+                    {/*
+                     * A quién pertenece la sesión que «Cerrar sesión» va a
+                     * terminar. Los mismos datos ya viven en la cabecera
+                     * (arriba a la derecha), pero en el cajón móvil esa
+                     * cabecera no está a la vista a la vez que este menú —y
+                     * en escritorio, atar la identidad a la acción que la usa
+                     * es más útil que dejar 300px de aurora vacía entre el
+                     * último enlace y la salida.
+                     */}
+                    {user && (
+                        <div className="dash-sidebar__identity">
+                            <Avatar name={user.nombre} size="sm" />
+                            <span className="dash-sidebar__identity-text">
+                                <span className="dash-sidebar__identity-name">{user.nombre}</span>
+                                <span className="dash-sidebar__identity-role">{getRoleLabel(user.role)}</span>
+                            </span>
+                        </div>
+                    )}
                     <button
                         className="dash-sidebar__nav-item dash-sidebar__logout"
                         onClick={handleLogout}
