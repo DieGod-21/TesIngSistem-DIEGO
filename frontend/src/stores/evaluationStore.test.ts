@@ -7,29 +7,29 @@ describe('evaluationStore — lo tecleado sobrevive a la navegación', () => {
     beforeEach(() => store().limpiar());
 
     it('empieza sin nada', () => {
-        expect(store().leer(1)).toBeUndefined();
+        expect(store().borradores[1]).toBeUndefined();
     });
 
     it('conserva lo escrito para cada terna por separado', () => {
         store().escribir(1, { calificacion: '85' });
         store().escribir(2, { comentarios: 'Falta el análisis de riesgos.' });
 
-        expect(store().leer(1)).toEqual({ calificacion: '85', comentarios: '' });
-        expect(store().leer(2)).toEqual({ calificacion: '', comentarios: 'Falta el análisis de riesgos.' });
+        expect(store().borradores[1]).toEqual({ calificacion: '85', comentarios: '' });
+        expect(store().borradores[2]).toEqual({ calificacion: '', comentarios: 'Falta el análisis de riesgos.' });
     });
 
     it('mezcla cambios parciales sin borrar el otro campo', () => {
         store().escribir(1, { calificacion: '90' });
         store().escribir(1, { comentarios: 'Buen trabajo.' });
-        expect(store().leer(1)).toEqual({ calificacion: '90', comentarios: 'Buen trabajo.' });
+        expect(store().borradores[1]).toEqual({ calificacion: '90', comentarios: 'Buen trabajo.' });
     });
 
     it('descarta una terna sin tocar las demás', () => {
         store().escribir(1, { calificacion: '70' });
         store().escribir(2, { calificacion: '80' });
         store().descartar(1);
-        expect(store().leer(1)).toBeUndefined();
-        expect(store().leer(2)?.calificacion).toBe('80');
+        expect(store().borradores[1]).toBeUndefined();
+        expect(store().borradores[2]?.calificacion).toBe('80');
     });
 
     it('descartar algo que no existe no cambia la referencia del estado', () => {
@@ -42,8 +42,8 @@ describe('evaluationStore — lo tecleado sobrevive a la navegación', () => {
         store().escribir(1, { calificacion: '70' });
         store().escribir(2, { calificacion: '80' });
         store().limpiar();
-        expect(store().leer(1)).toBeUndefined();
-        expect(store().leer(2)).toBeUndefined();
+        expect(store().borradores[1]).toBeUndefined();
+        expect(store().borradores[2]).toBeUndefined();
     });
 });
 

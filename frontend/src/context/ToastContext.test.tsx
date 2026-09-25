@@ -198,3 +198,30 @@ describe('ToastContext · ciclo de vida', () => {
         expect(error).toHaveAttribute('aria-live', 'assertive');
     });
 });
+
+/**
+ * Quien LANZA avisos no los pinta: no tiene por qué re-renderizarse cuando la
+ * pila cambia. Antes el valor del contexto incluía la pila, así que cada aviso
+ * repintaba tres veces (alta, salida, retirada) a todos los consumidores
+ * montados, incluidas páginas de listado enteras que solo querían `toast`.
+ */
+describe('ToastContext · quien lanza avisos no se repinta por ellos', () => {
+    it('el ciclo completo de un aviso no re-renderiza a los consumidores', () => {
+        let renders = 0;
+        const Pagina: React.FC = () => {
+            renders++;
+            const { toast } = useToast();
+            return <button data-testid="lanzar" onClick={() => toast.success('Guardado')}>lanzar</button>;
+        };
+        render(<ToastProvider><Pagina /></ToastProvider>);
+        const inicial = renders;
+
+        act(() => { fireEvent.click(screen.getByTestId('lanzar')); });   // alta
+        expect(avisos()).toHaveLength(1);
+        cerrarAMano();                                                   // salida
+        finDeAnimacion(aviso()!);                                        // retirada
+        expect(avisos()).toHaveLength(0);
+
+        expect(renders).toBe(inicial);
+    });
+});

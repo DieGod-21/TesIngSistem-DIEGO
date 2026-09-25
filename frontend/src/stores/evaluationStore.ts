@@ -26,9 +26,6 @@ interface EvaluationState {
     /** Registra lo tecleado en una terna (parcial: solo el campo que cambió). */
     escribir: (ternaId: number, patch: Partial<BorradorLocal>) => void;
 
-    /** Lee lo tecleado en una terna, o `undefined` si está intacta. */
-    leer: (ternaId: number) => BorradorLocal | undefined;
-
     /**
      * Olvida lo tecleado en una terna. Se llama cuando el contenido ya está en
      * el servidor (borrador guardado o evaluación enviada): a partir de ahí la
@@ -41,15 +38,13 @@ interface EvaluationState {
     limpiar: () => void;
 }
 
-export const useEvaluationStore = create<EvaluationState>((set, get) => ({
+export const useEvaluationStore = create<EvaluationState>((set) => ({
     borradores: {},
 
     escribir: (ternaId, patch) => set((s) => {
         const previo = s.borradores[ternaId] ?? { calificacion: '', comentarios: '' };
         return { borradores: { ...s.borradores, [ternaId]: { ...previo, ...patch } } };
     }),
-
-    leer: (ternaId) => get().borradores[ternaId],
 
     descartar: (ternaId) => set((s) => {
         if (!(ternaId in s.borradores)) return s;      // sin cambios → sin re-render

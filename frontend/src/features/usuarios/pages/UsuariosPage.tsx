@@ -1,9 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Plus, Users, UserPlus, AlertTriangle, RefreshCw, Search } from 'lucide-react';
 import { listUsuariosCached, USUARIOS_LIST_KEY } from '../../../services/usuariosService';
-import { getCached } from '../../../services/cache';
-import { isCancel } from '../../../services/apiClient';
-import { userMessageFor } from '../../../services/errorMessages';
 import type { Usuario } from '../../../types/api';
 import NuevoUsuarioModal from '../components/NuevoUsuarioModal';
 import { Avatar, Button, Badge, PageHeader, EmptyState, Skeleton, ListCount, CopyField } from '../../../components/ui';
@@ -11,7 +8,10 @@ import { useToast } from '../../../context/ToastContext';
 
 import { matchesText } from '../../../utils/text';
 import { usePrimeraLlegada } from '../../../hooks/usePrimeraLlegada';
+import { useCachedResource } from '../../../hooks/useCachedResource';
 import '../styles/usuarios.css';
+
+const SIN_USUARIOS: Usuario[] = [];
 
 const ROL_LABEL: Record<string, string> = {
     admin:     'Admin',
@@ -48,11 +48,13 @@ const UsuariosPage: React.FC = () => {
      * en el primer render y se revalida detrás. Ver la nota extensa en
      * `ProyectosListPage`, que documenta la medición.
      */
-    const [usuarios, setUsuarios] = useState<Usuario[]>(
-        () => getCached<Usuario[]>(USUARIOS_LIST_KEY) ?? [],
-    );
-    const [loading, setLoading]   = useState(true);
-    const [error, setError]       = useState<string | null>(null);
+    const {
+        data,
+        loading,
+        error,
+        reload: fetchUsuarios,
+    } = useCachedResource(USUARIOS_LIST_KEY, listUsuariosCached);
+    const usuarios = data ?? SIN_USUARIOS;
     const [modalOpen, setModalOpen] = useState(false);
     const [search, setSearch]       = useState('');
     const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
@@ -63,27 +65,6 @@ const UsuariosPage: React.FC = () => {
      * tres que no lo hacía.
      */
     const [recienCreado, setRecienCreado] = useState<number | null>(null);
-
-    const fetchUsuarios = useCallback(async (signal?: AbortSignal) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await listUsuariosCached();
-            if (signal?.aborted) return;
-            setUsuarios(data);
-        } catch (e) {
-            if (signal?.aborted || isCancel(e)) return;
-            setError(userMessageFor(e));
-        } finally {
-            if (!signal?.aborted) setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        fetchUsuarios(controller.signal);
-        return () => controller.abort();
-    }, [fetchUsuarios]);
 
     const roleCounts = useMemo(() => ({
         admin:     usuarios.filter((u) => u.rol === 'admin').length,
@@ -288,10 +269,10 @@ const UsuariosPage: React.FC = () => {
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
                 onCreated={(nombre, id) => {
+                    // El alta ya invalidó `usuarios`: la lista vuelve a leer sola.
                     setModalOpen(false);
                     setRecienCreado(id);
                     toast.success(`${nombre} ya tiene acceso al sistema.`);
-                    fetchUsuarios();
                 }}
             />
         </div>

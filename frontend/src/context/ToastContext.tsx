@@ -29,10 +29,13 @@ export interface ToastItem {
     exiting?: boolean;
 }
 
+/**
+ * Solo la acción de lanzar. La pila de avisos la pinta el provider y no viaja
+ * en el contexto: si lo hiciera, cada aviso repintaría a todos los
+ * consumidores de `useToast`, que solo lanzan y nunca la leen.
+ */
 interface ToastContextValue {
-    toasts: ToastItem[];
     addToast: (type: ToastType, message: string, duration?: number) => void;
-    removeToast: (id: string) => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────
@@ -98,14 +101,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
     }, []);
 
-    // Valor memoizado: evita que los consumidores de `useToast` (páginas y
-    // acciones) re-rendericen cuando el provider re-renderiza por su padre
-    // (p. ej. ThemeProvider al alternar tema). addToast/removeToast ya son
-    // useCallback estables; el valor solo cambia al cambiar `toasts`.
-    const value = useMemo<ToastContextValue>(
-        () => ({ toasts, addToast, removeToast }),
-        [toasts, addToast, removeToast],
-    );
+    const value = useMemo<ToastContextValue>(() => ({ addToast }), [addToast]);
 
     return (
         <ToastContext.Provider value={value}>
