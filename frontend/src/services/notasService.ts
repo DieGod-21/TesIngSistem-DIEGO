@@ -11,10 +11,11 @@ import { invalidateEstudiantes } from './estudiantesService';
 import { invalidateTesis } from './tesisService';
 import type { Nota, NotasEstudianteResponse } from '../types/api';
 
+/** Cuerpo de `PUT /api/notas` tal como lo declara el contrato. */
 export interface UpsertNotaDto {
-    carnet: string;
-    curso_codigo: string;
-    nota_final: number;
+    estudianteId: number;
+    cursoCodigo: '043' | '049';
+    notaFinal: number;
     observacion?: string | null;
 }
 

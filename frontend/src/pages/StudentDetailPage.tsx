@@ -511,7 +511,7 @@ const StudentDetailPage: React.FC = () => {
             {state.student && capabilities.canEditGrades && (
                 <EditNotaModal
                     open={editModal.open}
-                    carnet={state.student.carnet}
+                    estudianteId={state.student.id}
                     initialCurso={editModal.curso}
                     initialNota={editModal.notaActual}
                     onClose={() => setEditModal((m) => ({ ...m, open: false }))}

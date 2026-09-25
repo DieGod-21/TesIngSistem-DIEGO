@@ -1,9 +1,9 @@
 /**
  * thesisStatus.ts
  *
- * Cálculo centralizado del estado de tesis a partir de las notas
- * crudas de PG1 (043) y PG2 (049). El backend NO entrega un estado
- * fiable de tesis, así que toda la lógica vive en el frontend.
+ * Estado de tesis a partir de las notas de PG1 (043) y PG2 (049).
+ * El veredicto lo decide el servidor (`veredictoTesis`); la regla local de
+ * `computeEstadoTesis` queda como respaldo y para detectar «faltan notas».
  *
  * Regla estricta:
  *   - PENDIENTE  → si pg1 o pg2 es null/undefined.
@@ -46,6 +46,59 @@ export function computeEstadoTesis({ pg1, pg2 }: NotasPG): EstadoTesisResultado 
         return { estado: 'APROBADO', aprobado: true };
     }
     return { estado: 'REPROBADO', aprobado: false };
+}
+
+/** Veredicto resuelto: estado, motivo y mínimo con los que se pinta la tesis. */
+export interface VeredictoTesis extends EstadoTesisResultado {
+    razon: string;
+    notaMinima: number;
+    /** true si el servidor y la regla local discrepan (solo diagnóstico). */
+    divergente: boolean;
+}
+
+function razonLocal(estado: EstadoTesisCalculado): string {
+    if (estado === 'APROBADO') return `Cumple con la nota mínima (${THESIS_MIN_GRADE}) en PG1 y PG2.`;
+    if (estado === 'PENDIENTE') return 'Faltan notas de PG1 y/o PG2.';
+    return `No alcanza la nota mínima (${THESIS_MIN_GRADE}) en PG1 y/o PG2.`;
+}
+
+/**
+ * Veredicto de tesis con el SERVIDOR como autoridad.
+ *
+ * `/api/tesis/estado` y el reporte integral ya entregan `aprueba_tesis`,
+ * `razon` y `nota_minima`. El cliente solo aporta lo que ese booleano no
+ * puede decir: «PENDIENTE» cuando falta alguna nota.
+ *
+ *   - Falta PG1 o PG2 (`notas`)           → PENDIENTE.
+ *   - El servidor evaluó con ambas notas  → su veredicto, su razón y su mínimo.
+ *   - Sin respuesta del servidor, o con notas que él no tenía (completadas
+ *     desde /notas) → la regla local, como respaldo.
+ */
+export function veredictoTesis(
+    servidor: EstadoTesis | ReporteEstudiante | null | undefined,
+    notas: NotasPG,
+): VeredictoTesis {
+    const local = computeEstadoTesis(notas);
+    const respaldo: VeredictoTesis = {
+        ...local,
+        razon: razonLocal(local.estado),
+        notaMinima: THESIS_MIN_GRADE,
+        divergente: false,
+    };
+    if (local.estado === 'PENDIENTE') return respaldo;
+
+    const delServidor = extractGradesFromReporte(servidor);
+    const evaluoCompleto = delServidor.pg1 != null && delServidor.pg2 != null;
+    if (!servidor || typeof servidor.aprueba_tesis !== 'boolean' || !evaluoCompleto) return respaldo;
+
+    const aprobado = servidor.aprueba_tesis;
+    return {
+        estado: aprobado ? 'APROBADO' : 'REPROBADO',
+        aprobado,
+        razon: servidor.razon?.trim() || razonLocal(aprobado ? 'APROBADO' : 'REPROBADO'),
+        notaMinima: typeof servidor.nota_minima === 'number' ? servidor.nota_minima : THESIS_MIN_GRADE,
+        divergente: aprobado !== local.aprobado,
+    };
 }
 
 /**

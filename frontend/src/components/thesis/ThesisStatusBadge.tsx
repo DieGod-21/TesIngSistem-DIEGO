@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import type { EstadoTesis, CursoNotaResumen, EstadoNota } from '../../types/api';
-import { computeEstadoTesis, extractGradesFromReporte } from '../../utils/thesisStatus';
+import { extractGradesFromReporte, veredictoTesis } from '../../utils/thesisStatus';
 import { VOCAB } from '../../config/vocabulary';
 import './thesis-status.css';
 
@@ -57,9 +57,9 @@ const CURSO_META: Record<string, { label: 'PG1' | 'PG2'; name: string }> = {
     '049': { label: 'PG2', name: 'Proyecto de Graduación II' },
 };
 
+/** El veredicto es el que trae `estado` (resuelto por el servidor); solo «faltan notas» se deriva aquí. */
 function deriveStatus(estado: EstadoTesis): VisualStatus {
-    const grades = extractGradesFromReporte(estado);
-    const result = computeEstadoTesis(grades).estado;
+    const result = veredictoTesis(estado, extractGradesFromReporte(estado)).estado;
     if (result === 'APROBADO')  return 'eligible';
     if (result === 'PENDIENTE') return 'pending';
     return 'not_eligible';

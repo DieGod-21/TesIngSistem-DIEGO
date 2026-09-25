@@ -16,7 +16,7 @@
 import { apiGet, apiPost } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 import { cached, invalidate } from './cache';
-import { unwrapCollection, unwrapEntity } from './normalize';
+import { unwrapCollection, unwrapEntity, detectTruncation, reportTruncation } from './normalize';
 import type { Proyecto, FaseProyecto } from '../types/api';
 
 export interface CreateProyectoDto {
@@ -35,16 +35,57 @@ export interface ListProyectosParams {
     search?: string;
 }
 
+/** Máximo que acepta el contrato por página; sin `limit` el servidor usa 50. */
+export const PROYECTOS_PAGE_SIZE = 100;
+
+type ProyectosPage =
+    | Proyecto[]
+    | { proyectos: Proyecto[]; pagination?: { pages?: number; total?: number } };
+
+function urlPagina(params: ListProyectosParams, page: number): string {
+    const qs = new URLSearchParams();
+    if (params.fase)   qs.set('fase', params.fase);
+    if (params.search) qs.set('search', params.search);
+    qs.set('page', String(page));
+    qs.set('limit', String(PROYECTOS_PAGE_SIZE));
+    return `${API_PATHS.proyectos.list}?${qs}`;
+}
+
+/**
+ * Todos los proyectos que cumplen el filtro, recorriendo las páginas.
+ *
+ * La respuesta no está documentada: si trae `pagination` se piden las páginas
+ * restantes; si no la trae y llega una página llena, el listado podría estar
+ * incompleto y se reporta como truncado en vez de asumir que es todo.
+ */
 export async function listProyectos(
     params: ListProyectosParams = {},
     opts: { signal?: AbortSignal } = {},
 ): Promise<Proyecto[]> {
-    const qs = new URLSearchParams();
-    if (params.fase)   qs.set('fase', params.fase);
-    if (params.search) qs.set('search', params.search);
-    const url = `${API_PATHS.proyectos.list}${qs.toString() ? `?${qs}` : ''}`;
-    const data = await apiGet<Proyecto[] | { proyectos: Proyecto[] }>(url, { signal: opts.signal });
-    return unwrapCollection<Proyecto>(data, ['proyectos'], url);
+    const primeraUrl = urlPagina(params, 1);
+    const primera = await apiGet<ProyectosPage>(primeraUrl, { signal: opts.signal });
+    const filas = unwrapCollection<Proyecto>(primera, ['proyectos'], primeraUrl);
+    const pagination = Array.isArray(primera) ? undefined : primera?.pagination;
+
+    if (typeof pagination?.pages !== 'number') {
+        if (detectTruncation(filas.length, undefined, PROYECTOS_PAGE_SIZE)) {
+            reportTruncation(API_PATHS.proyectos.list, filas.length);
+        }
+        return filas;
+    }
+
+    const resto = await Promise.all(
+        Array.from({ length: Math.max(0, pagination.pages - 1) }, (_, i) => {
+            const url = urlPagina(params, i + 2);
+            return apiGet<ProyectosPage>(url, { signal: opts.signal })
+                .then((p) => unwrapCollection<Proyecto>(p, ['proyectos'], url));
+        }),
+    );
+    const todas = filas.concat(...resto);
+    if (detectTruncation(todas.length, pagination.total)) {
+        reportTruncation(API_PATHS.proyectos.list, todas.length, pagination.total);
+    }
+    return todas;
 }
 
 // ─── Listado cacheado (el servicio POSEE su caché) ──────────────────────────

@@ -11,7 +11,7 @@ import { IonToast } from '@ionic/react';
 import { User, CreditCard, Mail, UserPlus, Save, Eraser, ChevronRight } from 'lucide-react';
 import { createStudent } from '../../services/studentsService';
 import type { StudentPayload } from '../../services/studentsService';
-import type { Student } from '../../types/student';
+import type { Estudiante } from '../../types/api';
 import { useForm } from '../../hooks/useForm';
 import { runValidators, validators } from '../../utils/validators';
 import { Avatar, Button, Card, Field } from '../ui';
@@ -55,7 +55,7 @@ function validate(values: FormFields) {
 const StudentManualForm: React.FC = () => {
     const history = useHistory();
     // Rastro de lo creado en esta sesión: el formulario se vacía al guardar.
-    const [created, setCreated] = useState<Student[]>([]);
+    const [created, setCreated] = useState<Estudiante[]>([]);
     const [toast, setToast] = useState<{ open: boolean; message: string; color: string }>({
         open: false, message: '', color: 'success',
     });
@@ -190,12 +190,12 @@ const StudentManualForm: React.FC = () => {
                                             type="button"
                                             className="sn-log__item"
                                             onClick={() => history.push(routes.studentDetail(s.id))}
-                                            aria-label={`Abrir expediente de ${s.nombreCompleto} (${s.carnetId})`}
+                                            aria-label={`Abrir expediente de ${s.nombre} (${s.carnet})`}
                                         >
-                                            <Avatar name={s.nombreCompleto} size="sm" />
+                                            <Avatar name={s.nombre} size="sm" />
                                             <span className="sn-log__meta">
-                                                <span className="sn-log__name">{s.nombreCompleto}</span>
-                                                <span className="sn-log__carnet">{s.carnetId}</span>
+                                                <span className="sn-log__name">{s.nombre}</span>
+                                                <span className="sn-log__carnet">{s.carnet}</span>
                                             </span>
                                             <ChevronRight size={16} className="sn-log__go" aria-hidden="true" />
                                         </button>

@@ -26,6 +26,7 @@ const MESSAGES: Record<NetworkErrorKind, string> = {
     rateLimited:  'Demasiadas solicitudes en poco tiempo. Espera un momento y vuelve a intentar.',
     server:       'El servidor tuvo un problema. Intenta de nuevo en unos minutos.',
     unavailable:  'El servicio no está disponible temporalmente. Intenta más tarde.',
+    invalidResponse: 'El servidor respondió de forma inesperada. Intenta de nuevo en unos minutos.',
     unknown:      'Ocurrió un error inesperado. Intenta de nuevo.',
 };
 

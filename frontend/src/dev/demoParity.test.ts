@@ -17,15 +17,21 @@
  * ── QUÉ NO COMPRUEBA ────────────────────────────────────────────────────
  *
  * No compara respuestas contra el contrato: eso lo garantiza el propio doble,
- * que declara copiar la envoltura de /api-docs.json. Aquí solo se comprueba
- * COBERTURA, que es la que se pierde sola con el tiempo.
+ * que declara copiar la envoltura de /api-docs.json. La primera parte solo
+ * comprueba COBERTURA, que es la que se pierde sola con el tiempo.
+ *
+ * La segunda sí mira los CUERPOS de las escrituras: un doble que acepta
+ * cualquier cosa ocultó durante meses que notas, altas y ternas no enviaban
+ * lo que el contrato pide. Aquí el cuerpo antiguo debe fallar y el del
+ * contrato, pasar.
  */
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { API_PATHS } from '../config/apiConfig';
-import { responder } from './demoApi';
+import { responder, installDemoApi } from './demoApi';
+import { ESTUDIANTES, PROYECTOS, resolucionDe } from './demoDataset';
 
 const SERVICIOS = join(__dirname, '..', 'services');
 
@@ -48,6 +54,7 @@ const MUESTRA: Record<string, unknown[]> = {
     'ternas.submit':           [1],
     'ternas.reopen':           [1],
     'reportes.ternaById':      [1],
+    'reportes.actaPdf':        [1],
     'reportes.estudiante':     ['1890-17-11000'],
     'importar.notas':          ['043'],
 };
@@ -129,5 +136,85 @@ describe('paridad demo ↔ producto', () => {
 
     it('toda ruta con parámetros tiene argumento de muestra', () => {
         expect(() => rutasDeclaradas()).not.toThrow();
+    });
+});
+
+describe('la demo valida los cuerpos de escritura como el contrato', () => {
+    const url = (ruta: string) => new URL(ruta, 'http://localhost');
+    const estado = async (verbo: string, ruta: string, cuerpo: unknown) =>
+        (await responder(verbo, url(ruta), cuerpo))?.status;
+
+    it('PUT /api/notas exige estudianteId, cursoCodigo y notaFinal', async () => {
+        const id = ESTUDIANTES[0].id;
+        expect(await estado('PUT', '/api/notas', { carnet: ESTUDIANTES[0].carnet, curso_codigo: '043', nota_final: 80 })).toBe(400);
+        expect(await estado('PUT', '/api/notas', { estudianteId: id, cursoCodigo: '050', notaFinal: 80 })).toBe(400);
+        expect(await estado('PUT', '/api/notas', { estudianteId: id, cursoCodigo: '043', notaFinal: 101 })).toBe(400);
+        expect(await estado('PUT', '/api/notas', { estudianteId: 999_999, cursoCodigo: '043', notaFinal: 80 })).toBe(404);
+        expect(await estado('PUT', '/api/notas', { estudianteId: id, cursoCodigo: '043', notaFinal: 80, observacion: null })).toBe(200);
+    });
+
+    it('POST /api/estudiantes exige carnet y nombre', async () => {
+        expect(await estado('POST', '/api/estudiantes', null)).toBe(400);
+        expect(await estado('POST', '/api/estudiantes', { carnet: '1890-99-00001' })).toBe(400);
+        expect(await estado('POST', '/api/estudiantes', { carnet: '1890-99-00001', nombre: 'PRUEBA DE PARIDAD' })).toBe(201);
+    });
+
+    it('POST /api/ternas exige exactamente 3 evaluadores, uno por cargo', async () => {
+        const base = { numero: 90, proyectoId: PROYECTOS[0].id };
+        expect(await estado('POST', '/api/ternas', {
+            ...base,
+            evaluadores: [{ usuarioId: 2, rol: 'presidente' }, { usuarioId: 3, rol: 'secretario' }],
+        })).toBe(422);
+        expect(await estado('POST', '/api/ternas', {
+            ...base,
+            evaluadores: [
+                { usuarioId: 2, rol: 'presidente' },
+                { usuarioId: 3, rol: 'presidente' },
+                { usuarioId: 4, rol: 'vocal' },
+            ],
+        })).toBe(422);
+        expect(await estado('POST', '/api/ternas', {
+            ...base,
+            evaluadores: [
+                { usuarioId: 2, rol: 'presidente' },
+                { usuarioId: 2, rol: 'secretario' },
+                { usuarioId: 4, rol: 'vocal' },
+            ],
+        })).toBe(422);
+        expect(await estado('POST', '/api/ternas', {
+            ...base,
+            evaluadores: [
+                { usuarioId: 2, rol: 'presidente' },
+                { usuarioId: 3, rol: 'secretario' },
+                { usuarioId: 4, rol: 'vocal' },
+            ],
+        })).toBe(201);
+        // Legacy deprecado: el contrato lo mapea en orden presidente/secretario/vocal.
+        expect(await estado('POST', '/api/ternas', { ...base, numero: 91, evaluadoresIds: [2, 3, 4] })).toBe(201);
+        expect(await estado('POST', '/api/ternas', { ...base, numero: 92, evaluadoresIds: [2, 3] })).toBe(422);
+    });
+
+    it('un cuerpo string sin Content-Type JSON llega vacío, como en el servidor', async () => {
+        installDemoApi();
+        const alta = { carnet: '1890-99-00002', nombre: 'PRUEBA SIN CABECERA' };
+        const sinCabecera = await fetch('/api/estudiantes', { method: 'POST', body: JSON.stringify(alta) });
+        expect(sinCabecera.status).toBe(400);
+        const conCabecera = await fetch('/api/estudiantes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(alta),
+        });
+        expect(conCabecera.status).toBe(201);
+    });
+});
+
+describe('la resolución de terna de la demo sigue la escala de la API', () => {
+    it('≥70 tesis · 60–69 curso · <60 reprobado · sin enviar pendiente', () => {
+        expect(resolucionDe(70, true)).toBe('aprueba_tesis');
+        expect(resolucionDe(69.99, true)).toBe('aprueba_curso');
+        expect(resolucionDe(60, true)).toBe('aprueba_curso');
+        expect(resolucionDe(59.99, true)).toBe('reprobado');
+        expect(resolucionDe(95, false)).toBe('pendiente');
+        expect(resolucionDe(null, true)).toBe('pendiente');
     });
 });

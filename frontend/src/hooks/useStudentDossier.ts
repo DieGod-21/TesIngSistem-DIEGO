@@ -23,14 +23,14 @@ import { getNotasByEstudianteId } from '../services/notasService';
 import { getProyectosByEstudiante } from '../services/proyectosService';
 import { isCancel } from '../services/apiClient';
 import { userMessageFor } from '../services/errorMessages';
+import { reportError } from '../services/telemetry';
 import {
     buildCursosResumen,
-    computeEstadoTesis,
     extractGradesFromNotas,
     extractGradesFromReporte,
     mergeGrades,
+    veredictoTesis,
 } from '../utils/thesisStatus';
-import { THESIS_MIN_GRADE } from '../config/apiConfig';
 import type {
     CursoNotaResumen, EstadoTesis, Estudiante, Nota, Proyecto, ReporteEstudiante,
     ReporteEstudianteTerna,
@@ -98,6 +98,14 @@ export function useStudentDossier(id: string | number | null) {
                 }
 
                 setState({ student, reporte, notas, proyectos, loading: false, error: null });
+
+                // Diagnóstico, una vez por carga: sin carné ni nombre.
+                const completas = mergeGrades(fromReporte, extractGradesFromNotas(notas));
+                if (veredictoTesis(reporte, completas).divergente) {
+                    reportError(new Error('Veredicto de tesis: el servidor y la regla local discrepan'), {
+                        source: 'tesis:divergencia /api/reportes/estudiante',
+                    });
+                }
             } catch (e) {
                 // Cancelación: nunca es un error de UI.
                 if (signal.aborted || isCancel(e)) return;
@@ -117,7 +125,7 @@ export function useStudentDossier(id: string | number | null) {
         extractGradesFromReporte(state.reporte),
         extractGradesFromNotas(state.notas),
     );
-    const tesis = computeEstadoTesis(pgGrades);
+    const tesis = veredictoTesis(state.reporte, pgGrades);
 
     const tesisInput: EstadoTesis | null = state.student
         ? {
@@ -125,12 +133,8 @@ export function useStudentDossier(id: string | number | null) {
             nombre:        state.student.nombre,
             email:         state.student.email,
             aprueba_tesis: tesis.aprobado,
-            razon:         tesis.estado === 'APROBADO'
-                ? `Cumple con la nota mínima (${THESIS_MIN_GRADE}) en PG1 y PG2.`
-                : tesis.estado === 'PENDIENTE'
-                    ? 'Faltan notas de PG1 y/o PG2.'
-                    : `No alcanza la nota mínima (${THESIS_MIN_GRADE}) en PG1 y/o PG2.`,
-            nota_minima:   THESIS_MIN_GRADE,
+            razon:         tesis.razon,
+            nota_minima:   tesis.notaMinima,
             promedio:      state.reporte?.promedio ?? null,
             graduacion_1:  grades.find((g) => g.curso === '043') ?? null,
             graduacion_2:  grades.find((g) => g.curso === '049') ?? null,

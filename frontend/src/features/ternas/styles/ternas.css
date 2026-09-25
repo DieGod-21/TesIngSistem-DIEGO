@@ -414,72 +414,23 @@
     color: var(--text-secondary);
 }
 
-.nt-evals {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+.nt-roles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-12);
+}
+
+.nt-rol {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
-    max-height: 15rem;
-    overflow-y: auto;
-}
-
-.nt-eval {
-    display: flex;
-    align-items: center;
-    gap: var(--space-10);
-    padding: var(--space-8) var(--space-10);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
+    gap: var(--space-4);
     min-width: 0;
-    transition: border-color var(--transition-base), background var(--transition-base);
 }
 
-.nt-eval:hover { border-color: var(--border-strong); }
-
-.nt-eval:focus-within {
-    border-color: var(--color-primary);
-    box-shadow: var(--ring);
-}
-
-.nt-eval.is-checked {
-    border-color: var(--color-primary);
-    background: var(--color-primary-soft);
-}
-
-/* Al llegar al tope de tres, el resto se apaga en vez de desaparecer: quien
-   mira necesita entender POR QUÉ ya no puede elegir a más. */
-.nt-eval.is-blocked {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.nt-eval__box { flex-shrink: 0; accent-color: var(--color-primary); }
-
-.nt-eval__text {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1;
-}
-
-.nt-eval__name {
-    font-size: var(--text-base);
+.nt-rol__label {
+    font-size: var(--text-sm);
     font-weight: var(--weight-medium);
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.nt-eval__mail {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .nt-aviso {
@@ -495,6 +446,7 @@
 
 @media (max-width: 480px) {
     .nt-row { grid-template-columns: 1fr; }
+    .nt-roles { grid-template-columns: 1fr; }
 }
 
 /* Techo de tres líneas para el título del proyecto en la ficha de terna.

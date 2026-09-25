@@ -14,7 +14,7 @@ const CURSOS = [
 
 interface Props {
     open: boolean;
-    carnet: string;
+    estudianteId: number;
     initialCurso?: '043' | '049';
     initialNota?: number | null;
     onClose: () => void;
@@ -29,7 +29,7 @@ interface FormState {
 
 const EditNotaModal: React.FC<Props> = ({
     open,
-    carnet,
+    estudianteId,
     initialCurso = '043',
     initialNota,
     onClose,
@@ -89,9 +89,9 @@ const EditNotaModal: React.FC<Props> = ({
         setApiError(null);
         try {
             await upsertNota({
-                carnet,
-                curso_codigo: form.curso,
-                nota_final: Number(form.nota),
+                estudianteId,
+                cursoCodigo: form.curso,
+                notaFinal: Number(form.nota),
                 observacion: form.observacion.trim() || null,
             });
             onSaved();

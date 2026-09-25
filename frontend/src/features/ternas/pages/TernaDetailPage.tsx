@@ -12,6 +12,7 @@ import { useParams, useHistory } from 'react-router-dom';
 import { ChevronLeft, FileText, GraduationCap, AlertTriangle, RefreshCw, ClipboardList, FolderOpen, CalendarDays } from 'lucide-react';
 import ThesisStatusBadge from '../../../components/thesis/ThesisStatusBadge';
 import EvaluationForm from '../components/EvaluationForm';
+import DescargarActaButton from '../../../components/DescargarActaButton';
 import { useTernaDetalle } from '../hooks/useTernaDetalle';
 import { useEntityLinks } from '../../../hooks/useEntityLinks';
 import type { EvaluadorTerna } from '../../../types/api';
@@ -106,6 +107,7 @@ const TernaDetailPage: React.FC = () => {
                                 </span>
                             }
                             subtitle={terna.titulo || 'Sin título de proyecto'}
+                            actions={<DescargarActaButton ternaId={terna.id} numero={terna.numero} />}
                         />
 
                         <div className="terna-detail-grid">

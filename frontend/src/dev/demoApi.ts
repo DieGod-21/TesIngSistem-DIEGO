@@ -40,6 +40,9 @@ import {
 import type { Estudiante, Proyecto, TernaDetalle, Usuario } from '../types/api';
 import './demo.css';
 
+/** Cargos de una terna según el contrato de `POST /api/ternas`. */
+const CARGOS_TERNA = ['presidente', 'secretario', 'vocal'] as const;
+
 const CLAVE_SESION = 'umg:demo-data';
 
 /** ¿Se pidió el conjunto de demostración? Solo tiene sentido en desarrollo. */
@@ -148,6 +151,13 @@ const fail = (status: number, message: string) =>
         headers: { 'Content-Type': 'application/json' },
     });
 
+/** 400 con la forma de validación del servidor real: `errors: [{ field, message }]`. */
+const invalido = (errors: Array<{ field: string; message: string }>) =>
+    new Response(JSON.stringify({ success: false, message: 'Datos de entrada inválidos', errors }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+    });
+
 const soloAdmin = () => fail(403, 'Esta operación requiere privilegios de administrador.');
 const noPerteneces = () => fail(403, 'No formas parte de esta terna.');
 
@@ -170,6 +180,32 @@ function recalcularTerna(t: TernaDetalle): void {
         evaluaciones_enviadas: enviadas.length,
         total_evaluadores: t.evaluadores.length,
     };
+}
+
+/**
+ * PDF mínimo y válido (una página, texto ASCII) para que la descarga del acta
+ * se pueda ejercitar sin servidor. No imita el formato real del acta.
+ */
+function pdfDeActa(t: TernaDetalle): Blob {
+    const contenido = `BT /F1 16 Tf 72 720 Td (Acta de evaluacion - Terna ${t.numero} - DEMOSTRACION) Tj ET`;
+    const objetos = [
+        '<< /Type /Catalog /Pages 2 0 R >>',
+        '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+        '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+        `<< /Length ${contenido.length} >>\nstream\n${contenido}\nendstream`,
+        '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    ];
+    let pdf = '%PDF-1.4\n';
+    const offsets: number[] = [];
+    objetos.forEach((o, i) => {
+        offsets.push(pdf.length);
+        pdf += `${i + 1} 0 obj\n${o}\nendobj\n`;
+    });
+    const xref = pdf.length;
+    pdf += `xref\n0 ${objetos.length + 1}\n0000000000 65535 f \n`
+        + offsets.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('')
+        + `trailer\n<< /Size ${objetos.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return new Blob([pdf], { type: 'application/pdf' });
 }
 
 const num = (v: string | null, alt: number) => {
@@ -357,12 +393,16 @@ export async function responder(metodo: string, url: URL, cuerpo: unknown): Prom
         });
     }
     if (ruta === '/api/estudiantes' && metodo === 'POST') {
-        const dto = cuerpo as { carnet: string; nombre: string; email?: string; carrera?: string };
+        const dto = (cuerpo ?? {}) as { carnet?: unknown; nombre?: unknown; email?: string; carrera?: string };
+        const errores: Array<{ field: string; message: string }> = [];
+        if (typeof dto.carnet !== 'string' || !dto.carnet.trim()) errores.push({ field: 'carnet', message: 'El carné es obligatorio.' });
+        if (typeof dto.nombre !== 'string' || !dto.nombre.trim()) errores.push({ field: 'nombre', message: 'El nombre es obligatorio.' });
+        if (errores.length > 0) return invalido(errores);
         if (estudiantes.some((e) => e.carnet === dto.carnet)) return fail(409, 'Ese carné ya está registrado.');
         const nuevo: Estudiante = {
             id: Math.max(...estudiantes.map((e) => e.id)) + 1,
-            carnet: dto.carnet,
-            nombre: dto.nombre,
+            carnet: String(dto.carnet),
+            nombre: String(dto.nombre),
             email: dto.email ?? '',
             carrera: dto.carrera ?? '1890',
             activo: true,
@@ -398,6 +438,15 @@ export async function responder(metodo: string, url: URL, cuerpo: unknown): Prom
 
     // ── Notas ──
     if (ruta === '/api/notas' && metodo === 'PUT') {
+        const dto = (cuerpo ?? {}) as { estudianteId?: unknown; cursoCodigo?: unknown; notaFinal?: unknown };
+        const errores: Array<{ field: string; message: string }> = [];
+        if (!Number.isInteger(dto.estudianteId)) errores.push({ field: 'estudianteId', message: 'estudianteId es obligatorio.' });
+        if (dto.cursoCodigo !== '043' && dto.cursoCodigo !== '049') errores.push({ field: 'cursoCodigo', message: 'cursoCodigo debe ser 043 o 049.' });
+        if (typeof dto.notaFinal !== 'number' || dto.notaFinal < 0 || dto.notaFinal > 100) {
+            errores.push({ field: 'notaFinal', message: 'notaFinal debe estar entre 0 y 100.' });
+        }
+        if (errores.length > 0) return invalido(errores);
+        if (!estudiantes.some((e) => e.id === dto.estudianteId)) return fail(404, 'Estudiante no encontrado.');
         // El doble NO altera los perfiles: son la fuente de verdad del conjunto
         // y reescribirlos rompería la coherencia entre pantallas. Se confirma la
         // escritura sin fingir que el estado académico cambió.
@@ -496,11 +545,25 @@ export async function responder(metodo: string, url: URL, cuerpo: unknown): Prom
     }
     if (ruta === '/api/ternas' && metodo === 'POST') {
         if (!esAdmin()) return soloAdmin();
-        const dto = cuerpo as { numero?: number; proyectoId?: number; evaluadoresIds?: number[]; fechaEvaluacion?: string };
+        const dto = (cuerpo ?? {}) as {
+            numero?: number;
+            proyectoId?: number;
+            evaluadores?: Array<{ usuarioId?: number; rol?: string }>;
+            evaluadoresIds?: number[];
+            fechaEvaluacion?: string;
+        };
         const proyecto = proyectos.find((p) => p.id === Number(dto.proyectoId));
         if (!proyecto) return fail(404, 'El proyecto indicado no existe.');
-        const ids = dto.evaluadoresIds ?? [];
-        if (ids.length < 2 || ids.length > 3) return fail(422, 'Una terna requiere entre 2 y 3 evaluadores.');
+        // Payload preferido: `evaluadores` con cargo. Legacy (deprecado):
+        // `evaluadoresIds`, que el contrato mapea en orden presidente/secretario/vocal.
+        const asignados = Array.isArray(dto.evaluadores)
+            ? dto.evaluadores
+            : (dto.evaluadoresIds ?? []).map((usuarioId, i) => ({ usuarioId, rol: CARGOS_TERNA[i] }));
+        const cargos = new Set(asignados.map((e) => e.rol));
+        const ids = [...new Set(asignados.map((e) => Number(e.usuarioId)))];
+        if (asignados.length !== 3 || ids.length !== 3 || !CARGOS_TERNA.every((r) => cargos.has(r))) {
+            return fail(422, 'Se requieren exactamente 3 evaluadores: presidente, secretario y vocal.');
+        }
         const nueva: TernaDetalle = {
             id: Math.max(0, ...ternas.map((t) => t.id)) + 1,
             numero: Number(dto.numero) || ternas.length + 1,
@@ -606,6 +669,16 @@ export async function responder(metodo: string, url: URL, cuerpo: unknown): Prom
         }
     }
     {
+        const m = M(/^\/api\/reportes\/ternas\/(\d+)\/acta\.pdf$/);
+        if (m) {
+            const t = ternas.find((x) => x.id === Number(m[1]));
+            if (!t) return fail(404, 'Terna no encontrada.');
+            // Contrato: el evaluador solo descarga el acta de sus ternas.
+            if (!esAdmin() && !asignadoA(t, sesion.id)) return noPerteneces();
+            return new Response(pdfDeActa(t), { status: 200, headers: { 'Content-Type': 'application/pdf' } });
+        }
+    }
+    {
         const m = M(/^\/api\/reportes\/estudiante\/(.+)$/);
         if (m) {
             const carnet = decodeURIComponent(m[1]);
@@ -696,7 +769,7 @@ export async function responder(metodo: string, url: URL, cuerpo: unknown): Prom
 
     if (ruta === '/health') return ok({ status: 'ok', database: 'demo' });
 
-    return null;   // ruta desconocida: se deja pasar al servidor real
+    return null;   // ruta desconocida: el interceptor responde 501 (ver installDemoApi)
 }
 
 // ─── Instalación ────────────────────────────────────────────────────────────
@@ -721,9 +794,13 @@ export function installDemoApi(): void {
 
         const metodo = (init?.method ?? (entrada instanceof Request ? entrada.method : 'GET')).toUpperCase();
 
+        // Como un servidor Express con `express.json()`: el cuerpo solo se
+        // interpreta si la petición declara JSON. Un string sin esa cabecera
+        // llega vacío, igual que en producción.
         let cuerpo: unknown = null;
         const raw = init?.body;
-        if (typeof raw === 'string') {
+        const declaraJson = (new Headers(init?.headers).get('Content-Type') ?? '').includes('application/json');
+        if (typeof raw === 'string' && declaraJson) {
             try { cuerpo = JSON.parse(raw); } catch { cuerpo = null; }
         }
 
@@ -734,7 +811,12 @@ export function installDemoApi(): void {
         const respuesta = await responder(metodo, url, cuerpo);
         if (respuesta) return respuesta;
 
-        return original(entrada as RequestInfo, init);
+        /*
+         * Nada de /api sale al servidor real: en `npm run dev` el `fetch`
+         * original va por el proxy a producción, y quien usa la demo cree
+         * estar aislado. El 501 deja a la vista la ruta que le falta al doble.
+         */
+        return fail(501, `El conjunto de demostración no atiende ${metodo} ${url.pathname}.`);
     };
 
     montarBanda();

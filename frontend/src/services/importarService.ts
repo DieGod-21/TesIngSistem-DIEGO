@@ -138,10 +138,10 @@ function normalizarEstudiantes(raw: unknown): ImportarEstudiantesResult {
 
 // ─── Llamadas ───────────────────────────────────────────────────────────────
 
+/** El contrato declara un único campo multipart: `archivo`. */
 function formulario(file: File): FormData {
     const form = new FormData();
     form.append('archivo', file, file.name);
-    form.append('file', file, file.name);
     return form;
 }
 
