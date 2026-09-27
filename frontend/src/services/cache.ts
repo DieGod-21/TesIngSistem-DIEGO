@@ -10,13 +10,17 @@
  *   - Almacenar valores con TTL configurable.
  *   - Deduplicar peticiones en vuelo por clave (misma clave → una sola carga).
  *   - Invalidación explícita por clave/prefijo tras escrituras.
+ *   - Avisar a quien esté mirando una clave cuando se invalida (`subscribe`),
+ *     para que una vista montada no se quede con la copia de antes.
  *
  * Diseño:
- *   - Funciones puras sobre dos Map de módulo (sin estado mutable oculto en
- *     los consumidores). Se testea de forma independiente.
+ *   - Estado en Map de módulo (valores, cargas en vuelo y suscriptores), sin
+ *     nada oculto en los consumidores. Se testea de forma independiente.
  *   - Las claves usan `recurso:sub` (p. ej. `estudiantes:registry`) para que
  *     `invalidate('estudiantes')` limpie todo el recurso.
  */
+
+import { reportError } from './telemetry';
 
 interface CacheEntry<T> {
     value: T;
@@ -28,6 +32,12 @@ export const DEFAULT_TTL_MS = 60_000;
 
 const store = new Map<string, CacheEntry<unknown>>();
 const inflight = new Map<string, Promise<unknown>>();
+const listeners = new Map<string, Set<() => void>>();
+
+/** ¿La clave pertenece al recurso? `estudiantes` cubre `estudiantes:*`. */
+function afecta(key: string, prefix: string): boolean {
+    return key === prefix || key.startsWith(`${prefix}:`);
+}
 
 /** Devuelve el valor cacheado si existe y no expiró; si no, `undefined`. */
 export function getCached<T>(key: string): T | undefined {
@@ -48,21 +58,65 @@ export function setCached<T>(key: string, value: T, ttl: number = DEFAULT_TTL_MS
 /**
  * Invalida por clave exacta o por prefijo de recurso: `invalidate('estudiantes')`
  * limpia `estudiantes` y cualquier `estudiantes:*`. También cancela la
- * deduplicación en vuelo para que la próxima lectura vuelva al origen.
+ * deduplicación en vuelo para que la próxima lectura vuelva al origen, y avisa
+ * a los suscriptores de las claves afectadas.
  */
 export function invalidate(prefix: string): void {
     for (const key of Array.from(store.keys())) {
-        if (key === prefix || key.startsWith(`${prefix}:`)) store.delete(key);
+        if (afecta(key, prefix)) store.delete(key);
     }
     for (const key of Array.from(inflight.keys())) {
-        if (key === prefix || key.startsWith(`${prefix}:`)) inflight.delete(key);
+        if (afecta(key, prefix)) inflight.delete(key);
+    }
+    for (const [key, set] of Array.from(listeners)) {
+        if (afecta(key, prefix)) Array.from(set).forEach(avisarSinPropagar);
     }
 }
 
-/** Vacía toda la caché (útil en logout o en tests). */
+/*
+ * `invalidate` se llama justo después de una escritura que el servidor ya
+ * aceptó: si un suscriptor falla, no debe parecer que falló la escritura ni
+ * dejar sin aviso a los demás.
+ */
+function avisarSinPropagar(avisar: () => void): void {
+    try {
+        avisar();
+    } catch (e) {
+        reportError(e, { source: 'cache:suscriptor' });
+    }
+}
+
+/**
+ * Vacía toda la caché (logout o tests).
+ *
+ * NO avisa a los suscriptores, a propósito: es el fin de la sesión y las vistas
+ * se desmontan. Avisar haría que una vista volviera a pedir sus datos ya sin
+ * token, y el 401 resultante acabaría en «Tu sesión expiró» justo al salir.
+ */
 export function clear(): void {
     store.clear();
     inflight.clear();
+}
+
+/**
+ * Avisa cuando `invalidate()` afecta a `key`. Devuelve la baja.
+ *
+ * Solo avisa: no entrega datos. Quien escucha decide si vuelve a leer, así que
+ * la caché sigue sin saber nada de React ni de quién la consume.
+ */
+export function subscribe(key: string, listener: () => void): () => void {
+    let set = listeners.get(key);
+    if (!set) {
+        set = new Set();
+        listeners.set(key, set);
+    }
+    set.add(listener);
+    return () => {
+        const actual = listeners.get(key);
+        if (!actual) return;
+        actual.delete(listener);
+        if (actual.size === 0) listeners.delete(key);
+    };
 }
 
 /**
@@ -75,6 +129,11 @@ export function clear(): void {
  * El `loader` NO debe recibir la señal de aborto de un consumidor individual:
  * la carga compartida beneficia a todos y no debe cancelarse porque uno se
  * desmonte. Cada consumidor evita renders obsoletos con su propio AbortSignal.
+ *
+ * Solo guarda su resultado y limpia el registro si sigue siendo la carga
+ * vigente de su clave. Una carga retirada por `invalidate()` o `clear()` trae
+ * datos anteriores a la escritura o al logout: se entregan a quien la pidió,
+ * pero no se guardan ni pisan a la carga nueva.
  */
 export async function cached<T>(
     key: string,
@@ -87,13 +146,14 @@ export async function cached<T>(
     const existing = inflight.get(key);
     if (existing) return existing as Promise<T>;
 
-    const promise = loader()
+    const vigente = () => inflight.get(key) === promise;
+    const promise: Promise<T> = loader()
         .then((value) => {
-            setCached(key, value, ttl);
+            if (vigente()) setCached(key, value, ttl);
             return value;
         })
         .finally(() => {
-            inflight.delete(key);
+            if (vigente()) inflight.delete(key);
         });
 
     inflight.set(key, promise);

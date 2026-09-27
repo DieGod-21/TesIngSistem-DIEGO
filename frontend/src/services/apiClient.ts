@@ -86,6 +86,7 @@ export type NetworkErrorKind =
     | 'rateLimited'  // 429
     | 'server'       // 500 (o 5xx no específico)
     | 'unavailable'  // 503
+    | 'invalidResponse' // 2xx que no viene de la API (HTML de un proxy o del frontend)
     | 'unknown';     // cualquier otro
 
 export class ApiError extends Error {
@@ -186,15 +187,33 @@ function redirectExpiredSession(): never {
     throw new ApiError(401, 'Sesión expirada. Por favor inicia sesión nuevamente.', undefined, 'unauthorized');
 }
 
+/**
+ * Solo un cuerpo JSON de la API aporta mensaje. Un cuerpo de texto NO: con la
+ * API caída es la página HTML de Caddy (con la IP interna del contenedor), o
+ * el texto en inglés de un limitador. Se deja el sintético, que
+ * `userMessageFor` cambia por el texto de su tipo; el cuerpo crudo sigue en
+ * `payload` para diagnóstico.
+ */
 function extractErrorMessage(parsed: unknown, status: number): string {
     if (parsed && typeof parsed === 'object') {
         const p = parsed as Record<string, unknown>;
         if (typeof p.error === 'string' && p.error) return p.error;
         if (typeof p.message === 'string' && p.message) return p.message;
     }
-    if (typeof parsed === 'string' && parsed) return parsed;
     return `Error HTTP ${status}`;
 }
+
+/**
+ * Una respuesta 2xx en HTML no la escribió la API: es el index.html del
+ * frontend o una página del proxy, servida porque la ruta no llegó al backend.
+ * Tomarla por datos acababa en «no hay registros»; si era una escritura,
+ * en un «guardado» que nunca ocurrió.
+ */
+function respuestaAjena(status: number): ApiError {
+    return new ApiError(status, `Error HTTP ${status}`, undefined, 'invalidResponse');
+}
+
+const PARECE_HTML = /^\s*</;
 
 /** Promise compartida para evitar llamadas concurrentes al refresh. */
 let refreshPromise: Promise<string> | null = null;
@@ -292,12 +311,56 @@ function normalizeFetchError(err: unknown, callerSignal: AbortSignal | undefined
     throw err;
 }
 
+/** Parsea el cuerpo como texto/JSON; en no-2xx lanza el ApiError clasificado. */
+async function leerJson<T>(res: Response): Promise<T> {
+    if (res.status === 204) return undefined as T;
+    const text = await res.text();
+    let parsed: unknown = text;
+    try {
+        parsed = text ? JSON.parse(text) : null;
+    } catch {
+        // Dejamos parsed como string: el error no lo usará como mensaje.
+        if (res.ok && PARECE_HTML.test(text)) throw respuestaAjena(res.status);
+    }
+    if (!res.ok) throw apiErrorFromResponse(res.status, parsed);
+    return parsed as T;
+}
+
+/** Devuelve el cuerpo binario; un error llega como JSON y se clasifica igual. */
+async function leerBlob(res: Response): Promise<Blob> {
+    if (!res.ok) await leerJson(res);
+    const blob = await res.blob();
+    if (blob.type.includes('text/html')) throw respuestaAjena(res.status);
+    return blob;
+}
+
 /**
  * Realiza la petición HTTP cruda. Devuelve el JSON parseado tal cual.
  * Lanza ApiError si la respuesta no es 2xx.
  * En 401 intenta renovar el token automáticamente antes de fallar.
  */
-export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Promise<T> {
+export function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Promise<T> {
+    return solicitar(path, init, (res) => leerJson<T>(res));
+}
+
+/**
+ * Descarga binaria (p. ej. un PDF) con la MISMA sesión que `apiFetch`:
+ * Bearer, renovación proactiva, reintento tras 401 y timeout.
+ */
+export function apiBlob(path: string, init: Omit<ApiFetchOptions, 'method' | 'body'> = {}): Promise<Blob> {
+    return solicitar(path, { ...init, method: 'GET' }, leerBlob);
+}
+
+/**
+ * Núcleo compartido: autenticación, renovación y reintento. `leer` interpreta
+ * la respuesta DENTRO de la ventana del timeout, así que el cuerpo también
+ * cuenta para él.
+ */
+async function solicitar<T>(
+    path: string,
+    init: ApiFetchOptions,
+    leer: (res: Response) => Promise<T>,
+): Promise<T> {
     const { body, requireAuth = true, skipRefresh = false, headers, timeout, ...rest } = init;
     const timeoutMs = timeout ?? DEFAULT_TIMEOUT_MS;
     const callerSignal = rest.signal;
@@ -316,7 +379,7 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
         finalBody = body as BodyInit | null | undefined;
     }
 
-    // Proactive refresh: if the token expires within 60 s, renew before sending.
+    // Renovación anticipada: si el token vence en menos de 60 s, se renueva antes de enviar.
     let accessToken = readAccessToken();
     if (requireAuth && !skipRefresh && accessToken) {
         const expiresAt = Number(sessionStorage.getItem(EXPIRES_AT_KEY) ?? 0);
@@ -330,8 +393,8 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
                 if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
                     redirectExpiredSession();
                 }
-                // Network / 5xx error — don't invalidate the session.
-                // Proceed with the current token; the 401 interceptor will retry if needed.
+                // Fallo de red o 5xx: no invalida la sesión. Se sigue con el token
+                // actual; si caducó, el interceptor de 401 lo renueva y reintenta.
             }
         }
     }
@@ -346,8 +409,6 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
             signal: link.signal,
             headers: finalHeaders,
         });
-
-        if (res.status === 204) return undefined as T;
 
         // ── Interceptor 401 ──────────────────────────────────────────────────
         if (res.status === 401 && requireAuth && !skipRefresh) {
@@ -373,16 +434,7 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
                     headers: { ...finalHeaders, Authorization: `Bearer ${newToken}` },
                 });
 
-                if (retryRes.status === 204) return undefined as T;
-
-                const retryText = await retryRes.text();
-                let retryParsed: unknown = retryText;
-                try { retryParsed = retryText ? JSON.parse(retryText) : null; } catch { /* */ }
-
-                if (!retryRes.ok) {
-                    throw apiErrorFromResponse(retryRes.status, retryParsed);
-                }
-                return retryParsed as T;
+                return await leer(retryRes);
             } catch (err) {
                 normalizeFetchError(err, callerSignal, retryLink.state.timedOut);
             } finally {
@@ -391,17 +443,7 @@ export async function apiFetch<T>(path: string, init: ApiFetchOptions = {}): Pro
         }
         // ─────────────────────────────────────────────────────────────────────
 
-        const text = await res.text();
-        let parsed: unknown = text;
-        try {
-            parsed = text ? JSON.parse(text) : null;
-        } catch { /* dejamos parsed como string */ }
-
-        if (!res.ok) {
-            throw apiErrorFromResponse(res.status, parsed);
-        }
-
-        return parsed as T;
+        return await leer(res);
     } catch (err) {
         // ApiError y CanceledError ya están clasificados: se propagan tal cual.
         if (err instanceof ApiError || err instanceof CanceledError) throw err;

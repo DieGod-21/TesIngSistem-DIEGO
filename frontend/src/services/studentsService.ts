@@ -1,17 +1,15 @@
 /**
  * studentsService.ts
  *
- * Servicio de datos para el módulo de estudiantes.
- * Único endpoint soportado: POST /api/estudiantes (crear).
- * El listado se obtiene vía `estudiantesService.listEstudiantes`.
+ * Alta individual de estudiantes: POST /api/estudiantes.
+ * El listado se obtiene vía `estudiantesService.getEstudiantesRegistry`.
  */
 
-import { apiFetch } from './apiClient';
+import { apiPost } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 import { invalidateEstudiantes } from './estudiantesService';
-import type { StudentDTO } from '../types/dto';
-import type { Student } from '../types/student';
-import { adaptStudent } from '../adapters/studentAdapter';
+import { unwrapEntity } from './normalize';
+import type { Estudiante } from '../types/api';
 
 /** Dominios válidos para correo institucional */
 export const ALLOWED_EMAIL_DOMAINS = ['@miumg.edu.gt', '@umg.edu.gt'];
@@ -24,19 +22,19 @@ export interface StudentPayload {
 }
 
 /**
- * Registra un estudiante vía POST /api/estudiantes.
- * Campos reales del backend: nombre, carnet, email.
+ * Registra un estudiante. Contrato: `{ carnet, nombre, email?, carrera? }` →
+ * 201 `{ success, data: { estudiante } }`.
+ *
+ * El cuerpo viaja como objeto para que `apiFetch` lo serialice y declare
+ * `Content-Type: application/json`; un string ya serializado salía como
+ * `text/plain` y el servidor no lo interpretaba.
  */
-export async function createStudent(payload: StudentPayload): Promise<Student> {
-    const dto = await apiFetch<StudentDTO>(API_PATHS.estudiantes.list, {
-        method: 'POST',
-        body: JSON.stringify({
-            nombre: payload.nombreCompleto.trim(),
-            carnet: payload.carnetId.trim(),
-            email:  payload.correoInstitucional.trim(),
-        }),
+export async function createStudent(payload: StudentPayload): Promise<Estudiante> {
+    const raw = await apiPost<{ estudiante: Estudiante } | Estudiante>(API_PATHS.estudiantes.list, {
+        nombre: payload.nombreCompleto.trim(),
+        carnet: payload.carnetId.trim(),
+        email:  payload.correoInstitucional.trim(),
     });
-    // Alta de estudiante: invalidar el padrón cacheado para reflejarla.
     invalidateEstudiantes();
-    return adaptStudent(dto);
+    return unwrapEntity<Estudiante>(raw, 'estudiante', API_PATHS.estudiantes.list);
 }

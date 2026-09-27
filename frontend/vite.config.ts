@@ -1,7 +1,40 @@
 /// <reference types="vitest" />
 
+import { execSync } from 'node:child_process'
 import react from '@vitejs/plugin-react'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
+
+/**
+ * Commit del build, para poder saber desde el navegador qué versión está
+ * desplegada. Se toma de `VITE_APP_COMMIT`, de la variable que exponga la
+ * plataforma de CI o despliegue, o de git si el build tiene `.git`. Si no hay
+ * ninguno queda vacío: mejor sin commit que con uno inventado.
+ *
+ * `-dirty` marca cambios sin commitear en archivos rastreados. Los archivos
+ * sin rastrear (configuración local de herramientas, por ejemplo) no cuentan:
+ * no forman parte del código que se construye.
+ */
+function commitDelBuild(env: Record<string, string>): string {
+  const explicito = env.VITE_APP_COMMIT ?? process.env.SOURCE_COMMIT ?? process.env.GITHUB_SHA
+  if (explicito) return explicito.slice(0, 7)
+  try {
+    const git = (cmd: string) => execSync(cmd, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    const sha = git('git rev-parse --short HEAD')
+    return git('git status --porcelain --untracked-files=no') ? `${sha}-dirty` : sha
+  } catch {
+    return ''
+  }
+}
+
+/** `<meta name="app-version">`: visible con «ver código fuente», sin tocar la UI. */
+function metaDeVersion(version: string): Plugin {
+  return {
+    name: 'app-version-meta',
+    transformIndexHtml: () => (version
+      ? [{ tag: 'meta', attrs: { name: 'app-version', content: version }, injectTo: 'head' }]
+      : []),
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -18,8 +51,11 @@ export default defineConfig(({ command, mode }) => {
 
   // Metadata de versión: se prioriza la variable explícita; si no, la versión
   // de package.json que npm expone como npm_package_version al correr scripts.
+  // En el build se le añade el commit como metadato semver (`1.0.0-rc.1+ab12cd3`).
   // Queda disponible en telemetría vía import.meta.env.VITE_APP_VERSION.
-  const appVersion = env.VITE_APP_VERSION ?? process.env.npm_package_version ?? ''
+  const baseVersion = env.VITE_APP_VERSION ?? process.env.npm_package_version ?? ''
+  const commit = command === 'build' ? commitDelBuild(env) : ''
+  const appVersion = baseVersion && commit ? `${baseVersion}+${commit}` : baseVersion
 
   return {
     define: {
@@ -30,6 +66,7 @@ export default defineConfig(({ command, mode }) => {
     // ejecutar la app. Se elimina para reducir tamaño y tiempo de build.
     plugins: [
       react(),
+      metaDeVersion(appVersion),
     ],
     build: {
       /*
@@ -78,9 +115,12 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     server: {
-      proxy: {
-        // Evita CORS en desarrollo: el navegador llama a /api/... (mismo origen)
-        // y Vite reenvía a https://notas.digicom.com.gt manteniendo HTTPS.
+      // Evita CORS en desarrollo: el navegador llama a /api/... (mismo origen)
+      // y Vite reenvía a https://notas.digicom.com.gt manteniendo HTTPS.
+      //
+      // En `--mode demo` no hay proxy: si el doble no llegara a instalarse,
+      // las peticiones fallarían en local en vez de llegar a producción.
+      proxy: mode === 'demo' ? undefined : {
         '/api': {
           target: 'https://notas.digicom.com.gt',
           changeOrigin: true,

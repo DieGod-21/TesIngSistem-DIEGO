@@ -48,17 +48,25 @@ export function invalidateTernas(): void {
 
 // ─── Alta de terna ──────────────────────────────────────────────────────────
 
-/** Mínimo y máximo de evaluadores que el contrato acepta en el alta. */
-export const TERNA_MIN_EVALUADORES = 2;
-export const TERNA_MAX_EVALUADORES = 3;
+/**
+ * Cargos de una terna, en el orden en que el contrato los enumera. Una terna
+ * tiene exactamente uno de cada: tres evaluadores, ni más ni menos.
+ */
+export const ROLES_TERNA = ['presidente', 'secretario', 'vocal'] as const;
+export type RolTerna = typeof ROLES_TERNA[number];
+
+export interface EvaluadorAsignado {
+    usuarioId: number;
+    rol: RolTerna;
+}
 
 export interface CreateTernaDto {
     /** Número visible de la terna. */
     numero: number;
     /** Proyecto sobre el que se evalúa. La terna no se crea contra el estudiante. */
     proyectoId: number;
-    /** Entre 2 y 3 evaluadores, por contrato. */
-    evaluadoresIds: number[];
+    /** Exactamente 3, uno por cargo. `evaluadoresIds` está deprecado en el contrato. */
+    evaluadores: EvaluadorAsignado[];
     /** Opcional, formato `YYYY-MM-DD`. */
     fechaEvaluacion?: string;
 }

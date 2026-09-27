@@ -5,7 +5,7 @@
  * GET /api/reportes/ternas
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { BarChart3, Search, RefreshCw, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
@@ -14,13 +14,11 @@ import {
     invalidateReportes,
     REPORTES_TERNAS_GLOBAL_KEY,
 } from '../../../services/reportesService';
-import { getCached } from '../../../services/cache';
-import { isCancel } from '../../../services/apiClient';
-import { userMessageFor } from '../../../services/errorMessages';
 import type { ReporteTernasGlobal, ResolucionTerna, ReporteTernaItem } from '../../../types/api';
 import { matchesText } from '../../../utils/text';
 import { useCountUp } from '../../../hooks/useCountUp';
 import { usePrimeraLlegada } from '../../../hooks/usePrimeraLlegada';
+import { useCachedResource } from '../../../hooks/useCachedResource';
 import { Badge, Button, PageHeader, EmptyState, Skeleton, ListCount } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
 import { RESOLUCION_LABEL, RESOLUCION_TONE } from '../../../utils/ternaStatus';
@@ -47,46 +45,24 @@ const ReportesPage: React.FC = () => {
      * en el primer render y se revalida detrás. Ver la nota extensa en
      * `ProyectosListPage`, que documenta la medición.
      */
-    const [data, setData] = useState<ReporteTernasGlobal | null>(
-        () => getCached<ReporteTernasGlobal>(REPORTES_TERNAS_GLOBAL_KEY) ?? null,
+    const { data, loading, error } = useCachedResource<ReporteTernasGlobal>(
+        REPORTES_TERNAS_GLOBAL_KEY,
+        getGlobalTernasReportCached,
     );
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<Filter>('all');
     const [query, setQuery] = useState('');
 
     /*
-     * `forzar` distingue las dos maneras de llegar aqui.
+     * Dos maneras de llegar a los datos.
      *
      * Entrar en la pantalla acepta lo cacheado: es justo lo que evita el
      * esqueleto al volver. Pero «Refrescar» es una peticion EXPLICITA de datos
      * nuevos, y devolverle lo mismo que ya tenia —sin tocar la red— convertiria
-     * el boton en un adorno. Se invalida primero para que la lectura vuelva
-     * al origen; el TTL manda en el primer caso y el usuario en el segundo.
+     * el boton en un adorno. Por eso invalida: la caché avisa a esta vista y la
+     * lectura vuelve al origen. El TTL manda en el primer caso y el usuario en
+     * el segundo.
      */
-    const load = async (signal?: AbortSignal, forzar = false) => {
-        setLoading(true);
-        setError(null);
-        try {
-            if (forzar) invalidateReportes();
-            const report = await getGlobalTernasReportCached();
-            if (signal?.aborted) return;
-            setData(report);
-        } catch (e) {
-            if (signal?.aborted || isCancel(e)) return;
-            setError(userMessageFor(e));
-            setData(null);
-        } finally {
-            if (!signal?.aborted) setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        const controller = new AbortController();
-        load(controller.signal);
-        return () => controller.abort();
-
-    }, []);
+    const refrescar = () => invalidateReportes();
 
     /* `data?.ternas ?? []` fabricaba un array nuevo en cada render, así que el
        filtro de abajo se recalculaba entero cada vez aunque no cambiara nada:
@@ -187,7 +163,7 @@ const ReportesPage: React.FC = () => {
                     </div>
                     <Button
                         variant="secondary"
-                        onClick={() => load(undefined, true)}
+                        onClick={refrescar}
                         loading={refrescando}
                         spinIcon
                         aria-label="Refrescar reporte"
@@ -205,7 +181,7 @@ const ReportesPage: React.FC = () => {
                         title="No se pudo cargar el reporte"
                         description={error}
                         action={
-                            <Button variant="secondary" onClick={() => load(undefined, true)}>
+                            <Button variant="secondary" onClick={refrescar}>
                                 <RefreshCw size={16} aria-hidden="true" /> Reintentar
                             </Button>
                         }

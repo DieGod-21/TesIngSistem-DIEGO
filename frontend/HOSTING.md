@@ -155,7 +155,12 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment
 |---|---|---|
 | `VITE_API_URL` | Sí (producción) | Origen de la API. El build **falla** si falta. |
 | `VITE_TELEMETRY_URL` | No | Endpoint de telemetría; si falta, la telemetría es no-op. |
-| `VITE_APP_VERSION` | No | Versión para telemetría; por defecto la de `package.json`. |
+| `VITE_APP_VERSION` | No | Versión para telemetría; por defecto la de `package.json`. El build le añade el commit (`1.0.0-rc.1+ab12cd3`). |
+| `VITE_APP_COMMIT` | No | Commit del build. Si falta se usa `SOURCE_COMMIT` o `GITHUB_SHA`, y si tampoco existen, `git rev-parse` cuando el build tiene `.git`. Sin ninguno, la versión va sin commit. |
+
+La versión resultante se publica en `<meta name="app-version">` de `index.html`
+(«ver código fuente» en el navegador) y en la telemetría: sirve para saber qué
+build sirve producción sin adivinarlo por fechas.
 
 Ver `.env.example`. Definir estas variables en el entorno de CI/CD del build,
 no en el host de archivos estáticos (se hornean en el bundle en tiempo de build).

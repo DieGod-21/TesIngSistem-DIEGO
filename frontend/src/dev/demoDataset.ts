@@ -355,11 +355,12 @@ const TERNAS_SEMILLA: SemillaTerna[] = [
         ],
     },
     {
-        // Panel de DOS evaluadores: el contrato admite de 2 a 3.
+        // Promedio 66: aprueba el curso pero NO califica para tesis (60–69).
         numero: 4, proyectoIdx: 8,
         evaluadores: [
             { usuarioId: 2, nota: 68, enviada: true, comentario: 'El alcance propuesto no se sostiene con la evidencia presentada.' },
             { usuarioId: 5, nota: 64, enviada: true },
+            { usuarioId: 3, nota: 66, enviada: true },
         ],
     },
     {
@@ -374,10 +375,11 @@ const TERNAS_SEMILLA: SemillaTerna[] = [
 
 const nombreUsuario = (id: number) => USUARIOS.find((u) => u.id === id)?.nombre ?? 'Evaluador';
 
+/** Escala de `GET /api/reportes/ternas`: ≥70 tesis · 60–69 curso · <60 reprobado. */
 export function resolucionDe(promedio: number | null, todasEnviadas: boolean) {
     if (!todasEnviadas || promedio == null) return 'pendiente' as const;
-    if (promedio >= 80) return 'aprueba_tesis' as const;
-    if (promedio >= NOTA_MINIMA) return 'aprueba_curso' as const;
+    if (promedio >= NOTA_MINIMA) return 'aprueba_tesis' as const;
+    if (promedio >= 60) return 'aprueba_curso' as const;
     return 'reprobado' as const;
 }
 

@@ -16,6 +16,7 @@ import { userMessageFor } from '../../../services/errorMessages';
 import { ResolutionBadge } from './ReportesPage';
 import { Button, CopyField, EmptyState, Skeleton, PageHeader } from '../../../components/ui';
 import AccessRestricted from '../../../components/AccessRestricted';
+import DescargarActaButton from '../../../components/DescargarActaButton';
 import '../styles/reportes.css';
 import '../../ternas/styles/ternas.css';
 
@@ -127,6 +128,7 @@ const ReportDetailPage: React.FC = () => {
                                 </span>
                             }
                             subtitle={`${report.proyecto?.titulo || 'Sin título'}${report.proyecto?.fase ? ` · ${report.proyecto.fase}` : ''}`}
+                            actions={<DescargarActaButton ternaId={report.terna_id} numero={report.numero} />}
                         />
 
                         <div className="report-detail-grid">

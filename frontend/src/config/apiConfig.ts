@@ -80,6 +80,7 @@ export const API_PATHS = {
     reportes: {
         ternas:      '/api/reportes/ternas',
         ternaById:   (id: number) => `/api/reportes/ternas/${id}`,
+        actaPdf:     (id: number) => `/api/reportes/ternas/${id}/acta.pdf`,
         estudiante:  (carnet: string) => `/api/reportes/estudiante/${encodeURIComponent(carnet)}`,
     },
     importar: {
@@ -100,9 +101,9 @@ export const COURSE_CODES = {
 export const THESIS_MIN_GRADE = 70;
 
 /**
- * Límite alto para traer el padrón completo en una sola petición y así permitir
- * búsqueda/paginación en cliente (ver decisión en useEstudiantesList). Si la API
- * devuelve exactamente este número, el conjunto podría estar truncado: los hooks
- * activan una salvaguarda (`atLimit` + warning) sugiriendo migrar a server-side.
+ * Tamaño de página con el que se descarga el padrón completo para buscar y
+ * paginar en cliente (ver decisión en useEstudiantesList). Es el máximo que
+ * admite `GET /api/estudiantes` (`limit` ≤ 100; el servidor recorta valores
+ * mayores): el padrón se recorre página a página hasta `pagination.pages`.
  */
-export const FETCH_ALL_LIMIT = 1000;
+export const FETCH_ALL_LIMIT = 100;

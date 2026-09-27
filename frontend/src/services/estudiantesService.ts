@@ -70,11 +70,18 @@ export async function getEstudiantesRegistry(
     return cached<EstudiantesRegistry>(
         ESTUDIANTES_CACHE_KEY,
         async () => {
-            const res = await listEstudiantes({ limit: FETCH_ALL_LIMIT });
-            const estudiantes = res.estudiantes ?? [];
-            const total = res.pagination?.total ?? estudiantes.length;
-            const isTruncated = detectTruncation(estudiantes.length, res.pagination?.total, FETCH_ALL_LIMIT);
-            if (isTruncated) reportTruncation(API_PATHS.estudiantes.list, estudiantes.length, res.pagination?.total);
+            // El contrato limita `limit` a 100: el padrón se recorre por páginas.
+            const primera = await listEstudiantes({ page: 1, limit: FETCH_ALL_LIMIT });
+            const paginas = primera.pagination?.pages ?? 1;
+            const resto = await Promise.all(
+                Array.from({ length: Math.max(0, paginas - 1) }, (_, i) =>
+                    listEstudiantes({ page: i + 2, limit: FETCH_ALL_LIMIT })),
+            );
+            const estudiantes = (primera.estudiantes ?? []).concat(...resto.map((r) => r.estudiantes ?? []));
+            const declarado = primera.pagination?.total;
+            const total = declarado ?? estudiantes.length;
+            const isTruncated = detectTruncation(estudiantes.length, declarado, FETCH_ALL_LIMIT);
+            if (isTruncated) reportTruncation(API_PATHS.estudiantes.list, estudiantes.length, declarado);
             return { estudiantes, total, isTruncated };
         },
     );

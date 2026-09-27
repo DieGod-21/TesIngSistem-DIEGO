@@ -6,7 +6,7 @@
  * y a veces anidada bajo `reporte`. Aquí normalizamos ambas variantes.
  */
 
-import { apiGet } from './apiClient';
+import { apiBlob, apiGet } from './apiClient';
 import { API_PATHS } from '../config/apiConfig';
 import { cached, invalidate } from './cache';
 import { unwrapEntity } from './normalize';
@@ -91,4 +91,26 @@ export async function getReporteEstudiante(carnet: string, opts: { signal?: Abor
 export async function getTernaReport(id: number, opts: { signal?: AbortSignal } = {}): Promise<ReporteTernaDetalle> {
     const raw = await apiGet<unknown>(API_PATHS.reportes.ternaById(id), { signal: opts.signal });
     return unwrapEntity<ReporteTernaDetalle>(raw, 'reporte', API_PATHS.reportes.ternaById(id));
+}
+
+/**
+ * Descarga el acta de evaluación de una terna en PDF.
+ *
+ * Admin: cualquier terna. Evaluador: solo las suyas (403 en otro caso). El
+ * contrato declara el formato como PROVISIONAL, pendiente del oficial.
+ */
+export async function descargarActaTerna(id: number, numero?: number): Promise<void> {
+    const pdf = await apiBlob(API_PATHS.reportes.actaPdf(id), { headers: { Accept: 'application/pdf' } });
+    const url = URL.createObjectURL(pdf);
+    try {
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = `acta-terna-${numero ?? id}.pdf`;
+        document.body.appendChild(enlace);
+        enlace.click();
+        enlace.remove();
+    } finally {
+        // Diferido: revocar en el mismo tick puede cancelar la descarga en Safari.
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
 }

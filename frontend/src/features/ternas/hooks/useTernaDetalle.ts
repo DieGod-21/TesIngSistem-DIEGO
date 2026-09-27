@@ -6,12 +6,12 @@ import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import {
     buildCursosResumen,
-    computeEstadoTesis,
     extractGradesFromNotas,
     extractGradesFromReporte,
     mergeGrades,
+    veredictoTesis,
 } from '../../../utils/thesisStatus';
-import { THESIS_MIN_GRADE } from '../../../config/apiConfig';
+import { reportError } from '../../../services/telemetry';
 import type { EstadoTesis, TernaDetalle } from '../../../types/api';
 
 export interface TernaDetalleState {
@@ -70,17 +70,18 @@ export function useTernaDetalle(id: number | null) {
                 }
                 const cursos = buildCursosResumen(fromBackend, notas);
                 const pgGrades = mergeGrades(fromReporte, extractGradesFromNotas(notas));
-                const result = computeEstadoTesis(pgGrades);
+                const result = veredictoTesis(fromBackend, pgGrades);
+                if (result.divergente) {
+                    reportError(new Error('Veredicto de tesis: el servidor y la regla local discrepan'), {
+                        source: 'tesis:divergencia /api/tesis/estado',
+                    });
+                }
                 eligibility = {
                     carnet:        terna.carnet,
                     nombre:        terna.estudiante_nombre,
                     aprueba_tesis: result.aprobado,
-                    razon:         result.estado === 'APROBADO'
-                        ? `Cumple con la nota mínima (${THESIS_MIN_GRADE}) en PG1 y PG2.`
-                        : result.estado === 'PENDIENTE'
-                            ? 'Faltan notas de PG1 y/o PG2.'
-                            : `No alcanza la nota mínima (${THESIS_MIN_GRADE}) en PG1 y/o PG2.`,
-                    nota_minima:   THESIS_MIN_GRADE,
+                    razon:         result.razon,
+                    nota_minima:   result.notaMinima,
                     promedio:      fromBackend?.promedio ?? null,
                     graduacion_1:  cursos.find((c) => c.curso === '043') ?? null,
                     graduacion_2:  cursos.find((c) => c.curso === '049') ?? null,

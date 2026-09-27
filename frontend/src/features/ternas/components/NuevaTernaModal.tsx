@@ -24,18 +24,28 @@ import { X, ClipboardList, Info } from 'lucide-react';
 import {
     createTerna,
     listTernasCached,
-    TERNA_MIN_EVALUADORES,
-    TERNA_MAX_EVALUADORES,
+    ROLES_TERNA,
+    type RolTerna,
 } from '../../../services/ternasService';
 import { listProyectosCached } from '../../../services/proyectosService';
 import { listUsuarios } from '../../../services/usuariosService';
 import { isCancel } from '../../../services/apiClient';
 import { userMessageFor } from '../../../services/errorMessages';
 import { matchesText } from '../../../utils/text';
-import { Avatar, Button, Picker, Alert } from '../../../components/ui';
+import { Button, Picker, Alert } from '../../../components/ui';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import { useOverlayTransition } from '../../../hooks/useOverlayTransition';
 import type { Proyecto, TernaResumen, Usuario } from '../../../types/api';
+
+const ROL_LABEL: Record<RolTerna, string> = {
+    presidente: 'Presidente',
+    secretario: 'Secretario',
+    vocal:      'Vocal',
+};
+
+type Asignados = Record<RolTerna, number | null>;
+
+const SIN_ASIGNAR: Asignados = { presidente: null, secretario: null, vocal: null };
 
 interface Props {
     open: boolean;
@@ -63,9 +73,9 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
     const [falloEval, setFalloEval]   = useState<string | null>(null);
 
     const [proyecto, setProyecto] = useState<Proyecto | null>(null);
-    const [elegidos, setElegidos] = useState<number[]>([]);
+    const [asignados, setAsignados] = useState<Asignados>(SIN_ASIGNAR);
     const [fecha, setFecha]       = useState('');
-    const [errores, setErrores]   = useState<{ proyecto?: string; evaluadores?: string }>({});
+    const [errores, setErrores]   = useState<{ proyecto?: string; roles?: Partial<Record<RolTerna, string>> }>({});
     const [enviando, setEnviando] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
 
@@ -85,7 +95,7 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
 
     const reset = useCallback(() => {
         setProyecto(null);
-        setElegidos([]);
+        setAsignados(SIN_ASIGNAR);
         setFecha('');
         setErrores({});
         setApiError(null);
@@ -172,21 +182,24 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
 
     if (!montado) return null;
 
-    const alternar = (id: number) => {
-        setErrores((p) => ({ ...p, evaluadores: undefined }));
-        setElegidos((prev) => {
-            if (prev.includes(id)) return prev.filter((x) => x !== id);
-            if (prev.length >= TERNA_MAX_EVALUADORES) return prev;   // el tope es del contrato
-            return [...prev, id];
-        });
+    const asignar = (rol: RolTerna, valor: string) => {
+        setErrores((p) => ({ ...p, roles: { ...p.roles, [rol]: undefined } }));
+        setAsignados((prev) => ({ ...prev, [rol]: valor ? Number(valor) : null }));
     };
+
+    /** Un evaluador ocupa un solo cargo: en los otros dos aparece deshabilitado. */
+    const ocupadoEnOtroCargo = (usuarioId: number, rol: RolTerna) =>
+        ROLES_TERNA.some((r) => r !== rol && asignados[r] === usuarioId);
 
     const enviar = async (ev: React.FormEvent) => {
         ev.preventDefault();
         const errs: typeof errores = {};
         if (!proyecto) errs.proyecto = 'Elige el proyecto que se va a evaluar.';
-        if (elegidos.length < TERNA_MIN_EVALUADORES) {
-            errs.evaluadores = `Selecciona al menos ${TERNA_MIN_EVALUADORES} evaluadores.`;
+        const faltan = ROLES_TERNA.filter((r) => asignados[r] == null);
+        if (faltan.length > 0) {
+            errs.roles = Object.fromEntries(
+                faltan.map((r) => [r, `Elige quién ocupa el cargo de ${ROL_LABEL[r].toLowerCase()}.`]),
+            );
         }
         setErrores(errs);
         if (Object.keys(errs).length > 0 || !proyecto || numero == null) return;
@@ -197,7 +210,7 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
             await createTerna({
                 numero,
                 proyectoId: proyecto.id,
-                evaluadoresIds: elegidos,
+                evaluadores: ROLES_TERNA.map((rol) => ({ usuarioId: asignados[rol] as number, rol })),
                 ...(fecha ? { fechaEvaluacion: fecha } : {}),
             });
             // No se vacía aquí: `onCreated` cierra el diálogo y el formulario
@@ -211,10 +224,10 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         }
     };
 
-    const tope = elegidos.length >= TERNA_MAX_EVALUADORES;
     // Sin número todavía no hay nada que enviar: el contrato lo exige y
     // adivinarlo produciría un choque con una terna existente.
-    const listo = numero != null && Boolean(proyecto) && elegidos.length >= TERNA_MIN_EVALUADORES;
+    const listo = numero != null && Boolean(proyecto) && ROLES_TERNA.every((r) => asignados[r] != null);
+    const faltanEvaluadores = !cargandoEval && !falloEval && evaluadores.length < ROLES_TERNA.length;
 
     return createPortal(
         <div
@@ -306,8 +319,7 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                         </legend>
 
                         <p className="nt-hint" id="nt-eval-hint">
-                            Entre {TERNA_MIN_EVALUADORES} y {TERNA_MAX_EVALUADORES}.
-                            {' '}Seleccionados: {elegidos.length} de {TERNA_MAX_EVALUADORES}.
+                            Exactamente tres evaluadores, uno por cargo.
                         </p>
 
                         {cargandoEval && <p className="nt-hint">Cargando evaluadores…</p>}
@@ -316,43 +328,51 @@ const NuevaTernaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                             <Alert tone="danger">{falloEval}</Alert>
                         )}
 
-                        {!cargandoEval && !falloEval && evaluadores.length === 0 && (
+                        {faltanEvaluadores && (
                             <Alert tone="warning">
-                                No hay evaluadores registrados. Crea al menos {TERNA_MIN_EVALUADORES} en
-                                la sección de Usuarios antes de formar una terna.
+                                Una terna necesita {ROLES_TERNA.length} evaluadores y hay {evaluadores.length} registrados.
+                                Créalos en la sección de Usuarios antes de formar una terna.
                             </Alert>
                         )}
 
-                        {!cargandoEval && evaluadores.length > 0 && (
-                            <ul className="nt-evals" aria-describedby="nt-eval-hint">
-                                {evaluadores.map((u) => {
-                                    const marcado = elegidos.includes(u.id);
-                                    const bloqueado = !marcado && tope;
+                        {!cargandoEval && !falloEval && !faltanEvaluadores && (
+                            <div className="nt-roles">
+                                {ROLES_TERNA.map((rol) => {
+                                    const error = errores.roles?.[rol];
                                     return (
-                                        <li key={u.id}>
-                                            <label
-                                                className={`nt-eval${marcado ? ' is-checked' : ''}${bloqueado ? ' is-blocked' : ''}`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    className="nt-eval__box"
-                                                    checked={marcado}
-                                                    disabled={enviando || bloqueado}
-                                                    onChange={() => alternar(u.id)}
-                                                />
-                                                <Avatar name={u.nombre} size="sm" tone="success" />
-                                                <span className="nt-eval__text">
-                                                    <span className="nt-eval__name">{u.nombre}</span>
-                                                    <span className="nt-eval__mail">{u.email}</span>
-                                                </span>
+                                        <div className="nt-rol" key={rol}>
+                                            <label htmlFor={`nt-rol-${rol}`} className="nt-rol__label">
+                                                {ROL_LABEL[rol]}
                                             </label>
-                                        </li>
+                                            <select
+                                                id={`nt-rol-${rol}`}
+                                                className="ui-control"
+                                                value={asignados[rol] ?? ''}
+                                                onChange={(e) => asignar(rol, e.target.value)}
+                                                disabled={enviando}
+                                                required
+                                                aria-invalid={error ? true : undefined}
+                                                aria-describedby={`nt-rol-${rol}-msg`}
+                                            >
+                                                <option value="">Sin asignar</option>
+                                                {evaluadores.map((u) => (
+                                                    <option key={u.id} value={u.id} disabled={ocupadoEnOtroCargo(u.id, rol)}>
+                                                        {u.nombre}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <p
+                                                id={`nt-rol-${rol}-msg`}
+                                                className="ui-picker__msg ui-picker__msg--error"
+                                                aria-live="polite"
+                                            >
+                                                {error ?? ''}
+                                            </p>
+                                        </div>
                                     );
                                 })}
-                            </ul>
+                            </div>
                         )}
-
-                        <p className="ui-picker__msg" aria-live="polite">{errores.evaluadores ?? ''}</p>
                     </fieldset>
 
                     {/* Una terna creada no se puede borrar desde aquí: el contrato

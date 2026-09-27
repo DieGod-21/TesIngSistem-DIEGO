@@ -8,9 +8,11 @@ name: CI
 # señal. Se detectaron a mano. Este workflow existe para que eso no dependa de
 # que alguien mire.
 
+# `diego` es la rama de trabajo: sin ella en la lista, lo que se hacía ahí
+# solo se validaba en local hasta llegar a un PR.
 on:
   push:
-    branches: [main]
+    branches: [main, diego]
   pull_request:
 
 # Un push nuevo cancela la ejecución anterior de la misma rama: la señal que
@@ -52,6 +54,14 @@ jobs:
         id: types
         if: '!cancelled()'
         run: npx tsc --noEmit
+
+      # Los specs de Cypress tienen su propio tsconfig y el paso anterior no los
+      # mira. No se ejecutan aquí (piden navegador y servidor demo), pero que al
+      # menos compilen: un spec roto solo se descubría al correrlo a mano.
+      - name: TypeScript (specs E2E)
+        id: types-e2e
+        if: '!cancelled()'
+        run: npx tsc --noEmit -p cypress
 
       # Incluye src/architecture.test.ts: CSS inválido, fronteras de módulo,
       # escalas del sistema de diseño y deuda visual congelada.

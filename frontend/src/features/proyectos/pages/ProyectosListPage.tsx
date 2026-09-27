@@ -1,12 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { FolderOpen, FolderPlus, Plus, AlertTriangle, RefreshCw, Search, SearchX } from 'lucide-react';
 import { listProyectosCached, PROYECTOS_LIST_KEY } from '../../../services/proyectosService';
-import { getCached } from '../../../services/cache';
-import { isCancel } from '../../../services/apiClient';
-import { userMessageFor } from '../../../services/errorMessages';
 import { matchesText } from '../../../utils/text';
 import { usePrimeraLlegada } from '../../../hooks/usePrimeraLlegada';
+import { useCachedResource } from '../../../hooks/useCachedResource';
 import type { FaseProyecto, Proyecto } from '../../../types/api';
 import ProyectoCard from '../components/ProyectoCard';
 import NuevoProyectoModal from '../components/NuevoProyectoModal';
@@ -16,6 +14,8 @@ import { routes } from '../../../config/routes';
 import '../styles/proyectos.css';
 
 type FaseFilter = 'all' | FaseProyecto;
+
+const SIN_PROYECTOS: Proyecto[] = [];
 
 const FASES: { value: FaseFilter; label: string }[] = [
     { value: 'all', label: 'Todas' },
@@ -55,12 +55,16 @@ const ProyectosListPage: React.FC = () => {
  * lista se pinta en el primer render y no hay hueco donde quepa un esqueleto.
  * Si venció el TTL devuelve `undefined` y se ve el esqueleto, que es lo
  * correcto: no se presenta como actual algo que ya no sabemos si lo es.
+ *
+ * Esa lectura la hace `useCachedResource`.
  */
-    const [proyectos, setProyectos] = useState<Proyecto[]>(
-        () => getCached<Proyecto[]>(PROYECTOS_LIST_KEY) ?? [],
-    );
-    const [loading, setLoading]     = useState(true);
-    const [error, setError]         = useState<string | null>(null);
+    const {
+        data,
+        loading,
+        error,
+        reload: fetchProyectos,
+    } = useCachedResource(PROYECTOS_LIST_KEY, listProyectosCached);
+    const proyectos = data ?? SIN_PROYECTOS;
     const [modalOpen, setModalOpen] = useState(false);
 
     /**
@@ -102,27 +106,6 @@ const ProyectosListPage: React.FC = () => {
     const abrirProyecto = useCallback((id: number) => {
         history.push(routes.proyectoDetail(id), { desde: `${location.pathname}${location.search}` });
     }, [history, location.pathname, location.search]);
-
-    const fetchProyectos = useCallback(async (signal?: AbortSignal) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await listProyectosCached();
-            if (signal?.aborted) return;
-            setProyectos(data);
-        } catch (e) {
-            if (signal?.aborted || isCancel(e)) return;
-            setError(userMessageFor(e));
-        } finally {
-            if (!signal?.aborted) setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        fetchProyectos(controller.signal);
-        return () => controller.abort();
-    }, [fetchProyectos]);
 
     // El filtrado ocurre sobre el conjunto ya descargado: una cohorte de
     // graduación son decenas de proyectos y el resultado debe verse mientras se
@@ -285,10 +268,10 @@ const ProyectosListPage: React.FC = () => {
                 onClose={() => setModalOpen(false)}
                 carnetsConProyecto={carnetsConProyecto}
                 onCreated={(titulo, id) => {
+                    // El alta ya invalidó `proyectos`: la lista vuelve a leer sola.
                     setModalOpen(false);
                     toast.success(`Proyecto «${titulo}» creado.`);
                     setRecienCreado(id);
-                    fetchProyectos();
                 }}
             />
         </div>
